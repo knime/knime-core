@@ -70,7 +70,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -124,8 +124,7 @@ import org.osgi.framework.ServiceReference;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FileUtil {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(FileUtil.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileUtil.class);
 
     // temp files created by FileUtil along with a flag denoting whether these files are to be deleted on shutdown
     private static final Map<File, Boolean> TEMP_FILES = Collections.synchronizedMap(new HashMap<>());
@@ -202,8 +201,7 @@ public final class FileUtil {
             try {
                 urlTimeout = Integer.parseInt(to);
             } catch (NumberFormatException ex) {
-                LOGGER.error("Illegal value for property "
-                        + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
+                LOGGER.error("Illegal value for property " + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
             }
             if (urlTimeout < 0) {
                 LOGGER.errorWithFormat("Illegal (negative) value for property %s: %d",
@@ -239,7 +237,7 @@ public final class FileUtil {
         }
 
         // attempt to touch all paths in the paths set
-        final FileTime now = FileTime.from(ZonedDateTime.now().toInstant());
+        final FileTime now = FileTime.from(Instant.now());
         long successCounter = 0;
         long failCounter = 0;
         boolean warningLogged = false;
@@ -281,9 +279,8 @@ public final class FileUtil {
      *             be deleted.
      * @throws IOException If that fail for any reason.
      */
-    public static void copy(final File file, final File destination,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    public static void copy(final File file, final File destination, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
         final long size = file.length();
         byte[] cache = new byte[BUFF_SIZE];
         CanceledExecutionException cee = null;
@@ -307,8 +304,7 @@ public final class FileUtil {
         // delete destination file if canceled.
         if (cee != null) {
             if (!destination.delete()) {
-                LOGGER.warn("Unable to delete \"" + destination.getName()
-                        + "\" after copying has been canceled.");
+                LOGGER.warn("Unable to delete \"" + destination.getName() + "\" after copying has been canceled.");
             }
             throw cee;
         }
@@ -325,11 +321,9 @@ public final class FileUtil {
      * @throws IOException if the source does not exist or the source could not
      *             be copied due to file permissions
      */
-    public static void copyDir(final File sourceDir, final File targetDir)
-            throws IOException {
+    public static void copyDir(final File sourceDir, final File targetDir) throws IOException {
         if (!sourceDir.exists()) {
-            throw new IOException("Source directory \"" + sourceDir
-                    + "\" does not exist.");
+            throw new IOException("Source directory \"" + sourceDir + "\" does not exist.");
         }
         if (sourceDir.isDirectory()) {
             if (!targetDir.isDirectory() && !targetDir.mkdirs()) {
@@ -337,8 +331,7 @@ public final class FileUtil {
             }
             final String[] sourceDirList = sourceDir.list();
             if (sourceDirList == null) {
-                throw new IOException("Can't copy directory \"" + sourceDir
-                        + "\", no read permissions.");
+                throw new IOException("Can't copy directory \"" + sourceDir + "\", no read permissions.");
             }
             for (String child : sourceDirList) {
                 copyDir(new File(sourceDir, child), new File(targetDir, child));
@@ -361,9 +354,8 @@ public final class FileUtil {
      * @throws IOException If that fails for any reason.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
-    public static void copy(final InputStream input,
-            final OutputStream destination) throws IOException {
-        byte[] cache = new byte[BUFF_SIZE];
+    public static void copy(final InputStream input, final OutputStream destination) throws IOException {
+        final var cache = new byte[BUFF_SIZE];
         int read;
         while ((read = input.read(cache, 0, cache.length)) > 0) {
             destination.write(cache, 0, read);
@@ -380,9 +372,8 @@ public final class FileUtil {
      * @throws IOException If that fails for any reason.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
-    public static void copy(final Reader source, final Writer destination)
-            throws IOException {
-        char[] cache = new char[BUFF_SIZE];
+    public static void copy(final Reader source, final Writer destination) throws IOException {
+        final var cache = new char[BUFF_SIZE];
         int read;
         while ((read = source.read(cache, 0, cache.length)) > 0) {
             destination.write(cache, 0, read);
@@ -397,13 +388,11 @@ public final class FileUtil {
      *            a directory).
      * @throws IOException If that fail for any reason.
      */
-    public static void copy(final File file, final File destination)
-            throws IOException {
-        ExecutionMonitor exec = new ExecutionMonitor();
+    public static void copy(final File file, final File destination) throws IOException {
         try {
+            final var exec = new ExecutionMonitor();
             copy(file, destination, exec);
-        } catch (CanceledExecutionException cee) {
-            // can't happen, private execution monitor
+        } catch (CanceledExecutionException cee) { //NOSONAR can't happen, private execution monitor
         }
     }
 
@@ -421,16 +410,14 @@ public final class FileUtil {
     }
 
     private static boolean deleteRecursively(final File dir, final boolean removeFromTempfiles) {
-        String name = dir.getName();
-        File dirWithCanonicalParent = dir;
-        File parentFile = dir.getParentFile();
+        final var name = dir.getName();
+        var dirWithCanonicalParent = dir;
+        final var parentFile = dir.getParentFile();
         if (parentFile != null) {
             try {
                 // get canonical parent (resolve symlinks in parent path)
-                dirWithCanonicalParent =
-                        new File(parentFile.getCanonicalFile(), name);
-            } catch (IOException e) {
-                // ignore, leave dir as it is
+                dirWithCanonicalParent = new File(parentFile.getCanonicalFile(), name);
+            } catch (IOException e) { //NOSONAR ignore, leave dir as it is
             }
         }
         File canonicalDir;
@@ -442,9 +429,7 @@ public final class FileUtil {
 
         // a symbolic link has a different canonical path than its actual path,
         // unless it's a link to itself
-        if (!IS_WINDOWS
-                && !canonicalDir.equals(dirWithCanonicalParent
-                        .getAbsoluteFile())) {
+        if (!IS_WINDOWS && !canonicalDir.equals(dirWithCanonicalParent.getAbsoluteFile())) {
             // this file is a symbolic link, and there's no reason for us to
             // follow it, because then we might be deleting something outside of
             // the directory we were told to delete
@@ -457,9 +442,7 @@ public final class FileUtil {
         // directory and delete them one by one
         File[] files = canonicalDir.listFiles();
         if (files != null) {
-            for (int i = 0; i < files.length; i++) {
-                File file = files[i];
-
+            for (final var file : files) {
                 // in case this directory is actually a symbolic link, or it's
                 // empty, we want to try to delete the link before we try
                 // anything
@@ -520,18 +503,11 @@ public final class FileUtil {
      *             if two files or directories in the include list have the same
      *             (simple) name.
      */
-    public static boolean zipDir(final File zipFile,
-            final Collection<File> includeList, final int compressionLevel,
-            final ZipFileFilter filter, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        ZipOutputStream zout =
-                new ZipOutputStream(new BufferedOutputStream(
-                        new FileOutputStream(zipFile)));
-        zout.setLevel(compressionLevel);
-        try {
+    public static boolean zipDir(final File zipFile, final Collection<File> includeList, final int compressionLevel,
+            final ZipFileFilter filter, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        try (final var zout = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(zipFile)))) {
+            zout.setLevel(compressionLevel);
             return zipDir(zout, includeList, filter, exec);
-        } finally {
-            zout.close();
         }
     }
 
@@ -546,9 +522,8 @@ public final class FileUtil {
      * @throws CanceledExecutionException See delegating method
      *
      */
-    public static boolean zipDir(final ZipOutputStream zout,
-        final Collection<File> includeList, final ZipFileFilter filter,
-        final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+    public static boolean zipDir(final ZipOutputStream zout, final Collection<File> includeList,
+        final ZipFileFilter filter, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         return zipDir(zout, includeList, "", filter, exec);
     }
 
@@ -591,10 +566,9 @@ public final class FileUtil {
      *             exist.
      * @since 3.2
      */
-    public static boolean zipDir(final ZipOutputStream zout,
-            final Collection<File> includeList, final String zipEntryPrefix, final ZipFileFilter filter,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    public static boolean zipDir(final ZipOutputStream zout, final Collection<File> includeList,
+        final String zipEntryPrefix, final ZipFileFilter filter, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
 
         ExecutionMonitor execMon = exec;
         if (execMon == null) {
@@ -627,8 +601,7 @@ public final class FileUtil {
             } else if (f.isDirectory()) {
                 complete &= addOneDir(zipper, f, filter, execMon, size, buff);
             } else {
-                throw new IOException("File " + f.getAbsolutePath()
-                        + " not added to zip archive");
+                throw new IOException("File " + f.getAbsolutePath() + " not added to zip archive");
             }
         }
 
@@ -659,67 +632,56 @@ public final class FileUtil {
         }
     }
 
-    private static boolean addOneDir(final ZipWrapper zout,
-            final File rootDir, final ZipFileFilter filter,
-            final ExecutionMonitor exec, final long origSize, final byte[] buff) throws IOException,
-            CanceledExecutionException {
+    private static boolean addOneDir(final ZipWrapper zout, final File rootDir, final ZipFileFilter filter,
+        final ExecutionMonitor exec, final long origSize, final byte[] buff)
+        throws IOException, CanceledExecutionException {
 
         // false if unable to look into a sub dir or an I/O error occurs
         boolean complete = true;
 
-        Stack<File> dirs = new Stack<File>();
+        final var dirStack = new ArrayDeque<File>();
 
         String rootName = rootDir.getName();
         zout.putNextEntry(new ZipEntry(rootName + "/"));
         zout.closeEntry();
 
         // now, traverse the root dir
-        dirs.push(rootDir);
+        dirStack.push(rootDir);
 
         int rootEndIdx = rootDir.getAbsolutePath().length() + 1;
-        while (!dirs.isEmpty()) {
+        while (!dirStack.isEmpty()) {
 
-            File d = dirs.pop();
+            File d = dirStack.pop();
             File[] ls = d.listFiles();
             if (ls == null) {
                 // the dir was not accessible
                 complete = false;
                 continue;
             }
-            for (File f : ls) {
-
+            for (final File f : ls) {
                 if (!filter.include(f)) {
                     continue;
                 }
 
-                String fName =
-                        f.getAbsolutePath().substring(rootEndIdx)
-                                .replace('\\', '/');
+                String fName = f.getAbsolutePath().substring(rootEndIdx).replace('\\', '/');
                 String entryName = rootName + "/" + fName;
 
                 if (f.isFile()) {
-
                     complete &= addZipEntry(buff, zout, f, entryName, exec, origSize);
-
                 } else if (f.isDirectory()) {
-
                     zout.putNextEntry(new ZipEntry(entryName + "/"));
                     zout.closeEntry();
-                    dirs.push(f);
+                    dirStack.push(f);
                 }
             }
         }
 
         return complete;
-
     }
 
-    private static boolean addZipEntry(final byte[] buf,
-            final ZipWrapper zout, final File f, final String entryName,
-            final ExecutionMonitor exec, final long origSize) throws IOException,
-            CanceledExecutionException {
-        InputStream in = new FileInputStream(f);
-        try {
+    private static boolean addZipEntry(final byte[] buf, final ZipWrapper zout, final File f, final String entryName,
+            final ExecutionMonitor exec, final long origSize) throws IOException, CanceledExecutionException {
+        try (InputStream in = new FileInputStream(f)) {
             zout.putNextEntry(new ZipEntry(entryName));
             int read;
             while ((read = in.read(buf)) >= 0) {
@@ -732,14 +694,11 @@ public final class FileUtil {
             throw cee;
         } catch (IOException ioe) {
             throw ioe;
-        } catch (Throwable t) {
-            LOGGER.debug(
-                    "Error while adding file to zip archive ("
-                            + f.getAbsolutePath() + ")", t);
+        } catch (Throwable t) { // NOSONAR
+            LOGGER.debug("Error while adding file to zip archive (" + f.getAbsolutePath() + ")", t);
             return false;
         } finally {
             zout.closeEntry();
-            in.close();
         }
         return true;
     }
@@ -767,14 +726,7 @@ public final class FileUtil {
     /**
      * A filter that causes all files to be included in the zip archive.
      */
-    public static final ZipFileFilter ZIP_INCLUDEALL_FILTER =
-            new ZipFileFilter() {
-
-                @Override
-                public boolean include(final File f) {
-                    return true;
-                }
-            };
+    public static final ZipFileFilter ZIP_INCLUDEALL_FILTER = f -> true;
 
     /**
      * Recursively packs all the the files and directories beneath the
@@ -792,13 +744,11 @@ public final class FileUtil {
      *         directory is unreadable.
      * @throws IOException if an I/O error occurs
      */
-    public static boolean zipDir(final File zipFile, final File rootDir,
-            final int compressionLevel) throws IOException {
+    public static boolean zipDir(final File zipFile, final File rootDir, final int compressionLevel)
+            throws IOException {
         try {
-            return zipDir(zipFile, rootDir, compressionLevel,
-                    ZIP_INCLUDEALL_FILTER, null);
-        } catch (CanceledExecutionException e) {
-            // doesn't happen as we provide no execution monitor
+            return zipDir(zipFile, rootDir, compressionLevel, ZIP_INCLUDEALL_FILTER, null);
+        } catch (CanceledExecutionException e) { // NOSONAR doesn't happen as we provide no execution monitor
             return false;
         }
     }
@@ -830,12 +780,9 @@ public final class FileUtil {
      *             the <code>exec</code>
      * @throws IOException if an I/O error occurs
      */
-    public static boolean zipDir(final File zipFile, final File rootDir,
-            final int compressionLevel, final ZipFileFilter filter,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        return zipDir(zipFile, Collections.singletonList(rootDir),
-                compressionLevel, filter, exec);
+    public static boolean zipDir(final File zipFile, final File rootDir, final int compressionLevel,
+        final ZipFileFilter filter, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        return zipDir(zipFile, Collections.singletonList(rootDir), compressionLevel, filter, exec);
     }
 
     /**
@@ -846,11 +793,9 @@ public final class FileUtil {
      * @param destDir the destination directory, must already exist
      * @throws IOException if an I/O error occurs
      */
-    public static void unzip(final File zipFile, final File destDir)
-            throws IOException {
+    public static void unzip(final File zipFile, final File destDir) throws IOException {
         if (!destDir.exists()) {
-            throw new IOException("Destination directory does not exist: "
-                    + destDir);
+            throw new IOException("Destination directory does not exist: " + destDir);
         }
         if (!destDir.isDirectory()) {
             throw new IOException("Destination is not a directory: " + destDir);
@@ -865,16 +810,13 @@ public final class FileUtil {
      * segments from the zip entries. If the zip stream contains elements with
      * less path segments, they all end up directly in the specified dir.
      *
-     * @param zipStream must contain a zip archive. Is unpacked an stored in the
-     *            specified directory.
-     * @param dir the destination directory the content of the zip stream is
-     *            stored in
-     * @param stripLevel the number of path segments (directory levels) striped
-     *            off the file (and dir) names in the zip archive.
+     * @param zipStream must contain a zip archive. Is unpacked an stored in the specified directory.
+     * @param dir the destination directory the content of the zip stream is stored in
+     * @param stripLevel the number of path segments (directory levels) stripped off the file (and dir) names
+     *        in the zip archive.
      * @throws IOException if it was not able to store the content
      */
-    public static void unzip(final ZipInputStream zipStream, final File dir,
-            final int stripLevel) throws IOException {
+    public static void unzip(final ZipInputStream zipStream, final File dir, final int stripLevel) throws IOException {
         ZipEntry e;
         byte[] buf = new byte[BUFF_SIZE];
         String canonicalDestPath = dir.getCanonicalPath();
@@ -887,28 +829,25 @@ public final class FileUtil {
                 if (!name.isEmpty() && !name.equals("/")) {
                     File d = new File(dir, name);
                     if (!d.getCanonicalPath().startsWith(canonicalDestPath)) {
-                        throw new IOException(
-                            "Path traversal attack detected, entry " + name + " will leave the destination directory");
+                        throw new IOException("Path traversal attack detected, entry " + name
+                            + " will leave the destination directory");
                     }
 
                     if (!d.mkdirs() && !d.exists()) {
-                        throw new IOException("Could not create directory '"
-                                + d.getAbsolutePath() + "'.");
+                        throw new IOException("Could not create directory '" + d.getAbsolutePath() + "'.");
                     }
                 }
             } else {
                 File f = new File(dir, name);
                 if (!f.getCanonicalPath().startsWith(canonicalDestPath)) {
-                    throw new IOException(
-                        "Path traversal attack detected, entry " + name + " will leave the destination directory");
+                    throw new IOException("Path traversal attack detected, entry " + name
+                        + " will leave the destination directory");
                 }
 
                 File parentDir = f.getParentFile();
                 if (!parentDir.exists() && !parentDir.mkdirs()) {
-                    throw new IOException("Could not create directory '"
-                            + parentDir.getAbsolutePath() + "'.");
+                    throw new IOException("Could not create directory '" + parentDir.getAbsolutePath() + "'.");
                 }
-
 
                 try (OutputStream out = new FileOutputStream(f)) {
                     int read;
@@ -918,8 +857,8 @@ public final class FileUtil {
                 }
             }
         }
-        zipStream.close();
 
+        zipStream.close();
     }
 
     /**
@@ -1048,9 +987,8 @@ public final class FileUtil {
      * @throws IOException see {@link File#createTempFile(String, String)}
      * @since 2.9
      */
-    public static File
-        createTempFile(final String prefix, final String suffix, final File rootDir, final boolean deleteOnExit)
-            throws IOException {
+    public static File createTempFile(final String prefix, final String suffix, final File rootDir,
+            final boolean deleteOnExit) throws IOException {
         File tmpFile = File.createTempFile(prefix, suffix, rootDir);
         TEMP_FILES.put(tmpFile, deleteOnExit);
         return tmpFile;
@@ -1135,46 +1073,41 @@ public final class FileUtil {
      *         operation will fail if the user does not have permission to
      *         change the access permissions of this abstract pathname.
      */
-    public static boolean chmod(final File f, final Boolean readable,
-            final Boolean writable, final Boolean executable,
+    public static boolean chmod(final File f, final Boolean readable, final Boolean writable, final Boolean executable,
             final boolean ownerOnly) {
-        boolean b = true;
+        boolean success = true;
 
         // if the x on a directory is removed recursion must happen first
         if ((executable != null) && !executable.booleanValue() && f.isDirectory()) {
             File[] dirList = f.listFiles(); // null if no read permissions
             if (dirList != null) {
                 for (File entry : dirList) {
-                    b &= chmod(entry, readable, writable, executable, ownerOnly);
+                    success &= chmod(entry, readable, writable, executable, ownerOnly);
                 }
             }
         }
 
         if (readable != null) {
-            b &= f.setReadable(readable, ownerOnly);
+            success &= f.setReadable(readable, ownerOnly);
         }
         if (writable != null) {
-            b &= f.setWritable(writable, ownerOnly);
+            success &= f.setWritable(writable, ownerOnly);
         }
         if (executable != null) {
-            b &= f.setExecutable(executable, ownerOnly);
+            success &= f.setExecutable(executable, ownerOnly);
         }
 
         // in all other cases do the recursion after changing the permissions
-        if (executable == null || executable.booleanValue()) {
-            if (f.isDirectory()) {
-                File[] dirList = f.listFiles(); // null if no read permissions
-                if (dirList != null) {
-                    for (File entry : dirList) {
-                        b &=
-                                chmod(entry, readable, writable, executable,
-                                        ownerOnly);
-                    }
+        if ((executable == null || executable.booleanValue()) && f.isDirectory()) {
+            File[] dirList = f.listFiles(); // null if no read permissions
+            if (dirList != null) {
+                for (File entry : dirList) {
+                    success &= chmod(entry, readable, writable, executable, ownerOnly);
                 }
             }
         }
 
-        return b;
+        return success;
     }
 
     /**
@@ -1191,11 +1124,13 @@ public final class FileUtil {
         // UNC allows // and \\ as prefix, // won't clash with path slashes and avoid mixing of / and \ problems
         final var uncPrefix = "//";
         if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
-            // Throughout this if-branch, we assume that if there are query or fragment parts (cf. RFC3986 sec. 3), they can be dropped.
-            // Note that the authority part potentially, but not necessarily, contains a host part (cf. RFC3986 sec. 3.2).
+            // Throughout this if-branch, we assume that if there are query or fragment parts (cf. RFC3986 sec. 3),
+            // they can be dropped. Note that the authority part potentially, but not necessarily, contains a host part
+            // (cf. RFC3986 sec. 3.2).
+
             // Obtain String suitable as input for File to check for existence
             String path =
-                looksLikeUNC(fileUrl) ? uncPrefix + fileUrl.getAuthority() + fileUrl.getPath() : fileUrl.getPath();
+                looksLikeUNC(fileUrl) ? (uncPrefix + fileUrl.getAuthority() + fileUrl.getPath()) : fileUrl.getPath();
 
             var dataFile = new File(path);
 
@@ -1412,20 +1347,7 @@ public final class FileUtil {
      */
     public static URLConnection openOutputConnection(final URL url, final String httpMethod,
         final Map<String, String> properties) throws IOException {
-        var urlConnection = URLConnectionFactory.getConnection(url);
-
-        if (urlConnection instanceof HttpURLConnection) {
-            ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
-            ((HttpURLConnection)urlConnection).setChunkedStreamingMode(1 << 20);
-            urlConnection = new HttpURLConnectionDecorator((HttpURLConnection)urlConnection);
-        }
-
-        urlConnection.setDoOutput(true);
-        URLConnection u = urlConnection;
-        properties.entrySet().stream().forEach(p -> u.setRequestProperty(p.getKey(), p.getValue()));
-        urlConnection.connect();
-
-        return urlConnection;
+        return openOutputConnection0(url, httpMethod, properties, null);
     }
 
     /**
@@ -1446,23 +1368,28 @@ public final class FileUtil {
      */
     public static URLConnection openOutputConnection(final URL url, final String httpMethod,
         final Map<String, String> properties, final HostnameVerifier hostnameVerifier) throws IOException {
+        return openOutputConnection0(url, httpMethod, properties, CheckUtils.checkArgumentNotNull(hostnameVerifier));
+    }
+
+    private static URLConnection openOutputConnection0(final URL url, final String httpMethod,
+        final Map<String, String> properties, final HostnameVerifier hostnameVerifier) throws IOException {
         var urlConnection = URLConnectionFactory.getConnection(url);
 
-        if (urlConnection instanceof HttpURLConnection) {
-            ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
-            ((HttpURLConnection)urlConnection).setChunkedStreamingMode(1 << 20);
-            if (urlConnection instanceof HttpsURLConnection) {
-                ((HttpsURLConnection) urlConnection).setHostnameVerifier(hostnameVerifier);
+        if (urlConnection instanceof HttpURLConnection httpConnection) {
+            httpConnection.setRequestMethod(httpMethod);
+            httpConnection.setChunkedStreamingMode(1 << 20);
+            if (hostnameVerifier != null && httpConnection instanceof HttpsURLConnection httpsConnection) {
+                httpsConnection.setHostnameVerifier(hostnameVerifier);
             }
-            urlConnection = new HttpURLConnectionDecorator((HttpURLConnection)urlConnection);
+            urlConnection = new HttpURLConnectionDecorator(httpConnection);
         }
 
-        urlConnection.setDoOutput(true);
-        URLConnection u = urlConnection;
-        properties.entrySet().stream().forEach(p -> u.setRequestProperty(p.getKey(), p.getValue()));
-        urlConnection.connect();
+        final var connection = urlConnection;
+        connection.setDoOutput(true);
+        properties.entrySet().stream().forEach(p -> connection.setRequestProperty(p.getKey(), p.getValue()));
+        connection.connect();
 
-        return urlConnection;
+        return connection;
     }
 
     /**
@@ -1478,7 +1405,7 @@ public final class FileUtil {
      * @since 4.3
      */
     public static OutputStream openOutputStream(final URL url, final String httpMethod) throws IOException {
-        return openOutputStream(url, httpMethod, Collections.emptyMap());
+        return openOutputStream(url, httpMethod, Map.of());
     }
 
     /**
@@ -1532,9 +1459,8 @@ public final class FileUtil {
      * @throws IOException if an I/O error occurs
      * @since 2.6
      */
-    public static InputStream openStreamWithTimeout(final URL url)
-            throws IOException {
-      return openStreamWithTimeout(url, urlTimeout);
+    public static InputStream openStreamWithTimeout(final URL url) throws IOException {
+        return openStreamWithTimeout(url, urlTimeout);
     }
 
     /**
@@ -1555,24 +1481,29 @@ public final class FileUtil {
         return new WrappedURLInputStream(conn);
     }
 
-    /** Opens a buffered input stream for the location (file path or URL).
+    /**
+     * Opens a buffered input stream for the location (file path or URL).
+     *
      * @param loc the location; can be both a file path or URL.
      * @return a buffered input stream.
      * @throws IOException Forwarded from file input stream or url.openStream.
      * @throws InvalidSettingsException If the argument is invalid or null.
-     * @since 2.6 */
-    public static InputStream openInputStream(final String loc)
-        throws IOException, InvalidSettingsException {
+     * @since 2.6
+     */
+    public static InputStream openInputStream(final String loc) throws IOException, InvalidSettingsException {
         return openInputStream(loc, urlTimeout);
     }
 
-    /** Opens a buffered input stream for the location (file path or URL).
+    /**
+     * Opens a buffered input stream for the location (file path or URL).
+     *
      * @param loc the location; can be both a file path or URL.
      * @param timeoutInMilliseconds The timeout in milliseconds ({@code >0}).
      * @return a buffered input stream.
      * @throws IOException Forwarded from file input stream or url.openStream.
      * @throws InvalidSettingsException If the argument is invalid or null.
-     * @since 3.3*/
+     * @since 3.3
+     */
     public static InputStream openInputStream(final String loc, final int timeoutInMilliseconds)
         throws IOException, InvalidSettingsException {
         if (loc == null || loc.length() == 0) {
@@ -1585,15 +1516,15 @@ public final class FileUtil {
         } catch (MalformedURLException mue) {
             File file = new File(loc);
             if (!file.exists()) {
-                throw new InvalidSettingsException(
-                        "No such file or URL: " + loc, mue);
+                throw new InvalidSettingsException("No such file or URL: " + loc, mue);
             }
             stream = new FileInputStream(file);
         }
         return new BufferedInputStream(stream);
     }
 
-    /** Get default timeout in milliseconds. Default is {@value #DEFAULT_URL_TIMEOUT_MILLIS} but can be changed via the
+    /**
+     * Get default timeout in milliseconds. Default is {@value #DEFAULT_URL_TIMEOUT_MILLIS} but can be changed via the
      * {@link KNIMEConstants#PROPERTY_URL_TIMEOUT} property. This value is used when any of the openInput/Output
      * methods are called without timeout argument.
      *
@@ -1651,7 +1582,8 @@ public final class FileUtil {
                 }
                 return files;
             } else {
-                CheckUtils.checkArgumentNotNull(FileUtil.resolveToPath(url), "Only relative knime URLs are supported: \"%s\"", url);
+                CheckUtils.checkArgumentNotNull(FileUtil.resolveToPath(url),
+                    "Only relative knime URLs are supported: \"%s\"", url);
                 return listLocalDirectory(url, filter, recursive);
             }
         } else {
@@ -1709,7 +1641,7 @@ public final class FileUtil {
          * @param zipEntryPrefix a possibly null prefix to prepend to all zip entry names
          */
         ZipWrapper(final ZipOutputStream zipStream, final String zipEntryPrefix) {
-            super(new NullOutputStream());
+            super(NullOutputStream.NULL_OUTPUT_STREAM);
             m_zipper = zipStream;
             m_zipEntryPrefix = StringUtils.defaultIfBlank(zipEntryPrefix, null);
         }
