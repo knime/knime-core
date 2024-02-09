@@ -634,7 +634,7 @@ public final class SubNodeContainer extends SingleNodeContainer
             boolean outputChanged = setVirtualOutputIntoOutport(newState);
             setInternalState(newState);
             if (outputChanged) {
-                parent.resetAndConfigureNodeAndSuccessors(getID(), false);
+                parent.resetAndConfigureNodeAndSuccessors(getID(), false, false);
             } else {
                 try (WorkflowLock parentLock = parent.lock()) {
                     parentLock.queueCheckForNodeStateChangeNotification(true);

@@ -576,7 +576,7 @@ public final class WizardExecutionController extends WebResourceController imple
             currentSN.getNameWithID(), previousSN == null ? "no more Components to reset"
                 : "new current one is \"" + previousSN.getNameWithID() + "\"");
         manager.cancelExecution(currentSN);
-        manager.resetAndConfigureNodeAndSuccessors(currentSNID, false);
+        manager.resetAndConfigureNodeAndSuccessors(currentSNID, false, false);
     }
 
     void save(final NodeSettingsWO settings) {
