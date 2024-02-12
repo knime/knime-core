@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
@@ -68,6 +69,7 @@ import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeTimer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -182,6 +184,43 @@ public final class EclipseUtil {
      */
     public static boolean isRunInDebug() {
         return RUN_IN_DEBUG;
+    }
+
+    /**
+     * The eclipse application / product name, e.g.
+     * <ul>
+     * <li>org.knime.product.KNIME_APPLICATION - regular desktop app
+     * <li>org.knime.product.KNIME_BATCH_APPLICATION
+     * <li>com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION - hub/server executor
+     * <li>org.eclipse.ui.ide.workbench - not relevant but possible
+     * <li>... there are few other possible
+     * <li>unknown - if it can't be determined
+     * </ul>
+     *
+     * @return that id, not null
+     *
+     * @since 5.3
+     */
+    public static String getApplicationID() {
+        if (!StringUtils.isEmpty(System.getProperty("eclipse.application"))) {
+            return System.getProperty("eclipse.application");
+        }
+
+        Bundle myself = FrameworkUtil.getBundle(NodeTimer.class);
+        if (myself != null) {
+            BundleContext ctx = myself.getBundleContext();
+            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
+            if (ser != null) {
+                try {
+                    ApplicationHandle appHandle = ctx.getService(ser);
+                    return appHandle.getInstanceId();
+                } finally {
+                    ctx.ungetService(ser);
+                }
+            }
+        }
+
+        return "<unknown>";
     }
 
     private static boolean checkSDK() {
@@ -330,22 +369,7 @@ public final class EclipseUtil {
      * @since 2.12
      */
     public static boolean determineServerUsage() {
-        Bundle myself = FrameworkUtil.getBundle(EclipseUtil.class);
-        if (myself != null) {
-            BundleContext ctx = myself.getBundleContext();
-            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
-            if (ser != null) {
-                ApplicationHandle appHandle = ctx.getService(ser);
-                String instanceId = appHandle.getInstanceId();
-                boolean b = (instanceId != null) && instanceId.contains("KNIME_REMOTE_APPLICATION");
-                ctx.ungetService(ser);
-                return b;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return StringUtils.contains(getApplicationID(), "KNIME_REMOTE_APPLICATION");
     }
 
 }

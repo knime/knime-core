@@ -94,12 +94,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.JsonUtil;
 import org.knime.core.util.MutableInteger;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
-import org.osgi.service.application.ApplicationHandle;
 import org.osgi.service.prefs.Preferences;
 
 import jakarta.json.JsonArray;
@@ -563,34 +558,12 @@ public final class NodeTimer {
             job.add("javaUIPerspectiveSwitches", m_javaUIPerspectiveSwitches);
             job.add("lastUsedPerspective", m_lastUsedPerspective);
             job.add("launches", getNrLaunches());
-            job.add("lastApplicationID", getApplicationID()); // batch, standard KNIME AP, ...
+            job.add("lastApplicationID", EclipseUtil.getApplicationID()); // batch, standard KNIME AP, ...
             job.add("timeSinceLastStart", getCurrentInstanceUpTime());
             job.add("crashes", m_crashes);
             job.add("properlyShutDown", properShutdown);
             JsonObject jo = job.build();
             return jo;
-        }
-
-        private static String getApplicationID() {
-            if (!StringUtils.isEmpty(System.getProperty("eclipse.application"))) {
-                return System.getProperty("eclipse.application");
-            }
-
-            Bundle myself = FrameworkUtil.getBundle(NodeTimer.class);
-            if (myself != null) {
-                BundleContext ctx = myself.getBundleContext();
-                ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
-                if (ser != null) {
-                    try {
-                        ApplicationHandle appHandle = ctx.getService(ser);
-                        return appHandle.getInstanceId();
-                    } finally {
-                        ctx.ungetService(ser);
-                    }
-                }
-            }
-
-            return "<unknown>";
         }
 
         synchronized void writeToFile(final boolean properShutdown) {
@@ -616,7 +589,7 @@ public final class NodeTimer {
             // a workspace containing preferences
             final Preferences preferences = InstanceScope.INSTANCE.getNode("org.knime.workbench.core");
             boolean defaultSendStats;
-            if ("org.knime.product.KNIME_APPLICATION".equals(getApplicationID())) {
+            if ("org.knime.product.KNIME_APPLICATION".equals(EclipseUtil.getApplicationID())) {
                 // running in UI mode -- the user was prompted if he wants to share (and if so, it will have value
                 // 'true' in the preferences)
                 defaultSendStats = false;
