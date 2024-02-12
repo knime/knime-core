@@ -84,6 +84,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.AbstractDocument;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
@@ -675,10 +676,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             final var fieldPassword = String.valueOf(m_passwordField.getPassword());
             if (!fieldPassword.equals(model.getPassword())) {
                 String modelPwd = model.getPassword();
-                char[] password = m_passwordField.getPassword();
                 String componentPwd = null;
-                if (isNotEmpty(password)) {
-                    componentPwd = new String(password);
+                if (StringUtils.isNotEmpty(fieldPassword)) {
+                    componentPwd = fieldPassword;
                 }
                 if (!Objects.equals(componentPwd, modelPwd)) {
                     updateNoListener(m_passwordField, modelPwd);
@@ -687,13 +687,12 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
         } else if (model.getAuthenticationType().equals(AuthenticationType.PWD)) {
             //update the password field
-            final var fieldPassword = String.valueOf(m_passwordField.getPassword());
+            final var fieldPassword = String.valueOf(m_passwordOnlyField.getPassword());
             if (!fieldPassword.equals(model.getPassword())) {
                 String modelPwd = model.getPassword();
-                char[] password = m_passwordOnlyField.getPassword();
                 String componentPwd = null;
-                if (isNotEmpty(password)) {
-                    componentPwd = new String(password);
+                if (StringUtils.isNotEmpty(fieldPassword)) {
+                    componentPwd = fieldPassword;
                 }
                 if (!Objects.equals(componentPwd, modelPwd)) {
                     updateNoListener(m_passwordOnlyField, modelPwd);
@@ -735,6 +734,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
+        clearDeselectedFields();
         updateModel();
     }
 
@@ -870,5 +870,34 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     public void setPasswordOnlyLabel(final String passwordOnlyLabel) {
         m_passwordOnlyLabel.setText(passwordOnlyLabel);
         updateComponent();
+    }
+
+    /**
+     * Clears the data of the 'other' authentication types. Added as part of AP-21887 to
+     * only store authentication data when needed. To specifically clear the settings model,
+     * call {@link SettingsModelAuthentication#clear()}.
+     * <p>
+     * This method clears the text fields in the dialog, whose cleared contents are then
+     * propagated to the settings model on UI action events.
+     *
+     * @param type authentication type
+     */
+    private void clearDeselectedFields() {
+        final var selectedType = AuthenticationType.get(m_authenticationType.getSelection().getActionCommand());
+        for (var otherType : m_supportedTypes) {
+            if (otherType == selectedType) {
+                continue;
+            }
+            switch (selectedType) {
+                case USER -> m_usernameOnlyField.setText("");
+                case PWD -> m_passwordOnlyField.setText("");
+                case USER_PWD -> {
+                    m_usernameField.setText("");
+                    m_passwordField.setText("");
+                }
+                case CREDENTIALS -> m_credentialField.setSelectedItem(-1);
+                case NONE, KERBEROS -> { } // NOSONAR avoiding incomplete-switch warning
+            }
+        }
     }
 }
