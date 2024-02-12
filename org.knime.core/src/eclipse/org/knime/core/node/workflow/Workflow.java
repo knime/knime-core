@@ -528,55 +528,56 @@ class Workflow {
             NodeID node = (NodeID)(ani[i]);
             Set<Integer> inPorts = bfsSortedNodes.get(node);
             // Output ports to traverse to reach successors. If empty, consider all output ports.
-            Set<Integer> outPortsToTraverse = new HashSet<Integer>();
+            Set<Integer> outPortsToTraverse = new HashSet<>();
             // Determine output ports to traverse for the case of metanodes.
             NodeContainer currNC = getNode(node);
-            if (!handleMetanodeAsSingleNode && (currNC != null) && (currNC instanceof WorkflowManager)) {
+            if (!handleMetanodeAsSingleNode && (currNC != null) && (currNC instanceof WorkflowManager currWFM)) {
                 for (int in : inPorts) {
-                     Set<Integer> connectedMetanodeOutports = ((WorkflowManager)currNC).getWorkflow().connectedOutPorts(in);
-                     outPortsToTraverse.addAll(connectedMetanodeOutports);
+                    Set<Integer> connectedMetanodeOutports = currWFM.getWorkflow().connectedOutPorts(in);
+                    outPortsToTraverse.addAll(connectedMetanodeOutports);
                 }
             }
             // look at all successors of this node
-            m_connectionsBySource.get(node).stream().filter(connection -> {
+            m_connectionsBySource.get(node).stream() //
                 // If the collection is empty, consider all outgoing connections, else only those adjacent to the
                 // specified output ports.
-                return outPortsToTraverse.isEmpty() || outPortsToTraverse.contains(connection.getSourcePort());
-            }).forEach(connection -> {
-                NodeID successor = connection.getDest();
-                if (this.getID().equals(successor)) {
-                    parentOutgoingPorts.add(connection.getDestPort());
-                } else {
-                    // don't check nodes which are already in the list...
-                    if (!bfsSortedNodes.containsKey(successor)) {
-                        // and make sure all predecessors that are part of the inclusion list of this successor are
-                        // already in the list
-                        boolean allContained = true;
-                        Set<Integer> incomingPorts = new HashSet<Integer>();
-                        for (ConnectionContainer connectionToSuccessor : m_connectionsByDest.get(successor)) {
-                            NodeID predecessor = connectionToSuccessor.getSource();
-                            if (!predecessor.equals(getID())) {
-                                // its not a WFMIN connection...
-                                if (!bfsSortedNodes.containsKey(predecessor)) {
-                                    // ...and its not already in the list...
-                                    if (inclusionList.contains(predecessor)) {
-                                        // ...but if it is in the inclusion list then do not (yet!) include it!
-                                        allContained = false;
+                .filter(connection -> outPortsToTraverse.isEmpty()
+                    || outPortsToTraverse.contains(connection.getSourcePort())) //
+                .forEach(connection -> {
+                    NodeID successor = connection.getDest();
+                    if (this.getID().equals(successor)) {
+                        parentOutgoingPorts.add(connection.getDestPort());
+                    } else {
+                        // don't check nodes which are already in the list...
+                        if (!bfsSortedNodes.containsKey(successor)) {
+                            // and make sure all predecessors that are part of the inclusion list of this successor are
+                            // already in the list
+                            boolean allContained = true;
+                            Set<Integer> incomingPorts = new HashSet<>();
+                            for (ConnectionContainer connectionToSuccessor : m_connectionsByDest.get(successor)) {
+                                NodeID predecessor = connectionToSuccessor.getSource();
+                                if (!predecessor.equals(getID())) {
+                                    // its not a WFMIN connection...
+                                    if (!bfsSortedNodes.containsKey(predecessor)) {
+                                        // ...and its not already in the list...
+                                        if (inclusionList.contains(predecessor)) {
+                                            // ...but if it is in the inclusion list then do not (yet!) include it!
+                                            allContained = false;
+                                        }
+                                    } else {
+                                        // not WFMIN but source is in our list: needs to be remembered as "incoming" port
+                                        // within this BF search.
+                                        incomingPorts.add(connectionToSuccessor.getDestPort());
                                     }
-                                } else {
-                                    // not WFMIN but source is in our list: needs to be remembered as "incoming" port
-                                    // within this BF search.
-                                    incomingPorts.add(connectionToSuccessor.getDestPort());
                                 }
                             }
-                        }
-                        if (allContained) {
-                            // if all predecessors are already in the BFS list (or not to be considered): add it!
-                            bfsSortedNodes.put(successor, incomingPorts);
+                            if (allContained) {
+                                // if all predecessors are already in the BFS list (or not to be considered): add it!
+                                bfsSortedNodes.put(successor, incomingPorts);
+                            }
                         }
                     }
-                }
-            });
+                });
         }
         // add parents if any connections were found
         if (!parentOutgoingPorts.isEmpty()) {
