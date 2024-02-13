@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -90,6 +91,7 @@ import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.EclipseUtil;
@@ -884,5 +886,18 @@ public final class KNIMELogger {
         if (isToLogCodingMessages()) {
             log(Level.ERROR, CODING_PROBLEM_PREFIX + message, cause, considerWFDirAppenders);
         }
+    }
+
+    /**
+     * Tries to retrieve node context information from the given log message object.
+     *
+     * @param msg log message object to retrieve info from
+     * @return node context information if available, otherwise {@link Optional#empty()}
+     */
+    public static Optional<NodeContextInformation> getNodeContext(final Object msg) {
+        if (msg instanceof KNIMELogMessage kmsg) {
+            return Optional.ofNullable(kmsg.nodeContext());
+        }
+        return Optional.empty();
     }
 }

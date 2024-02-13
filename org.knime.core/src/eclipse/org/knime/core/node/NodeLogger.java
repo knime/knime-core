@@ -46,7 +46,8 @@ package org.knime.core.node;
 
 import java.io.Writer;
 import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.log4j.Layout;
@@ -86,49 +87,6 @@ public final class NodeLogger {
         FATAL,
         /** includes all messages. */
         ALL
-    }
-
-    /**
-     * Class that encapsulates all information of a log message in KNIME such as the {@link NodeID} and
-     * workflow directory if the message can be assigned to them.
-     * @author Tobias Koetter, KNIME.com
-     * @since 4.2
-     * @noreference This class is not intended to be referenced by clients.
-     * @deprecated
-     */
-    // this class previously had a private constructor but is unfortunately public itself
-    @Deprecated(forRemoval = true, since = "5.3")
-    public static final class KNIMELogMessage {
-
-        /**
-         * @return the nodeID
-         */
-        @SuppressWarnings("static-method")
-        public NodeID getNodeID() {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @return the nodeName
-         */
-        @SuppressWarnings("static-method")
-        public String getNodeName() {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * @return the jobID
-         */
-        @SuppressWarnings("static-method")
-        public UUID getJobID() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public String toString() {
-            throw new UnsupportedOperationException();
-        }
-
     }
 
     /**
@@ -814,5 +772,44 @@ public final class NodeLogger {
     public static void logNodeId(final boolean enable) {
         KNIMELogger.setLogNodeId(enable);
         LogLog.debug("Node ID logging set to: " + enable);
+    }
+
+    /**
+     * Information from the node context – if available – at the time the message was logged.
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     *
+     * @param nodeID non-{@code null} node id
+     * @param nodeName non-{@code null} node name
+     *
+     * @since 5.3
+     */
+    public record NodeContextInformation(NodeID nodeID, String nodeName) {
+
+        /**
+         * Creates a new log message node context information object.
+         *
+         * @param nodeID non-{@code null} node id
+         * @param nodeName non-{@code null} node name
+         */
+        public NodeContextInformation {
+            Objects.requireNonNull(nodeID);
+            Objects.requireNonNull(nodeName);
+        }
+    }
+
+    /**
+     * Tries to retrieve node context information from the given log message object.
+     *
+     * @apiNote This method is public for testing purposes only.
+     *
+     * @param msg log message object to retrieve info from
+     * @return node context information if available, otherwise {@link Optional#empty()}
+     *
+     * @since 5.3
+     */
+    // we have this method in order to avoid exporting the whole logging package
+    public static Optional<NodeContextInformation> getNodeContext(final Object msg) {
+        return KNIMELogger.getNodeContext(msg);
     }
 }

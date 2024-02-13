@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
+        <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
+                <message_argument value="org.knime.core_5.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>

@@ -49,9 +49,11 @@
 package org.knime.core.node.logging;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
+import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.workflow.NodeID;
 
 /**
@@ -62,8 +64,7 @@ import org.knime.core.node.workflow.NodeID;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  *
  * @param logger logger with which this message should be logged
- * @param nodeID the nullable node ID if available
- * @param nodeName the nullable name of the node if available
+ * @param nodeContext the nullable node context information if available
  * @param workflowDir the nullable workflow location if available
  * @param jobID nullable job ID
  * @param msg nullable log message
@@ -72,11 +73,15 @@ import org.knime.core.node.workflow.NodeID;
  * @noreference This class is not intended to be referenced by clients.
  */
 // originally an ordinary class in org.knime.core.node, copied as a record
-record KNIMELogMessage(Logger logger, NodeID nodeID, String nodeName, File workflowDir, UUID jobID,
+record KNIMELogMessage(Logger logger, NodeContextInformation nodeContext, File workflowDir, UUID jobID,
     Object msg) {
 
     @Override
     public String toString() {
         return DelegatingLogger.renderMessage(logger, this);
+    }
+
+    Optional<String> nodeName() {
+        return nodeContext == null ? Optional.empty() : Optional.of(nodeContext.nodeName());
     }
 }

@@ -70,10 +70,10 @@ import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.NodeLoggerPatternLayout;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowEvent.Type;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -218,8 +218,7 @@ final class DelegatingLogger {
         if (!logNodeId && !logInWFDir && !logWFDir && !logJobId) {
             return message;
         }
-        NodeID nodeID = null;
-        String nodeName = null;
+        NodeContextInformation nodeContext = null;
         File workflowDir = null;
         UUID jobID = null;
         if (withNodeContext) {
@@ -229,8 +228,7 @@ final class DelegatingLogger {
                     //retrieve and store the node id only if the user has requested to log it
                     final var nodeContainer = context.getNodeContainer();
                     if (nodeContainer != null) {
-                        nodeID = nodeContainer.getID();
-                        nodeName = nodeContainer.getName();
+                        nodeContext = new NodeContextInformation(nodeContainer.getID(), nodeContainer.getName());
                     }
                 }
                 if (logInWFDir || logWFDir || logJobId) {
@@ -246,7 +244,7 @@ final class DelegatingLogger {
                 }
             }
         }
-        return new KNIMELogMessage(logger, nodeID, nodeName, workflowDir, jobID,  message);
+        return new KNIMELogMessage(logger, nodeContext, workflowDir, jobID,  message);
     }
 
     /**

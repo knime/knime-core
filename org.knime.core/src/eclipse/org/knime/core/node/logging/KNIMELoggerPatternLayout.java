@@ -58,6 +58,7 @@ import org.apache.log4j.helpers.FormattingInfo;
 import org.apache.log4j.helpers.PatternConverter;
 import org.apache.log4j.helpers.PatternParser;
 import org.apache.log4j.spi.LoggingEvent;
+import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.NodeLoggerPatternLayout;
 import org.knime.core.util.CoreConstants;
 
@@ -116,10 +117,6 @@ public abstract class KNIMELoggerPatternLayout extends PatternLayout {
 
         private final int m_precision;
 
-        /**
-         * @param formattingInfo
-         * @param precision
-         */
         NodeIDLogPatternConverter(final FormattingInfo formattingInfo, final int precision) {
             super(formattingInfo);
             m_precision = precision;
@@ -127,51 +124,38 @@ public abstract class KNIMELoggerPatternLayout extends PatternLayout {
 
         @Override
         protected String convert(final LoggingEvent event) {
-            Object msg = event.getMessage();
-            if (msg instanceof KNIMELogMessage kmsg) {
-                final var nodeID = kmsg.nodeID();
-                if (nodeID != null) {
-                    if (m_precision <= 0) {
-                        return nodeID.toString();
-                    } else if (m_precision == 1) {
-                        return Integer.toString(nodeID.getIndex());
-                    } else {
-                        final var buf = new StringBuilder();
-                        buf.append(nodeID.getIndex());
-                        var prefix = nodeID.getPrefix();
-                        var counter = 1;
-                        while (prefix != null && !prefix.isRoot() && counter < m_precision) {
-                            buf.insert(0, ":");
-                            buf.insert(0, prefix.getIndex());
-                            prefix = prefix.getPrefix();
-                            counter++;
-                        }
-                        return buf.toString();
+            return KNIMELogger.getNodeContext(event.getMessage()).map(nodeCtx -> { // NOSONAR
+                final var nodeID = nodeCtx.nodeID();
+                if (m_precision <= 0) {
+                    return nodeID.toString();
+                } else if (m_precision == 1) {
+                    return Integer.toString(nodeID.getIndex());
+                } else {
+                    final var buf = new StringBuilder();
+                    buf.append(nodeID.getIndex());
+                    var prefix = nodeID.getPrefix();
+                    var counter = 1;
+                    while (prefix != null && !prefix.isRoot() && counter < m_precision) {
+                        buf.insert(0, ":");
+                        buf.insert(0, prefix.getIndex());
+                        prefix = prefix.getPrefix();
+                        counter++;
                     }
+                    return buf.toString();
                 }
-            }
-            return null;
+            }).orElse(null);
         }
     }
 
     static class NodeNameLogPatternConverter extends PatternConverter {
-        /**
-         * @param formattingInfo
-         */
+
         protected NodeNameLogPatternConverter(final FormattingInfo formattingInfo) {
             super(formattingInfo);
         }
 
         @Override
         protected String convert(final LoggingEvent event) {
-            Object msg = event.getMessage();
-            if (msg instanceof KNIMELogMessage kmsg) {
-                final String nodeName = kmsg.nodeName();
-                if (nodeName != null) {
-                    return nodeName;
-                }
-            }
-            return null;
+            return KNIMELogger.getNodeContext(event.getMessage()).map(NodeContextInformation::nodeName).orElse(null);
         }
     }
 
