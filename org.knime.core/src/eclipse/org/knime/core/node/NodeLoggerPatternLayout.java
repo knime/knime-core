@@ -49,6 +49,7 @@
 package org.knime.core.node;
 
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.helpers.PatternParser;
 import org.knime.core.node.logging.KNIMELoggerPatternLayout;
 
 /**
@@ -90,5 +91,10 @@ public class NodeLoggerPatternLayout extends KNIMELoggerPatternLayout {
      * @since 5.3
      * */
     public static final char CORRELATION_ID = 'C';
+
+    @Override
+    protected PatternParser createPatternParser(final String pattern) { // NOSONAR silence API checker complaints
+        return super.createPatternParser(pattern);
+    }
 
 }
