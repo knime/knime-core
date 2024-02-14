@@ -888,7 +888,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             if (otherType == selectedType) {
                 continue;
             }
-            switch (selectedType) {
+            switch (otherType) {
                 case USER -> m_usernameOnlyField.setText("");
                 case PWD -> m_passwordOnlyField.setText("");
                 case USER_PWD -> {
