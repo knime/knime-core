@@ -51,6 +51,8 @@ package org.knime.core.node.workflow.capture;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -224,7 +226,7 @@ public final class WorkflowSegment {
     WorkflowManager loadWorkflowInternal(final Consumer<WorkflowLoadResult> loadResultCallback) {
         File tmpDir = null;
         try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
-            tmpDir = FileUtil.createTempDir("workflow_segment");
+            tmpDir = newTempDirWithName(getName());
             FileUtil.unzip(in, tmpDir, 1);
             var loadHelper =
                 createWorkflowLoadHelper(tmpDir, warning -> NodeLogger.getLogger(WorkflowSegment.class).warn(warning));
@@ -239,6 +241,15 @@ public final class WorkflowSegment {
             // should never happen
             throw new IllegalStateException("Failed loading workflow port object", ex);
         }
+    }
+
+    /**
+     * @return a new empty temporary directory called according to the <code>name</code> (workflow name)
+     * @throws IOException Failing to creating the folder
+     */
+    // added as part of AP-21997
+    static File newTempDirWithName(final String name) throws IOException {
+        return new File(FileUtil.createTempDir("workflow_segment"), name);
     }
 
     /**
@@ -271,7 +282,15 @@ public final class WorkflowSegment {
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        var tmpDir = FileUtil.createTempDir("workflow_segment");
+        String name = wfm.getName();
+        try {
+            Paths.get(name);
+        } catch (InvalidPathException ipe) {
+            NodeLogger.getLogger(WorkflowSegment.class)
+                .warn("Workflow name '%s' is invalid, using default".formatted(name), ipe);
+            name = "Workflow Manager";
+        }
+        var tmpDir = newTempDirWithName(name);
         return wfmToStream(wfm, tmpDir);
     }
 
