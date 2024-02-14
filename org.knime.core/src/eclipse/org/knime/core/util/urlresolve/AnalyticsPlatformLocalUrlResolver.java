@@ -48,9 +48,12 @@
  */
 package org.knime.core.util.urlresolve;
 
-import java.io.File;
-import java.net.URI;
+import java.net.URL;
+import java.util.Objects;
+import java.util.Optional;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
 import org.knime.core.util.Pair;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -70,50 +73,132 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    URI resolveMountpointRelative(final String decodedPath, final HubItemVersion version)
-            throws ResourceAccessException {
-        final var mountpointRoot = m_executorInfo.getMountpoint().map(Pair::getSecond)
-            .orElseThrow(() -> new ResourceAccessException("Mountpoint or space relative URL needs a mountpoint."));
-        final var resolvedFile = new File(mountpointRoot.toFile(), decodedPath);
-        final var normalizedPath = resolvedFile.toPath().normalize().toUri();
-        final var normalizedRoot = mountpointRoot.normalize().toUri();
-        if (!normalizedPath.toString().startsWith(normalizedRoot.toString())) {
-            throw new ResourceAccessException("Leaving the mount point is not allowed for relative URLs: "
-                + resolvedFile.getAbsolutePath() + " is not in " + mountpointRoot.toFile().getAbsolutePath());
-        }
-        return resolvedFile.toURI();
-    }
-
-    @Override
-    URI resolveSpaceRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        return resolveMountpointRelative(decodedPath, version);
-    }
-
-    @Override
-    URI resolveWorkflowRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        // in local application or a file inside the workflow
-        final var currentLocation = m_executorInfo.getLocalWorkflowPath();
-        final var resolvedFile = new File(currentLocation.toFile(), decodedPath);
-
-        // if resolved path is outside the workflow, check whether it is still inside the mountpoint
+    Optional<ContextPaths> getContextPaths() {
         final var mountpoint = m_executorInfo.getMountpoint();
+        if (!mountpoint.isPresent()) {
+            return Optional.empty();
+        }
 
-        if (!URLResolverUtil.getCanonicalPath(resolvedFile)
-            .startsWith(URLResolverUtil.getCanonicalPath(currentLocation.toFile())) && mountpoint.isPresent()) {
-            final var mountpointRoot = mountpoint.get().getSecond();
-            final var normalizedRoot = mountpointRoot.normalize().toUri();
-            final var normalizedPath = resolvedFile.toPath().normalize().toUri();
+        final var localRootPath = mountpoint.get().getSecond().normalize();
+        final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath().normalize();
+        if (!localWorkflowPath.startsWith(localRootPath)) {
+            return Optional.empty();
+        }
 
-            if (!normalizedPath.toString().startsWith(normalizedRoot.toString())) {
+        final var pathToWorkflow = Path.fromOSString(localRootPath.relativize(localWorkflowPath).toString());
+        return Optional.of(new ContextPaths(EMPTY_POSIX_PATH, pathToWorkflow));
+    }
+
+    @Override
+    ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
+        final var acrossMountpoints = m_executorInfo.getMountpoint() //
+                .map(Pair::getFirst) //
+                .filter(uri -> Objects.equals(uri.getAuthority(), mountId)) //
+                .isEmpty();
+        return new ResolvedURL(mountId, path, version, null, url, acrossMountpoints);
+    }
+
+    @Override
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        final var mountpoint = m_executorInfo.getMountpoint()
+            .orElseThrow(() -> new ResourceAccessException("Mountpoint or space relative URL needs a mountpoint."));
+
+        final var mountpointRoot = mountpoint.getSecond().normalize();
+        final var resolved = mountpointRoot.resolve(path.toOSString()).normalize();
+        if (!resolved.startsWith(mountpointRoot)) {
+            throw new ResourceAccessException("Leaving the mount point is not allowed for relative URLs: "
+                + resolved + " is not in " + mountpointRoot);
+        }
+
+        final var mountId = mountpoint.getFirst().getAuthority();
+        final var workflowPath = m_executorInfo.getLocalWorkflowPath().normalize();
+
+        final IPath pathInWorkspace;
+        final IPath pathInWorkflow;
+        if (resolved.startsWith(workflowPath)) {
+            // This use case (accessing the contents of one's own workflow using a mountpoint-relative URL) is quite
+            // strange, but we allow it for backwards compatibility:
+            //     `knime://knime.mountpoint/path/to/CurrentWorkflow/data/file.csv`
+            pathInWorkspace = Path.fromOSString(mountpointRoot.relativize(workflowPath).toString());
+            pathInWorkflow = Path.fromOSString(workflowPath.relativize(resolved).toString());
+        } else {
+            pathInWorkspace = Path.fromOSString(mountpointRoot.relativize(resolved).toString());
+            pathInWorkflow = null;
+        }
+
+        final var resourceUrl = URLResolverUtil.toURL(resolved);
+        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, false);
+    }
+
+    @Override
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        return resolveMountpointRelative(url, path, version);
+    }
+
+    @Override
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        // in local application or a file inside the workflow
+        final var workflowPath = m_executorInfo.getLocalWorkflowPath().normalize();
+        final var resolved = workflowPath.resolve(path.toOSString()).normalize();
+        final var isInsideWorkflow = resolved.startsWith(workflowPath);
+
+
+        final String mountId;
+        final IPath pathInWorkspace;
+        final var mountpoint = m_executorInfo.getMountpoint().orElse(null);
+        if (mountpoint != null) {
+            mountId = mountpoint.getFirst().getAuthority();
+
+            // if resolved path is outside the workflow, check whether it is still inside the mountpoint
+            final var normalizedRoot = mountpoint.getSecond().normalize();
+            if (!resolved.startsWith(normalizedRoot)) {
                 throw new ResourceAccessException("Leaving the mount point is not allowed for workflow relative URLs: "
-                    + resolvedFile.getAbsolutePath() + " is not in " + mountpointRoot.toAbsolutePath());
+                        + resolved + " is not in " + normalizedRoot);
+            }
+
+            final var pathUntilWorkflow = isInsideWorkflow ? workflowPath : resolved;
+            pathInWorkspace = Path.fromOSString(normalizedRoot.relativize(pathUntilWorkflow).toString());
+        } else {
+            if (!isInsideWorkflow) {
+                throw new ResourceAccessException(
+                    "Cannot access items outside the workflow because it is not imported into a space: '" + url + "'");
+            }
+            mountId = null;
+            pathInWorkspace = null;
+        }
+
+        IPath pathInWorkflow = null;
+        if (isInsideWorkflow) {
+            final var belowWorkflow = Path.fromOSString(workflowPath.relativize(resolved).toString());
+            // If a workflow references itself by going outside and then in again, it is resolved from the outside:
+            //  - `knime://knime.workflow/../<Workflow Name>`  => `pathInWorkflow == null`
+            //  - `knime://knime.workflow`                     => `pathInWorkflow != null`
+            //  - `knime://knime.workflow/data/file.txt`       => `pathInWorkflow != null`
+            if (belowWorkflow.segmentCount() > 0 || !leavesScope(path)) {
+                pathInWorkflow = belowWorkflow;
             }
         }
-        return resolvedFile.toURI();
+
+        final var resourceUrl = URLResolverUtil.toURL(resolved);
+        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, false);
     }
 
     @Override
-    URI resolveNodeRelative(final String decodedPath) throws ResourceAccessException {
-        return defaultResolveNodeRelative(decodedPath, m_executorInfo.getLocalWorkflowPath());
+    ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
+        final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath();
+
+        String mountId = null;
+        IPath pathToWorkflow = null;
+        final var mountpoint = m_executorInfo.getMountpoint().orElse(null);
+        if (mountpoint != null) {
+            mountId = mountpoint.getFirst().getAuthority();
+            pathToWorkflow = Path.fromOSString(mountpoint.getSecond().relativize(localWorkflowPath).toString());
+        }
+
+        return resolveNodeRelative(mountId, pathToWorkflow, localWorkflowPath, path);
     }
 }

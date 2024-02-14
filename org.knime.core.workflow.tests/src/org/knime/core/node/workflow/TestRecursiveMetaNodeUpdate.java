@@ -75,8 +75,8 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
 
     @Before
     public void setUp() throws Exception {
-        NodeID baseID = loadAndSetWorkflow(
-            getWorkflowDirectory("testRecursiveMetaNodeUpdate_Group/TestRecursiveMetaNodeUpdate"));
+        final var workflowDir = getWorkflowDirectory("testRecursiveMetaNodeUpdate_Group/TestRecursiveMetaNodeUpdate");
+        NodeID baseID = loadAndSetWorkflowInWorkspace(workflowDir, workflowDir.getParentFile());
         m_tableDiff_BeforeUpdate_11 = new NodeID(baseID, 11);
         m_tableDiff_BeforeUpdate_13 = new NodeID(baseID, 13);
         m_tableDiff_BeforeUpdate_15 = new NodeID(baseID, 15);

@@ -77,7 +77,8 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
 
     @Before
     public void setUp() throws Exception {
-        NodeID wfmID = loadAndSetWorkflow();
+        final var workflowDir = getDefaultWorkflowDirectory();
+        NodeID wfmID = loadAndSetWorkflowInWorkspace(workflowDir, workflowDir.getParentFile());
         m_diffChecker_Before_5 = wfmID.createChild(5);
         m_diffChecker_Before_8 = wfmID.createChild(8);
         m_diffChecker_Before_9 = wfmID.createChild(9);

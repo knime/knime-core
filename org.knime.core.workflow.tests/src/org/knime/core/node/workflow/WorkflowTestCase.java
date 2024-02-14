@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -116,6 +117,14 @@ public abstract class WorkflowTestCase {
         return m.getID();
     }
 
+    protected NodeID loadAndSetWorkflowInWorkspace(final File workflowDir, final File workspaceDir) throws Exception {
+        final var settings = DataContainerSettings.getDefault();
+		WorkflowManager m = loadWorkflow(workflowDir, new ExecutionMonitor(), settings, workspaceDir.toPath()) //
+		        .getWorkflowManager();
+        setManager(m);
+        return m.getID();
+    }
+
     protected NodeID loadAndSetWorkflow(final DataContainerSettings settings) throws Exception {
         WorkflowManager m =
             loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor(), settings).getWorkflowManager();
@@ -129,7 +138,23 @@ public abstract class WorkflowTestCase {
 
     protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
         final DataContainerSettings settings) throws Exception {
-        final var workflowContext = WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null);
+        return loadWorkflow(workflowDir, exec, settings, null);
+    }
+
+    protected WorkflowLoadResult loadWorkflow(final File workflowDir, final ExecutionMonitor exec,
+        final DataContainerSettings settings, final Path mountpointRoot) throws Exception {
+        final WorkflowContextV2 workflowContext;
+        if (mountpointRoot == null) {
+            workflowContext = WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null);
+        } else {
+            workflowContext = WorkflowContextV2.builder() //
+                    .withAnalyticsPlatformExecutor(builder -> builder //
+                        .withCurrentUserAsUserId() //
+                        .withLocalWorkflowPath(workflowDir.toPath().toAbsolutePath())
+                        .withMountpoint("LOCAL", mountpointRoot.toAbsolutePath())) //
+                    .withLocalLocation() //
+                    .build();
+        }
         return loadWorkflow(workflowDir, exec, new WorkflowLoadHelper(workflowContext, settings) {
 
             @Override

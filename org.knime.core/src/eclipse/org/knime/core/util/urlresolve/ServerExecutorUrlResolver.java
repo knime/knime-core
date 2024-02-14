@@ -48,14 +48,17 @@
  */
 package org.knime.core.util.urlresolve;
 
-import java.io.File;
-import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
-import org.eclipse.core.runtime.URIUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.net.URIBuilder;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.knime.core.node.workflow.contextv2.ServerJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
-import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 
@@ -76,62 +79,103 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    URL resolveMountpointAbsolute(final URL url) throws ResourceAccessException {
-        final var mountId = url.getAuthority();
-        checkNoVersion(HubItemVersion.of(url).orElse(null));
-        if (m_locationInfo.getDefaultMountId().equals(mountId)) {
-            final var uri = resolveMountpointRelative(URIPathEncoder.decodePath(url),
-                HubItemVersion.of(url).orElse(null));
-            return URIPathEncoder.UTF_8.encodePathSegments(URLResolverUtil.toURL(uri));
-        }
-        // possibly a MountTable is present, which will then resolve the URL (AP-19986)
-        return url;
+    Optional<ContextPaths> getContextPaths() {
+        return Optional.of(new ContextPaths(EMPTY_POSIX_PATH, getWorkflowPath(m_locationInfo)));
     }
 
     @Override
-    URI resolveMountpointRelative(final String decodedPath, final HubItemVersion version)
+    ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
+        checkNoVersion(version);
+
+        if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
+            // possibly a MountTable is present, which will then resolve the URL (AP-19986)
+            return new ResolvedURL(mountId, path, null, null, url, true);
+        }
+
+        return resolveMountpointRelative(url, path, null);
+    }
+
+    @Override
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
             throws ResourceAccessException {
         checkNoVersion(version);
 
+        final var workflowPath = getWorkflowPath(m_locationInfo);
+        IPath pathToItem;
+        IPath pathInsideWorkflow = null;
+        if (workflowPath.isPrefixOf(path)) {
+            pathToItem = workflowPath;
+            final var subPath = path.makeRelativeTo(workflowPath);
+            if (subPath.segmentCount() > 0) {
+                // this is weird, but we keep it for backwards compatibility
+                pathInsideWorkflow = subPath;
+            }
+        } else {
+            pathToItem = path;
+        }
+
+        final var mountId = m_locationInfo.getDefaultMountId();
+        return new ResolvedURL(mountId, pathToItem, null, pathInsideWorkflow, createRepoUrl(path), false);
+    }
+
+    @Override
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        return resolveMountpointRelative(url, path, version);
+    }
+
+    @Override
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        checkNoVersion(version);
+
+        final var workflowPath = getWorkflowPath(m_locationInfo);
+        final var resolvedPath = workflowPath.append(path);
+
+        final IPath pathInsideMountpoint;
+        final IPath pathInsideWorkflow;
+        final URL resourceUrl;
+        if (leavesScope(path)) {
+            // we're on a server executor, resolve against the repository
+            pathInsideMountpoint = resolvedPath;
+            pathInsideWorkflow = null;
+            resourceUrl = createRepoUrl(resolvedPath);
+        } else {
+            // file inside the workflow
+            final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath();
+            final var resolvedFile = localWorkflowPath.resolve(path.toOSString());
+            pathInsideMountpoint = workflowPath;
+            pathInsideWorkflow = Path.fromOSString(localWorkflowPath.relativize(resolvedFile).toString());
+            resourceUrl = URLResolverUtil.toURL(resolvedFile);
+        }
+
+        final var mountId = m_locationInfo.getDefaultMountId();
+        return new ResolvedURL(mountId, pathInsideMountpoint, null, pathInsideWorkflow, resourceUrl, false);
+    }
+
+    @Override
+    ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
+        final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath();
+        final var pathToWorkflow = getWorkflowPath(m_locationInfo);
+        return resolveNodeRelative(m_locationInfo.getDefaultMountId(), pathToWorkflow, localWorkflowPath, path);
+    }
+
+    private URL createRepoUrl(final IPath path) throws ResourceAccessException {
         // legacy Servers don't have spaces or versions, resolve directly against repo root
         final var repositoryAddress = m_locationInfo.getRepositoryAddress().normalize();
-        return URIUtil.append(repositoryAddress, decodedPath + ":data").normalize();
-    }
-
-    @Override
-    URI resolveSpaceRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        checkNoVersion(version);
-
-        return resolveMountpointRelative(decodedPath, version);
-    }
-
-    @Override
-    URI resolveWorkflowRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        checkNoVersion(version);
-
-        if (leavesScope(decodedPath)) {
-            // we're on a server executor, resolve against the repository
-            final var repositoryAddress = m_locationInfo.getRepositoryAddress().normalize();
-            final var uri =
-                URIUtil.append(repositoryAddress, m_locationInfo.getWorkflowPath() + "/" + decodedPath + ":data");
-            return uri.normalize();
+        final var uriBuilder = new URIBuilder(repositoryAddress);
+        final var segments = new ArrayList<>(uriBuilder.getPathSegments());
+        final var additionalSegments = Arrays.asList(path.segments());
+        if (!additionalSegments.isEmpty()) {
+            segments.addAll(additionalSegments);
+        } else if (segments.isEmpty() || !StringUtils.isEmpty(segments.get(segments.size() - 1))) {
+            // make sure that the repository root has a trailing slash (required by KNIME Server)
+            segments.add("");
         }
-
-        // file inside the workflow
-        final var currentLocation = m_executorInfo.getLocalWorkflowPath();
-        final var resolvedFile = new File(currentLocation.toFile(), decodedPath);
-        if (!URLResolverUtil.getCanonicalPath(resolvedFile)
-            .startsWith(URLResolverUtil.getCanonicalPath(currentLocation.toFile()))) {
-            throw new ResourceAccessException(
-                "Path component of workflow relative URLs leaving the workflow must start with " + "'/..', found '"
-                    + decodedPath + "'.");
-        }
-        return resolvedFile.toURI();
-    }
-
-    @Override
-    URI resolveNodeRelative(final String decodedPath) throws ResourceAccessException {
-        return defaultResolveNodeRelative(decodedPath, m_executorInfo.getLocalWorkflowPath());
+        HubExecutorUrlResolver.addDataSuffix(segments);
+        uriBuilder.setPathSegments(segments);
+        return URLResolverUtil.toURL(uriBuilder);
     }
 
     private static void checkNoVersion(final HubItemVersion version) throws ResourceAccessException {

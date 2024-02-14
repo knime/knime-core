@@ -57,15 +57,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowCreationHelper;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.ServerJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
@@ -82,8 +77,6 @@ class ServerExecutorUrlResolverTest {
 
     private static ServerExecutorUrlResolver m_resolver;
 
-    private static WorkflowContextV2 m_context;
-
     // before all tests create a new workflow context
     // the workflow context is a singleton, so we need to create a new one for each test
     @BeforeAll
@@ -91,7 +84,7 @@ class ServerExecutorUrlResolverTest {
         final var baseUri = new URI("http://localhost:8080/knime");
         final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
 
-        m_context = WorkflowContextV2.builder()
+        final var context = WorkflowContextV2.builder()
                 .withServerJobExecutor(exec -> exec
                     .withCurrentUserAsUserId()
                     .withLocalWorkflowPath(currentLocation)
@@ -103,20 +96,8 @@ class ServerExecutorUrlResolverTest {
                     .withDefaultMountId("My-Knime-Hub"))
                 .build();
 
-        m_resolver = new ServerExecutorUrlResolver((ServerJobExecutorInfo)m_context.getExecutorInfo(),
-            (ServerLocationInfo)m_context.getLocationInfo());
-    }
-
-    @BeforeEach
-    void createWorkflow() {
-        final var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
-            new WorkflowCreationHelper(m_context));
-        NodeContext.pushContext(wfm);
-    }
-
-    @AfterEach
-    void popNodeContext() {
-        NodeContext.removeLastContext();
+        m_resolver = new ServerExecutorUrlResolver((ServerJobExecutorInfo)context.getExecutorInfo(),
+            (ServerLocationInfo)context.getLocationInfo());
     }
 
     @ParameterizedTest
@@ -145,7 +126,7 @@ class ServerExecutorUrlResolverTest {
         for (final var url : new URL[] { withVersion, withBoth }) {
             final var ex = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(url),
                     "Must not contain version query parameter");
-            assertTrue(ex.getMessage().startsWith("Node-relative KNIME URLs cannot specify an item version:"),
+            assertTrue(ex.getMessage().startsWith("Node-relative KNIME URLs cannot specify an item version"),
                 "Must not contain item version");
         }
     }

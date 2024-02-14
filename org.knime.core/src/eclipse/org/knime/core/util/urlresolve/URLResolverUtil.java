@@ -48,12 +48,11 @@
  */
 package org.knime.core.util.urlresolve;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 
 import org.apache.hc.core5.net.URIBuilder;
 import org.knime.core.util.URIPathEncoder;
@@ -65,24 +64,9 @@ import org.knime.core.util.pathresolve.URIToFileResolve;
  * Introduced to narrow Exception types from IOException to ResourceAccessException.
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
- * @since 4.8
+ * @since 5.3
  */
 public final class URLResolverUtil {
-
-    /**
-     * Wraps the IOException in a more specific ResourceAccessException.
-     *
-     * @param file
-     * @return resolved canonical path
-     * @throws ResourceAccessException
-     */
-    static String getCanonicalPath(final File file) throws ResourceAccessException {
-        try {
-            return file.getCanonicalPath();
-        } catch (IOException e) {
-            throw new ResourceAccessException("Failed to get the canonical path of file: " + e.getMessage(), e);
-        }
-    }
 
     /**
      * Converts the URI builder for the space URI to a URL. Used in KnimeUrlResolvers.
@@ -95,12 +79,27 @@ public final class URLResolverUtil {
         try {
             return toURL(uriBuilder.build().normalize());
         } catch (URISyntaxException ex) {
-            throw new ResourceAccessException("Could not build space URI: " + ex.getMessage(), ex);
+            throw new ResourceAccessException("Cannot build URL: " + ex.getMessage(), ex);
         }
     }
 
     /**
-     * Wraps the URI to URL conversion into a ResourceAccessException, used e.g. in {@link URIToFileResolve}.
+     * Wraps the URL to URI conversion into a {@link ResourceAccessException}.
+     *
+     * @param url URL to convert
+     * @return converted URI
+     * @throws ResourceAccessException
+     */
+    public static URI toURI(final URL url) throws ResourceAccessException {
+        try {
+            return url.toURI();
+        } catch (URISyntaxException ex) {
+            throw new ResourceAccessException("Cannot build URI: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Wraps the URI to URL conversion into a {@link ResourceAccessException}, used e.g. in {@link URIToFileResolve}.
      *
      * @param uri input URI
      * @return converted URL
@@ -112,6 +111,20 @@ public final class URLResolverUtil {
         } catch (MalformedURLException ex) {
             throw new ResourceAccessException("Cannot convert URI to URL: " + ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * Converts the given path to a URL.
+     * <ul>
+     *   <li>Path segments are encoded: {@code "file://tmp/ä/Ä.txt"} -> {@code "file://tmp/%C3%A4/%C3%84.txt"}</li>
+     *   <li>Windows UNC paths are represented with four forward slashes: {@code file:////UncHost/path/to/file.csv}</li>
+     * </ul>
+     * @param path
+     * @return converted URL
+     * @throws ResourceAccessException
+     */
+    static URL toURL(final Path path) throws ResourceAccessException {
+        return toURL(path.toFile().toURI());
     }
 
     /**

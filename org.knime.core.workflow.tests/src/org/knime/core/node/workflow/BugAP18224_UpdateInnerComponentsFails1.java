@@ -34,7 +34,8 @@ public class BugAP18224_UpdateInnerComponentsFails1 extends WorkflowTestCase {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		var baseId = loadAndSetWorkflow(new File(getDefaultWorkflowDirectory(), "mainWorkflow"));
+		final var workspaceDir = getDefaultWorkflowDirectory();
+		var baseId = loadAndSetWorkflowInWorkspace(new File(workspaceDir, "mainWorkflow"), workspaceDir);
 		m_olderVersionComponent = new NodeID(baseId, 1);
 		m_newerVersionComponent = new NodeID(baseId, 4);
 		m_tableDiff = new NodeID(baseId, 3);

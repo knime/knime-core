@@ -66,7 +66,6 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
-import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 
@@ -80,34 +79,31 @@ class AnalyticsPlatformLocalUrlResolverTest {
 
     private static AnalyticsPlatformLocalUrlResolver m_resolver;
 
-    private static WorkflowContextV2 m_context;
-
     // before all tests create a new workflow context
     // the workflow context is a singleton, so we need to create a new one for each test
     @BeforeAll
     static void createResolver() {
         final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
-
-        m_context = WorkflowContextV2.builder()
-                .withAnalyticsPlatformExecutor(exec -> exec
-                    .withCurrentUserAsUserId()
-                    .withLocalWorkflowPath(currentLocation)
-                    .withMountpoint("LOCAL", currentLocation.getParent()))
-                .withLocalLocation()
-                .build();
-        m_resolver = new AnalyticsPlatformLocalUrlResolver((AnalyticsPlatformExecutorInfo)m_context.getExecutorInfo());
+        m_resolver = new AnalyticsPlatformLocalUrlResolver(AnalyticsPlatformExecutorInfo.builder() //
+            .withCurrentUserAsUserId() //
+            .withLocalWorkflowPath(currentLocation)
+            .withMountpoint("LOCAL", currentLocation.getParent()) //
+            .build());
     }
+
+    private static WorkflowManager wfm;
 
     @BeforeEach
     void createWorkflow() {
-        final var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
-            new WorkflowCreationHelper(m_context));
+        wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(), new WorkflowCreationHelper());
         NodeContext.pushContext(wfm);
     }
 
     @AfterEach
     void popNodeContext() {
+        WorkflowManager.ROOT.removeProject(wfm.getID());
         NodeContext.removeLastContext();
+        wfm = null;
     }
 
     @ParameterizedTest

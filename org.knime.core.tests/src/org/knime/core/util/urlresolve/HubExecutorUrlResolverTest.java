@@ -82,8 +82,6 @@ class HubExecutorUrlResolverTest {
 
     private static HubExecutorUrlResolver m_resolver;
 
-    private static WorkflowContextV2 m_context;
-
     // before all tests create a new workflow context
     // the workflow context is a singleton, so we need to create a new one for each test
     @BeforeAll
@@ -91,7 +89,7 @@ class HubExecutorUrlResolverTest {
         final var repoAddressUri = URI.create("https://api.example.com:443/knime/rest/v4/repository");
         final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
 
-        m_context = WorkflowContextV2.builder()
+        final var context = WorkflowContextV2.builder()
                 .withHubJobExecutor(exec -> exec
                     .withCurrentUserAsUserId()
                     .withLocalWorkflowPath(currentLocation)
@@ -107,20 +105,23 @@ class HubExecutorUrlResolverTest {
                     .withWorkflowItemId("*12"))
                 .build();
 
-        m_resolver = new HubExecutorUrlResolver((HubJobExecutorInfo)m_context.getExecutorInfo(),
-            (HubSpaceLocationInfo)m_context.getLocationInfo());
+        m_resolver = new HubExecutorUrlResolver((HubJobExecutorInfo)context.getExecutorInfo(),
+            (HubSpaceLocationInfo)context.getLocationInfo());
     }
+
+    private static WorkflowManager wfm;
 
     @BeforeEach
     void createWorkflow() {
-        final var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
-            new WorkflowCreationHelper(m_context));
+        wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(), new WorkflowCreationHelper());
         NodeContext.pushContext(wfm);
     }
 
     @AfterEach
     void popNodeContext() {
+        WorkflowManager.ROOT.removeProject(wfm.getID());
         NodeContext.removeLastContext();
+        wfm = null;
     }
 
     @ParameterizedTest
@@ -151,11 +152,28 @@ class HubExecutorUrlResolverTest {
 
     @ParameterizedTest
     @MethodSource({
-        "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()",
+        "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()"
+    })
+    void testResolveWorkflowRelative(final URL unversioned, final URL withVersion, final URL withBoth,
+        @SuppressWarnings("unused") final HubItemVersion version) throws ResourceAccessException {
+        assertEquals("file", m_resolver.resolve(unversioned).getProtocol(),
+                "Should resolve to a file URL");
+
+        assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
+            "Must not contain version query parameter");
+        assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withBoth),
+                "Must not contain version query parameters");
+    }
+
+    @ParameterizedTest
+    @MethodSource({
         "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
     })
-    void testResolveForbidden(@SuppressWarnings("unused") final URL unversioned, final URL withVersion,
-            final URL withBoth, @SuppressWarnings("unused") final HubItemVersion version) {
+    void testResolveNodeRelative(final URL unversioned, final URL withVersion, final URL withBoth,
+        @SuppressWarnings("unused") final HubItemVersion version) {
+        final var exc = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(unversioned));
+        assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
+
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
             "Must not contain version query parameter");
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withBoth),

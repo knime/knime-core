@@ -48,8 +48,10 @@
  */
 package org.knime.core.util.urlresolve;
 
-import java.net.URI;
+import java.net.URL;
+import java.util.Optional;
 
+import org.eclipse.core.runtime.IPath;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 
@@ -66,23 +68,36 @@ final class ContextlessUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    URI resolveMountpointRelative(final String decodedPath, final HubItemVersion version)
+    Optional<ContextPaths> getContextPaths() {
+        return Optional.empty();
+    }
+
+    @Override
+    ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
+        return new ResolvedURL(mountId, path, version, null, url, true);
+    }
+
+    @Override
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
             throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 
     @Override
-    URI resolveSpaceRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 
     @Override
-    URI resolveWorkflowRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 
     @Override
-    URI resolveNodeRelative(final String decodedPath) throws ResourceAccessException {
+    ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 }

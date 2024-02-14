@@ -49,14 +49,11 @@
 package org.knime.core.util.urlresolve;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Optional;
 
-import org.apache.hc.core5.net.URIBuilder;
-import org.eclipse.core.runtime.URIUtil;
+import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
-import org.knime.core.node.workflow.contextv2.RestLocationInfo;
-import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 
@@ -67,77 +64,94 @@ import org.knime.core.util.hub.HubItemVersion;
  */
 final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
-    private final RestLocationInfo m_locationInfo;
+    private final String m_mountId;
+    private final URI m_mountpointUri;
+    private final HubSpaceLocationInfo m_hubLocationInfo;
 
-    RemoteExecutorUrlResolver(final RestLocationInfo locationInfo) {
-        m_locationInfo = locationInfo;
+    RemoteExecutorUrlResolver(final URI mountpointUri, final HubSpaceLocationInfo locationInfo) {
+        m_mountId = mountpointUri.getAuthority();
+        m_mountpointUri = mountpointUri;
+        m_hubLocationInfo = locationInfo;
     }
 
     @Override
-    URL resolveMountpointAbsolute(final URL url) throws ResourceAccessException {
-        if (!m_locationInfo.getDefaultMountId().equals(url.getAuthority())) {
+    Optional<ContextPaths> getContextPaths() {
+        if (m_hubLocationInfo != null) {
+            return Optional.of(new ContextPaths(getSpacePath(m_hubLocationInfo), getWorkflowPath(m_hubLocationInfo)));
+        }
+
+        // must be an old KNIME Server
+        return Optional.ofNullable(m_mountpointUri).map(uri -> new ContextPaths(EMPTY_POSIX_PATH, getPath(uri)));
+    }
+
+    @Override
+    ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
+        if (!m_mountId.equals(mountId)) {
             throw new ResourceAccessException("Unknown Mount ID on Remote Executor in URL '" + url + "'.");
         }
 
         // the rest is done by the ExplorerFileStore instance from the ExplorerMountTable
-        return super.resolveMountpointAbsolute(url);
+        final var isHubIdUrl = m_hubLocationInfo != null && path.segmentCount() == 1 && path.segment(0).startsWith("*");
+        final var resourceUrl = createKnimeUrl(m_mountId, path, version);
+        return new ResolvedURL(m_mountId, path, version, null, resourceUrl, isHubIdUrl);
     }
 
     @Override
-    URI resolveMountpointRelative(final String decodedPath, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
             throws ResourceAccessException {
-        return resolveSpaceRelative(decodedPath, version);
+        // Mountpoint and space are synonymous here
+        return resolveSpaceRelative(url, path, version);
     }
 
     @Override
-    URI resolveSpaceRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        if (m_locationInfo instanceof HubSpaceLocationInfo hubInfo) {
-            // Hub executor, resolve via the repository
-            final var spacePath = hubInfo.getSpacePath();
-            final var workflowAddress = hubInfo.getWorkflowAddress();
-            final var workflowPath = hubInfo.getWorkflowPath();
-            final var repositoryAddress = hubInfo.getRepositoryAddress();
-            return HubExecutorUrlResolver.createSpaceRelativeRepoUri(workflowAddress, workflowPath, decodedPath,
-                repositoryAddress, spacePath, version);
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        final IPath resolvedPath;
+        if (m_hubLocationInfo != null) {
+            // Hub executor
+            final var spacePath = getSpacePath(m_hubLocationInfo);
+            resolvedPath = spacePath.append(path);
+        } else {
+            // server executor, Space == Mountpoint Root and no versions
+            if (version != null) {
+                throw new ResourceAccessException("KNIME URLs on Server cannot specify a version: " + url);
+            }
+            resolvedPath = path;
         }
 
-        if (version != null) {
-            throw new ResourceAccessException("KNIME URLs on Server cannot specify a version.");
-        }
-
-        // server executor, Space == Mountpoint Root and no versions
-        final URI uri;
-        try {
-            uri = new URI(KnimeUrlType.SCHEME, m_locationInfo.getDefaultMountId(), decodedPath, null);
-        } catch (URISyntaxException e) {
-            throw new ResourceAccessException("Could not build space URI: " + e.getMessage(), e);
-        }
-        return uri.normalize();
+        final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, version);
+        return new ResolvedURL(m_mountId, resolvedPath, version, null, resourceUrl, false);
     }
 
     @Override
-    URI resolveWorkflowRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        if (!leavesScope(decodedPath)) {
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        if (!leavesScope(path)) {
             throw new ResourceAccessException(
                 "Workflow relative URL points to a resource within a workflow. Not accessible.");
         }
 
-        try {
-            final var builder = new URIBuilder() //
-                    .setScheme(KnimeUrlType.SCHEME) //
-                    .setHost(m_locationInfo.getDefaultMountId()) //
-                    .setPath(m_locationInfo.getWorkflowPath());
-            if (version != null) {
-                version.addVersionToURI(builder);
-            }
-            return URIUtil.append(builder.build(), decodedPath);
-        } catch (URISyntaxException e) {
-            throw new ResourceAccessException("Could not build workflow relative URI: " + e.getMessage(), e);
+        if (m_hubLocationInfo != null) {
+            final var workflowPath = getWorkflowPath(m_hubLocationInfo);
+            final var resolvedPath = workflowPath.append(path);
+            final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, version);
+            return new ResolvedURL(m_mountId, resolvedPath, version, null, resourceUrl, false);
         }
+
+        // server executor, Space == Mountpoint Root and no versions
+        if (version != null) {
+            throw new ResourceAccessException("KNIME URLs on Server cannot specify a version.");
+        }
+
+        final var workflowPath = getPath(m_mountpointUri);
+        final var resolvedPath = workflowPath.append(path);
+        final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, null);
+        return new ResolvedURL(m_mountId, resolvedPath, null, null, resourceUrl, false);
     }
 
     @Override
-    URI resolveNodeRelative(final String decodedPath) throws ResourceAccessException {
+    ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
         throw new ResourceAccessException("Node relative URLs cannot be resolved from within purely remote workflows.");
     }
 }

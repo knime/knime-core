@@ -27,7 +27,8 @@ public class BugAP18224_UpdateInnerComponentsFails3 extends WorkflowTestCase {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		var baseId = loadAndSetWorkflow(new File(getDefaultWorkflowDirectory(), "mainWorkflow"));
+		final var workspaceDir = getDefaultWorkflowDirectory();
+		var baseId = loadAndSetWorkflowInWorkspace(new File(workspaceDir, "mainWorkflow"), workspaceDir);
 		m_outerComponent = new NodeID(baseId, 1);
 	}
 

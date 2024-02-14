@@ -48,18 +48,17 @@
  */
 package org.knime.core.util.urlresolve;
 
-import java.io.File;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.hc.core5.net.URIBuilder;
-import org.eclipse.core.runtime.URIUtil;
-import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
+import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.workflow.contextv2.HubJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
-import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 
@@ -80,139 +79,125 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    URL resolveMountpointAbsolute(final URL url) throws ResourceAccessException {
-        final var mountId = url.getAuthority();
+    Optional<ContextPaths> getContextPaths() {
+        return Optional.of(new ContextPaths(getSpacePath(m_locationInfo), getWorkflowPath(m_locationInfo)));
+    }
+
+    @Override
+    ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
         if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
-            // TODO should this be delegated to the `ExplorerMountTable`?
-            throw new ResourceAccessException("Unknown Mount ID on Hub Executor in URL '" + url + "'.");
+            // possibly a MountTable is present, which will then resolve the URL (AP-19986)
+            return new ResolvedURL(mountId, path, null, null, url, true);
         }
 
         // we're on a Hub executor, resolve workflow locally via the repository
-        final var decodedPath = URIPathEncoder.decodePath(url);
-        final var versionInfo = HubItemVersion.of(url);
 
-        final var repoUriBuilder = new URIBuilder(m_locationInfo.getRepositoryAddress());
-        final var segments = new ArrayList<>(repoUriBuilder.getPathSegments());
-        segments.addAll(new URIBuilder().setPath(decodedPath + ":data").getPathSegments());
-        repoUriBuilder.setPathSegments(segments);
-        versionInfo.ifPresent(version -> version.addVersionToURI(repoUriBuilder));
-        return URLResolverUtil.toURL(repoUriBuilder);
+        final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
+        final var versionInfo = HubItemVersion.of(url).orElse(null);
+        final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), versionInfo, path);
+        return new ResolvedURL(mountId, path, version, null, resourceUrl, isHubIdUrl);
     }
 
     @Override
-    URI resolveMountpointRelative(final String decodedPath, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
             throws ResourceAccessException {
-        return resolveSpaceRelative(decodedPath, version);
+        return resolveSpaceRelative(url, path, version);
     }
 
     @Override
-    URI resolveSpaceRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
         // we're on a Hub executor, resolve workflow locally via the repository
-        final var spacePath = m_locationInfo.getSpacePath();
-        final var repositoryAddress = m_locationInfo.getRepositoryAddress();
-        final var workflowPath = m_locationInfo.getWorkflowPath();
-        final var workflowAddress = m_locationInfo.getWorkflowAddress();
-        return createSpaceRelativeRepoUri(workflowAddress, workflowPath, decodedPath, repositoryAddress, spacePath,
-            version);
+        return resolveRelativeToHubSpace(m_locationInfo, path, version);
     }
 
     @Override
-    URI resolveWorkflowRelative(final String decodedPath, final HubItemVersion version) throws ResourceAccessException {
-        if (leavesScope(decodedPath)) {
-            // we're on a server of hub executor, resolve against the repository
-            final var spacePath = m_locationInfo.getSpacePath();
-            final var workflowAddress = m_locationInfo.getWorkflowAddress().normalize();
-            final var plainUri = URIUtil.append(workflowAddress, decodedPath).normalize();
-            final var relativeSpacePath = spacePath.startsWith("/") ? spacePath.substring(1) : spacePath;
-            final var spaceUri = URIUtil.append(m_locationInfo.getRepositoryAddress(), relativeSpacePath).normalize();
-            if (!isContainedIn(plainUri, spaceUri)) {
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+            throws ResourceAccessException {
+        final var mountId = m_locationInfo.getDefaultMountId();
+        final var workflowPath = getWorkflowPath(m_locationInfo);
+
+        if (leavesScope(path)) {
+            // we're on a hub executor, resolve against the repository
+            final var referencedItemPath = workflowPath.append(path);
+
+            final var spacePath = getSpacePath(m_locationInfo);
+            if (!spacePath.isPrefixOf(referencedItemPath)) {
                 throw new ResourceAccessException("Leaving the Hub space is not allowed for workflow relative URLs: "
-                    + decodedPath + " is not in " + spacePath);
+                        + path + " is not in " + spacePath);
             }
-            try {
-                final var builder = new URIBuilder(URIUtil.append(workflowAddress, decodedPath + ":data"));
-                if (version != null) {
-                    version.addVersionToURI(builder);
-                }
-                return builder.build().normalize();
-            } catch (URISyntaxException e) {
-                throw new ResourceAccessException("Could not build space URI: " + e.getMessage(), e);
-            }
+
+            final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), version, referencedItemPath);
+            return new ResolvedURL(mountId, referencedItemPath, version, null, resourceUrl, false);
         }
 
         // file inside the workflow
-        final var currentLocation = m_executorInfo.getLocalWorkflowPath();
-        final var resolvedFile = new File(currentLocation.toFile(), decodedPath);
-
-        if (!URLResolverUtil.getCanonicalPath(resolvedFile)
-            .startsWith(URLResolverUtil.getCanonicalPath(currentLocation.toFile()))) {
-            throw new ResourceAccessException(
-                "Path component of workflow relative URLs leaving the workflow must start with " + "'/..', found '"
-                    + decodedPath + "'.");
-        }
-
-        if (version != null) {
-            throw new ResourceAccessException("Workflow relative URLs accessing workflow contents cannot specify a "
-                    + "version: 'knime://workflow.knime" + decodedPath + "?version="
-                    + version.getQueryParameterValue().orElse(LinkType.LATEST_STATE.getIdentifier()) + "'.");
-        }
-
-        return resolvedFile.toURI();
+        final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath().toAbsolutePath().normalize();
+        return resolveInExecutorWorkflowDir(url, mountId, workflowPath, path, version, localWorkflowPath);
     }
 
     @Override
-    URI resolveNodeRelative(final String decodedPath) throws ResourceAccessException {
-        return defaultResolveNodeRelative(decodedPath, m_executorInfo.getLocalWorkflowPath());
+    ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
+        final var mountId = m_locationInfo.getDefaultMountId();
+        final var pathToWorkflow = getWorkflowPath(m_locationInfo);
+        final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath().toAbsolutePath().normalize();
+        return resolveNodeRelative(mountId, pathToWorkflow, localWorkflowPath, path);
     }
 
     /**
-     * Creates a space-relative URI.
+     * Resolves the given path relative to the workflow's hub space root.
      *
-     * @param workflowAddress space-relative path
-     * @param workflowPath space-relative path
-     * @param decodedPath space-relative path
-     * @param spacePath path to the Hub Space
-     * @param spaceRepoUri REST repository address of the Hub Space
-     * @param itemVersion item version, may be {@code null}
-     * @return resolved URI
-     * @throws ResourceAccessException if the URI doesn't stay in its lane
+     * @param locationInfo hub space location info
+     * @param path path relative to the space
+     * @param version hub item version
+     * @return resolved URL components
+     * @throws ResourceAccessException if resolution fails
      */
-    static URI createSpaceRelativeRepoUri(final URI workflowAddress, final String workflowPath,
-        final String decodedPath, final URI repositoryAddress, final String spacePath, final HubItemVersion version)
-        throws ResourceAccessException {
-        final URI normalizedUri;
-        final URI plainUri;
-        final URI spaceRepoUri;
-        try {
-            // this URI does not have a trailing slash because of normalization, safe to append to
-            final var spaceRepoUriBuilder = new URIBuilder(repositoryAddress);
-            final var segments = new ArrayList<>(spaceRepoUriBuilder.getPathSegments());
-            segments.addAll(new URIBuilder().setPath(spacePath).getPathSegments());
-            spaceRepoUriBuilder.setPathSegments(segments);
-            spaceRepoUri = spaceRepoUriBuilder.build().normalize();
+    static ResolvedURL resolveRelativeToHubSpace(final HubSpaceLocationInfo locationInfo, final IPath path,
+        final HubItemVersion version) throws ResourceAccessException {
+        final var spacePath = getSpacePath(locationInfo);
+        final var resolvedPath = spacePath.append(path);
 
-            // omit `:data` and query parameter for the checks below
-            plainUri = new URIBuilder(URIUtil.append(spaceRepoUri, decodedPath)).build().normalize();
-            final var builder = new URIBuilder(URIUtil.append(spaceRepoUri, decodedPath + ":data"));
-            if (version != null) {
-                version.addVersionToURI(builder);
-            }
-            normalizedUri = builder.build().normalize();
-        } catch (URISyntaxException e) {
-            throw new ResourceAccessException("Could not build space URI: " + e.getMessage(), e);
+        if (!spacePath.isPrefixOf(resolvedPath)) {
+            throw new ResourceAccessException("Leaving the Hub space is not allowed for space relative URLs: "
+                + path + " is not in " + spacePath);
         }
 
-        if (isContainedIn(plainUri, workflowAddress)) {
+        final var workflowPath = getWorkflowPath(locationInfo);
+        if (workflowPath.isPrefixOf(resolvedPath)) {
             // we could allow this at some point and resolve the URL in the local file system
             throw new ResourceAccessException("Accessing the workflow contents is not allowed for space relative URLs: "
-                + "'" + decodedPath + "' points into current workflow " + workflowPath);
+                + "'" + path + "' points into current workflow " + workflowPath);
         }
 
-        if (!isContainedIn(plainUri, spaceRepoUri)) {
-            throw new ResourceAccessException("Leaving the Hub space is not allowed for space relative URLs: "
-                + decodedPath + " is not in " + spacePath);
+        final var resourceUrl = createRepoUrl(locationInfo.getRepositoryAddress(), version, resolvedPath);
+        return new ResolvedURL(locationInfo.getDefaultMountId(), resolvedPath, version, null, resourceUrl, false);
+    }
+
+    private static URL createRepoUrl(final URI repositoryAddress, final HubItemVersion version,
+        final IPath referencedItemPath) throws ResourceAccessException {
+
+        final var builder = new URIBuilder(repositoryAddress.normalize());
+        final var pathSegments = new ArrayList<>(builder.getPathSegments());
+        pathSegments.addAll(Arrays.asList(referencedItemPath.segments()));
+        addDataSuffix(pathSegments);
+        builder.setPathSegments(pathSegments);
+
+        if (version != null) {
+            version.addVersionToURI(builder);
         }
 
-        return normalizedUri;
+        return URLResolverUtil.toURL(builder);
+    }
+
+    static void addDataSuffix(final List<String> pathSegments) {
+        pathSegments.removeIf(String::isEmpty);
+        if (pathSegments.isEmpty()) {
+            pathSegments.add(":data");
+        } else {
+            final var last = pathSegments.size() - 1;
+            pathSegments.set(last, pathSegments.get(last) + ":data");
+        }
     }
 }

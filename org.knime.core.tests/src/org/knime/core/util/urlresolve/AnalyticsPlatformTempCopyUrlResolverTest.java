@@ -48,6 +48,7 @@
  */
 package org.knime.core.util.urlresolve;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -82,8 +83,6 @@ class AnalyticsPlatformTempCopyUrlResolverTest {
 
     private static AnalyticsPlatformTempCopyUrlResolver m_resolver;
 
-    private static WorkflowContextV2 m_context;
-
     // before all tests create a new workflow context
     // the workflow context is a singleton, so we need to create a new one for each test
     @BeforeAll
@@ -91,10 +90,11 @@ class AnalyticsPlatformTempCopyUrlResolverTest {
         final var repoAddressUri = URI.create("https://api.example.com:443/knime/rest/v4/repository");
         final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
 
-        m_context = WorkflowContextV2.builder()
+        final var context = WorkflowContextV2.builder()
                 .withAnalyticsPlatformExecutor(exec -> exec
                     .withCurrentUserAsUserId()
-                    .withLocalWorkflowPath(currentLocation))
+                    .withLocalWorkflowPath(currentLocation)
+                    .withMountpoint("My-Knime-Hub", currentLocation.getParent()))
                 .withHubSpaceLocation(loc -> loc
                     .withRepositoryAddress(repoAddressUri)
                     .withWorkflowPath("/Users/john/Private/folder/workflow")
@@ -104,20 +104,23 @@ class AnalyticsPlatformTempCopyUrlResolverTest {
                     .withWorkflowItemId("*12"))
                 .build();
         m_resolver = new AnalyticsPlatformTempCopyUrlResolver(
-            (AnalyticsPlatformExecutorInfo)m_context.getExecutorInfo(), (RestLocationInfo)m_context.getLocationInfo(),
-            repoAddressUri);
+            (AnalyticsPlatformExecutorInfo)context.getExecutorInfo(), (RestLocationInfo)context.getLocationInfo(),
+            context.getMountpointURI().orElseThrow());
     }
+
+    private static WorkflowManager wfm;
 
     @BeforeEach
     void createWorkflow() {
-        final var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
-            new WorkflowCreationHelper(m_context));
+        wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(), new WorkflowCreationHelper());
         NodeContext.pushContext(wfm);
     }
 
     @AfterEach
     void popNodeContext() {
+        WorkflowManager.ROOT.removeProject(wfm.getID());
         NodeContext.removeLastContext();
+        wfm = null;
     }
 
     @ParameterizedTest
@@ -139,14 +142,31 @@ class AnalyticsPlatformTempCopyUrlResolverTest {
 
     @ParameterizedTest
     @MethodSource({
-        "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()",
-        "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
+        "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()"
     })
-    void testResolveNeverVersioned(@SuppressWarnings("unused") final URL unversioned, final URL withVersion,
-            final URL bothVersions) throws ResourceAccessException {
+    void testResolveWorkflowRelativeNeverVersioned(final URL unversioned, final URL withVersion, final URL bothVersions)
+            throws ResourceAccessException {
+        assertEquals("file", m_resolver.resolve(unversioned).getProtocol(),
+            "Should resolve to a file URL");
+
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
             "Should not be able to resolve with version");
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(bothVersions),
-                "Should not be able to resolve with versions");
+            "Should not be able to resolve with versions");
+    }
+
+    @ParameterizedTest
+    @MethodSource({
+        "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
+    })
+    void testResolveNodeRelativeNeverVersioned(final URL unversioned, final URL withVersion, final URL bothVersions)
+            throws ResourceAccessException {
+        final var exc = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(unversioned));
+        assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
+
+        assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
+            "Should not be able to resolve with version");
+        assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(bothVersions),
+            "Should not be able to resolve with versions");
     }
 }

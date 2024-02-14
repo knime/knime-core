@@ -55,25 +55,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowCreationHelper;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
-import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -85,29 +74,6 @@ import org.knime.core.util.hub.HubItemVersion;
  * @author Manuel Hotz, KNIME AG, Zurich, Switzerland
  */
 class RemoteExecutorUrlResolverTest {
-
-    private Set<NodeID> m_staticWFMs;
-
-    @BeforeEach
-    void setupEach() {
-        m_staticWFMs =
-                WorkflowManager.ROOT.getNodeContainers().stream().map(NodeContainer::getID).collect(Collectors.toSet());
-    }
-
-    @AfterEach
-    void popNodeContext() {
-        NodeContext.removeLastContext();
-
-        Collection<NodeID> workflows = WorkflowManager.ROOT.getNodeContainers().stream().map(nc -> nc.getID())
-                .filter(id -> !m_staticWFMs.contains(id)).collect(Collectors.toList());
-        workflows.stream().forEach(id -> WorkflowManager.ROOT.removeProject(id));
-    }
-
-    private static void pushNodeContext(final WorkflowContextV2 context) {
-        final var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
-            new WorkflowCreationHelper(context));
-        NodeContext.pushContext(wfm);
-    }
 
     @Nested
     @DisplayName("Remote Executor w/ HubSpaceLocation")
@@ -133,10 +99,9 @@ class RemoteExecutorUrlResolverTest {
                         .withSpace("/Users/john/Private", "*11")
                         .withWorkflowItemId("*12"))
                     .build();
+            final var mountpointUri = context.getMountpointURI().orElseThrow();
             final var loc = (HubSpaceLocationInfo)context.getLocationInfo();
-            m_resolver = new RemoteExecutorUrlResolver(loc);
-
-            pushNodeContext(context);
+            m_resolver = new RemoteExecutorUrlResolver(mountpointUri, loc);
         }
 
         @ParameterizedTest
@@ -182,31 +147,14 @@ class RemoteExecutorUrlResolverTest {
         @BeforeEach
         void createContext() throws URISyntaxException {
             // original location == current location
-            final var baseUri = new URI("http://localhost:8080/knime");
-            final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
-
-            final var context = WorkflowContextV2.builder()
-                    .withAnalyticsPlatformExecutor(exec -> exec
-                        .withCurrentUserAsUserId()
-                        .withLocalWorkflowPath(currentLocation)
-                        .withMountpoint("My-Knime-Hub", currentLocation.getParent()))
-                    .withServerLocation(loc -> loc
-                        .withRepositoryAddress(baseUri)
-                        .withWorkflowPath("/workflow")
-                        .withAuthenticator(new SimpleTokenAuthenticator("token"))
-                        .withDefaultMountId("My-Knime-Hub"))
-                    .build();
-            final var loc = (ServerLocationInfo)context.getLocationInfo();
-            m_resolver = new RemoteExecutorUrlResolver(loc);
-
-            pushNodeContext(context);
+            final var mountpointUri = URI.create("knime://My-Knime-Hub/workflow");
+            m_resolver = new RemoteExecutorUrlResolver(mountpointUri, null);
         }
 
-        // workflow-relative and mountpoint-absolute URLs can specify a version on Server, but it is ignored later
         @ParameterizedTest
         @MethodSource({
+            // mountpoint-absolute URLs can specify a version on Server
             "org.knime.core.util.urlresolve.URLMethodSources#mountpointAbsolute()",
-            "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeLeavingScope()",
         })
         void testVersionedUrls(final URL unversioned, final URL versioned, final URL bothVersions,
                 final HubItemVersion version) throws ResourceAccessException {
@@ -214,7 +162,7 @@ class RemoteExecutorUrlResolverTest {
             for (final var url : new URL[] { versioned, bothVersions }) {
                 final var resolved = m_resolver.resolve(url);
                 if (!HubItemVersion.currentState().equals(version)) {
-                    assertNotEquals(resolvedPlain, resolved, "Version should bot be ignored");
+                    assertNotEquals(resolvedPlain, resolved, "Version should not be ignored");
                     final var fromUrl = HubItemVersion.of(resolved);
                     assertEquals(version, fromUrl.orElseThrow(), "Has correct version");
                 }
@@ -224,11 +172,12 @@ class RemoteExecutorUrlResolverTest {
 
         @ParameterizedTest
         @MethodSource({
-            // no Mountpoint- and space-relative KNIME URLs with version on Server
+            // no Mountpoint-, workflow- and space-relative KNIME URLs with version on Server
             "org.knime.core.util.urlresolve.URLMethodSources#mountpointRelative()",
             "org.knime.core.util.urlresolve.URLMethodSources#spaceRelative()",
+            "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeLeavingScope()",
             // Node relative URLs cannot be resolved from pure remote wfs
-            "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
+            "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()",
         })
         void testNoVersioningPossibleOnServer(@SuppressWarnings("unused") final URL unversioned, final URL versioned,
                 final URL bothVersions) {
