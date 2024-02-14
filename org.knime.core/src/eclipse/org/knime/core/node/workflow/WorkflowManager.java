@@ -2807,11 +2807,9 @@ public final class WorkflowManager extends NodeContainer
     void resetNodesInWFMConnectedToInPorts(final Set<Integer> inPorts) {
         try (WorkflowLock lock = lock()) {
             if (!isResetable()) {
-                // only attempt to do this if possible.
                 return;
             }
-            // first make sure we clean up indirectly affected
-            // loop start nodes inside this WFM
+            // There may be a loop end node among the successors of inPorts.
             resetAndConfigureAffectedLoopContext(this.getID(), inPorts);
             // now find all nodes that are directly affected:
             ArrayList<NodeAndInports> nodes = m_workflow.findAllConnectedNodes(inPorts);
@@ -5317,60 +5315,54 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Reset node and all executed successors of a specific node. Note that we will reset & configure(!) nodes apart
+     * Reset nodeID and all executed successors of a specific nodeID. Note that we will reset & configure(!) nodes apart
      * from the (in)direct successors if the list contains loop end nodes without their corresponding loop start
      * equivalents.
      *
-     * @param id of the target node. This node and all its successors will be reset.
-     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the
-     *            metanode will be reset which are successors of the target node (i.e., as if the metanode contents were
-     *            part of the parent workflow).
+     * @param nodeID of the target nodeID. This nodeID and all its successors will be reset.
+     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the metanode will
+     *            be reset which are successors of the target nodeID (i.e., as if the metanode contents were part of the
+     *            parent workflow).
      */
-    private void resetNodeAndSuccessors(final NodeID id, final boolean fullyResetMetanodes) {
+    private void resetNodeAndSuccessors(final NodeID nodeID, final boolean fullyResetMetanodes) {
         assert m_workflowLock.isHeldByCurrentThread();
-        NodeContainer nc = getNodeContainer(id);
-        if (!nc.isResetable()) {
-            if (nc.getInternalState().equals(IDLE)) {
-                // the node is IDLE: we don't need to reset it but we
-                // should remove its node message! (This for instance
-                // matters when we disconnect the inport of this node
-                // and it showed an error due to conflicting stacks!)
-                nc.setNodeMessage(null);
+        NodeContainer node = getNodeContainer(nodeID);
+        if (!node.isResetable()) {
+            if (node.getInternalState().equals(IDLE)) {
+                // the node is IDLE: we don't need to reset it but we should remove its node message! (This for instance
+                // matters when we disconnect the inport of this node and it showed an error due to conflicting stacks!)
+                node.setNodeMessage(null);
             }
             // any other reasons for "non reset-ability" are ignored until
             // now (Mar 2012) - not sure if there could be others?
             return;
         }
-        // clean context - that is make sure all loops affected by
-        // this reset-"chain" are completely reset/configured!
-        resetAndConfigureAffectedLoopContext(id);
-        if (!nc.isResetable()) {
-            // if the above led to an implicit reset of our node: stop here.
+        // clean context - that is make sure all loops affected by this reset-"chain" are completely reset/configured!
+        resetAndConfigureAffectedLoopContext(node.getID());
+        if (!node.isResetable()) {
+            // if the above led to an implicit reset of our nodeID: stop here.
             return;
         }
         // Now perform the actual reset!
         // a) Reset all successors first
-        resetSuccessors(id, -1, true, fullyResetMetanodes);
-        if (!nc.isResetable()) {
-            // if the above led to an implicit reset of our node
+        resetSuccessors(node.getID(), -1, true, fullyResetMetanodes);
+        if (!node.isResetable()) {
+            // if the above led to an implicit reset of our nodeID
             // (contained in loop): stop here.
             return;
         }
-        // b) and then reset node itself
-        if (nc instanceof SingleNodeContainer) {
-            invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+        // b) and then reset nodeID itself
+        if (node instanceof SingleNodeContainer snc) {
+            invokeResetOnSingleNodeContainer(snc);
         } else {
-            WorkflowManager wfm = (WorkflowManager)nc;
-            // this is ok, since we will never call this again
-            // while traversing a flow - this is the main entry
-            // point from the outside and should reset all children
-            // (resetSuccessors() follows ports and will be
-            // called throughout subsequent calls...)
-
+            WorkflowManager wfm = (WorkflowManager)node;
+            // this is ok, since we will never call this again while traversing a flow - this is the main entry point
+            // from the outside and should reset all children (resetSuccessors() follows ports and will be called
+            // throughout subsequent calls...)
             // TODO this configures the metanode, too!
             wfm.resetAndReconfigureAllNodesInWFM();
         }
-        nc.resetJobManagerViews();
+        node.resetJobManagerViews();
     }
 
     /**
@@ -5378,15 +5370,11 @@ public final class WorkflowManager extends NodeContainer
      * successors are completely reset and freshly configured. This is used to ensure proper reset/configure of the
      * entire loop if only parts of a loop are affected by a reset propagation.
      *
-     * @param id ...
+     * @param node The given node
      */
-    private void resetAndConfigureAffectedLoopContext(final NodeID id) {
-        // First find all the nodes in this workflow that are connected
-        // to the origin:
-        LinkedHashMap<NodeID, Set<Integer>> allnodes =
-            m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, /*skipWFM=*/ true);
-        // the do cleanup
-        resetAndConfigureAffectedLoopContext(allnodes);
+    private void resetAndConfigureAffectedLoopContext(final NodeID node) {
+        var successors = m_workflow.getBreadthFirstListOfNodeAndSuccessors(node, true);
+        resetAndConfigureAffectedLoopContext(successors);
     }
 
     /**
@@ -5394,67 +5382,58 @@ public final class WorkflowManager extends NodeContainer
      * set of successors are completely reset and freshly configured. This is used to ensure proper reset/configure of
      * the entire loop if only parts of a loop are affected by a reset propagation.
      *
-     * @param id ...
+     * @param node The node whose successors to check for loop contexts
      * @param portIndices set of output ports, empty set for all ports.
      */
-    private void resetAndConfigureAffectedLoopContext(final NodeID id, final Set<Integer> portIndices) {
-        // First find all the nodes in this workflow that are connected
-        // to the origin:
-        LinkedHashMap<NodeID, Set<Integer>> allnodes =
-            m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndices, /*skipWFM=*/ true);
-        // the do cleanup
-        resetAndConfigureAffectedLoopContext(allnodes);
+    private void resetAndConfigureAffectedLoopContext(final NodeID node, final Set<Integer> portIndices) {
+        var successors = m_workflow.getBreadthFirstListOfPortSuccessors(node, portIndices, true);
+        resetAndConfigureAffectedLoopContext(successors);
     }
 
     /* Check list of nodes and reset/configure all loops that are only
      * partially contained in the list.
      *
-     * @param allnodes ...
+     * @param successors The list of nodes
      */
-    private void resetAndConfigureAffectedLoopContext(final LinkedHashMap<NodeID, Set<Integer>> allnodes) {
-        // find any LoopEnd nodes without loop starts in the set:
-        for (NodeID leid : allnodes.keySet()) {
-            NodeContainer lenc = getNodeContainer(leid);
-            if (lenc instanceof NativeNodeContainer) {
-                if (((NativeNodeContainer)lenc).getNodeModel() instanceof LoopEndNode) {
-                    NodeID lsid;
-                    try {
-                        lsid = m_workflow.getMatchingLoopStart(leid);
-                    } catch (Exception e) {
-                        // this can happen if we run into incorrectly configured loops
-                        lsid = null;
-                    }
-                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
-                        // found a LoopEndNode without matching LoopStart
-                        // to be reset as well: try to reset&configure the
-                        // node (and its successors) if it is executed and
-                        // we are past the first iteration (=corresponding
-                        // End loop was executed at least once already - which
-                        // also means it is set in the LoopContextObject):
-                        NativeNodeContainer lsnc = (NativeNodeContainer)m_workflow.getNode(lsid);
-                        if (EXECUTED.equals(lsnc.getInternalState())) {
-                            FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
-                            if (flc.needsCompleteResetOnLoopBodyChanges()) {
-                                // this is ugly but necessary: we need to make
-                                // sure we don't go into an infinite loop here,
-                                // trying to reset this part over and over again.
-                                // so reset this node "out of the order" first
-                                // as a "flag" that we have already done it:
-                                invokeResetOnSingleNodeContainer(lsnc);
-                                configureSingleNodeContainer(lsnc, true);
-                                // and now launch the proper reset (&configure!) for this branch:
-                                // Fix for bug #4148:
-                                // instead of a call to resetAndConfigureNode(lsid)
-                                // call the following to avoid checking for "isResetable()"
-                                // which will fail in nested loops with "affected" loops
-                                // within a metanode
-                                resetSuccessors(lsid);
-                                // and launch configure starting with this node
-                                configureNodeAndSuccessors(lsid, false);
-                            }
-                        }
-                    }
+    private void resetAndConfigureAffectedLoopContext(final LinkedHashMap<NodeID, Set<Integer>> successors) {
+        successors.keySet().stream() //
+            .map(this::getNodeContainer) //
+            .filter(node -> node instanceof NativeNodeContainer) //
+            .map(node -> (NativeNodeContainer)node) //
+            .filter(node -> node.getNodeModel() instanceof LoopEndNode) //
+            .map(loopEnd -> {
+                try {
+                    return m_workflow.getMatchingLoopStart(loopEnd.getID());
+                } catch (Exception ignored) { // NOSONAR
+                    return null;
                 }
+            }) //
+            .filter(loopStart -> loopStart != null && !successors.containsKey(loopStart)) //
+            .forEach(nonSuccessorLoopStart -> resetNonSuccessorLoopStart(nonSuccessorLoopStart));
+    }
+
+    private void resetNonSuccessorLoopStart(NodeID loopStartID) {
+        // found a LoopEndNode without matching LoopStart to be reset as well: try to reset&configure
+        // the node (and its successors) if it is executed, and we are past the first iteration
+        // (=corresponding End loop was executed at least once already - which also means it is set in
+        // the LoopContextObject):
+        var loopStart = (NativeNodeContainer)m_workflow.getNode(loopStartID);
+        if (loopStart.getInternalState() == EXECUTED) {
+            var flowLoopContext = loopStart.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+            if (flowLoopContext.needsCompleteResetOnLoopBodyChanges()) {
+                // this is ugly but necessary: we need to make sure we don't go into an infinite loop
+                // here, trying to reset this part over and over again. so reset this node "out of the
+                // order" first as a "flag" that we have already done it:
+                invokeResetOnSingleNodeContainer(loopStart);
+                configureSingleNodeContainer(loopStart, true);
+                // and now launch the proper reset (&configure!) for this branch:
+                // Fix for bug #4148: instead of a call to resetAndConfigureNode(loopStart) call the
+                // following to avoid checking for "isResetable()"
+                // which will fail in nested loops with
+                // "affected" loops within a metanode
+                resetSuccessors(loopStart.getID());
+                // and launch configure starting with this node
+                configureNodeAndSuccessors(loopStart.getID(), false);
             }
         }
     }
