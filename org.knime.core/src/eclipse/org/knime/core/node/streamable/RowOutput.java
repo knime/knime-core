@@ -52,10 +52,9 @@ import java.util.UUID;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.BufferedRowWrite;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.v2.RowKeyType;
-import org.knime.core.data.v2.RowWrite;
+import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataTable;
@@ -82,7 +81,7 @@ public abstract class RowOutput extends PortOutput {
     }
 
     /**
-     * An adatper for {@link RowOutput}s whose {@link #canForward()}, {@link #forward()}, and {@link #close()}
+     * An adapter for {@link RowOutput}s whose {@link #commit()} and {@link #close()}
      * methods may throw an undeclared {@link InterruptedException} from underlying calls.
      *
      * @since 5.4
@@ -100,39 +99,16 @@ public abstract class RowOutput extends PortOutput {
     private final class FallbackWriteCursor implements InterruptibleRowWriteCursor {
 
         private boolean m_closed;
-        private final BufferedRowWrite m_rowWrite;
-
-        private boolean m_needsCommit;
 
         public FallbackWriteCursor(final DataTableSpec spec) {
             final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
                 new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
-            m_rowWrite = new BufferedRowWrite(schema);
-        }
-
-        @Override
-        public RowWrite forward() {
-            try {
-                commitIfNecessary();
-                m_needsCommit = true;
-                return m_rowWrite;
-            } catch (final InterruptedException e) { // NOSONAR exception is rethrown
-                throw ExceptionUtils.asRuntimeException(e);
-            }
-        }
-
-        private void commitIfNecessary() throws InterruptedException {
-            if (m_needsCommit) {
-                push(m_rowWrite.materializeDataRow());
-                m_needsCommit = false;
-            }
         }
 
         @Override
         public void close() {
             if (!m_closed) {
                 try {
-                    commitIfNecessary();
                     RowOutput.this.close();
                     m_closed = true;
                 } catch (final InterruptedException e) { // NOSONAR exception is rethrown
@@ -141,11 +117,17 @@ public abstract class RowOutput extends PortOutput {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public boolean canForward() {
-            return true;
+        public void commit(final RowRead row) {
+            try {
+                push(row.materializeDataRow());
+            } catch (final InterruptedException e) { // NOSONAR exception is rethrown
+                throw ExceptionUtils.asRuntimeException(e);
+            }
         }
-
     }
 
     /**
@@ -168,7 +150,7 @@ public abstract class RowOutput extends PortOutput {
     public void setFully(final BufferedDataTable table) throws InterruptedException {
         try (final var in = table.cursor(); final var out = asWriteCursor(table.getSpec())) {
             while (in.canForward()) {
-                out.forward().setFrom(in.forward());
+                out.commit(in.forward());
             }
         }
         close();

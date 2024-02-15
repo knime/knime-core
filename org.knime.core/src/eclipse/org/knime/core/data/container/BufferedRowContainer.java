@@ -53,7 +53,7 @@ import java.io.IOException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.v2.RowContainer;
-import org.knime.core.data.v2.RowWrite;
+import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataContainer;
@@ -67,17 +67,20 @@ import org.knime.core.node.BufferedDataTable;
  */
 final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
-    static final DataCell MISSING_CELL = DataType.getMissingCell();
-
-    private final BufferedRowWrite m_row;
+    private static final DataCell MISSING_CELL = DataType.getMissingCell();
 
     private final BufferedDataContainer m_delegate;
 
-    private boolean m_needsCommit;
+    private final ValueSchema m_schema;
 
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
         m_delegate = delegate;
-        m_row = new BufferedRowWrite(schema);
+        m_schema = schema;
+    }
+
+    @Override
+    public ValueSchema getSchema() {
+        return m_schema;
     }
 
     @Override
@@ -86,27 +89,12 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     }
 
     @Override
-    public RowWrite forward() {
-        commitIfNecessary();
-        m_needsCommit = true;
-        return m_row;
-    }
-
-    private void commitIfNecessary() {
-        if (m_needsCommit) {
-            m_delegate.addRowToTable(m_row.materializeDataRow());
-            m_needsCommit = false;
-        }
-    }
-
-    @Override
-    public boolean canForward() {
-        return true;
+    public void commit(final RowRead row) {
+        m_delegate.addRowToTable(row.materializeDataRow());
     }
 
     @Override
     public BufferedDataTable finish() throws IOException {
-        commitIfNecessary();
         m_delegate.close();
         return m_delegate.getTable();
     }
@@ -126,5 +114,4 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     BufferedDataContainer getDelegate() {
         return m_delegate;
     }
-
 }

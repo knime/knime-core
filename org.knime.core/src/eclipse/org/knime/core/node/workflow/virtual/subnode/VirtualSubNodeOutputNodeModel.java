@@ -264,7 +264,7 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                                     .build());
                             final var out = output.createCursor()) {
                         while (in.canForward()) {
-                            out.forward().setFrom(in.forward());
+                            out.commit(in.forward());
                         }
                         inObjects[i] = output.finish();
                     } finally {

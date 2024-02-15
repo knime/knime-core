@@ -136,7 +136,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
                 try (final var in = table.cursor();
                         final var out = rowOutput.asWriteCursor(table.getSpec())) {
                     while (in.canForward()) {
-                        out.forward().setFrom(in.forward());
+                        out.commit(in.forward());
                     }
                 } finally {
                     // these cursors can throw interrupted exceptions, so we have to make sure we close the output

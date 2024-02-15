@@ -68,6 +68,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.v2.RowBuffer;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowRead;
@@ -161,7 +162,7 @@ class BufferedRowContainerTest {
                 final RowWriteCursor writeCursor = rowContainer.createCursor();
                 final RowCursor readCursor = origTable.cursor()) {
             while (readCursor.canForward()) {
-                writeCursor.forward().setFrom(readCursor.forward());
+                writeCursor.commit(readCursor.forward());
                 context.checkCanceled();
             }
             setFromCopyTable = rowContainer.finish();
@@ -177,14 +178,15 @@ class BufferedRowContainerTest {
         try (final RowContainer rowContainer = context.createRowContainer(origTable.getSpec(), DATA_CONTAINER_SETTINGS);
                 final RowWriteCursor writeCursor = rowContainer.createCursor();
                 final RowCursor readCursor = origTable.cursor()) {
+            final RowBuffer row = rowContainer.createRowBuffer();
             while (readCursor.canForward()) {
                 RowRead read = readCursor.forward();
-                RowWrite write = writeCursor.forward();
-                write.setRowKey(read.getRowKey());
+                row.setRowKey(read.getRowKey());
                 for (int i = 0, end = readCursor.getNumColumns(); i < end; i++) {
                     // no missings in data
-                    write.getWriteValue(i).setValue(read.getValue(i));
+                    row.getWriteValue(i).setValue(read.getValue(i));
                 }
+                writeCursor.commit(row);
                 context.checkCanceled();
             }
             cellByCellCopyTable = rowContainer.finish();
@@ -264,28 +266,30 @@ class BufferedRowContainerTest {
             final RowWriteCursor writeCursor = rowContainer.createCursor();
             final RowCursor readCursor = table.cursor()) {
 
+            RowBuffer row = rowContainer.createRowBuffer();
+
             // row 0 is unmodified
             RowRead read = readCursor.forward();
-            RowWrite write = writeCursor.forward();
-            write.setFrom(read);
+            row.setFrom(read);
+            writeCursor.commit(row);
 
             // row 1 modifies row key after `setFrom` is called
             read = readCursor.forward();
-            write = writeCursor.forward();
-            write.setFrom(read);
-            write.setRowKey(new RowKey("modified-key-after-copy"));
+            row.setFrom(read);
+            row.setRowKey(new RowKey("modified-key-after-copy"));
+            writeCursor.commit(row);
 
             // row 2 modifies cell value after `setFrom` is called
             read = readCursor.forward();
-            write = writeCursor.forward();
-            write.setFrom(read);
-            ((IntWriteValue)write.getWriteValue(0)).setIntValue(-2);
+            row.setFrom(read);
+            ((IntWriteValue)row.getWriteValue(0)).setIntValue(-2);
+            writeCursor.commit(row);
 
             // row 3 sets one cell missing
             read = readCursor.forward();
-            write = writeCursor.forward();
-            write.setFrom(read);
-            write.setMissing(1);
+            row.setFrom(read);
+            row.setMissing(1);
+            writeCursor.commit(row);
 
             copyTable = rowContainer.finish();
         }
@@ -334,17 +338,18 @@ class BufferedRowContainerTest {
         BufferedDataTable table;
         try (RowContainer container = context.createRowContainer(spec, DATA_CONTAINER_SETTINGS);
                 RowWriteCursor writeCursor = container.createCursor()) {
-            RowWrite write = writeCursor.forward();
-            write.setRowKey(new RowKey("Row 0"));
-            ((IntWriteValue)write.getWriteValue(0)).setIntValue(0);
-            ((DoubleWriteValue)write.getWriteValue(1)).setDoubleValue(0.0);
-            ((StringWriteValue)write.getWriteValue(2)).setStringValue("Row 0");
+            RowBuffer row = container.createRowBuffer();
+            row.setRowKey(new RowKey("Row 0"));
+            ((IntWriteValue)row.getWriteValue(0)).setIntValue(0);
+            ((DoubleWriteValue)row.getWriteValue(1)).setDoubleValue(0.0);
+            ((StringWriteValue)row.getWriteValue(2)).setStringValue("Row 0");
+            writeCursor.commit(row);
 
-            write = writeCursor.forward();
-            write.setRowKey(new RowKey("Row 1"));
-            write.setMissing(0);
-            ((DoubleWriteValue)write.getWriteValue(1)).setDoubleValue(1.0);
-            ((StringWriteValue)write.getWriteValue(2)).setStringValue("Row 1");
+            row.setRowKey(new RowKey("Row 1"));
+            row.setMissing(0);
+            ((DoubleWriteValue)row.getWriteValue(1)).setDoubleValue(1.0);
+            ((StringWriteValue)row.getWriteValue(2)).setStringValue("Row 1");
+            writeCursor.commit(row);
 
             table = container.finish();
         }
@@ -379,24 +384,25 @@ class BufferedRowContainerTest {
         BufferedDataTable table;
         try (RowContainer container = context.createRowContainer(spec, DATA_CONTAINER_SETTINGS);
                 RowWriteCursor writeCursor = container.createCursor()) {
-            RowWrite write = writeCursor.forward();
-            write.setRowKey(new RowKey("Row 0"));
-            ((IntWriteValue)write.getWriteValue(0)).setIntValue(0);
-            ((DoubleWriteValue)write.getWriteValue(1)).setDoubleValue(0.0);
-            ((StringWriteValue)write.getWriteValue(2)).setStringValue("Row 0");
+            RowBuffer row = container.createRowBuffer();
+            row.setRowKey(new RowKey("Row 0"));
+            ((IntWriteValue)row.getWriteValue(0)).setIntValue(0);
+            ((DoubleWriteValue)row.getWriteValue(1)).setDoubleValue(0.0);
+            ((StringWriteValue)row.getWriteValue(2)).setStringValue("Row 0");
+            writeCursor.commit(row);
 
-            write = writeCursor.forward();
-            write.setRowKey(new RowKey("Row 1"));
-            write.setMissing(0);
-            ((DoubleWriteValue)write.getWriteValue(1)).setDoubleValue(1.0);
-            ((StringWriteValue)write.getWriteValue(2)).setStringValue("Row 1");
+            row.setRowKey(new RowKey("Row 1"));
+            row.setMissing(0);
+            ((DoubleWriteValue)row.getWriteValue(1)).setDoubleValue(1.0);
+            ((StringWriteValue)row.getWriteValue(2)).setStringValue("Row 1");
+            writeCursor.commit(row);
 
             // now setFrom the first row to the second row
-            write = writeCursor.forward();
-            write.setRowKey(new RowKey("Row 2"));
-            write.setMissing(0);
-            ((DoubleWriteValue)write.getWriteValue(1)).setDoubleValue(2.0);
-            ((StringWriteValue)write.getWriteValue(2)).setStringValue("Row 2");
+            row.setRowKey(new RowKey("Row 2"));
+            row.setMissing(0);
+            ((DoubleWriteValue)row.getWriteValue(1)).setDoubleValue(2.0);
+            ((StringWriteValue)row.getWriteValue(2)).setStringValue("Row 2");
+            writeCursor.commit(row);
 
             table = container.finish();
         }
@@ -407,18 +413,19 @@ class BufferedRowContainerTest {
                 RowWriteCursor writeCursor = container.createCursor();
                 RowCursor readCursor = table.cursor()) {
             RowRead read = readCursor.forward();
-            RowWrite write = writeCursor.forward();
-            ((IntWriteValue)write.getWriteValue(0)).setIntValue(-1); // expected to be overwritten
-            write.setFrom(read);
+            RowBuffer row = container.createRowBuffer();
+            ((IntWriteValue)row.getWriteValue(0)).setIntValue(-1); // expected to be overwritten
+            row.setFrom(read);
+            writeCursor.commit(row);
 
             read = readCursor.forward();
-            write = writeCursor.forward();
-            write.setMissing(2); // expected to be overwritten
-            write.setFrom(read);
+            row.setMissing(2); // expected to be overwritten
+            row.setFrom(read);
+            writeCursor.commit(row);
 
             read = readCursor.forward();
-            write = writeCursor.forward();
-            write.setFrom(read);
+            row.setFrom(read);
+            writeCursor.commit(row);
 
             copyTable = container.finish();
         }

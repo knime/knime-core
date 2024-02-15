@@ -50,6 +50,7 @@ package org.knime.core.data.v2;
 
 import java.io.IOException;
 
+import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.table.cursor.LookaheadCursor;
 
@@ -62,6 +63,27 @@ import org.knime.core.table.cursor.LookaheadCursor;
  * @noreference This interface is not intended to be referenced by clients.
  */
 public interface RowContainer extends AutoCloseable {
+
+    /**
+     * Get the {@code ValueSchema} of this container.
+     *
+     * @return the ValueSchema of this container
+     */
+    ValueSchema getSchema();
+
+    /**
+     * Create a {@link RowBuffer} with the schema of this container.
+     * <p>
+     * The {@code RowBuffer} can be used as a staging area: set values for all columns and then
+     * {@link RowWriteCursor#commit(RowRead) commit} the buffer to the {@link #createCursor() write cursor}.
+     * <p>
+     * {@code RowBuffer} instances are meant to be re-used: set values, commit, set new values, commit, etc.
+     *
+     * @return a new RowBuffer with the schema of this container
+     */
+    default RowBuffer createRowBuffer() {
+        return new BufferedAccessRowBuffer(getSchema());
+    }
 
     /**
      * Create a new {@link LookaheadCursor} over {@link RowWrite}s.

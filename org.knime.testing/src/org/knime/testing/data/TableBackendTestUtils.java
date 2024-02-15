@@ -81,6 +81,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.v2.RowBuffer;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
@@ -186,16 +187,15 @@ final class TableBackendTestUtils {
         var columnDataFactories = Stream.of(columns).map(Column::dataFactory).toArray(ColumnDataFactory[]::new);
         try (var rowContainer = exec.createRowContainer(tableSpec, containerSettings);
                 var writeCursor = rowContainer.createCursor()) {
-            writeData(rowIDFactory, size, columnDataFactories, writeCursor, columns);
+            writeData(rowIDFactory, size, columnDataFactories, writeCursor, rowContainer.createRowBuffer(), columns);
             return rowContainer.finish();
         }
     }
 
     private static void writeData(final LongFunction<String> rowIDFactory, final int size,
-        final ColumnDataFactory[] columnDataFactories, final RowWriteCursor writeCursor, final Column... columns) {
+        final ColumnDataFactory[] columnDataFactories, final RowWriteCursor writeCursor, final RowBuffer rowWrite, final Column... columns) {
         LongConsumer[] mappers = null;
         for (long r = 0; r < size; r++) {
-            var rowWrite = writeCursor.forward();
             if (mappers == null) {
                 mappers = IntStream.range(0, columns.length)//
                     .mapToObj(i -> columns[i].dataFactory().createMapper(rowWrite.getWriteValue(i)))
@@ -211,6 +211,7 @@ final class TableBackendTestUtils {
                     mappers[c].accept(rowIndex);
                 }
             }
+            writeCursor.commit(rowWrite);
         }
     }
 
