@@ -42,52 +42,65 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   15 Feb 2024 (pietzsch): created
  */
 package org.knime.core.data.container;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.DataRowRowRead;
 import org.knime.core.data.v2.RowRead;
 
 /**
- * Fallback implementation of {@link RowCursor} based on {@link CloseableRowIterator}.
+ * A {@link RowRead} that forwards to a {@link DataRow}.
+ * <p>
+ * The underlying {@code DataRow} can be changed via {@link #setDataRow}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz
+ * @since 5.4
+ * @author Tobias Pietzsch
  */
-final class FallbackRowCursor implements RowCursor {
+public final class DataRowRead implements RowRead, DataRowRowRead {
 
-    private final CloseableRowIterator m_delegate;
+    private DataRow m_row;
 
-    private final DataRowRead m_rowRead;
-
-    private final int m_numValues;
-
-    FallbackRowCursor(final CloseableRowIterator delegate, final DataTableSpec spec) {
-        m_delegate = delegate;
-        m_rowRead = new DataRowRead();
-        m_numValues = spec.getNumColumns();
+    /**
+     * Let this {@code RowRead} delegate to the given {@code row}.
+     *
+     * @param row the row to delegate to
+     * @return {@code this}, for convenience
+     */
+    public DataRowRead setDelegate(final DataRow row) {
+        m_row = row;
+        return this;
     }
 
     @Override
-    public RowRead forward() {
-        if (m_delegate.hasNext()) {
-            return m_rowRead.setDelegate(m_delegate.next());
-        }
-        return null;
-    }
-
-    @Override
-    public void close() {
-        m_delegate.close();
+    public DataRow materializeDataRow() {
+        return m_row;
     }
 
     @Override
     public int getNumColumns() {
-        return m_numValues;
+        return m_row.getNumCells();
     }
 
     @Override
-    public boolean canForward() {
-        return m_delegate.hasNext();
+    public RowKeyValue getRowKey() {
+        return m_row.getKey();
+    }
+
+    @Override
+    public <D extends DataValue> D getValue(final int index) {
+        @SuppressWarnings("unchecked")
+        final D cell = (D)m_row.getCell(index);
+        return cell;
+    }
+
+    @Override
+    public boolean isMissing(final int index) {
+        return m_row.getCell(index).isMissing();
     }
 }
