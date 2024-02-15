@@ -53,13 +53,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntSupplier;
-import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -68,7 +69,6 @@ import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
-import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
@@ -255,8 +255,6 @@ public final class BufferedTableBackend implements TableBackend {
                     .map(Selection::columns)//
                     .map(ColumnSelection::getSelected)//
                     .flatMapToInt(IntStream::of)//
-                    .distinct()//
-                    .sorted()//
                     .toArray();
                 union = union.retainColumns(columns);
             }
@@ -390,7 +388,7 @@ public final class BufferedTableBackend implements TableBackend {
 
         void writeRow(final long rowIndex, final RowRead row) {
             if (m_slice.includeRow(rowIndex)) {
-                m_slice.copyRow(m_cursor.forward(), row);
+                m_cursor.commit(m_slice.filterColumns(row));
             }
         }
 
@@ -410,21 +408,27 @@ public final class BufferedTableBackend implements TableBackend {
     }
 
     private static final class Slice {
-        private final Selection m_slice;
-
-        private final IntUnaryOperator m_indexMap;
+        private final RowRangeSelection m_rowRange;
 
         private final DataTableSpec m_slicedSpec;
 
+        /**
+         * if {@code m_selectionRowRead == null} then all columns are selected
+         */
+        private final SelectionRowRead m_selectionRowRead;
+
+        /**
+         * @param slice.columns() does not include the row index column
+         */
         Slice(final Selection slice, final DataTableSpec spec) {
-            m_slice = slice;
+            m_rowRange = slice.rows();
             var filterColumns = slice.columns();
             if (!filterColumns.allSelected()) {
                 var cols = filterColumns.getSelected();
-                m_indexMap = i -> cols[i];
                 m_slicedSpec = sliceSpec(spec, cols);
+                m_selectionRowRead = new SelectionRowRead(cols);
             } else {
-                m_indexMap = i -> i;
+                m_selectionRowRead = null;
                 m_slicedSpec = spec;
             }
         }
@@ -439,24 +443,51 @@ public final class BufferedTableBackend implements TableBackend {
             return rearranger.createSpec();
         }
 
-        void copyRow(final RowWrite rowWrite, final RowRead rowRead) {
-            rowWrite.setRowKey(rowRead.getRowKey());
-            for (int i = 0; i < m_slicedSpec.getNumColumns(); i++) { //NOSONAR
-                var oldIndex = m_indexMap.applyAsInt(i);
-                if (rowRead.isMissing(oldIndex)) {
-                    rowWrite.setMissing(i);
-                } else {
-                    rowWrite.getWriteValue(i).setValue(rowRead.getValue(oldIndex));
-                }
-            }
+        RowRead filterColumns(final RowRead rowRead) {
+            return m_selectionRowRead == null ? rowRead : m_selectionRowRead.filter(rowRead);
         }
 
         boolean includeRow(final long rowIndex) {
-            final RowRangeSelection rowSel = m_slice.rows();
             // see javadoc of RowRangeSelection#retainRows(long, long): from < 0 ==> allSelected == true
-            return rowSel.allSelected() || (rowIndex >= rowSel.fromIndex() && rowIndex < rowSel.toIndex());
+            return m_rowRange.allSelected() || (rowIndex >= m_rowRange.fromIndex() && rowIndex < m_rowRange.toIndex()); // TODO (TP) add boolean RowRangeSelection.contains(int rowIndex)
+        }
+    }
+
+    private static class SelectionRowRead implements RowRead {
+
+        private final int[] m_colsWithoutRowKey;
+
+        SelectionRowRead(final int[] colsWithoutRowKey) {
+            m_colsWithoutRowKey = colsWithoutRowKey;
         }
 
+        private RowRead m_rowRead;
+
+        RowRead filter(final RowRead rowRead)
+        {
+            m_rowRead = rowRead;
+            return this;
+        }
+
+        @Override
+        public int getNumColumns() {
+            return m_colsWithoutRowKey.length;
+        }
+
+        @Override
+        public <D extends DataValue> D getValue(final int index) {
+            return m_rowRead.getValue(m_colsWithoutRowKey[index]);
+        }
+
+        @Override
+        public boolean isMissing(final int index) {
+            return m_rowRead.isMissing(m_colsWithoutRowKey[index]);
+        }
+
+        @Override
+        public RowKeyValue getRowKey() {
+            return m_rowRead.getRowKey();
+        }
     }
 
     @Override

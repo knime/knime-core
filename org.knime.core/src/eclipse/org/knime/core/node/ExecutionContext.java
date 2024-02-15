@@ -74,6 +74,7 @@ import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
+import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
@@ -912,6 +913,11 @@ public class ExecutionContext extends ExecutionMonitor {
         @Override
         public void close() throws IOException {
             m_backendDelegate.close();
+        }
+
+        @Override
+        public ValueSchema getSchema() {
+            return m_backendDelegate.getSchema();
         }
 
         @Override

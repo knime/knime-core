@@ -61,16 +61,14 @@ import java.io.Closeable;
 public interface RowWriteCursor extends Closeable {
 
     /**
-     * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
+     * Commit the given {@code RowRead} to the table.
+     * <p>
+     * After this method returns, it is safe to re-use the {@code RowRead}, for example to set it to new values for the
+     * next row to be committed.
      *
-     * @return the element at the current cursor position or null if no new element available
+     * @since 5.4
      */
-    RowWrite forward();
-
-    /**
-     * @return {@code true} if more elements are available, otherwise {@code false}
-     */
-    boolean canForward();
+    void commit(RowRead row);
 
     /**
      * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
