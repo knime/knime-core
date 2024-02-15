@@ -112,11 +112,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     }
 
     @Override
-    public boolean canForward() {
-        return true;
-    }
-
-    @Override
     public BufferedDataTable finish() throws IOException {
         commitIfNecessary();
         m_delegate.close();
