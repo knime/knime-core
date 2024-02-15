@@ -68,11 +68,6 @@ public interface RowWriteCursor extends Closeable {
     RowWrite forward();
 
     /**
-     * @return {@code true} if more elements are available, otherwise {@code false}
-     */
-    boolean canForward();
-
-    /**
      * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
      * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
      * side effects.<br>
