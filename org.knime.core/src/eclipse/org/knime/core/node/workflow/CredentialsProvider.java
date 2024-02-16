@@ -139,9 +139,10 @@ public final class CredentialsProvider {
         }
     }
 
-    /** List all credentials variables available in the workflow. The names
-     * returned in the collection are valid identifiers for the
-     * {@link #get(String)} method.
+    /**
+     * List all credentials variable names available in the workflow. The names
+     * returned in the collection are valid identifiers for the {@link #get(String)} method.
+     *
      * @return the collection of valid credentials identifiers.
      */
     public Collection<String> listNames() {
@@ -152,6 +153,21 @@ public final class CredentialsProvider {
         FlowObjectStack flowObjectStack = m_client.getFlowObjectStack();
         names.addAll(flowObjectStack.getAvailableFlowVariables(Type.CREDENTIALS).keySet());
         return names;
+    }
+
+    /**
+     * List all credentials variables available in the workflow. Uses {@link #listNames()} and
+     * {@link #get(String)} to reconstruct credential {@link FlowVariable}s.
+     *
+     * @return the collection of flow variables from valid credentials identifiers.
+     * @since 5.3
+     */
+    public Collection<FlowVariable> listVariables() {
+        return listNames().stream() //
+            .map(this::get) //
+            .map(c -> CredentialsStore.newCredentialsFlowVariable(c.getName(), c.getLogin(), c.getPassword(),
+                c.getSecondAuthenticationFactor().orElse(null))) //
+            .toList();
     }
 
     /** @return the client, can be <code>null</code> */

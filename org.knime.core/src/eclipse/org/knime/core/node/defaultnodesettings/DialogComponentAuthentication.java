@@ -67,6 +67,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -90,6 +91,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelAuthentication.AuthenticationType;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.Pair;
 
@@ -112,7 +115,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     private final JRadioButton m_typeCredential;
     private final JRadioButton m_typeKerberos;
 
-    private final JComboBox<String> m_credentialField = new JComboBox<>();
+    private final JComboBox<FlowVariableCell> m_credentialField = new JComboBox<>();
 
     private final JTextField m_usernameOnlyField = new JTextField(20);
 
@@ -141,8 +144,6 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
 
     private HashSet<AuthenticationType> m_supportedTypes;
     private Map<AuthenticationType, Pair<String, String>> m_namingMap = new HashMap<>();
-
-    private int m_numberOfAvailableCredentials;
 
     private JRadioButton createAuthenticationTypeButton(final AuthenticationType type, final ButtonGroup group,
         final ActionListener l) {
@@ -584,6 +585,8 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.insets = new Insets(0, leftInset, 0, 0);
+        m_credentialField.setRenderer(new FlowVariableListCellRenderer());
+        m_credentialField.setEditable(false);
         panel.add(m_credentialField, gbc);
         return panel;
     }
@@ -595,9 +598,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         String pwd = null;
         switch (type) {
             case CREDENTIALS:
-                // field caches last credential for convenience, which is not tracked by #available creds
-                // hence, only choose the selected item, once credentials are actually there
-                credential = m_numberOfAvailableCredentials > 0 ? (String)m_credentialField.getSelectedItem() : null;
+                credential = getCredentialFromField().orElse(null);
                 break;
             case KERBEROS:
                 //nothing to store
@@ -646,10 +647,9 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
             }
         }
 
-        if (model.getAuthenticationType().equals(AuthenticationType.CREDENTIALS)) {
+        if (model.getAuthenticationType() == AuthenticationType.CREDENTIALS) {
             //update the credential information
-            if (m_credentialField.getSelectedItem() != null
-                && !((String)m_credentialField.getSelectedItem()).equals(model.getCredential())) {
+            if (getCredentialFromField().filter(name -> !Objects.equals(name, model.getCredential())).isPresent()) {
                 ItemListener[] itemListeners = m_credentialField.getItemListeners();
                 for (ItemListener listener : itemListeners) {
                     m_credentialField.removeItemListener(listener);
@@ -660,13 +660,13 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 }
             }
 
-        } else if (model.getAuthenticationType().equals(AuthenticationType.USER)) {
+        } else if (model.getAuthenticationType() == AuthenticationType.USER) {
           //update the user name only field
             if (!m_usernameOnlyField.getText().equals(model.getUsername())) {
                 updateNoListener(m_usernameOnlyField, model.getUsername());
             }
 
-        } else if (model.getAuthenticationType().equals(AuthenticationType.USER_PWD)) {
+        } else if (model.getAuthenticationType() == AuthenticationType.USER_PWD) {
             //update the user name field
             if (!m_usernameField.getText().equals(model.getUsername())) {
                 updateNoListener(m_usernameField, model.getUsername());
@@ -685,7 +685,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
                 }
             }
 
-        } else if (model.getAuthenticationType().equals(AuthenticationType.PWD)) {
+        } else if (model.getAuthenticationType() == AuthenticationType.PWD) {
             //update the password field
             final var fieldPassword = String.valueOf(m_passwordOnlyField.getPassword());
             if (!fieldPassword.equals(model.getPassword())) {
@@ -708,7 +708,7 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      */
     private void updatePanel() {
         final var modelEnabled = getModel().isEnabled();
-        final var credentialsAvailable = m_numberOfAvailableCredentials > 0 && modelEnabled;
+        final var credentialsAvailable = m_credentialField.getItemCount() > 0 && modelEnabled;
         m_credentialField.setEnabled(credentialsAvailable);
         m_typeCredential.setEnabled(credentialsAvailable);
         m_credentialPanel.setVisible(m_typeCredential.isSelected());
@@ -796,37 +796,38 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * available credentials name. This way, if the selected credential becomes unavailable,
      * it remains cached in the model. Allows for easy re-selection on re-execute.
      *
-     * This also means that clients using this method have to check for the existence
-     * of the cache credential since it no longer implies that. Technically, this should
-     * not be a problem because this parent class ({@link DialogComponentAuthentication})
-     * automatically disables credentials selection once none are available anymore.
+     * This also means that clients using this method have to check for the existence of the
+     * cache credential since it no longer implies that. However, since the credentials are
+     * rendered as {@link FlowVariableCell}s, an invalid variable is also marked in the dialog
+     * with a red border for the user to see.
      *
      * Note: other dialog components (e.g. the {@link DialogComponentCredentialSelection}) or
      * nodes (e.g. Hub Authenticator, SSH Connector, ...) that allow for credential selection
      * do not cache the last credential name. I.e. everywhere else, after a re-configure, the
-     * selected credential name is lost if the implementation does not take precautions.
+     * selected credential name is lost if the implementation does not cache.
      *
      * @param cp CredentialsProvider
      */
     public void loadCredentials(final CredentialsProvider cp) {
-        final SettingsModelAuthentication model = (SettingsModelAuthentication)getModel();
+        final var model = (SettingsModelAuthentication)getModel();
         m_credentialField.removeAllItems();
-        final Collection<String> names = cp != null ? cp.listNames() : null;
-        if (names != null) {
-            for (final String option : names) {
-                m_credentialField.addItem(option);
-            }
-            m_numberOfAvailableCredentials = names.size();
-        } else {
-            m_numberOfAvailableCredentials = 0;
+        cp.listVariables().stream().map(FlowVariableCell::new).forEach(m_credentialField::addItem);
+        // if the credential was lost due to re-configure, it might become available again
+        final var selectedCredential = model.getCredential();
+        if (m_credentialField.getItemCount() == 0 && selectedCredential != null) {
+            // this FlowVariableCell(String) constructor creates an invalid-marked cell
+            m_credentialField.addItem(new FlowVariableCell(selectedCredential));
         }
-        // If the credential was lost due to re-configure, it might become available again.
-        // Let it remain stored as credentials field.
-        final var storedCredential = model.getCredential();
-        if (m_credentialField.getItemCount() == 0 && storedCredential != null) {
-            m_credentialField.addItem(storedCredential);
+        m_credentialField.setSelectedItem(selectedCredential);
+    }
+
+    private Optional<String> getCredentialFromField() {
+        final var selectedType = AuthenticationType.get(m_authenticationType.getSelection().getActionCommand());
+        if (selectedType != AuthenticationType.CREDENTIALS) {
+            return Optional.empty();
         }
-        m_credentialField.setSelectedItem(storedCredential);
+        return Optional.ofNullable((FlowVariableCell)m_credentialField.getSelectedItem()) //
+                .map(FlowVariableCell::getName);
     }
 
     /**
