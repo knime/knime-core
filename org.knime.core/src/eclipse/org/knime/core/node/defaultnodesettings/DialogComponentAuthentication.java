@@ -811,7 +811,11 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
     public void loadCredentials(final CredentialsProvider cp) {
         final var model = (SettingsModelAuthentication)getModel();
         m_credentialField.removeAllItems();
-        cp.listVariables().stream().map(FlowVariableCell::new).forEach(m_credentialField::addItem);
+        if (cp != null) {
+            cp.listVariables().stream() //
+                .map(FlowVariableCell::new) //
+                .forEach(m_credentialField::addItem);
+        }
         // if the credential was lost due to re-configure, it might become available again
         final var selectedCredential = model.getCredential();
         if (m_credentialField.getItemCount() == 0 && selectedCredential != null) {
