@@ -818,11 +818,11 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         }
         // if the credential was lost due to re-configure, it might become available again
         final var selectedCredential = model.getCredential();
-        if (m_credentialField.getItemCount() == 0 && selectedCredential != null) {
+        if (cp != null && !cp.listNames().contains(selectedCredential)) {
             // this FlowVariableCell(String) constructor creates an invalid-marked cell
             m_credentialField.addItem(new FlowVariableCell(selectedCredential));
         }
-        m_credentialField.setSelectedItem(selectedCredential);
+        setCredentialFieldTo(selectedCredential);
     }
 
     private Optional<String> getCredentialFromField() {
@@ -832,6 +832,19 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
         }
         return Optional.ofNullable((FlowVariableCell)m_credentialField.getSelectedItem()) //
                 .map(FlowVariableCell::getName);
+    }
+
+    private void setCredentialFieldTo(final String name) {
+        for (var i = 0; i < m_credentialField.getItemCount(); i++) {
+            var cell = m_credentialField.getItemAt(i);
+            if (cell != null && Objects.equals(cell.getName(), name)) {
+                m_credentialField.setSelectedIndex(i);
+                return;
+            }
+        }
+        // explicitly deselect the chosen selection if nothing matched, for example
+        // if the name is null (JComboBox#setSelectedItem(null) is a no-op)
+        m_credentialField.setSelectedIndex(-1);
     }
 
     /**
