@@ -57,6 +57,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -82,8 +83,9 @@ public interface IEarlyStartup {
      * @param beforeKNIMEApplicationStart if {@code true} it will only execute the extension points which wish to be
      *            called right before the start of the KNIME Application; if {code false} it will call the extension
      *            points which wish to be called later after most of the KNIME Application has been started already.
-     *            NOTE: if {@code true}, the {@link IEarlyStartup}-implementation must not use the {@link NodeLogger} -
-     *            because its initialization prevents the workspace-selection-prompt from being shown.
+     *            NOTE: if {@code true}, the {@link IEarlyStartup}-implementation must not access the
+     *            {@link KNIMEConstants}-class - because its initialization prevents the workspace-selection-prompt from
+     *            being shown.
      *
      * @noreference This method is not intended to be referenced by clients.
      */
