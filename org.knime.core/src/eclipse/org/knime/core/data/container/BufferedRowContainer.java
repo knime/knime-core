@@ -87,8 +87,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     private final BufferedDataContainer m_delegate;
 
-    private boolean m_needsCommit = false;
-
     private Committer m_committer;
 
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
@@ -121,22 +119,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     }
 
     @Override
-    public RowWrite forward() {
-        commitIfNecessary();
-        m_needsCommit = true;
-        return m_row;
-    }
-
-    private void commitIfNecessary() {
-        if (m_needsCommit) {
-            m_row.commit();
-            m_needsCommit = false;
-        }
-    }
-
-    @Override
     public BufferedDataTable finish() throws IOException {
-        commitIfNecessary();
         m_delegate.close();
         return m_delegate.getTable();
     }
