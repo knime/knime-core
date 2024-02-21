@@ -73,14 +73,6 @@ public interface RowWriteCursor extends Closeable {
     //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
     void commit(RowRead row);
 
-    // old API
-    /**
-     * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
-     *
-     * @return the element at the current cursor position or null if no new element available
-     */
-    RowWrite forward();
-
     /**
      * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
      * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
