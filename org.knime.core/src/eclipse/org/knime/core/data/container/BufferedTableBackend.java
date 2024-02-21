@@ -270,9 +270,10 @@ public final class BufferedTableBackend implements TableBackend {
             try (var readCursor = table.cursor(TableFilter.fromSelection(sliceFromFirstRow))) {
                 long r = moveToSlice(readCursor, exec, numRows);
                 for (; readCursor.canForward(); r++) {
-                    var rowWrite = writeCursor.forward();
+                    var rowWrite = writeCursor.row();
                     var rowRead = readCursor.forward();
                     copyRow(rowWrite, rowRead);
+                    writeCursor.commit();
                     exec.setProgress(r / numRows);
                 }
             }
