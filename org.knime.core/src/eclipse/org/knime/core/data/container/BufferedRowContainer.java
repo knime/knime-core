@@ -52,6 +52,7 @@ import java.io.IOException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.def.DefaultRow;
@@ -70,6 +71,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.table.access.BufferedAccesses;
 import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
+import org.knime.core.table.access.WriteAccess;
 
 /**
  * Legacy implementation for {@link RowContainer} using {@link BufferedDataContainer} as storage backend.
@@ -87,14 +89,35 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     private boolean m_needsCommit = false;
 
+    private Committer m_committer;
+
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
         m_row = new BufferedRowWrite(delegate, schema);
+        m_committer = new Committer(delegate, schema);
         m_delegate = delegate;
     }
 
     @Override
     public RowWriteCursor createCursor() {
         return this;
+    }
+
+    // new API v1
+    @Override
+    public RowWrite row() {
+        return m_row;
+    }
+
+    // new API v1
+    @Override
+    public void commit() {
+        m_row.commit();
+    }
+
+    // new API v2
+    @Override
+    public void commit(final RowRead row) {
+        m_committer.commit(row);
     }
 
     @Override
@@ -127,6 +150,64 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         }
     }
 
+    private static class Materializer<D extends DataValue> {
+        private final ReadValue m_read;
+
+        private final WriteValue<D> m_write;
+
+        <R extends ReadAccess, W extends WriteAccess> Materializer(final ValueFactory<R, W> factory) {
+            BufferedAccess buf = BufferedAccesses.createBufferedAccess(factory.getSpec());
+            m_read = factory.createReadValue((R)buf);
+            m_write = (WriteValue<D>)factory.createWriteValue((W)buf);
+        }
+
+        DataCell materializeDataCell(final D value) {
+            m_write.setValue(value);
+            return m_read.getDataCell();
+        }
+    }
+
+    private static class Committer {
+        private final BufferedDataContainer m_delegate;
+
+        // lazily initialized when materializeDataCell() is unsupported on a value
+        private final Materializer<?>[] m_materializers;
+
+        // re-used for constructing DataRows
+        private final DataCell[] m_cells;
+
+        private final ValueSchema m_schema;
+
+        private Committer(final BufferedDataContainer delegate, final ValueSchema schema) {
+
+            m_delegate = delegate;
+            m_schema = schema;
+            int numCells = schema.numFactories() - 1;
+            m_cells = new DataCell[numCells];
+            m_materializers = new Materializer[numCells];
+        }
+
+        public void commit(final RowRead row) {
+            for (int i = 0; i < m_cells.length; ++i) {
+                if (row.isMissing(i)) {
+                    m_cells[i] = MISSING_CELL;
+                } else {
+                    try {
+                        m_cells[i] = row.getValue(i).materializeDataCell();
+                    } catch (UnsupportedOperationException ex) {
+                        if (m_materializers[i] == null) {
+                            m_materializers[i] = new Materializer<>(m_schema.getValueFactory(i + 1));
+                        }
+                        m_cells[i] = m_materializers[i].materializeDataCell(row.getValue(i));
+                    }
+                }
+            }
+            RowKey rowId = new RowKey(row.getRowKey().getString());
+            m_delegate.addRowToTable(new DefaultRow(rowId, m_cells));
+        }
+    }
+
+    // TODO (TP) remove
     private static final class BufferedRowWrite implements RowWrite {
 
         private final BufferedDataContainer m_delegate;
