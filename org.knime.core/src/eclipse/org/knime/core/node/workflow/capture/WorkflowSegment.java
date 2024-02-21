@@ -51,8 +51,6 @@ package org.knime.core.node.workflow.capture;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -63,8 +61,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataTableSpec;
@@ -81,6 +81,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -114,10 +116,12 @@ import org.knime.core.util.Version;
  */
 public final class WorkflowSegment {
 
-    //cached workflow manager
-    private WorkflowManager m_wfm = null;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowSegment.class);
 
-    private byte[] m_wfmStream = null;
+    //cached workflow manager
+    private WorkflowManager m_wfm;
+
+    private byte[] m_wfmStream;
 
     private final String m_name;
 
@@ -224,18 +228,18 @@ public final class WorkflowSegment {
     }
 
     WorkflowManager loadWorkflowInternal(final Consumer<WorkflowLoadResult> loadResultCallback) {
-        File tmpDir = null;
         try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
-            tmpDir = newTempDirWithName(getName());
+            final var tmpDir = newTempDirWithName(getName());
             FileUtil.unzip(in, tmpDir, 1);
-            var loadHelper =
-                createWorkflowLoadHelper(tmpDir, warning -> NodeLogger.getLogger(WorkflowSegment.class).warn(warning));
-            WorkflowLoadResult loadResult =
+            var loadHelper = createWorkflowLoadHelper(tmpDir, LOGGER::warn);
+            final WorkflowLoadResult loadResult =
                 WorkflowManager.EXTRACTED_WORKFLOW_ROOT.load(tmpDir, new ExecutionMonitor(), loadHelper, false);
             if (loadResultCallback != null) {
                 loadResultCallback.accept(loadResult);
             }
-            return loadResult.getWorkflowManager();
+            final WorkflowManager wfm = loadResult.getWorkflowManager();
+            createAndRegisterCleanupListener(wfm, tmpDir.getParentFile());
+            return wfm;
         } catch (InvalidSettingsException | CanceledExecutionException | UnsupportedWorkflowVersionException
                 | LockFailedException | IOException ex) {
             // should never happen
@@ -282,16 +286,13 @@ public final class WorkflowSegment {
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        String name = wfm.getName();
-        try {
-            Paths.get(name);
-        } catch (InvalidPathException ipe) {
-            NodeLogger.getLogger(WorkflowSegment.class)
-                .warn("Workflow name '%s' is invalid, using default".formatted(name), ipe);
-            name = "Workflow Manager";
-        }
+        final String name = StringUtils.replaceChars(wfm.getName(), FileUtil.ILLEGAL_FILENAME_CHARS, "_");
         var tmpDir = newTempDirWithName(name);
-        return wfmToStream(wfm, tmpDir);
+        try {
+            return wfmToStream(wfm, tmpDir);
+        } finally {
+            FileUtil.deleteRecursively(tmpDir.getParentFile());
+        }
     }
 
     static byte[] wfmToStream(final WorkflowManager wfm, final File tmpDir) throws IOException {
@@ -308,8 +309,6 @@ public final class WorkflowSegment {
             return bos.toByteArray();
         } catch (LockFailedException | CanceledExecutionException | IOException e) {
             throw new IOException("Failed saving workflow port object", e);
-        } finally {
-            FileUtil.deleteRecursively(tmpDir.getAbsoluteFile());
         }
     }
 
@@ -617,6 +616,39 @@ public final class WorkflowSegment {
         } else {
             return null;
         }
+    }
+
+    /** Registers a listener that cleans the temp file after the workflow is discarded. */
+    static void createAndRegisterCleanupListener(final WorkflowManager wfm, final File tempDirectory) {
+        final WorkflowManager parentWFM = wfm.getParent();
+        parentWFM.addListener(new DeleteTempFolderOnRemoveWorkflowListener(parentWFM, wfm.getID(), tempDirectory));
+    }
+
+    /** A listener added to the workflow's parent (WorkflowManager#EXTRACTED_WORKFLOW_ROOT) that deletes
+     * the workflow's temporary directory after the workflow is removed from the parent. */
+    static final class DeleteTempFolderOnRemoveWorkflowListener implements WorkflowListener {
+
+        private final WorkflowManager m_parentWFM;
+        private final NodeID m_childWFMID;
+        private final File m_tempDirectory;
+
+        private DeleteTempFolderOnRemoveWorkflowListener(final WorkflowManager parentWFM, final NodeID childWFMID,
+            final File tempDirectory) {
+            m_parentWFM = parentWFM;
+            m_childWFMID = childWFMID;
+            m_tempDirectory = tempDirectory;
+        }
+
+        @Override
+        public void workflowChanged(final WorkflowEvent event) {
+            if (event.getType() == WorkflowEvent.Type.NODE_REMOVED && Optional.ofNullable(event.getOldValue())
+                .filter(WorkflowManager.class::isInstance).map(WorkflowManager.class::cast).map(WorkflowManager::getID)
+                .stream().anyMatch(m_childWFMID::equals)) {
+                FileUtils.deleteQuietly(m_tempDirectory);
+                m_parentWFM.removeListener(this);
+            }
+        }
+
     }
 
 }
