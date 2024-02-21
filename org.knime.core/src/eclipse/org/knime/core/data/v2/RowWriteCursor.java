@@ -60,6 +60,20 @@ import java.io.Closeable;
  */
 public interface RowWriteCursor extends Closeable {
 
+    // new API v1
+    RowWrite row();
+
+    // new API v1
+    void commit();
+
+    // new API v2
+    // TODO (TP): This should be preferably be the only method,
+    //            but it needs one additional layer of buffering in case the RowWrite row() is written to directly.
+    //            How important is this?
+    //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
+    void commit(RowRead row);
+
+    // old API
     /**
      * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
      *
