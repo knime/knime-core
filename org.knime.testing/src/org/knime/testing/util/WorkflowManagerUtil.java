@@ -50,6 +50,7 @@ package org.knime.testing.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -87,6 +88,52 @@ public final class WorkflowManagerUtil {
         }
     }
 
+    private static WorkflowManager loadWorkflow(final File workflowDir, final WorkflowContextV2 workflowContext)
+            throws IOException, InvalidSettingsException, CanceledExecutionException,
+            UnsupportedWorkflowVersionException, LockFailedException {
+        final var loadHelper = new WorkflowLoadHelper() {
+            @Override
+            public WorkflowContextV2 getWorkflowContext() {
+                return workflowContext;
+            }
+
+            @Override
+            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
+                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
+                final boolean isNightlyBuild) {
+                return UnknownKNIMEVersionLoadPolicy.Try;
+            }
+        };
+
+        WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
+        return loadRes.getWorkflowManager();
+    }
+
+    /**
+     * Loads a workflow into memory and sets a {@link WorkflowContextV2 workflow context} claiming that the workflow
+     * lives on a {@code LOCAL} mountpoint with the given root directory.
+     *
+     * @param workflowDir
+     * @param workspaceDir
+     * @return the loaded workflow
+     * @throws IOException
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     * @throws UnsupportedWorkflowVersionException
+     * @throws LockFailedException
+     */
+    public static WorkflowManager loadWorkflowInWorkspace(final Path workflowDir, final Path workspaceDir)
+            throws IOException, InvalidSettingsException, CanceledExecutionException,
+            UnsupportedWorkflowVersionException, LockFailedException {
+        return loadWorkflow(workflowDir.toFile(), WorkflowContextV2.builder()
+            .withAnalyticsPlatformExecutor(exec -> exec
+                .withCurrentUserAsUserId()
+                .withLocalWorkflowPath(workflowDir.toAbsolutePath())
+                .withMountpoint("LOCAL", workspaceDir.toAbsolutePath()))
+            .withLocalLocation()
+            .build());
+    }
+
     /**
      * Loads a workflow into memory. Mainly copied from {@code org.knime.testing.core.ng.WorkflowLoadTest}.
      *
@@ -100,23 +147,7 @@ public final class WorkflowManagerUtil {
      */
     public static WorkflowManager loadWorkflow(final File workflowDir) throws IOException, InvalidSettingsException,
         CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
-
-            @Override
-            public WorkflowContextV2 getWorkflowContext() {
-                return WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null);
-            }
-
-            @Override
-            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                final boolean isNightlyBuild) {
-                return UnknownKNIMEVersionLoadPolicy.Try;
-            }
-        };
-
-        WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
-        return loadRes.getWorkflowManager();
+        return loadWorkflow(workflowDir, WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null));
     }
 
     /**
