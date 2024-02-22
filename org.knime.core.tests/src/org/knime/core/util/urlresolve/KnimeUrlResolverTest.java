@@ -81,11 +81,11 @@ import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.urlresolve.URLMethodSources.Context;
 import org.knime.core.util.urlresolve.URLMethodSources.WorkspaceType;
 
 /**
- *
- * @author leonard.woerteler
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  */
 class KnimeUrlResolverTest {
 
@@ -940,10 +940,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#remoteServerExecutorContexts()"
     })
-    void neighborWorkflowTest(final String context, final String localMountId, final WorkspaceType type,
+    void neighborWorkflowTest(final Context context, final String localMountId, final WorkspaceType type,
         final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
         final var expected = new HashMap<>(Map.of(
             KnimeUrlType.MOUNTPOINT_RELATIVE, new URL("knime://knime.mountpoint/group/workflow2"),
             KnimeUrlType.HUB_SPACE_RELATIVE, new URL("knime://knime.space/group/workflow2"),
@@ -972,10 +972,10 @@ class KnimeUrlResolverTest {
     @MethodSource({
         "org.knime.core.util.urlresolve.URLMethodSources#knwfContexts()"
     })
-    void neighborWorkflowTestKnwf(final String context, final String localMountId, final WorkspaceType type,
+    void neighborWorkflowTestKnwf(final Context context, final String localMountId, final WorkspaceType type,
         @SuppressWarnings("unused") final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
         final var expected = new HashMap<>(Map.of(
             KnimeUrlType.MOUNTPOINT_RELATIVE, new URL("knime://knime.mountpoint/group/workflow2"),
             KnimeUrlType.HUB_SPACE_RELATIVE, new URL("knime://knime.space/group/workflow2"),
@@ -997,10 +997,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()"
     })
-    void fileInsideWorkflowTest(final String context, final String localMountId, final WorkspaceType type,
+    void fileInsideWorkflowTest(final Context context, final String localMountId, final WorkspaceType type,
         final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
 
         final var path = Path.of((type == WorkspaceType.UNC_PATH ? "//UncMount/Share" : "")
             + "/Wörk – ßpäce/group/workflow/someDir/file.csv").toAbsolutePath();
@@ -1025,10 +1025,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#remoteServerExecutorContexts()"
     })
-    void fileInsideRemoteWorkflowTest(final String context, final String localMountId, final WorkspaceType type,
+    void fileInsideRemoteWorkflowTest(final Context context, final String localMountId, final WorkspaceType type,
         @SuppressWarnings("unused") final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
         final var workflowRelative = URI.create("knime://knime.workflow/data/../someDir/file.csv").toURL();
         final var e = assertThrows(resolver::resolve, workflowRelative);
         assertTrue("Should talk about lack of accessibility: '" + e.getMessage() + "'",
@@ -1044,10 +1044,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()",
     })
-    void testRootOfCurrentWorkflow(final String context, final String localMountId, final WorkspaceType type,
+    void testRootOfCurrentWorkflow(final Context context, final String localMountId, final WorkspaceType type,
         @SuppressWarnings("unused") final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
 
         final var path = Path.of((type == WorkspaceType.UNC_PATH ? "//UncMount/Share" : "")
             + "/Wörk – ßpäce/group/workflow").toAbsolutePath();
@@ -1062,10 +1062,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#localApContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#knwfContexts()"
     })
-    void testRootOfCurrentWorkflowLocal(final String context, final String localMountId, final WorkspaceType type,
+    void testRootOfCurrentWorkflowLocal(final Context context, final String localMountId, final WorkspaceType type,
         @SuppressWarnings("unused") final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
 
         final var path = Path.of((type == WorkspaceType.UNC_PATH ? "//UncMount/Share" : "")
             + "/Wörk – ßpäce/group/workflow").toAbsolutePath();
@@ -1082,10 +1082,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#remoteServerExecutorContexts()"
     })
-    void testRootOfCurrentWorkflowMountpoint(final String context, final String localMountId, final WorkspaceType type,
+    void testRootOfCurrentWorkflowMountpoint(final Context context, final String localMountId, final WorkspaceType type,
         final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
 
         final var expectedUrl = URIPathEncoder.UTF_8.encodePathSegments(
             new URI(KnimeUrlType.SCHEME, localMountId, spacePath + "/group/workflow", null)).toURL();
@@ -1099,10 +1099,10 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()",
     })
-    void testRootOfCurrentWorkflowExecutor(final String context, final String localMountId, final WorkspaceType type,
+    void testRootOfCurrentWorkflowExecutor(final Context context, final String localMountId, final WorkspaceType type,
         final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
 
         final var path = "/bla/blubb/repository" + spacePath + "/group/workflow:data";
         final var expectedUrl = URIPathEncoder.UTF_8.encodePathSegments(
@@ -1133,10 +1133,10 @@ class KnimeUrlResolverTest {
         //"org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()",
         //"org.knime.core.util.urlresolve.URLMethodSources#remoteServerExecutorContexts()"
     })
-    void testEscapeSpace(final String context, final String localMountId, final WorkspaceType type,
+    void testEscapeSpace(final Context context, final String localMountId, final WorkspaceType type,
         final String spacePath) throws Exception {
 
-        final var resolver = URLMethodSources.getResolver(context, localMountId, type);
+        final var resolver = context.getResolver(localMountId, type);
         final var subPath = "/foo/../../test.txt";
 
         assertThrows(resolver::resolve, new URL("knime://knime.mountpoint" + subPath));

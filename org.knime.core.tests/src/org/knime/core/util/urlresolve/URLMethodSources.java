@@ -51,7 +51,6 @@ package org.knime.core.util.urlresolve;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -71,43 +70,47 @@ import org.knime.core.util.hub.HubItemVersion;
 final class URLMethodSources {
 
     enum WorkspaceType {
-        LOCAL_PATH,
-        UNC_PATH
+            LOCAL_PATH(Path.of("/Wörk – ßpäce").toAbsolutePath()),
+            UNC_PATH(Path.of("//UncMount/Share/Wörk – ßpäce").toAbsolutePath());
+
+        private final Path workspace;
+
+        WorkspaceType(final Path absolutePath) {
+            workspace = absolutePath;
+        }
+
+        private static final Stream<WorkspaceType> supportedByOS() {
+            return SystemUtils.IS_OS_WINDOWS ? Arrays.stream(WorkspaceType.values())
+                : Stream.of(WorkspaceType.LOCAL_PATH);
+        }
     }
 
-    private static final Path WORKSPACE = Path.of("/Wörk – ßpäce").toAbsolutePath();
-
-    private static final Path WORKSPACE_UNC = Path.of("//UncMount/Share/Wörk – ßpäce").toAbsolutePath();
-
-    private static final Path getWorkspace(final WorkspaceType type) {
-        return type == WorkspaceType.LOCAL_PATH ? WORKSPACE : WORKSPACE_UNC;
-    }
-
-    private static final Stream<WorkspaceType> availableWorkspaceTypes() {
-        return SystemUtils.IS_OS_WINDOWS ? Arrays.stream(WorkspaceType.values()) : Stream.of(WorkspaceType.LOCAL_PATH);
-    }
-
-    private static final Map<String, BiFunction<String, WorkspaceType, KnimeUrlResolver>> CONTEXTS = Map.of(
-        "local+local", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+    /**
+     * <p>
+     * A context for resolution is defined by executor and workflow location.
+     * </p>
+     * This enumerates all relevant combinations for URL resolution, including remote workflow editing, where the user
+     * uses an application to view the state of a remote executor.
+     */
+    enum Context {
+        AP_LOCAL((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withAnalyticsPlatformExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
-                .withMountpoint(mountId, getWorkspace(type))) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
+                .withMountpoint(mountId, type.workspace)) //
             .withLocalLocation() //
-            .build()),
-
-        "local+knwf", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+            .build())),
+        AP_KNWF((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withAnalyticsPlatformExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow"))) //
-            .withArchiveLocation(getWorkspace(type).resolve("../Downloads/workflow.knwf").normalize()) //
-            .build()),
-
-        "local+hub", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow"))) //
+            .withArchiveLocation(type.workspace.resolve("../Downloads/workflow.knwf").normalize()) //
+            .build())),
+        AP_HUB((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withAnalyticsPlatformExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
-                .withMountpoint(mountId, getWorkspace(type))) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
+                .withMountpoint(mountId, type.workspace)) //
             .withHubSpaceLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/Users/John Döë/Private/group/workflow") //
@@ -115,24 +118,22 @@ final class URLMethodSources {
                 .withDefaultMountId("MountID") //
                 .withSpace("/Users/John Döë/Private", "*1234") //
                 .withWorkflowItemId("*1337")) //
-            .build()),
-
-        "local+server", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+            .build())),
+        AP_SERVER((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withAnalyticsPlatformExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
-                .withMountpoint(mountId, getWorkspace(type))) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
+                .withMountpoint(mountId, type.workspace)) //
             .withServerLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/group/workflow") //
                 .withAuthenticator(new SimpleTokenAuthenticator("token")) //
                 .withDefaultMountId("MountID")) //
-            .build()),
-
-        "hub+hub", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+            .build())),
+        HUB_HUB((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withHubJobExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
                 .withScope("a", "b") //
                 .withJobCreator("job creator") //
@@ -144,12 +145,11 @@ final class URLMethodSources {
                 .withDefaultMountId("MountID") //
                 .withSpace("/Users/John Döë/Private", "*1234") //
                 .withWorkflowItemId("*1337")) //
-            .build()),
-
-        "server+server", (mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
+            .build())),
+        SERVER_SERVER((mountId, type) -> KnimeUrlResolver.getResolver(WorkflowContextV2.builder() //
             .withServerJobExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
                 .withIsRemote(false)) //
             .withServerLocation(loc -> loc //
@@ -157,14 +157,13 @@ final class URLMethodSources {
                 .withWorkflowPath("/group/workflow") //
                 .withAuthenticator(new SimpleTokenAuthenticator("token")) //
                 .withDefaultMountId("MountID")) //
-            .build()),
-
-        "hub+hub+rwe", (mountId, type) -> KnimeUrlResolver.getRemoteWorkflowResolver(
+            .build())),
+        HUB_HUB_RWE((mountId, type) -> KnimeUrlResolver.getRemoteWorkflowResolver(
             URI.create("knime://" + mountId + "/Users/John%20D%C3%B6%C3%AB/Private/group/workflow"),
             WorkflowContextV2.builder() //
             .withHubJobExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
                 .withScope("a", "b") //
                 .withJobCreator("job creator") //
@@ -176,13 +175,12 @@ final class URLMethodSources {
                 .withDefaultMountId("MountID") //
                 .withSpace("/Users/John Döë/Private", "*1234") //
                 .withWorkflowItemId("*1337")) //
-            .build()),
-
-        "server+server+rwe", (mountId, type) -> KnimeUrlResolver.getRemoteWorkflowResolver(
+            .build())),
+        SERVER_SERVER_RWE((mountId, type) -> KnimeUrlResolver.getRemoteWorkflowResolver(
             URI.create("knime://" + mountId + "/group/workflow"), WorkflowContextV2.builder() //
             .withServerJobExecutor(exec -> exec //
                 .withUserId("user") //
-                .withLocalWorkflowPath(getWorkspace(type).resolve("group/workflow")) //
+                .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
                 .withIsRemote(true)) //
             .withServerLocation(loc -> loc //
@@ -190,60 +188,75 @@ final class URLMethodSources {
                 .withWorkflowPath("/group/workflow") //
                 .withAuthenticator(new SimpleTokenAuthenticator("token")) //
                 .withDefaultMountId("MountID")) //
-            .build())
-    );
+            .build()));
 
+        private final BiFunction<String, WorkspaceType, KnimeUrlResolver> m_resolver;
+
+        private Context(final BiFunction<String, WorkspaceType, KnimeUrlResolver> resolver) {
+            this.m_resolver = resolver;
+        }
+
+        KnimeUrlResolver getResolver(final String localMountId, final WorkspaceType type) {
+            return m_resolver.apply(localMountId, type);
+        }
+
+    }
 
     private URLMethodSources() {
         // hidden
     }
 
-    static KnimeUrlResolver getResolver(final String context, final String localMountId, final WorkspaceType type) {
-        return CONTEXTS.get(context).apply(localMountId, type);
-    }
-
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> localApContexts() {
-        return availableWorkspaceTypes().map(type -> Arguments.of("local+local", "MountID", type, ""));
+        return WorkspaceType.supportedByOS().map(type -> Arguments.of(Context.AP_LOCAL, "MountID", type, ""));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> knwfContexts() {
-        return availableWorkspaceTypes().map(type -> Arguments.of("local+knwf", null, type, null));
+        return WorkspaceType.supportedByOS().map(type -> Arguments.of(Context.AP_KNWF, null, type, null));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> tempCopyHubContexts() {
-        return availableWorkspaceTypes() //
-                .flatMap(type -> Stream.of("MountID", "Renamed") //
-                    .map(mountId -> Arguments.of("local+hub", mountId, type, "/Users/John Döë/Private")));
+        return WorkspaceType.supportedByOS() //
+            .flatMap(type -> Stream.of("MountID", "Renamed") //
+                .map(mountId -> Arguments.of(Context.AP_HUB, mountId, type, "/Users/John Döë/Private")));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> tempCopyServerContexts() {
-        return availableWorkspaceTypes() //
-                .flatMap(type -> Stream.of("MountID", "Renamed") //
-                    .map(mountId -> Arguments.of("local+server", mountId, type, "")));
+        return WorkspaceType.supportedByOS() //
+            .flatMap(type -> Stream.of("MountID", "Renamed") //
+                .map(mountId -> Arguments.of(Context.AP_SERVER, mountId, type, "")));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> hubExecutorContexts() {
-        return availableWorkspaceTypes() //
-                .map(type -> Arguments.of("hub+hub", "MountID", type, "/Users/John Döë/Private"));
+        return WorkspaceType.supportedByOS() //
+            .map(type -> Arguments.of(Context.HUB_HUB, "MountID", type, "/Users/John Döë/Private"));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> serverExecutorContexts() {
-        return availableWorkspaceTypes() //
-                .map(type -> Arguments.of("server+server", "MountID", type, ""));
+        return WorkspaceType.supportedByOS() //
+            .map(type -> Arguments.of(Context.SERVER_SERVER, "MountID", type, ""));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> remoteHubExecutorContexts() {
-        return availableWorkspaceTypes() //
-                .flatMap(type -> Stream.of("MountID", "Renamed") //
-                    .map(mountId -> Arguments.of("hub+hub+rwe", mountId, type, "/Users/John Döë/Private")));
+        return WorkspaceType.supportedByOS() //
+            .flatMap(type -> Stream.of("MountID", "Renamed") //
+                .map(mountId -> Arguments.of(Context.HUB_HUB_RWE, mountId, type, "/Users/John Döë/Private")));
     }
 
+    /** @return resolver context, local mount point id, workspace type, space path */
     static Stream<Arguments> remoteServerExecutorContexts() {
-        return availableWorkspaceTypes() //
-                .flatMap(type -> Stream.of("MountID", "Renamed") //
-                    .map(mountId -> Arguments.of("server+server+rwe", mountId, type, "")));
+        return WorkspaceType.supportedByOS() //
+            .flatMap(type -> Stream.of("MountID", "Renamed") //
+                .map(mountId -> Arguments.of(Context.SERVER_SERVER_RWE, mountId, type, "")));
     }
 
+    /** @return without version, with version, both versions, hub item version */
     static Stream<Arguments> mountpointAbsolute() {
         return Stream.of(
             Arguments.of("knime://My-Knime-Hub/Users/john/Private/test.txt",
@@ -265,6 +278,7 @@ final class URLMethodSources {
         );
     }
 
+    /** @return without version, with version, both versions, hub item version */
     static Stream<Arguments> mountpointRelative() {
         return Stream.of(
             Arguments.of("knime://knime.mountpoint/test.txt",
@@ -286,6 +300,7 @@ final class URLMethodSources {
         );
     }
 
+    /** @return without version, with version, both versions, hub item version */
     static Stream<Arguments> spaceRelative() {
         return Stream.of(
             Arguments.of("knime://knime.space/test.txt",
@@ -307,6 +322,7 @@ final class URLMethodSources {
         );
     }
 
+    /** @return without version, with version, both versions, hub item version */
     static Stream<Arguments> workflowRelativeLeavingScope() {
         return Stream.of(
             Arguments.of("knime://knime.workflow/../test.txt",
@@ -330,9 +346,13 @@ final class URLMethodSources {
 
     // Always unversioned URLs
 
+    /**
+     * Workflow-relative in workflow directory; referenced resource does not have its own item version
+     *
+     * @return without version, with version, both versions, hub item version
+     */
     static Stream<Arguments> workflowRelativeInScope() {
         return Stream.of(
-            // Workflow-relative in workflow directory; referenced resource does not have its own item version
             Arguments.of("knime://knime.workflow/test.txt",
                          "knime://knime.workflow/test.txt?version=3",
                          "knime://knime.workflow/test.txt?version=3&spaceVersion=3", null),
@@ -348,9 +368,14 @@ final class URLMethodSources {
         );
     }
 
+    /**
+     * Node-relative; similar to {@link #workflowRelativeInScope()}, referenced resource does not have its own item
+     * version
+     *
+     * @return without version, with version, both versions, hub item version
+     */
     static Stream<Arguments> nodeRelativeInScope() {
         return Stream.of(
-            // Node-relative; referenced resource does not have its own item version
             Arguments.of("knime://knime.node/test.txt",
                          "knime://knime.node/test.txt?version=3",
                          "knime://knime.node/test.txt?version=3&spaceVersion=3", null),

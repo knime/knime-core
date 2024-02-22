@@ -48,7 +48,7 @@
  */
 package org.knime.core.util.urlresolve;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -71,6 +71,7 @@ import org.knime.core.util.hub.HubItemVersion;
 
 /**
  * Tests for {@link AnalyticsPlatformLocalUrlResolver}, currently only with a focus on item version handling.
+ * For more generic tests see {@link KnimeUrlResolverTest}.
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @author Manuel Hotz, KNIME AG, Zurich, Switzerland
@@ -113,7 +114,7 @@ class AnalyticsPlatformLocalUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeLeavingScope()",
         "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()"
     })
-    void testResolveRelativeItemVersion(final URL unversioned, final URL withVersion, final URL bothVersions,
+    void testResolveRelativeIgnoresItemVersion(final URL unversioned, final URL withVersion, final URL bothVersions,
             @SuppressWarnings("unused") final HubItemVersion version)
                     throws ResourceAccessException, MalformedURLException {
         // given a local workflow
@@ -136,7 +137,7 @@ class AnalyticsPlatformLocalUrlResolverTest {
 
         for (final var url : new URL[] { withVersion, bothVersions }) {
             final var ex = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(url));
-            assertTrue(ex.getLocalizedMessage().startsWith("Node-relative KNIME URLs cannot specify an item version:"));
+            assertThat(ex.getLocalizedMessage()).startsWith("Node-relative KNIME URLs cannot specify an item version:");
         }
     }
 }
