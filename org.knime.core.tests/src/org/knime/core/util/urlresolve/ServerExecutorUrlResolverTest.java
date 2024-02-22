@@ -48,9 +48,12 @@
  */
 package org.knime.core.util.urlresolve;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertResolvedURIEquals;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertResolvedURLEquals;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -58,6 +61,7 @@ import java.net.URL;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.KNIMEConstants;
@@ -67,12 +71,13 @@ import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
-
 /**
  * Tests for {@link ServerExecutorUrlResolver}, currently only with a focus on item version handling.
  *
  * @author Manuel Hotz, KNIME AG, Zurich, Switzerland
+ * @author Carl Witt, KNIME AG, Zurich, Switzerland
  */
+@SuppressWarnings("javadoc")
 class ServerExecutorUrlResolverTest {
 
     private static ServerExecutorUrlResolver m_resolver;
@@ -98,6 +103,148 @@ class ServerExecutorUrlResolverTest {
 
         m_resolver = new ServerExecutorUrlResolver((ServerJobExecutorInfo)context.getExecutorInfo(),
             (ServerLocationInfo)context.getLocationInfo());
+    }
+
+    /** Check if URLs with a remote mount point are resolved correctly. */
+    @Test
+    void testResolveRemoteMountpointURL() throws Exception {
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withServerJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID()))
+                .withServerLocation(loc -> loc
+                    .withRepositoryAddress(URI.create("https://localhost:8080/knime"))
+                    .withWorkflowPath("/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("Server"))
+                .build());
+        assertThat(resolver).isOfAnyClassIn(ServerExecutorUrlResolver.class);
+
+        assertResolvedURLEquals("Unexpected resolved workflow-relative URL pointing to workflow root", resolver,
+            currentLocation.toUri().toURL(),
+            new URL("knime://knime.workflow"));
+
+        assertResolvedURIEquals(resolver,
+            new URI(URI.create("https://localhost:8080/knime").toString() + "/some%20where/outside.txt:data"),
+            new URL("knime://Server/some where/outside.txt"));
+    }
+
+    /** Checks if workflow-relative knime-URLs are resolved correctly to server addresses. */
+    @Test
+    void testResolveWorkflowRelativeToServer() throws Exception {
+        // original location == current location
+        final var baseUri = new URI("http://localhost:8080/knime");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withServerJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID()))
+                .withServerLocation(loc -> loc
+                    .withRepositoryAddress(baseUri)
+                    .withWorkflowPath("/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("Testserver"))
+                .build());
+        assertThat(resolver).isOfAnyClassIn(ServerExecutorUrlResolver.class);
+
+        // links inside the workflow must stay local links to the workflow copy
+        assertResolvedURIEquals(resolver,
+            new URI(currentLocation.toUri().toString() + "/workflow.knime").normalize(),
+            new URL("knime://knime.workflow/workflow.knime"));
+
+        // path outside the workflow
+        assertResolvedURIEquals(resolver,
+            new URI(baseUri.toString() + "/test%201.txt:data"),
+            new URL("knime://knime.workflow/../test 1.txt"));
+
+        assertResolvedURLEquals("Unexpected resolved workflow-relative URL pointing to workflow root", resolver,
+            currentLocation.toUri().toURL(),
+            new URL("knime://knime.workflow"));
+    }
+
+
+    /** Checks if German special characters in a remote work flow relative to server URL are encoded. */
+    @Test
+    void testRemoteWorkflowRelativeURLIsEncoded() throws Exception {
+        final var baseUri = new URI("http://localhost:8080/knime");
+
+        // original location == current location
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withServerJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withIsRemote(false))
+                .withServerLocation(loc -> loc
+                    .withRepositoryAddress(baseUri)
+                    .withWorkflowPath("/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("Server"))
+                .build());
+
+        assertResolvedURIEquals("Unexpected resolved umlaut URL", resolver,
+            new URI(baseUri.toString() + "/test%C3%9C.txt:data"),
+            new URL("knime://knime.workflow/../testÜ.txt"));
+    }
+
+    /** Checks if German special characters in a remote mount point resolved URL are encoded. */
+    @Test
+    void testRemoteMountpointURLIsEncoded() throws Exception {
+        // Mountpoint is never considered in the old code path, and it makes little sense here IMHO
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withServerJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withIsRemote(false))
+                .withServerLocation(loc -> loc
+                    .withRepositoryAddress(URI.create("https://localhost:8080/knime"))
+                    .withWorkflowPath("/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("Server"))
+                .build());
+
+        assertResolvedURIEquals(resolver,
+            new URI(URI.create("https://localhost:8080/knime").toString() + "/r%C3%B6w0.json:data").normalize(),
+            new URL("knime://knime.workflow/../röw0.json"));
+    }
+
+    /**
+     * Checks if mountpoint-relative knime-URLs are resolved correctly to server addresses.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    void testResolveMountpointRelativeToServer() throws Exception {
+        // original location == current location
+        final var baseUri = URI.create("http://localhost:8080/knime");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withServerJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID()))
+                .withServerLocation(loc -> loc
+                    .withRepositoryAddress(baseUri)
+                    .withWorkflowPath("/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("TestServer"))
+                .build());
+        assertThat(resolver).isOfAnyClassIn(ServerExecutorUrlResolver.class);
+
+        assertResolvedURIEquals(resolver,
+            new URI(baseUri.toString() + "/some%20where/outside.txt:data"),
+            new URL("knime://knime.mountpoint/some where/outside.txt"));
     }
 
     @ParameterizedTest

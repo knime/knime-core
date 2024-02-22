@@ -47,10 +47,14 @@
  *   6 Jul 2023 (carlwitt): created
  */
 package org.knime.core.util.urlresolve;
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertResolvedURIEquals;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertResolvedURLEquals;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertThrows;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -60,6 +64,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.KNIMEConstants;
@@ -109,7 +114,7 @@ class HubExecutorUrlResolverTest {
             (HubSpaceLocationInfo)context.getLocationInfo());
     }
 
-    private static WorkflowManager wfm;
+    private WorkflowManager wfm;
 
     @BeforeEach
     void createWorkflow() {
@@ -156,8 +161,7 @@ class HubExecutorUrlResolverTest {
     })
     void testResolveWorkflowRelative(final URL unversioned, final URL withVersion, final URL withBoth,
         @SuppressWarnings("unused") final HubItemVersion version) throws ResourceAccessException {
-        assertEquals("file", m_resolver.resolve(unversioned).getProtocol(),
-                "Should resolve to a file URL");
+        assertThat(m_resolver.resolve(unversioned)).hasProtocol("file");
 
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
             "Must not contain version query parameter");
@@ -172,11 +176,150 @@ class HubExecutorUrlResolverTest {
     void testResolveNodeRelative(final URL unversioned, final URL withVersion, final URL withBoth,
         @SuppressWarnings("unused") final HubItemVersion version) {
         final var exc = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(unversioned));
-        assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
+        org.junit.Assert.assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
 
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
             "Must not contain version query parameter");
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withBoth),
                 "Must not contain version query parameters");
+    }
+
+    /** Checks if space-relative knime-URLs are resolved correctly with version. */
+    @Test
+    void testResolveSpaceRelativeURLWithVersion() throws Exception { // NOSONAR rewrite tests using @ParameterizedTest in JUnit 5
+        final var repoAddressUri = URI.create("https://api.hub.knime.com:443/knime/rest/v4/repository");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withHubJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withScope("test", "test")
+                    .withJobCreator("test"))
+                .withHubSpaceLocation(loc -> loc
+                    .withRepositoryAddress(repoAddressUri)
+                    .withWorkflowPath("/Users/john/Private/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("My-Knime-Hub")
+                    .withSpace("/Users/john/Private", "*11")
+                    .withWorkflowItemId("*12")
+                    .withItemVersion(4))
+                .build());
+
+        // different item, so the workflow's item version is irrelevant
+        assertResolvedURIEquals(resolver,
+            URI.create(repoAddressUri.toString() + "/Users/john/Private/boss/test%20small.txt:data"),
+            new URL("knime://knime.space/boss/test%20small.txt"));
+        final var e = assertThrows(resolver::resolve, new URL("knime://knime.space/test/../../Public/stuff/test.txt"));
+        assertTrue("Error should indicate that leaving the Hub space is not allowed.",
+            e.getMessage().contains("Leaving the Hub space is not allowed"));
+    }
+
+    /** Checks if space-relative knime-URLs are resolved correctly without version. */
+    @Test
+    void testResolveSpaceRelativeURLWithoutVersion() throws Exception {
+        final var repoAddressUri = URI.create("https://api.hub.knime.com:443/knime/rest/v4/repository");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withHubJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withScope("test", "test")
+                    .withJobCreator("test"))
+                .withHubSpaceLocation(loc -> loc
+                    .withRepositoryAddress(repoAddressUri)
+                    .withWorkflowPath("/Users/john/Private/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("My-Knime-Hub")
+                    .withSpace("/Users/john/Private", "*11")
+                    .withWorkflowItemId("*12"))
+                .build());
+
+        assertResolvedURLEquals("Unexpected resolved workflow-relative URL pointing to workflow root", resolver,
+            currentLocation.toUri().toURL(),
+            new URL("knime://knime.workflow"));
+
+        assertResolvedURIEquals(resolver,
+            URI.create(repoAddressUri.toString() + "/Users/john/Private/boss/test%20small.txt:data"),
+            new URL("knime://knime.space/boss/test%20small.txt"));
+    }
+
+
+    /**
+     * Checks if workflow-relative knime-URLs do not leave the space.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    void testResolveWorkflowRelativeURLDontLeaveSpace() throws Exception {
+        final var repoAddressUri = URI.create("https://api.hub.knime.com:443/knime/rest/v4/repository");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withHubJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withScope("test", "test")
+                    .withJobCreator("test"))
+                .withHubSpaceLocation(loc -> loc
+                    .withRepositoryAddress(repoAddressUri)
+                    .withWorkflowPath("/Users/john/Private/folder/workflow")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("My-Knime-Hub")
+                    .withSpace("/Users/john/Private", "*11")
+                    .withWorkflowItemId("*12"))
+                .build());
+        assertThat(resolver).isOfAnyClassIn(HubExecutorUrlResolver.class);
+
+        assertResolvedURIEquals(resolver,
+            URI.create("https://api.hub.knime.com:443/knime/rest/v4/repository/Users/john/Private/test.txt:data"),
+            new URL("knime://knime.workflow/../../test.txt"));
+
+        final var eA = assertThrows(resolver::resolve, new URL("knime://knime.workflow/../../../Public/test.txt"));
+        assertTrue("Error should indicate that leaving the Hub space is not allowed, found " + eA,
+            eA.getMessage().contains("Leaving the Hub space is not allowed for workflow relative URLs:"));
+
+        final var eB = assertThrows(resolver::resolve, new URL("knime://knime.workflow/foo/../../../../test.txt"));
+        assertTrue("Error should indicate that leaving the Hub space is not allowed, found " + eB,
+            eB.getMessage().contains("Leaving the Hub space is not allowed for workflow relative URLs:"));
+    }
+
+
+    /**
+     * Checks if space-relative knime-URLs do not leave the space.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    void testResolveSpaceRelativeURLDontLeaveSpace() throws Exception {
+        final var repoAddressUri = URI.create("https://api.hub.knime.com:443/knime/rest/v4/repository");
+        final var currentLocation = KNIMEConstants.getKNIMETempPath().resolve("root").resolve("workflow");
+
+        final var resolver = KnimeUrlResolver.getResolver(WorkflowContextV2.builder()
+                .withHubJobExecutor(exec -> exec
+                    .withCurrentUserAsUserId()
+                    .withLocalWorkflowPath(currentLocation)
+                    .withJobId(UUID.randomUUID())
+                    .withScope("test", "test")
+                    .withJobCreator("test"))
+                .withHubSpaceLocation(loc -> loc
+                    .withRepositoryAddress(repoAddressUri)
+                    .withWorkflowPath("/Users/john/Private")
+                    .withAuthenticator(new SimpleTokenAuthenticator("token"))
+                    .withDefaultMountId("My-Knime-Hub")
+                    .withSpace("/Users/john/Private", "*11")
+                    .withWorkflowItemId("*12")
+                    .withItemVersion(4))
+                .build());
+        assertThat(resolver).isOfAnyClassIn(HubExecutorUrlResolver.class);
+
+        final var url = new URL("knime://knime.space/../test%20small.txt");
+        final var e = assertThrows(resolver::resolve, url);
+        assertTrue("Error should indicate that leaving the Hub space is not allowed.",
+            e.getMessage().contains("Leaving the Hub space is not allowed for space relative URLs:"));
     }
 }

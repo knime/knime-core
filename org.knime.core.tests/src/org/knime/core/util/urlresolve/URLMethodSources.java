@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -73,7 +74,7 @@ final class URLMethodSources {
             LOCAL_PATH(Path.of("/Wörk – ßpäce").toAbsolutePath()),
             UNC_PATH(Path.of("//UncMount/Share/Wörk – ßpäce").toAbsolutePath());
 
-        private final Path workspace;
+        final Path workspace;
 
         WorkspaceType(final Path absolutePath) {
             workspace = absolutePath;
@@ -188,7 +189,8 @@ final class URLMethodSources {
                 .withWorkflowPath("/group/workflow") //
                 .withAuthenticator(new SimpleTokenAuthenticator("token")) //
                 .withDefaultMountId("MountID")) //
-            .build()));
+            .build())),
+        NONE((mountId, type) -> KnimeUrlResolver.getResolver(null));
 
         private final BiFunction<String, WorkspaceType, KnimeUrlResolver> m_resolver;
 
@@ -196,10 +198,29 @@ final class URLMethodSources {
             this.m_resolver = resolver;
         }
 
+        /**
+         * @param localMountId
+         *            <ul>
+         *            <li>For {@link #AP_LOCAL} {@link #AP_SERVER} {@link #AP_HUB}: the mountpoint under which the
+         *            workflow is located in the Analytics Platform's mount table (for {@link #AP_KNWF} the workflow is
+         *            in a temp location).</li>
+         *            <li>For {@link #HUB_HUB_RWE} and {@link #SERVER_SERVER_RWE}: denotes the mount point via which the
+         *            remote workflow is accessed</li>
+         *            </ul>
+         * @param type of workspace paths
+         * @return
+         */
         KnimeUrlResolver getResolver(final String localMountId, final WorkspaceType type) {
             return m_resolver.apply(localMountId, type);
         }
 
+        /**
+         * @return a resolver using the <code>mountId</code> as local mount point identifier and
+         *         {@link WorkspaceType#LOCAL_PATH}.
+         */
+        KnimeUrlResolver getResolver() {
+            return getResolver("mountId", WorkspaceType.LOCAL_PATH);
+        }
     }
 
     private URLMethodSources() {
@@ -254,6 +275,19 @@ final class URLMethodSources {
         return WorkspaceType.supportedByOS() //
             .flatMap(type -> Stream.of("MountID", "Renamed") //
                 .map(mountId -> Arguments.of(Context.SERVER_SERVER_RWE, mountId, type, "")));
+    }
+
+    /** @return resolver context, local mount point id, workspace type, space path */
+    static Stream<Arguments> allNonNullContexts() {
+        return Stream.of(localApContexts(), knwfContexts(), tempCopyHubContexts(), tempCopyServerContexts(),
+            hubExecutorContexts(), serverExecutorContexts(), remoteHubExecutorContexts(),
+            remoteServerExecutorContexts()).flatMap(Function.identity());
+    }
+
+    /** @return resolver context, local mount point id, workspace type, space path */
+    static Stream<Arguments> allNonRemoteNonNullContexts() {
+        return Stream.of(localApContexts(), knwfContexts(), tempCopyHubContexts(), tempCopyServerContexts(),
+            hubExecutorContexts(), serverExecutorContexts()).flatMap(Function.identity());
     }
 
     /** @return without version, with version, both versions, hub item version */

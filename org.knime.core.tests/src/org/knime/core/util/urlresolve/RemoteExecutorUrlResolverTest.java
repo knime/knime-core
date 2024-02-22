@@ -48,9 +48,12 @@
  */
 package org.knime.core.util.urlresolve;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertResolvedURLEquals;
+import static org.knime.core.util.urlresolve.KnimeUrlResolverTest.assertThrows;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -59,6 +62,7 @@ import java.net.URL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.KNIMEConstants;
@@ -67,6 +71,8 @@ import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.urlresolve.URLMethodSources.Context;
+import org.knime.core.util.urlresolve.URLMethodSources.WorkspaceType;
 
 /**
  * Tests for {@link RemoteExecutorUrlResolver}, currently only with a focus on item version handling.
@@ -76,9 +82,40 @@ import org.knime.core.util.hub.HubItemVersion;
 class RemoteExecutorUrlResolverTest {
 
     @Nested
+    class Restrictions {
+        /** Checks that a workflow-relative URI pointing to a resource within the workflow cannot be resolved. */
+        @Test
+        void testResolveWithinWorkflowRelativeURI() throws Exception {
+            URL url = new URL("knime://knime.workflow/some where/inside.txt");
+            URI mountpointUri = new URI("knime://knime-server-mountpoint/test"
+                + "?exec=8443aad7-e59e-4be1-b31b-4b287f5bf466&name=test%2B2019-01-02%2B09.57.19");
+
+            final var resolver = KnimeUrlResolver.getRemoteWorkflowResolver(mountpointUri, null);
+            final var ex = assertThrows(resolver::resolve, url);
+            assertTrue("Message should talk about resources not being accessible, found '" + ex.getMessage() + "'.",
+                ex.getMessage()
+                    .contains("Workflow relative URL points to a resource within a workflow. Not accessible."));
+        }
+
+        @ParameterizedTest
+        @MethodSource({
+            "org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()",
+            "org.knime.core.util.urlresolve.URLMethodSources#remoteServerExecutorContexts()"
+        })
+        void fileInsideRemoteWorkflowTest(final Context context, final String localMountId, final WorkspaceType type,
+            @SuppressWarnings("unused") final String spacePath) throws Exception {
+
+            final var resolver = context.getResolver(localMountId, type);
+            final var workflowRelative = URI.create("knime://knime.workflow/data/../someDir/file.csv").toURL();
+            final var e = assertThrows(resolver::resolve, workflowRelative);
+            assertTrue("Should talk about lack of accessibility: '" + e.getMessage() + "'",
+                e.getMessage().contains("accessible"));
+        }
+    }
+
+    @Nested
     @DisplayName("Remote Executor w/ HubSpaceLocation")
     class WithHubSpaceLocation {
-
         private static RemoteExecutorUrlResolver m_resolver;
 
         // Remember the WFMS that were known before any test ran. Don't touch them on {@link #cleanup()}.
@@ -102,6 +139,38 @@ class RemoteExecutorUrlResolverTest {
             final var mountpointUri = context.getMountpointURI().orElseThrow();
             final var loc = (HubSpaceLocationInfo)context.getLocationInfo();
             m_resolver = new RemoteExecutorUrlResolver(mountpointUri, loc);
+        }
+
+        /**
+         * Checks if mountpoint-relative knime-URIs are correctly resolved to server mountpoint URIs.
+         *
+         * @throws Exception
+         */
+        @Test
+        void testResolveMountpointRelativeURIToServerMountpointURI() throws Exception {
+            final var url = new URL("knime://knime.mountpoint/some where/outside.txt");
+            final var mountpointUri = new URI("knime://knime-server-mountpoint/test"
+                + "?exec=8443aad7-e59e-4be1-b31b-4b287f5bf466&name=test%2B2019-01-02%2B09.57.19");
+
+            final var resolver = KnimeUrlResolver.getRemoteWorkflowResolver(mountpointUri, null);
+            final var expectedUrl = new URL("knime://knime-server-mountpoint/some%20where/outside.txt");
+            assertResolvedURLEquals(resolver, expectedUrl, url);
+        }
+
+        /**
+         * Checks if workflow-relative knime-URIs are correctly resolved to server mountpoint URIs.
+         *
+         * @throws Exception
+         */
+        @Test
+        void testResolveWorkfowRelativeURIToServerMountpointURI() throws Exception {
+            final var url = new URL("knime://knime.workflow/../some where/outside.txt");
+            final var mountpointUri = new URI("knime://knime-server-mountpoint/test"
+                + "?exec=8443aad7-e59e-4be1-b31b-4b287f5bf466&name=test%2B2019-01-02%2B09.57.19");
+
+            final var resolver = KnimeUrlResolver.getRemoteWorkflowResolver(mountpointUri, null);
+            final var expectedUrl = new URL("knime://knime-server-mountpoint/some%20where/outside.txt");
+            assertResolvedURLEquals(resolver, expectedUrl, url);
         }
 
         @ParameterizedTest
