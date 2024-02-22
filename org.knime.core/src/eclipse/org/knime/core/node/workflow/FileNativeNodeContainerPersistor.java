@@ -232,27 +232,16 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     /** {@inheritDoc} */
     @Override
-    NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode,
+    NodeSettingsRO loadNCAndModelSettings(final NodeSettingsRO settingsForNode,
         final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
                 throws InvalidSettingsException, CanceledExecutionException, IOException {
         m_nodePersistor = createNodePersistor(settingsForNode);
         m_nodePersistor.preLoad(m_node, result);
-        NodeSettingsRO washedModelSettings = modelSettings;
         try {
             if (modelSettings != null) { // null if the node never had settings - no reason to load them
                 m_node.validateModelSettings(modelSettings);
                 m_node.loadModelSettingsFrom(modelSettings);
-
-                // previous versions of KNIME (2.7 and before) kept the model settings only in the node;
-                // NodeModel#saveSettingsTo was always called before the dialog was opened (some dialog implementations
-                // rely on the exact structure of the NodeSettings ... which may change between versions).
-                // We wash the settings through the node so that the model settings are updated (they possibly
-                // no longer map to the variable settings loaded further down below - if so, the inconsistency
-                // is warned later during configuration)
-                NodeSettings washedSettings = new NodeSettings("model");
-                m_node.saveModelSettingsTo(washedSettings);
-                washedModelSettings = washedSettings;
             }
         } catch (Exception e) {
             final String error;
@@ -298,7 +287,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         if (m_nodePersistor.needsResetAfterLoad()) {
             setNeedsResetAfterLoad();
         }
-        return washedModelSettings;
+        return modelSettings;
     }
 
     /**

@@ -470,7 +470,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
 
     /** {@inheritDoc} */
     @Override
-    NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode, final NodeSettingsRO modelSettings,
+    NodeSettingsRO loadNCAndModelSettings(final NodeSettingsRO settingsForNode, final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
         throws InvalidSettingsException, CanceledExecutionException, IOException {
         return modelSettings;

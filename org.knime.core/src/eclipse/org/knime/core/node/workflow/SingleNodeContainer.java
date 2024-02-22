@@ -947,25 +947,33 @@ public abstract class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings) {
-        saveSettings(settings, false);
+        saveSettings(settings, false, false);
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeSettings getNodeSettings() {
         NodeSettings settings = new NodeSettings("configuration");
-        saveSettings(settings, true);
+        saveSettings(settings, true, false);
         return settings;
     }
 
-    /** Saves config from super NodeContainer (job manager) and the view and model settings and variable settings.
+    /**
+     * Saves config from super NodeContainer (job manager) and the view and model settings and variable settings.
+     *
      * @param settings To save to.
      * @param initDefaultSettings If true and the model or view settings are not yet assigned (node freshly dragged onto
-     * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
+     *            workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init
+     *            fallback settings.
+     * @param wash previous versions of KNIME (2.7 and before) kept the model settings only in the node;
+     *            NodeModel#saveSettingsTo was always called before the dialog was opened (some dialog implementations
+     *            rely on the exact structure of the NodeSettings ... which may change between versions). We wash the
+     *            settings through the node so that the model settings are updated when opening the dialog (only
+     *            relevant for the legacy swing-based dialogs)
      */
-    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
+    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultSettings, final boolean wash) {
         super.saveSettings(settings);
-        saveSNCSettings(settings, initDefaultSettings);
+        saveSNCSettings(settings, initDefaultSettings, wash);
     }
 
     /** Implementation of {@link WorkflowManager#saveNodeSettingsToDefault(NodeID)}. */
@@ -986,18 +994,20 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
      */
     void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
+        saveSNCSettings(settings, initDefaultSettings, false);
+    }
+
+    private void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultSettings, final boolean wash) {
         SingleNodeContainerSettings sncSettings = m_settings;
-        if (initDefaultSettings) {
-            final var initDefaultModelSettings = m_settings.getModelSettings() == null;
-            final var initDefaultViewSettings = m_settings.getViewSettings() == null;
-            if (initDefaultModelSettings || initDefaultViewSettings) {
-                sncSettings = m_settings.clone();
-                if (initDefaultModelSettings) {
-                    saveModelSettingsTo(sncSettings);
-                }
-                if (initDefaultViewSettings) {
-                    saveDefaultViewSettingsTo(sncSettings);
-                }
+        final var initDefaultModelSettings = initDefaultSettings && m_settings.getModelSettings() == null;
+        final var initDefaultViewSettings = initDefaultSettings && m_settings.getViewSettings() == null;
+        if (initDefaultModelSettings || initDefaultViewSettings || wash) {
+            sncSettings = m_settings.clone();
+            if (initDefaultModelSettings || wash) {
+                saveModelSettingsTo(sncSettings);
+            }
+            if (initDefaultViewSettings) {
+                saveDefaultViewSettingsTo(sncSettings);
             }
         }
         sncSettings.save(settings);
@@ -1093,7 +1103,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
     public boolean areDialogAndNodeSettingsEqual() {
         final String key = "snc_settings";
         NodeSettingsWO nodeSettings = new NodeSettings(key);
-        saveSettings(nodeSettings, true);
+        saveSettings(nodeSettings, true, false);
         NodeSettingsWO dlgSettings = new NodeSettings(key);
         NodeContext.pushContext(this);
         try {

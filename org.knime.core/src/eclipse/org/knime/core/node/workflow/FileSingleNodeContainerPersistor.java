@@ -264,7 +264,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                 KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN));
         }
         try {
-            modelSettings = loadNCAndWashModelSettings(settingsForNode, modelSettings, tblRep, exec, result);
+            modelSettings = loadNCAndModelSettings(settingsForNode, modelSettings, tblRep, exec, result);
         } catch (InvalidSettingsException ise) {
             String error = "Unable to load node container and wash settings: " + ise.getMessage();
             result.addError(error);
@@ -314,24 +314,22 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     }
 
     /**
-     * Called by {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)}. Will instantiate the node and load the
-     * model settings into it.
+     * Called by {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)}. Will instantiate the node and load (and
+     * validate) the model settings into it.
      *
      * @param settingsForNode the settings for the node, including the hasContent flag etc (the whole settings.xml)
-     * @param modelSettings The model settings (the child "model").
+     * @param modelSettings The settings to load the model settings into (the child "model")
      * @param tblRep Workflow's table repository
      * @param exec ...
      * @param result
-     * @return The washed model settings. Usually this is the modelSettings argument but the node may modify it during
-     *         save &amp; load
-     * @throws InvalidSettingsException ...
+     * @return the model settings as stored with the node
+     * @throws InvalidSettingsException if, e.g., loading the model settings failed
      * @throws CanceledExecutionException ...
      * @throws IOException ...
      */
-    abstract NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode,
-        final NodeSettingsRO modelSettings,
-        final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
-                throws InvalidSettingsException, CanceledExecutionException, IOException;
+    abstract NodeSettingsRO loadNCAndModelSettings(final NodeSettingsRO settingsForNode,
+        final NodeSettingsRO modelSettings, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
+        final LoadResult result) throws InvalidSettingsException, CanceledExecutionException, IOException;
 
         /** Loads the settings passed to the NodePersistor class. It includes node settings, variable settings,
      * file store information (but not node factory information). In 2.7 and before it was contained in a separate
