@@ -186,7 +186,7 @@ final class TableBackendTestUtils {
         final ColumnDataFactory[] columnDataFactories, final RowWriteCursor writeCursor, final Column... columns) {
         LongConsumer[] mappers = null;
         for (long r = 0; r < size; r++) {
-            var rowWrite = writeCursor.forward();
+            var rowWrite = writeCursor.row();
             if (mappers == null) {
                 mappers = IntStream.range(0, columns.length)//
                     .mapToObj(i -> columns[i].dataFactory().createMapper(rowWrite.getWriteValue(i)))
@@ -202,6 +202,7 @@ final class TableBackendTestUtils {
                     mappers[c].accept(rowIndex);
                 }
             }
+            writeCursor.commit();
         }
     }
 
