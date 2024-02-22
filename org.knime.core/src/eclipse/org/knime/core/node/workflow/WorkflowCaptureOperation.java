@@ -61,6 +61,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
@@ -78,6 +79,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pair;
 
 /**
@@ -134,8 +136,22 @@ public final class WorkflowCaptureOperation {
      * Carries out the actual capture-operation and returns the captured sub-workflow as a {@link WorkflowSegment}.
      *
      * @return the captured sub-workflow
+     * @deprecated use {@link #capture(String)} instead.
      */
+    @Deprecated(since = "5.3.0")
     public WorkflowSegment capture() {
+        return capture(null);
+    }
+
+    /**
+     * Carries out the actual capture-operation and returns the captured sub-workflow as a {@link WorkflowSegment}.
+     * @param workflowName The name of the workflow (null will use some default). Name is also used as a file name,
+     * must not contain {@link FileUtil#ILLEGAL_FILENAME_CHARS illegal chars} (will be replaced).
+     *
+     * @return the captured sub-workflow
+     * @since 5.3
+     */
+    public WorkflowSegment capture(final String workflowName) {
         WorkflowManager tempParent = null;
         try (WorkflowLock lock = m_wfm.lock()) {
             NodeID endNodeID = m_endNode.getID();
@@ -146,8 +162,10 @@ public final class WorkflowCaptureOperation {
                     .map(WorkflowCreationHelper::new)
                     .orElseGet(WorkflowCreationHelper::new);
 
-            tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT
-                .createAndAddProject("Capture-" + endNodeID, workflowCreationHelper);
+            final String name = StringUtils.replaceChars(
+                StringUtils.defaultIfBlank(workflowName, "Capture-" + endNodeID), FileUtil.ILLEGAL_FILENAME_CHARS, "_");
+
+            tempParent = WorkflowManager.EXTRACTED_WORKFLOW_ROOT.createAndAddProject(name, workflowCreationHelper);
 
             // "scope body" -- will copy those nodes later
             List<NodeContainer> nodesInScope = m_wfm.getWorkflow().getNodesInScope(m_endNode);
@@ -267,7 +285,7 @@ public final class WorkflowCaptureOperation {
     }
 
     /**
-     * Returns the input of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
+     * Returns the input of the (to be) captured sub-workflow, i.e. the same ports {@link #capture(String)} with a
      * subsequent {@link WorkflowSegment#getConnectedInputs()} would return.
      *
      * @return the inputs of the (to be) captured workflow fragment
@@ -285,7 +303,7 @@ public final class WorkflowCaptureOperation {
     }
 
     /**
-     * Returns the outputs of the (to be) captured sub-workflow, i.e. the same ports {@link #capture()} with a
+     * Returns the outputs of the (to be) captured sub-workflow, i.e. the same ports {@link #capture(String)} with a
      * subsequent {@link WorkflowSegment#getConnectedOutputs()} would return.
      *
      * @return the outputs of the (to be) captured workflow fragment
