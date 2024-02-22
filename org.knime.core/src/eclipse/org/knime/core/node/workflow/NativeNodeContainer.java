@@ -1397,7 +1397,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
             final PortObject[] inData) throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
-        saveSettings(settings, true);
+        saveSettings(settings, true, true /* only true when opening for the first time */);
         NodeContext.pushContext(this);
         try {
             return m_node.getDialogPaneWithSettings(inSpecs, inData, settings, getParent().isWriteProtected());

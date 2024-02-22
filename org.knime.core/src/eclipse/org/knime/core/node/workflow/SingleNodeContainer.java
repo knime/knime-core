@@ -963,9 +963,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @param initDefaultSettings If true and the model or view settings are not yet assigned (node freshly dragged onto
      * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
      */
-    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
+    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultSettings, final boolean wash) {
         super.saveSettings(settings);
-        saveSNCSettings(settings, initDefaultSettings);
+        saveSNCSettings(settings, initDefaultSettings, wash);
     }
 
     /** Implementation of {@link WorkflowManager#saveNodeSettingsToDefault(NodeID)}. */
@@ -985,14 +985,14 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @param initDefaultSettings If true and the view or model settings are not yet assigned (node freshly dragged onto
      * workflow) the NodeModel's saveSettingsTo or saveDefaultViewSettingsTo method is called to init fallback settings.
      */
-    void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultSettings) {
+    void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultSettings, final boolean wash) {
         SingleNodeContainerSettings sncSettings = m_settings;
         if (initDefaultSettings) {
             final var initDefaultModelSettings = m_settings.getModelSettings() == null;
             final var initDefaultViewSettings = m_settings.getViewSettings() == null;
             if (initDefaultModelSettings || initDefaultViewSettings) {
                 sncSettings = m_settings.clone();
-                if (initDefaultModelSettings) {
+                if (initDefaultModelSettings || wash) {
                     saveModelSettingsTo(sncSettings);
                 }
                 if (initDefaultViewSettings) {
