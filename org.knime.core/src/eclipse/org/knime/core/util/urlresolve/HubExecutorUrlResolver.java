@@ -88,15 +88,16 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         final HubItemVersion version) throws ResourceAccessException {
         if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
             // possibly a MountTable is present, which will then resolve the URL (AP-19986)
-            return new ResolvedURL(mountId, path, null, null, url, true);
+            return new ResolvedURL(mountId, path, null, null, url, false);
         }
 
         // we're on a Hub executor, resolve workflow locally via the repository
 
-        final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
         final var versionInfo = HubItemVersion.of(url).orElse(null);
         final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), versionInfo, path);
-        return new ResolvedURL(mountId, path, version, null, resourceUrl, isHubIdUrl);
+        final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
+        final var canBeRelativized = !isHubIdUrl && getSpacePath(m_locationInfo).isPrefixOf(path);
+        return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }
 
     @Override
@@ -129,7 +130,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
             }
 
             final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), version, referencedItemPath);
-            return new ResolvedURL(mountId, referencedItemPath, version, null, resourceUrl, false);
+            return new ResolvedURL(mountId, referencedItemPath, version, null, resourceUrl, true);
         }
 
         // file inside the workflow
@@ -172,7 +173,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         }
 
         final var resourceUrl = createRepoUrl(locationInfo.getRepositoryAddress(), version, resolvedPath);
-        return new ResolvedURL(locationInfo.getDefaultMountId(), resolvedPath, version, null, resourceUrl, false);
+        return new ResolvedURL(locationInfo.getDefaultMountId(), resolvedPath, version, null, resourceUrl, true);
     }
 
     private static URL createRepoUrl(final URI repositoryAddress, final HubItemVersion version,

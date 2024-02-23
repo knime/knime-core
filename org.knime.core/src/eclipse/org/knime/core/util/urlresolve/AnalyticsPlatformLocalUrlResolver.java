@@ -92,11 +92,11 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final HubItemVersion version) throws ResourceAccessException {
-        final var acrossMountpoints = m_executorInfo.getMountpoint() //
+        final var sameMountpoint = m_executorInfo.getMountpoint() //
                 .map(Pair::getFirst) //
                 .filter(uri -> Objects.equals(uri.getAuthority(), mountId)) //
-                .isEmpty();
-        return new ResolvedURL(mountId, path, version, null, url, acrossMountpoints);
+                .isPresent();
+        return new ResolvedURL(mountId, path, version, null, url, sameMountpoint);
     }
 
     @Override
@@ -129,7 +129,7 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
         }
 
         final var resourceUrl = URLResolverUtil.toURL(resolved);
-        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, false);
+        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, true);
     }
 
     @Override
@@ -184,7 +184,7 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
         }
 
         final var resourceUrl = URLResolverUtil.toURL(resolved);
-        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, false);
+        return new ResolvedURL(mountId, pathInWorkspace, version, pathInWorkflow, resourceUrl, true);
     }
 
     @Override

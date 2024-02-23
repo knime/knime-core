@@ -90,7 +90,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
 
         if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
             // possibly a MountTable is present, which will then resolve the URL (AP-19986)
-            return new ResolvedURL(mountId, path, null, null, url, true);
+            return new ResolvedURL(mountId, path, null, null, url, false);
         }
 
         return resolveMountpointRelative(url, path, null);
@@ -116,7 +116,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
         }
 
         final var mountId = m_locationInfo.getDefaultMountId();
-        return new ResolvedURL(mountId, pathToItem, null, pathInsideWorkflow, createRepoUrl(path), false);
+        return new ResolvedURL(mountId, pathToItem, null, pathInsideWorkflow, createRepoUrl(path), true);
     }
 
     @Override
@@ -151,7 +151,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
         }
 
         final var mountId = m_locationInfo.getDefaultMountId();
-        return new ResolvedURL(mountId, pathInsideMountpoint, null, pathInsideWorkflow, resourceUrl, false);
+        return new ResolvedURL(mountId, pathInsideMountpoint, null, pathInsideWorkflow, resourceUrl, true);
     }
 
     @Override

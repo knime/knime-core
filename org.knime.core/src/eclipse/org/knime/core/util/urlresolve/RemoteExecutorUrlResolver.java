@@ -64,12 +64,12 @@ import org.knime.core.util.hub.HubItemVersion;
  */
 final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
-    private final String m_mountId;
+    private final String m_localMountId;
     private final URI m_mountpointUri;
     private final HubSpaceLocationInfo m_hubLocationInfo;
 
     RemoteExecutorUrlResolver(final URI mountpointUri, final HubSpaceLocationInfo locationInfo) {
-        m_mountId = mountpointUri.getAuthority();
+        m_localMountId = mountpointUri.getAuthority();
         m_mountpointUri = mountpointUri;
         m_hubLocationInfo = locationInfo;
     }
@@ -87,14 +87,23 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final HubItemVersion version) throws ResourceAccessException {
-        if (!m_mountId.equals(mountId)) {
+
+        // we are conservative here and accept the URL as referencing the same mountpoint if the mount ID matches either
+        // the mount ID of the workflow in the local AP or the default mount ID of the remote Hub
+        if (!m_localMountId.equals(mountId)
+                && !(m_hubLocationInfo != null && m_hubLocationInfo.getDefaultMountId().equals(mountId))) {
             throw new ResourceAccessException("Unknown Mount ID on Remote Executor in URL '" + url + "'.");
         }
 
         // the rest is done by the ExplorerFileStore instance from the ExplorerMountTable
-        final var isHubIdUrl = m_hubLocationInfo != null && path.segmentCount() == 1 && path.segment(0).startsWith("*");
-        final var resourceUrl = createKnimeUrl(m_mountId, path, version);
-        return new ResolvedURL(m_mountId, path, version, null, resourceUrl, isHubIdUrl);
+        var canBeRelativized = true;
+        if (m_hubLocationInfo != null) {
+            final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
+            canBeRelativized = !isHubIdUrl && getSpacePath(m_hubLocationInfo).isPrefixOf(path);
+        }
+
+        final var resourceUrl = createKnimeUrl(m_localMountId, path, version);
+        return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }
 
     @Override
@@ -120,8 +129,10 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
             resolvedPath = path;
         }
 
-        final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, version);
-        return new ResolvedURL(m_mountId, resolvedPath, version, null, resourceUrl, false);
+        // we are using the best guess for which mount ID will work remotely
+        final var mountId = m_hubLocationInfo != null ? m_hubLocationInfo.getDefaultMountId() : m_localMountId;
+        final var resourceUrl = createKnimeUrl(m_localMountId, resolvedPath, version);
+        return new ResolvedURL(mountId, resolvedPath, version, null, resourceUrl, true);
     }
 
     @Override
@@ -135,8 +146,9 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
         if (m_hubLocationInfo != null) {
             final var workflowPath = getWorkflowPath(m_hubLocationInfo);
             final var resolvedPath = workflowPath.append(path);
-            final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, version);
-            return new ResolvedURL(m_mountId, resolvedPath, version, null, resourceUrl, false);
+            final var resourceUrl = createKnimeUrl(m_localMountId, resolvedPath, version);
+            final var remoteMountId = m_hubLocationInfo.getDefaultMountId();
+            return new ResolvedURL(remoteMountId, resolvedPath, version, null, resourceUrl, true);
         }
 
         // server executor, Space == Mountpoint Root and no versions
@@ -146,8 +158,8 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
         final var workflowPath = getPath(m_mountpointUri);
         final var resolvedPath = workflowPath.append(path);
-        final var resourceUrl = createKnimeUrl(m_mountId, resolvedPath, null);
-        return new ResolvedURL(m_mountId, resolvedPath, null, null, resourceUrl, false);
+        final var resourceUrl = createKnimeUrl(m_localMountId, resolvedPath, null);
+        return new ResolvedURL(m_localMountId, resolvedPath, null, null, resourceUrl, true);
     }
 
     @Override

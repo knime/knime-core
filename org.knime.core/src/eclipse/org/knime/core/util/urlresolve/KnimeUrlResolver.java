@@ -97,11 +97,10 @@ public abstract class KnimeUrlResolver {
      * @param version Hub item version, may be {@code null}
      * @param pathInsideWorkflow path inside the workflow's directory in the executor, may be {@code null}
      * @param resourceURL URL which can be read and (potentially) written to
-     * @param cannotBeRelativized flag indicating that the url references a resource not under the current mountpoint
-     *      or is a KNIME Hub ID URL, both of which can't be converted to a relative URL
+     * @param canBeRelativized flag indicating that the URL can be represented as a relative URL
      */
     record ResolvedURL(String mountID, IPath path, HubItemVersion version, IPath pathInsideWorkflow,
-        URL resourceURL, boolean cannotBeRelativized) {
+        URL resourceURL, boolean canBeRelativized) {
     }
 
     /**
@@ -245,7 +244,7 @@ public abstract class KnimeUrlResolver {
                 createKnimeUrl(resolved.mountID, resolved.path, resolved.version));
         }
 
-        if (resolved.cannotBeRelativized()) {
+        if (!resolved.canBeRelativized()) {
             // only absolute URLs can reference resources across mountpoints
             return out;
         }
@@ -323,10 +322,10 @@ public abstract class KnimeUrlResolver {
     /**
      * Resolves a mountpoint absolute URL in this resolver's scope.
      *
-     * @param mountId mount ID
-     * @param decodedPath URI's decoded path component
-     * @param version item version
-     * @return resolved URI
+     * @param url to resolve
+     * @param mountId host component of the url to resolve
+     * @param path path component of the url to resolve
+     * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
     abstract ResolvedURL resolveMountpointAbsolute(URL url, String mountId, IPath path, HubItemVersion version)
@@ -335,9 +334,9 @@ public abstract class KnimeUrlResolver {
     /**
      * Resolves a mountpoint relative URL in this resolver's scope.
      *
-     * @param decodedPath URI's decoded path component
-     * @param version item version
-     * @return resolved URI
+     * @param url to resolve
+     * @param path path component of the url to resolve
+     * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
     abstract ResolvedURL resolveMountpointRelative(URL url, IPath path, HubItemVersion version)
@@ -346,9 +345,9 @@ public abstract class KnimeUrlResolver {
     /**
      * Resolves a space relative URL in this resolver's scope.
      *
-     * @param decodedPath URI's decoded path component
-     * @param version item version
-     * @return resolved URI
+     * @param url to resolve
+     * @param path path component of the url to resolve
+     * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
     abstract ResolvedURL resolveSpaceRelative(URL url, IPath path, HubItemVersion version)
@@ -357,9 +356,9 @@ public abstract class KnimeUrlResolver {
     /**
      * Resolves a workflow relative URL in this resolver's scope.
      *
-     * @param decodedPath URI's decoded path component
-     * @param version item version
-     * @return resolved URI
+     * @param url to resolve
+     * @param path path component of the url to resolve
+     * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
     abstract ResolvedURL resolveWorkflowRelative(URL url, IPath path, HubItemVersion version)
@@ -368,8 +367,8 @@ public abstract class KnimeUrlResolver {
     /**
      * Resolves a node relative URL in this resolver's scope.
      *
-     * @param decodedPath URI's decoded path component
-     * @return resolved URI
+     * @param url to resolve
+     * @param path path component of the url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
     abstract ResolvedURL resolveNodeRelative(URL url, IPath path) throws ResourceAccessException;
@@ -405,7 +404,7 @@ public abstract class KnimeUrlResolver {
 
         final var pathInsideWorkflow = Path.fromOSString(workflowPath.relativize(resolvedPath).toString());
         final var resourceUrl = URLResolverUtil.toURL(resolvedPath);
-        return new ResolvedURL(mountId, pathToWorkflow, null, pathInsideWorkflow, resourceUrl, false);
+        return new ResolvedURL(mountId, pathToWorkflow, null, pathInsideWorkflow, resourceUrl, true);
     }
 
     /**
@@ -431,7 +430,7 @@ public abstract class KnimeUrlResolver {
 
         final var resolvedPath = localWorkflowPath.resolve(pathInWorkflow.toOSString());
         final var resourceUrl = URLResolverUtil.toURL(resolvedPath);
-        return new ResolvedURL(mountId, workflowPath, version, pathInWorkflow, resourceUrl, false);
+        return new ResolvedURL(mountId, workflowPath, version, pathInWorkflow, resourceUrl, true);
     }
 
     static URL createKnimeUrl(final String mountId, final IPath path, final HubItemVersion version)

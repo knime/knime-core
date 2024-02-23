@@ -92,20 +92,24 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final HubItemVersion version) throws ResourceAccessException {
-        final var defaultMountId = m_locationInfo.getDefaultMountId();
+
+        if (m_locationInfo instanceof HubSpaceLocationInfo
+                && path.segmentCount() == 1 && path.segment(0).startsWith("*")) {
+            // cannot relativize ID URLs (for now)
+            return new ResolvedURL(mountId, path, version, null, url, false);
+        }
 
         // we are conservative here and accept the URL as referencing the same mountpoint if the mount ID matches either
         // the mount ID of the workflow in the local AP or the default mount ID of the remote Hub/server
+        final var defaultMountId = m_locationInfo.getDefaultMountId();
         final var candidates = m_executorInfo.getMountpoint() //
                 .map(Pair::getFirst) //
                 .map(URI::getAuthority) //
                 .<Set<String>>map(id -> new HashSet<>(List.of(id, defaultMountId))) // `Set.of(X,Y)` hates duplicates
                 .orElseGet(() -> Set.of(defaultMountId));
 
-        final var isHubIdUrl = m_locationInfo instanceof HubSpaceLocationInfo
-                && path.segmentCount() == 1 && path.segment(0).startsWith("*");
-
-        return new ResolvedURL(mountId, path, version, null, url, !candidates.contains(mountId) || isHubIdUrl);
+        final var canBeRelativized = candidates.contains(mountId) && getSpacePath(m_locationInfo).isPrefixOf(path);
+        return new ResolvedURL(mountId, path, version, null, url, canBeRelativized);
     }
 
     @Override
@@ -139,15 +143,16 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
                     + "' points into current workflow " + workflowPath);
         }
 
-        final var mountId = m_mountpointURI.getAuthority();
-        final var resourceUrl = createKnimeUrl(mountId, resolvedPath, version);
-        return new ResolvedURL(mountId, resolvedPath, version, null, resourceUrl, false);
+        final var localMountId = m_mountpointURI.getAuthority();
+        final var remoteMountId = m_locationInfo.getDefaultMountId();
+        final var resourceUrl = createKnimeUrl(localMountId, resolvedPath, version);
+        return new ResolvedURL(remoteMountId, resolvedPath, version, null, resourceUrl, true);
     }
 
     @Override
     ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
             throws ResourceAccessException {
-        final var mountId = m_mountpointURI.getAuthority();
+        final var localMountId = m_mountpointURI.getAuthority();
         final var contextPaths = getContextPaths().orElseThrow();
         final var workflowPath = contextPaths.workflowPath();
 
@@ -159,20 +164,21 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
                 () -> "Leaving the Hub space is not allowed for workflow relative URLs: "
                         + resolvedPath + " is not in " + contextPaths.spacePath());
 
-            final var resourceUrl = createKnimeUrl(mountId, resolvedPath, version);
-            return new ResolvedURL(mountId, resolvedPath, version, null, resourceUrl, false);
+            final var remoteMountId = m_locationInfo.getDefaultMountId();
+            final var resourceUrl = createKnimeUrl(localMountId, resolvedPath, version);
+            return new ResolvedURL(remoteMountId, resolvedPath, version, null, resourceUrl, true);
         }
 
         // a file inside the workflow
         final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath().toAbsolutePath();
-        return resolveInExecutorWorkflowDir(url, mountId, workflowPath, path, version, localWorkflowPath);
+        return resolveInExecutorWorkflowDir(url, localMountId, workflowPath, path, version, localWorkflowPath);
     }
 
     @Override
     ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
-        final var mountId = m_mountpointURI.getAuthority();
+        final var localMountId = m_mountpointURI.getAuthority();
         final var pathToWorkflow = getPath(m_mountpointURI);
         final var localWorkflowPath = m_executorInfo.getLocalWorkflowPath();
-        return resolveNodeRelative(mountId, pathToWorkflow, localWorkflowPath, path);
+        return resolveNodeRelative(localMountId, pathToWorkflow, localWorkflowPath, path);
     }
 }

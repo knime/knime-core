@@ -51,6 +51,7 @@ package org.knime.core.util.urlresolve;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
@@ -60,6 +61,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -132,14 +134,14 @@ class KnimeUrlResolverTest {
         final var expectedPath = type.workspace.resolve("group/workflow/test.txt");
         final var resolved = resolver.resolve(url);
         assertEquals("Unexpected resolved URL", URLResolverUtil.toURL(expectedPath), resolved);
-        assertEquals("Unexpected resulting file", expectedPath, new File(resolved.toURI()));
+        assertEquals("Unexpected resulting file", expectedPath.toFile(), new File(resolved.toURI()));
     }
 
     /** Checks if German special characters in a local workflow relative URL are UTF-8 encoded. */
     @ParameterizedTest
     @MethodSource("org.knime.core.util.urlresolve.URLMethodSources#allNonNullContexts()")
-    void testMountpointSpaceRelative(final Context context, final String localMountId, final WorkspaceType type,
-        final String spacePath) throws Exception {
+    void testMountpointSpaceRelative(final Context context, final String localMountId, final WorkspaceType type)
+            throws Exception {
         final var resolver = context.getResolver(localMountId, type);
 
         // has no mount point
@@ -174,27 +176,50 @@ class KnimeUrlResolverTest {
         final String spacePath) throws Exception {
 
         final var resolver = context.getResolver(localMountId, type);
-        final var expected = new HashMap<>(Map.of(
+
+        final var expectedRelative = new HashMap<>(Map.of(
             KnimeUrlType.MOUNTPOINT_RELATIVE, new URL("knime://knime.mountpoint/group/workflow2"),
             KnimeUrlType.HUB_SPACE_RELATIVE, new URL("knime://knime.space/group/workflow2"),
-            KnimeUrlType.WORKFLOW_RELATIVE, new URL("knime://knime.workflow/../workflow2"),
-            // must include properly encoded space path
-            KnimeUrlType.MOUNTPOINT_ABSOLUTE, URIPathEncoder.UTF_8.encodePathSegments(
-                new URI(KnimeUrlType.SCHEME, localMountId, spacePath + "/group/workflow2", null)).toURL()));
+            KnimeUrlType.WORKFLOW_RELATIVE, new URL("knime://knime.workflow/../workflow2")));
 
-        for (final var initial : expected.entrySet()) {
-            final var initialUrl = initial.getValue();
+        // make sure that all possible versions of absolute URLs are present
+        final var pathInMountpoint = spacePath + "/group/workflow2";
+        final var absoluteDefaultId = URIPathEncoder.UTF_8.encodePathSegments(
+            new URI(KnimeUrlType.SCHEME, "MountID", pathInMountpoint, null)).toURL();
+        final var absoluteRenamedId = URIPathEncoder.UTF_8.encodePathSegments(
+            new URI(KnimeUrlType.SCHEME, localMountId, pathInMountpoint, null)).toURL();
+
+        final var allInputs = new HashSet<>(expectedRelative.values());
+        allInputs.add(absoluteRenamedId);
+        // the KS RWE resolver only uses the (local) mountpoint URL, so it doesn't know the remote default mount ID
+        if (context != Context.SERVER_SERVER_RWE) {
+            allInputs.add(absoluteDefaultId);
+        }
+
+        for (final var initialUrl : allInputs) {
             final var resolvedUrl = resolver.resolveInternal(initialUrl).orElseThrow();
             Optional.ofNullable(resolvedUrl.path()).ifPresent(p -> assertFalse(p.isAbsolute()));
             Optional.ofNullable(resolvedUrl.pathInsideWorkflow()).ifPresent(p -> assertFalse(p.isAbsolute()));
 
             final var converted = resolver.changeLinkType(initialUrl);
-            for (final var e : expected.entrySet()) {
+            for (final var e : expectedRelative.entrySet()) {
                 final var urlType = e.getKey();
                 final var expectedUrl = e.getValue();
-                assertThat(converted.get(urlType)).as("Converting from " + initial.getKey() + " to " + urlType)
+                assertThat(converted.get(urlType)).as("Converting " + initialUrl + " to " + urlType)
                     .isEqualTo(expectedUrl);
             }
+
+            final var inputType = KnimeUrlType.getType(initialUrl).orElseThrow();
+            // If an absolute URL is the input, it should come out unchanged
+            final var expectedAbsUrl = inputType == KnimeUrlType.MOUNTPOINT_ABSOLUTE ? initialUrl
+                // on Server executors we ignore the default mount ID for historical reasons
+                : context == Context.SERVER_SERVER_RWE ? absoluteRenamedId
+                    // in all other cases the URL should work in the workflow's location (using the default mount ID)
+                    : absoluteDefaultId;
+
+            assertThat(converted.get(KnimeUrlType.MOUNTPOINT_ABSOLUTE)) //
+                .as("Converting " + initialUrl + " to MOUNTPOINT_ABSOLUTE") //
+                .isEqualTo(expectedAbsUrl);
         }
     }
 
@@ -224,7 +249,7 @@ class KnimeUrlResolverTest {
         }
         assertEquals("someDir/file.csv", resolvedUrl.pathInsideWorkflow().toString());
         assertEquals(localMountId, resolvedUrl.mountID());
-        assertFalse(resolvedUrl.cannotBeRelativized());
+        assertTrue(resolvedUrl.canBeRelativized());
 
         assertResolvedURLEquals("Should resolve to a file in the executor's file system.", resolver,
             expectedUrl, workflowRelative);
@@ -239,8 +264,8 @@ class KnimeUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()",
     })
-    void testRootOfCurrentWorkflow(final Context context, final String localMountId, final WorkspaceType type,
-        @SuppressWarnings("unused") final String spacePath) throws Exception {
+    void testRootOfCurrentWorkflow(final Context context, final String localMountId, final WorkspaceType type)
+            throws Exception {
 
         final var resolver = context.getResolver(localMountId, type);
 
@@ -254,11 +279,28 @@ class KnimeUrlResolverTest {
 
     @ParameterizedTest
     @MethodSource({
+        "org.knime.core.util.urlresolve.URLMethodSources#tempCopyHubContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#remoteHubExecutorContexts()"
+    })
+    void testDifferentSpaceNotRelativizable(final Context context, final String localMountId, final WorkspaceType type)
+            throws Exception {
+        final var urlSame = new URL("knime://MountID/Users/John%20D%C3%B6%C3%AB/Private/workflow2");
+        final var resolvedSame = context.getResolver(localMountId, type).resolveInternal(urlSame).orElseThrow();
+        assertThat(resolvedSame.canBeRelativized()).as("canBeRelativized").isTrue();
+
+        final var urlOther = new URL("knime://MountID/Users/John%20D%C3%B6%C3%AB/OtherSpace/workflow2");
+        final var resolvedOther = context.getResolver(localMountId, type).resolveInternal(urlOther).orElseThrow();
+        assertThat(resolvedOther.canBeRelativized()).as("canBeRelativized").isFalse();
+    }
+
+    @ParameterizedTest
+    @MethodSource({
         "org.knime.core.util.urlresolve.URLMethodSources#localApContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#knwfContexts()"
     })
-    void testRootOfCurrentWorkflowLocal(final Context context, final String localMountId, final WorkspaceType type,
-        @SuppressWarnings("unused") final String spacePath) throws Exception {
+    void testRootOfCurrentWorkflowLocal(final Context context, final String localMountId, final WorkspaceType type)
+            throws Exception {
 
         final var resolver = context.getResolver(localMountId, type);
 

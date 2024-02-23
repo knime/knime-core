@@ -75,7 +75,7 @@ final class ContextlessUrlResolver extends KnimeUrlResolver {
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final HubItemVersion version) throws ResourceAccessException {
-        return new ResolvedURL(mountId, path, version, null, url, true);
+        return new ResolvedURL(mountId, path, version, null, url, false);
     }
 
     @Override
