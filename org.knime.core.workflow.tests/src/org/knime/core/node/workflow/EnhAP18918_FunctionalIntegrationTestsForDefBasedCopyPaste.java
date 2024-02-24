@@ -230,8 +230,8 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 		// checks its value
 		var copiedUnsafe = getManager().copyToDef(cc, PasswordRedactor.unsafe());
 		Function<DefClipboardContent, ConfigValuePasswordDef> passwordDef = dcc -> 
-			((ConfigValuePasswordDef) ((ConfigMapDef) ((ConfigMapDef) ((NativeNodeDef) dcc.getPayload().getNodes()
-				.get("15")).getModelSettings().getChildren().get("defaultValue")).getChildren().get("credentialsValue"))
+			((ConfigValuePasswordDef) ((ConfigMapDef) ((NativeNodeDef) dcc.getPayload().getNodes()
+				.get("15")).getModelSettings().getChildren().get("defaultValue"))
 				.getChildren().get("passwordEncrypted")); 
 		assertThat(passwordDef.apply(copiedUnsafe).getValue(),
 				is("02BAAAAGMq_QxveL1vZ0EBj9UiWy7_u1C6"));
