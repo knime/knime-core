@@ -3,6 +3,7 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.MatcherAssert.assertThat;
 import java.io.File;
 import java.io.IOException;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,11 +66,13 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
 
         // *no* update is available for A (#1)
         final var updateTemplateDir = new File(getDefaultWorkflowDirectory(), "A");
-        final var ifModified1 = m_upToDateComponent.getTemplateInformation().getTimestamp().toZonedDateTime();
+        final var ifModified1 =
+                m_upToDateComponent.getTemplateInformation().getTimestampInstant().atZone(ZoneOffset.UTC);
         when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), eq(ifModified1)))
                 .thenReturn(Optional.empty());
         // an update is available for A (#2)
-        final var ifModified2 = m_outOfDateComponent.getTemplateInformation().getTimestamp().toZonedDateTime();
+        final var ifModified2 =
+                m_outOfDateComponent.getTemplateInformation().getTimestampInstant().atZone(ZoneOffset.UTC);
         when(resolveMock.resolveToLocalOrTempFileConditional(any(), any(), eq(ifModified2)))
                 .thenReturn(Optional.of(updateTemplateDir));
     }
@@ -86,10 +89,10 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
                 m_upToDateComponent, UpdateStatus.UpToDate));
     }
 
-	@After
-	public void resetURIToFileResolveService() {
-		URIToFileResolveTestUtil.replaceURIToFileResolveService(m_origResolveService);
-	}
+    @After
+    public void resetURIToFileResolveService() {
+        URIToFileResolveTestUtil.replaceURIToFileResolveService(m_origResolveService);
+    }
 
     /**
      * Checks for updates in the order of the map given, containing expected update

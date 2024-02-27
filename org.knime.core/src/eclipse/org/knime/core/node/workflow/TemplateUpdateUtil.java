@@ -51,7 +51,7 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -278,7 +278,8 @@ public final class TemplateUpdateUtil {
              */
             // ignore modified since for versioned content
             final var cutoffDate = HubItemVersion.of(sourceURI).filter(HubItemVersion::isVersioned).isPresent() ? null
-                : Optional.ofNullable(linkInfo.getTimestamp()).map(OffsetDateTime::toZonedDateTime).orElse(null);
+                : Optional.ofNullable(linkInfo.getTimestampInstant()) //
+                    .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
             final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
                 new NullProgressMonitor(), cutoffDate).orElse(null);
             if (localDir == null) {

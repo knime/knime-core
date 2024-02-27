@@ -46,6 +46,7 @@
 package org.knime.core.node.workflow;
 
 import java.net.URI;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -125,7 +126,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
     private final Role m_role;
     private final TemplateType m_type;
-    private final OffsetDateTime m_timestamp;
+    private final Instant m_timestamp;
     private final URI m_sourceURI;
 
     /** see {@link #getUpdateStatus()}. */
@@ -151,51 +152,61 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      *            metadata
      */
     private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri,
-        final OffsetDateTime timestamp, final NodeSettingsRO exampleInputDataInfo,
+        final Instant timestamp, final NodeSettingsRO exampleInputDataInfo,
         final List<FlowVariable> incomingFlowVariables) {
         if (role == null) {
             throw new NullPointerException("Role must not be null");
         }
         m_role = role;
         switch (role) {
-        case None:
-            m_sourceURI = null;
-            m_timestamp = null;
-            m_type = null;
-            break;
-        case Template:
-            CheckUtils.checkNotNull(timestamp, "Template timestamp must not be null");
-            CheckUtils.checkNotNull(type, "Type must not be null");
-            m_sourceURI = null;
-            m_type = type;
-            m_timestamp = timestamp;
-            break;
-        case Link:
-            CheckUtils.checkNotNull(uri, "Link URI must not be null");
-            CheckUtils.checkNotNull(timestamp, "Metanode link timestamp must not be null");
-            m_sourceURI = uri;
-            m_type = null;
-            m_timestamp = timestamp;
-            break;
-        default:
-            throw new IllegalStateException("Unsupported role " + role);
+            case None:
+                m_sourceURI = null;
+                m_timestamp = null;
+                m_type = null;
+                break;
+            case Template:
+                CheckUtils.checkNotNull(timestamp, "Template timestamp must not be null");
+                CheckUtils.checkNotNull(type, "Type must not be null");
+                m_sourceURI = null;
+                m_type = type;
+                m_timestamp = timestamp;
+                break;
+            case Link:
+                CheckUtils.checkNotNull(uri, "Link URI must not be null");
+                CheckUtils.checkNotNull(timestamp, "Metanode link timestamp must not be null");
+                m_sourceURI = uri;
+                m_type = null;
+                m_timestamp = timestamp;
+                break;
+            default:
+                throw new IllegalStateException("Unsupported role " + role);
         }
         m_exampleInputDataInfo = exampleInputDataInfo;
         m_incomingFlowVariables = incomingFlowVariables == null ? Collections.emptyList() : incomingFlowVariables;
     }
 
-    /** @return the timestamp date or null if this is not a link. */
+    /**
+     * @return the timestamp date or null if this is not a link
+     */
     public OffsetDateTime getTimestamp() {
+        return m_timestamp == null ? null : m_timestamp.atOffset(ZoneOffset.UTC);
+    }
+
+    /**
+     * @return the timestamp instant or null if this is not a link
+     * @since 5.3
+     */
+    public Instant getTimestampInstant() {
         return m_timestamp;
     }
 
-    /** The timestamp formatted as string or null if this is not a link.
-     * @return This string or null. */
+    /**
+     * The timestamp formatted as string or null if this is not a link.
+     *
+     * @return this string or null
+     */
     public String getTimeStampString() {
-        if (m_timestamp == null) {
-            return null;
-        }
-        return DATE_FORMAT.format(m_timestamp);
+        return m_timestamp == null ? null : DATE_FORMAT.format(m_timestamp.atOffset(ZoneOffset.UTC));
     }
 
     /** @return the sourceURI */
@@ -263,8 +274,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
                     includeExampleInputDataInfo ? m_exampleInputDataInfo : null,
                     includeExampleInputDataInfo ? m_incomingFlowVariables : null);
             default:
-            throw new IllegalStateException("Can't link to metanode of role"
-                    + " \"" + getRole() + "\" (URI: \"" + sourceURI + "\")");
+                throw new IllegalStateException(
+                    "Can't link to metanode of role \"" + getRole() + "\" (URI: \"" + sourceURI + "\")");
         }
     }
 
@@ -279,26 +290,37 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      */
     public MetaNodeTemplateInformation createLinkWithUpdatedSource(final URI newSource)
         throws InvalidSettingsException {
+        // ifModifiedSince is set to null because always perform a download for components with a space version.
+        final var newLastModified = HubItemVersion.of(newSource).filter(HubItemVersion::isVersioned).isPresent()
+                ? Instant.EPOCH : null;
+        return createLinkWithUpdatedSource(newSource, newLastModified);
+    }
+
+    /**
+     * Create a new link template info based on this template (which must be a link already), which is supposed to be
+     * accessible under the argument URI.
+     *
+     * @param newSource The sourceURI, must not be {@code null}
+     * @param newLastModified new last-modified timestamp, {@code null} copies over this information's timestamp
+     * @return a new template linking to the argument URI
+     * @throws InvalidSettingsException If this object is not a template
+     * @since 5.3
+     */
+    public MetaNodeTemplateInformation createLinkWithUpdatedSource(final URI newSource, final Instant newLastModified)
+        throws InvalidSettingsException {
         if (newSource == null) {
             throw new InvalidSettingsException("New source URI is not present.");
         }
-        if (getRole() == Role.Link) {
-            var newInfo = buildTemplateInformation(newSource);
-            newInfo.m_updateStatus = m_updateStatus;
-            return newInfo;
-        }
-        throw new InvalidSettingsException(
-            "Can't link to metanode of role" + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
-    }
 
-    private MetaNodeTemplateInformation buildTemplateInformation(final URI newSource) {
-        if (HubItemVersion.of(newSource).filter(HubItemVersion::isVersioned).isPresent()) {
-            // ifModifiedSince is set to null because always perform a download for components with a space version.
-            return new MetaNodeTemplateInformation(Role.Link, null, newSource,
-                OffsetDateTime.parse("1970-01-01T00:00:00+00:00"), null, null);
-        } else {
-            return new MetaNodeTemplateInformation(Role.Link, null, newSource, m_timestamp, null, null);
+        if (getRole() != Role.Link) {
+            throw new InvalidSettingsException(
+                "Can't link to metanode of role" + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
         }
+
+        final var newInfo = new MetaNodeTemplateInformation(Role.Link, null, newSource,
+            newLastModified == null ? m_timestamp : newLastModified, null, null);
+        newInfo.m_updateStatus = m_updateStatus;
+        return newInfo;
     }
 
     /**
@@ -373,7 +395,6 @@ public final class MetaNodeTemplateInformation implements Cloneable {
 
 
 
-    /** {@inheritDoc} */
     @Override
     protected MetaNodeTemplateInformation clone() {
         try {
@@ -383,22 +404,21 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder(m_role.toString());
         switch (m_role) {
-        case None:
-            break;
-        case Link:
-            b.append(" to \"").append(m_sourceURI.toString());
-            b.append("\", version: ").append(getTimeStampString());
-            b.append("\", update: ").append(m_updateStatus);
-            break;
-        case Template:
-            b.append(" version ").append(getTimeStampString());
-            break;
-        default:
+            case None:
+                break;
+            case Link:
+                b.append(" to \"").append(m_sourceURI.toString());
+                b.append("\", version: ").append(getTimeStampString());
+                b.append("\", update: ").append(m_updateStatus);
+                break;
+            case Template:
+                b.append(" version ").append(getTimeStampString());
+                break;
+            default:
         }
         return b.toString();
     }
@@ -420,9 +440,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
 
         if (HubItemVersion.of(m_sourceURI).filter(HubItemVersion::isVersioned).isPresent()) {
-            return !getTimestamp().isEqual(other.getTimestamp());
+            return !m_timestamp.equals(other.m_timestamp);
         } else {
-            return getTimestamp().isAfter(other.getTimestamp());
+            return m_timestamp.isAfter(other.m_timestamp);
         }
     }
 
@@ -432,7 +452,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     public static MetaNodeTemplateInformation createNewTemplate(
         final Class<? extends NodeContainerTemplate> cl) {
         TemplateType type = TemplateType.get(cl);
-        return new MetaNodeTemplateInformation(Role.Template, type, null, OffsetDateTime.now(), null, null);
+        return new MetaNodeTemplateInformation(Role.Template, type, null, Instant.now(), null, null);
     }
 
     /**
@@ -460,10 +480,12 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         var uri = StringUtils.isEmpty(def.getUri()) ? null : URI.create(def.getUri());
         uri = HubItemVersion.migrateFromSpaceVersion(uri);
         var role = Role.Link;
+        final var updatedAt = def.getUpdatedAt();
         if (uri == null) {
-            role = def.getUpdatedAt() == null ? Role.None : Role.Template;
+            role = updatedAt == null ? Role.None : Role.Template;
         }
-        return new MetaNodeTemplateInformation(role, type, uri, def.getUpdatedAt(), null, null);
+        return new MetaNodeTemplateInformation(role, type, uri, updatedAt == null ? null : updatedAt.toInstant(),
+            null, null);
     }
 
     /**
@@ -476,7 +498,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      */
     public static MetaNodeTemplateInformation createNewTemplate(final NodeSettingsRO exampleInputDataInfo,
         final List<FlowVariable> incomingFlowVariables) {
-        return new MetaNodeTemplateInformation(Role.Template, TemplateType.SubNode, null, OffsetDateTime.now(),
+        return new MetaNodeTemplateInformation(Role.Template, TemplateType.SubNode, null, Instant.now(),
             exampleInputDataInfo, incomingFlowVariables);
     }
 
@@ -517,7 +539,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_TEMPLATE_INFO);
         String roleS = nestedSettings.getString("role");
         Role role;
-        OffsetDateTime timestamp;
+        Instant timestamp;
         URI sourceURI;
         TemplateType templateType;
         try {
@@ -528,20 +550,20 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
 
         switch (role) {
-        case None:
-            return NONE;
-        case Template:
-            sourceURI = null;
-            timestamp = readTimestamp(nestedSettings);
-            templateType = readTemplateType(nestedSettings, version);
-            break;
-        case Link:
-            sourceURI = readURI(nestedSettings);
-            templateType = null;
-            timestamp = readTimestamp(nestedSettings);
-            break;
-        default:
-            throw new InvalidSettingsException("Unsupported role: " + role);
+            case None:
+                return NONE;
+            case Template:
+                sourceURI = null;
+                timestamp = readTimestamp(nestedSettings);
+                templateType = readTemplateType(nestedSettings, version);
+                break;
+            case Link:
+                sourceURI = readURI(nestedSettings);
+                templateType = null;
+                timestamp = readTimestamp(nestedSettings);
+                break;
+            default:
+                throw new InvalidSettingsException("Unsupported role: " + role);
         }
 
 
@@ -568,7 +590,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     /** @param settings
     /** @return
     /** @throws InvalidSettingsException */
-    private static OffsetDateTime readTimestamp(final NodeSettingsRO settings)
+    private static Instant readTimestamp(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String dateS = settings.getString("timestamp");
         if (dateS == null || dateS.length() == 0) {
@@ -577,9 +599,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         try {
             var tempAccessor = DATE_FORMAT.parse(dateS);
             if (tempAccessor.isSupported(ChronoField.OFFSET_SECONDS)) {
-                return OffsetDateTime.from(tempAccessor);
+                return OffsetDateTime.from(tempAccessor).toInstant();
             } else {
-                return LocalDateTime.from(tempAccessor).atOffset(ZoneOffset.UTC);
+                return LocalDateTime.from(tempAccessor).toInstant(ZoneOffset.UTC);
             }
         } catch (DateTimeParseException pe) {
             throw new InvalidSettingsException("Cannot parse reference date \"" + dateS + "\": " + pe.getMessage(), pe);
