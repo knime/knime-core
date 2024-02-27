@@ -446,6 +446,21 @@ public abstract class KnimeUrlResolver {
     }
 
     /**
+     * Checks whether the given path component of a KNIME URL looks like a Hub ID URL.
+     * ID URLs have a single path segment which starts with an asterisk:
+     * <ul>
+     *   <li>{@code knime://My-KNIME-Hub/*a1b2c3d4}</li>
+     *   <li>{@code knime://ACMECorp-Hub/*d34db33f?itemVersion=5}</li>
+     * </ul>
+     *
+     * @param path the URL's parsed path component
+     * @return {@code true} if the path looks like a Hub item ID, {@code false} otherwise
+     */
+    static boolean isHubIdUrl(final IPath path) {
+        return path.segmentCount() == 1 && path.segment(0).startsWith("*");
+    }
+
+    /**
      * Checks if the given path starts with {@code /../}, which signals that it is supposed to escape the current scope.
      * Note that no normalization takes place, so the path could try to escape the scope later. The resolver has to
      * verify that this does not happen and that URLs <i>not</i> starting with {@code /../} stay in their scope.

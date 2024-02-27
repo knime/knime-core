@@ -95,8 +95,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
 
         final var versionInfo = HubItemVersion.of(url).orElse(null);
         final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), versionInfo, path);
-        final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
-        final var canBeRelativized = !isHubIdUrl && getSpacePath(m_locationInfo).isPrefixOf(path);
+        final var canBeRelativized = !isHubIdUrl(path) && getSpacePath(m_locationInfo).isPrefixOf(path);
         return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }
 

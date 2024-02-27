@@ -50,9 +50,11 @@ package org.knime.core.util.urlresolve;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.IPath;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
@@ -65,12 +67,19 @@ import org.knime.core.util.hub.HubItemVersion;
 final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
     private final String m_localMountId;
+
     private final URI m_mountpointUri;
+
     private final HubSpaceLocationInfo m_hubLocationInfo;
 
+    /**
+     * @param mountpointUri provides the name under which the remote (server/hub) location is mounted locally
+     * @param locationInfo provides the space path or workflow path
+     */
     RemoteExecutorUrlResolver(final URI mountpointUri, final HubSpaceLocationInfo locationInfo) {
-        m_localMountId = mountpointUri.getAuthority();
-        m_mountpointUri = mountpointUri;
+        m_mountpointUri = CheckUtils.checkArgumentNotNull(mountpointUri, "Remote job doesn't specify mountpoint URL");
+        m_localMountId = CheckUtils.checkArgumentNotNull(mountpointUri.getAuthority(),
+            "Mountpoint URL '%s' doesn't specify a mountID.", mountpointUri);
         m_hubLocationInfo = locationInfo;
     }
 
@@ -90,18 +99,18 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
         // we are conservative here and accept the URL as referencing the same mountpoint if the mount ID matches either
         // the mount ID of the workflow in the local AP or the default mount ID of the remote Hub
-        if (!m_localMountId.equals(mountId)
-                && !(m_hubLocationInfo != null && m_hubLocationInfo.getDefaultMountId().equals(mountId))) {
+        // covers server and hub
+        final var localIdMatches = m_localMountId.equals(mountId);
+        // historically, server resolution did not account for default mount id, that's why we do it only for hub
+        final var defaultIdMatches =
+            m_hubLocationInfo != null && Objects.equals(m_hubLocationInfo.getDefaultMountId(), mountId);
+        if (!(localIdMatches || defaultIdMatches)) {
             throw new ResourceAccessException("Unknown Mount ID on Remote Executor in URL '" + url + "'.");
         }
 
         // the rest is done by the ExplorerFileStore instance from the ExplorerMountTable
-        var canBeRelativized = true;
-        if (m_hubLocationInfo != null) {
-            final var isHubIdUrl = path.segmentCount() == 1 && path.segment(0).startsWith("*");
-            canBeRelativized = !isHubIdUrl && getSpacePath(m_hubLocationInfo).isPrefixOf(path);
-        }
-
+        var canBeRelativized = m_hubLocationInfo == null ||
+                (!isHubIdUrl(path) && getSpacePath(m_hubLocationInfo).isPrefixOf(path));
         final var resourceUrl = createKnimeUrl(m_localMountId, path, version);
         return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }

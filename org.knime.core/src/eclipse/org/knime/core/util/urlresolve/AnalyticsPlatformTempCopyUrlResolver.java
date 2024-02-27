@@ -77,11 +77,16 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
 
     private final URI m_mountpointURI;
 
+    /**
+     * @param executorInfo
+     * @param locationInfo of the original workflow that is opened as a temporary copy
+     * @param mountpointURI of the remote (server/hub) location that holds the original workflow
+     */
     AnalyticsPlatformTempCopyUrlResolver(final AnalyticsPlatformExecutorInfo executorInfo,
         final RestLocationInfo locationInfo, final URI mountpointURI) {
-        m_executorInfo = executorInfo;
-        m_locationInfo = locationInfo;
-        m_mountpointURI = mountpointURI;
+        m_executorInfo = CheckUtils.checkArgumentNotNull(executorInfo, "Analytics platform executor details required");
+        m_locationInfo = CheckUtils.checkArgumentNotNull(locationInfo, "Location of the remote workflow required");
+        m_mountpointURI = CheckUtils.checkArgumentNotNull(mountpointURI, "Remote mount point information required");
     }
 
     @Override
@@ -93,8 +98,7 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final HubItemVersion version) throws ResourceAccessException {
 
-        if (m_locationInfo instanceof HubSpaceLocationInfo
-                && path.segmentCount() == 1 && path.segment(0).startsWith("*")) {
+        if (m_locationInfo instanceof HubSpaceLocationInfo && isHubIdUrl(path)) {
             // cannot relativize ID URLs (for now)
             return new ResolvedURL(mountId, path, version, null, url, false);
         }
