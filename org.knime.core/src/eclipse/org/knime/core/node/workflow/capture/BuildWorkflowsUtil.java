@@ -91,14 +91,14 @@ public final class BuildWorkflowsUtil {
      */
     public static Pair<Integer, int[]> getInputOutputNodePositions(final int[] wfBounds, final int numNodes,
         final boolean isInput) {
-        int y_bb_center = (int)Math.round((wfBounds[3] - wfBounds[1]) / 2.0 + wfBounds[1]);
-        int y_offset = (int)Math.floor(y_bb_center - ((numNodes - 1) * NODE_DIST) / 2.0 - NODE_HEIGHT / 2.0);
-        int x_pos = (int)Math.round((isInput ? wfBounds[0] - NODE_DIST : wfBounds[2] + NODE_DIST) - NODE_WIDTH / 2.0);
-        int[] y_pos = new int[numNodes];
+        int yBoundingBoxCenter = (int)Math.round((wfBounds[3] - wfBounds[1]) / 2.0 + wfBounds[1]);
+        int yOffset = (int)Math.floor(yBoundingBoxCenter - ((numNodes - 1) * NODE_DIST) / 2.0 - NODE_HEIGHT / 2.0);
+        int xPos = (int)Math.round((isInput ? (wfBounds[0] - NODE_DIST) : (wfBounds[2] + NODE_DIST)) - NODE_WIDTH / 2.0);
+        int[] yPos = new int[numNodes];
         for (int i = 0; i < numNodes; i++) {
-            y_pos[i] = (int)Math.floor(y_offset + i * NODE_DIST);
+            yPos[i] = yOffset + i * NODE_DIST;
         }
-        return Pair.create(x_pos, y_pos);
+        return Pair.create(xPos, yPos);
     }
 
     /**
@@ -135,17 +135,9 @@ public final class BuildWorkflowsUtil {
     private static String listChars(final String chars, final boolean doFormat) {
         StringBuilder res = new StringBuilder();
         for (int i = 0; i < chars.length(); i++) {
-            String curChar = chars.substring(i, i + 1);
+            var curChar = chars.substring(i, i + 1);
             if (doFormat) {
-                // Printing `<` or `>` in JLabels that already use HTML formatting is problematic.
-                if (curChar.equals("<")) {
-                    curChar = "&lt;";
-                }
-                if (curChar.equals(">")) {
-                    curChar = "&gt;";
-                }
-            }
-            if (doFormat) {
+                curChar = escapeChevrons(curChar);
                 res.append("<code>");
             }
             res.append(curChar);
@@ -160,6 +152,17 @@ public final class BuildWorkflowsUtil {
             }
         }
         return res.toString();
+    }
+
+    private static String escapeChevrons(String curChar) {
+        // Printing `<` or `>` in JLabels that already use HTML formatting is problematic.
+        if (curChar.equals("<")) {
+            curChar = "&lt;";
+        }
+        if (curChar.equals(">")) {
+            curChar = "&gt;";
+        }
+        return curChar;
     }
 
     /**
@@ -181,7 +184,7 @@ public final class BuildWorkflowsUtil {
                         .addTextIssue(lr.getFilteredError("", LoadResultEntryType.Error)) //
                         .build().orElseThrow());
             case Ok:
-            case DataLoadError: // ignore data load errors
+            case DataLoadError: // NOSONAR ignore data load errors
             default:
                 return Optional.empty();
 

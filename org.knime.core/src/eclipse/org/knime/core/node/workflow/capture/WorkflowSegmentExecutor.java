@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.workflow.capture;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,8 +115,8 @@ public final class WorkflowSegmentExecutor {
      * @param ws the workflow segment to execute
      * @param workflowName the name of the metanode to be created (which will only be visible if 'debug' is
      *            <code>true</code>)
-     * @param hostNode the node which is responsible for the execution of the workflow segment (which provides the
-     *            input and receives the output data, supplies the file store, etc.)
+     * @param hostNode the node which is responsible for the execution of the workflow segment (which provides the input
+     *            and receives the output data, supplies the file store, etc.)
      * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
      *            debugging purposes), if <code>false</code> it's hidden
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
@@ -202,19 +201,16 @@ public final class WorkflowSegmentExecutor {
      * @return the resulting port objects and flow variables
      * @throws Exception if workflow execution fails
      */
-    public Pair<PortObject[], List<FlowVariable>> executeWorkflow(final PortObject[] inputData, final ExecutionContext exec)
-        throws Exception { // NOSONAR
+    public Pair<PortObject[], List<FlowVariable>> executeWorkflow(final PortObject[] inputData,
+        final ExecutionContext exec) throws Exception { // NOSONAR
         NativeNodeContainer virtualInNode = ((NativeNodeContainer)m_wfm.getNodeContainer(m_virtualStartID));
-        DefaultVirtualPortObjectInNodeModel inNM =
-                (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
+        DefaultVirtualPortObjectInNodeModel inNM = (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
 
         m_flowVirtualScopeContext.registerHostNodeForPortObjectPersistence(m_hostNode, exec);
 
-        inNM.setVirtualNodeInput(new VirtualNodeInput(inputData,
-            collectOutputFlowVariablesFromUpstreamNodes(m_hostNode)));
+        inNM.setVirtualNodeInput(
+            new VirtualNodeInput(inputData, collectOutputFlowVariablesFromUpstreamNodes(m_hostNode)));
         NativeNodeContainer nnc = (NativeNodeContainer)m_wfm.getNodeContainer(m_virtualEndID);
-        DefaultVirtualPortObjectOutNodeModel outNM =
-            (DefaultVirtualPortObjectOutNodeModel)nnc.getNodeModel();
 
         AtomicReference<Exception> exception = new AtomicReference<>();
         executeAndWait(exec, exception);
@@ -223,6 +219,7 @@ public final class WorkflowSegmentExecutor {
             throw exception.get();
         }
 
+        DefaultVirtualPortObjectOutNodeModel outNM = (DefaultVirtualPortObjectOutNodeModel)nnc.getNodeModel();
         PortObject[] portObjectCopies = copyPortObjects(outNM.getOutObjects(), exec);
         // if (portObjectCopies != null) {
         //     removeSuperfluousFileStores(Stream.concat(stream(portObjectCopies), outputData.stream()));
@@ -270,8 +267,8 @@ public final class WorkflowSegmentExecutor {
     }
 
     /**
-     * Cancels the execution if it is running and removes the virtual node containing the workflow segment from
-     * the hosting workflow.
+     * Cancels the execution if it is running and removes the virtual node containing the workflow segment from the
+     * hosting workflow.
      */
     public void dispose() {
         cancel();
@@ -317,10 +314,10 @@ public final class WorkflowSegmentExecutor {
      * (either as file store cell or file store port object).
      */
     //private static void removeSuperfluousFileStores(final Stream<PortObject> portObjects) {
-        // TODO
-        // see ticket https://knime-com.atlassian.net/browse/AP-14414
-        // m_thisNode.getNode().getFileStoreHandler();
-        // ...
+    // TODO
+    // see ticket https://knime-com.atlassian.net/browse/AP-14414
+    // m_thisNode.getNode().getFileStoreHandler();
+    // ...
     //}
 
     /*
