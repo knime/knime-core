@@ -48,17 +48,23 @@
  */
 package org.knime.core.util;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.net.URIBuilder;
+import org.eclipse.core.runtime.Path;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowContext;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.util.workflowalizer.AuthorInformation;
+import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
+import org.knime.core.node.workflow.contextv2.HubJobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
+import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2.ExecutorType;
 
 /**
  * Static constants and utility methods for working with KNIME context properties.
@@ -84,7 +90,7 @@ public final class ContextProperties {
     public static final String CONTEXT_PROPERTY_WORKFLOW_ABSOLUTE_PATH = "context.workflow.absolute-path";
 
     /**
-     * Context variable name for workflow user.
+     * Context variable name for workflow user ID.
      */
     public static final String CONTEXT_PROPERTY_SERVER_USER = "context.workflow.user";
 
@@ -119,25 +125,70 @@ public final class ContextProperties {
     private static final String CONTEXT_PROPERTY_JOB_ID = "context.job.id";
 
     /**
+     * Context variable name for job id when run on server.
+     */
+    private static final String CONTEXT_PROPERTY_JOB_ACCOUNT_ID = "context.job.account.id";
+
+    /**
+     * Context variable name for job id when run on server.
+     */
+    private static final String CONTEXT_PROPERTY_JOB_ACCOUNT_NAME = "context.job.account.name";
+
+    /**
+     * Context variable name for workflow user name.
+     */
+    private static final String CONTEXT_PROPERTY_EXECUTOR_USER_NAME = "context.workflow.username";
+
+    /**
+     * Context variable name for executor AP version.
+     */
+    private static final String CONTEXT_PROPERTY_EXECUTOR_VERSION = "context.workflow.executor.version";
+
+    /**
+     * Context variable name for workflow ID when stored on KNIME Hub.
+     */
+    private static final String CONTEXT_PROPERTY_HUB_ITEM_ID = "context.workflow.hub.item.id";
+
+    /**
+     * Context variable name for the enclosing space's ID when stored on KNIME Hub.
+     */
+    private static final String CONTEXT_PROPERTY_HUB_SPACE_ID = "context.workflow.hub.space.id";
+
+    /**
+     * Context variable name for the enclosing space's path when stored on KNIME Hub.
+     */
+    private static final String CONTEXT_PROPERTY_HUB_SPACE_PATH = "context.workflow.hub.space.path";
+
+    /**
+     * Context variable name for the enclosing space's path when stored on KNIME Hub.
+     */
+    private static final String CONTEXT_PROPERTY_HUB_API_BASE_URL = "context.workflow.hub.api.base-url";
+
+    /**
      * The list of all context properties.
      */
-    private static final List<String> CONTEXT_PROPERTIES;
+    private static final List<String> CONTEXT_PROPERTIES = List.of( //
+        /* Old properties (before AP 5.3). */
+        CONTEXT_PROPERTY_WORKFLOW_NAME, //
+        CONTEXT_PROPERTY_WORKFLOW_PATH, //
+        CONTEXT_PROPERTY_WORKFLOW_ABSOLUTE_PATH, //
+        CONTEXT_PROPERTY_SERVER_USER, //
+        CONTEXT_PROPERTY_TEMP_LOCATION, //
+        CONTEXT_PROPERTY_AUTHOR, //
+        CONTEXT_PROPERTY_EDITOR, //
+        CONTEXT_PROPERTY_CREATION_DATE, //
+        CONTEXT_PROPERTY_LAST_MODIFIED, //
+        CONTEXT_PROPERTY_JOB_ID, //
 
-    static {
-        final ArrayList<String> contextProperties = new ArrayList<>();
-        contextProperties.add(CONTEXT_PROPERTY_WORKFLOW_NAME);
-        contextProperties.add(CONTEXT_PROPERTY_WORKFLOW_PATH);
-        contextProperties.add(CONTEXT_PROPERTY_WORKFLOW_ABSOLUTE_PATH);
-        contextProperties.add(CONTEXT_PROPERTY_SERVER_USER);
-        contextProperties.add(CONTEXT_PROPERTY_TEMP_LOCATION);
-        contextProperties.add(CONTEXT_PROPERTY_AUTHOR);
-        contextProperties.add(CONTEXT_PROPERTY_EDITOR);
-        contextProperties.add(CONTEXT_PROPERTY_CREATION_DATE);
-        contextProperties.add(CONTEXT_PROPERTY_LAST_MODIFIED);
-        contextProperties.add(CONTEXT_PROPERTY_JOB_ID);
-        contextProperties.trimToSize();
-        CONTEXT_PROPERTIES = Collections.unmodifiableList(contextProperties);
-    }
+        /* Properties introduced with AP 5.3 (AP-20735). */
+        CONTEXT_PROPERTY_EXECUTOR_USER_NAME, //
+        CONTEXT_PROPERTY_EXECUTOR_VERSION, //
+        CONTEXT_PROPERTY_JOB_ACCOUNT_ID, //
+        CONTEXT_PROPERTY_JOB_ACCOUNT_NAME, //
+        CONTEXT_PROPERTY_HUB_ITEM_ID, //
+        CONTEXT_PROPERTY_HUB_SPACE_ID, //
+        CONTEXT_PROPERTY_HUB_SPACE_PATH, //
+        CONTEXT_PROPERTY_HUB_API_BASE_URL);
 
     /**
      * Extracts the value of a context property.
@@ -146,51 +197,125 @@ public final class ContextProperties {
      * @return the non-{@code null}, but possibly empty, value of the context property.
      * @throws IllegalArgumentException of {@code property} is not the name of a context property.
      */
-    public static String extractContextProperty(final String property) {
-        final WorkflowManager manager = NodeContext.getContext().getWorkflowManager();
-        if (CONTEXT_PROPERTY_WORKFLOW_NAME.equals(property)) {
-            return manager.getName();
-        }
-        if (CONTEXT_PROPERTY_JOB_ID.equals(property)) {
-            final WorkflowContext context = manager.getContext();
-            return context == null ? null : context.getJobId().map(UUID::toString).orElse(null);
-        }
-        if (CONTEXT_PROPERTY_WORKFLOW_PATH.equals(property)) {
-            final WorkflowContext context = manager.getContext();
-            if (context.getRelativeRemotePath().isPresent()) {
-                return context.getRelativeRemotePath().get();
-            }
+    public static String extractContextProperty(final String property) { // NOSONAR
+        final var nodeContext = NodeContext.getContext();
+        final var contextV2 = nodeContext.getContextObjectForClass(WorkflowContextV2.class).orElse(null);
 
-            final File wfLocation =
-                context.getOriginalLocation() == null ? context.getCurrentLocation() : context.getOriginalLocation();
-            final File mpLocation = context.getMountpointRoot();
-            if (mpLocation == null || wfLocation == null) {
+        if (CONTEXT_PROPERTY_WORKFLOW_NAME.equals(property)) {
+            final var manager = nodeContext.getWorkflowManager();
+            if (manager != null) {
+                return manager.getName();
+            } else if (contextV2 != null && contextV2.getLocationInfo() instanceof RestLocationInfo restInfo) {
+                return Path.forPosix(restInfo.getWorkflowPath()).lastSegment();
+            } else {
                 return "";
             }
-            final String wfPath = wfLocation.getAbsolutePath();
-            final String mpPath = mpLocation.getAbsolutePath();
-            assert wfPath.startsWith(mpPath);
-            final String resultPath = wfPath.substring(mpPath.length());
-            return resultPath.replace("\\", "/");
         }
+
+        if (CONTEXT_PROPERTY_JOB_ID.equals(property)) {
+            if (contextV2 != null && contextV2.getExecutorType() != ExecutorType.ANALYTICS_PLATFORM) {
+                return ((JobExecutorInfo)contextV2.getExecutorInfo()).getJobId().toString();
+            } else {
+                return null;
+            }
+        }
+
+        if (CONTEXT_PROPERTY_WORKFLOW_PATH.equals(property)) {
+            if (contextV2 == null) {
+                return "";
+            }
+
+            // TODO the following logic doesn't work correctly in temp-copy "yellow bar" mode
+            if (contextV2.getExecutorType() != ExecutorType.ANALYTICS_PLATFORM) {
+                return ((RestLocationInfo)contextV2.getLocationInfo()).getWorkflowPath();
+            }
+
+            final var executorInfo = (AnalyticsPlatformExecutorInfo)contextV2.getExecutorInfo();
+            final var mountPoint = executorInfo.getMountpoint().orElse(null);
+            if (mountPoint == null) {
+                return "";
+            }
+
+            final var wfLocation = executorInfo.getLocalWorkflowPath().toAbsolutePath();
+            final var mpLocation = mountPoint.getSecond().toAbsolutePath();
+            CheckUtils.checkState(wfLocation.startsWith(mpLocation),
+                "Workflow '%s' is not contained in mountpoint root '%s'.", wfLocation, mpLocation);
+            final var relPath = Path.fromOSString(mpLocation.relativize(wfLocation).toString()).makeAbsolute();
+            return relPath.toString();
+        }
+
         if (CONTEXT_PROPERTY_WORKFLOW_ABSOLUTE_PATH.equals(property)) {
-            final WorkflowContext context = manager.getContext();
-            final File wfLocation = context.getCurrentLocation();
+            final var wfLocation = contextV2 == null ? null : contextV2.getExecutorInfo().getLocalWorkflowPath();
             if (wfLocation == null) {
                 return "";
             }
-            return wfLocation.getAbsolutePath().replace("\\", "/");
+            // Note: this isn't safe in general because POSIX paths can contain backslashes
+            return wfLocation.toFile().getAbsolutePath().replace("\\", "/");
         }
+
         if (CONTEXT_PROPERTY_SERVER_USER.equals(property)) {
-            return manager.getContext().getUserid();
+            return contextV2 == null ? "" : contextV2.getExecutorInfo().getUserId();
         }
+
+        if (CONTEXT_PROPERTY_HUB_API_BASE_URL.equals(property)) {
+            if (contextV2 != null && contextV2.getLocationInfo() instanceof HubSpaceLocationInfo hubLocation) {
+                final var repositoryAddress = hubLocation.getRepositoryAddress();
+                return getHubApiBaseUrl(repositoryAddress).orElse("");
+            }
+            return "";
+        }
+
+        if (CONTEXT_PROPERTY_EXECUTOR_USER_NAME.equals(property)) {
+            if (contextV2 == null) {
+                return "";
+            }
+            final var executorInfo = contextV2.getExecutorInfo();
+            return executorInfo instanceof HubJobExecutorInfo hubInfo ? hubInfo.getJobCreatorName()
+                : executorInfo.getUserId();
+        }
+
+        if (CONTEXT_PROPERTY_EXECUTOR_VERSION.equals(property)) {
+            if (contextV2 == null) {
+                return "";
+            }
+
+            if (contextV2.getExecutorInfo() instanceof JobExecutorInfo jobExec && jobExec.isRemote()) {
+                // version is reported via the RWE
+                return jobExec.getRemoteExecutorVersion().orElse("");
+            }
+            return KNIMEConstants.VERSION;
+        }
+
         if (CONTEXT_PROPERTY_TEMP_LOCATION.equals(property)) {
-            return manager.getContext().getTempLocation().getAbsolutePath();
+            return contextV2 == null ? "" : contextV2.getExecutorInfo().getTempFolder().toFile().getAbsolutePath();
         }
-        final AuthorInformation authInfo = manager.getAuthorInformation();
+
+        if (CONTEXT_PROPERTY_HUB_ITEM_ID.equals(property) || CONTEXT_PROPERTY_HUB_SPACE_ID.equals(property)
+                || CONTEXT_PROPERTY_HUB_SPACE_PATH.equals(property)) {
+            if (contextV2 != null && contextV2.getLocationInfo() instanceof HubSpaceLocationInfo hubInfo) {
+                if (CONTEXT_PROPERTY_HUB_ITEM_ID.equals(property)) {
+                    return hubInfo.getWorkflowItemId();
+                } else if (CONTEXT_PROPERTY_HUB_SPACE_ID.equals(property)) {
+                    return hubInfo.getSpaceItemId();
+                } else {
+                    return hubInfo.getSpacePath();
+                }
+            }
+            return "";
+        }
+
+        if (CONTEXT_PROPERTY_JOB_ACCOUNT_ID.equals(property) || CONTEXT_PROPERTY_JOB_ACCOUNT_NAME.equals(property)) {
+            if (contextV2 != null && contextV2.getExecutorInfo() instanceof HubJobExecutorInfo hubJob) {
+                return CONTEXT_PROPERTY_JOB_ACCOUNT_ID.equals(property) ? hubJob.getScopeId() : hubJob.getScopeName();
+            } else {
+                return "";
+            }
+        }
+
+        final var manager = nodeContext.getWorkflowManager();
+        final var authInfo = manager == null ? null : manager.getAuthorInformation();
         if (authInfo != null) {
-            final String author = Optional.ofNullable(authInfo.getAuthor()).orElse("");
-            final String dateCreated = Optional.ofNullable(authInfo.getAuthoredDate()).map(Object::toString).orElse("");
+            final var author = Optional.ofNullable(authInfo.getAuthor()).orElse("");
             if (CONTEXT_PROPERTY_AUTHOR.equals(property)) {
                 return author;
             }
@@ -199,6 +324,8 @@ public final class ContextProperties {
                  * author is returned as last editor. */
                 return authInfo.getLastEditor().orElse(author);
             }
+
+            final var dateCreated = Optional.ofNullable(authInfo.getAuthoredDate()).map(Object::toString).orElse("");
             if (CONTEXT_PROPERTY_CREATION_DATE.equals(property)) {
                 return dateCreated;
             }
@@ -213,6 +340,45 @@ public final class ContextProperties {
         }
 
         throw new IllegalArgumentException("Not a context property : \"" + property + '"');
+    }
+
+    /**
+     * Extrapolates the Hub API base URL from the Hub repository address. This removes
+     * <ul>
+     *   <li>the (optional) {@code /knime/rest/v4} and
+     *   <li>the (mandatory) {@code /repository} segment
+     * </ul>
+     * from the end of the URL. So both {@code https://127.0.0.1/foo/bar/knime/rest/v4/repository/}
+     * and {https://127.0.0.1/foo/bar/repository/} will be rewritten to {@code https://127.0.0.1/foo/bar}.
+     *
+     * @param repositoryAddress repository address from the workflow context
+     * @return hub API base URL as a string or {@link Optional#empty()} if no {@code /repository} segment was found
+     */
+    private static Optional<String> getHubApiBaseUrl(final URI repositoryAddress) {
+        final var uriBuilder = new URIBuilder(repositoryAddress);
+        final var path = uriBuilder.getPathSegments();
+        int end = path.size();
+
+        // skip empty segments (trailing slashes)
+        while (end > 0 && StringUtils.isEmpty(path.get(end - 1))) {
+            end--;
+        }
+
+        // expect and skip `repository` segment
+        if (end == 0 || !"repository".equals(path.get(end - 1))) {
+            return Optional.empty();
+        }
+        end--;
+
+        // skip `/knime/rest/v4` suffix if found, it's synthetic
+        if (end >= 3 && path.subList(end - 3, end).equals(List.of("knime", "rest", "v4"))) {
+            end -= 3;
+        }
+
+        // remove all skipped segments
+        uriBuilder.setPathSegments(path.subList(0, end));
+
+        return Optional.of(uriBuilder.toString());
     }
 
     /**
