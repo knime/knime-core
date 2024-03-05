@@ -64,7 +64,6 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataTableSpec;
@@ -253,7 +252,8 @@ public final class WorkflowSegment {
      */
     // added as part of AP-21997
     static File newTempDirWithName(final String name) throws IOException {
-        return new File(FileUtil.createTempDir("workflow_segment"), name);
+        final String sanitizedName = FileUtil.ILLEGAL_FILENAME_CHARS_PATTERN.matcher(name).replaceAll("_");
+        return new File(FileUtil.createTempDir("workflow_segment"), sanitizedName);
     }
 
     /**
@@ -286,8 +286,7 @@ public final class WorkflowSegment {
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        final String name = StringUtils.replaceChars(wfm.getName(), FileUtil.ILLEGAL_FILENAME_CHARS, "_");
-        var tmpDir = newTempDirWithName(name);
+        var tmpDir = newTempDirWithName(wfm.getName());
         try {
             return wfmToStream(wfm, tmpDir);
         } finally {
