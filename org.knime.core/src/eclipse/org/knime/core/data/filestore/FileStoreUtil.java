@@ -113,8 +113,9 @@ public final class FileStoreUtil {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static List<FileStore> getFileStores(final FileStorePortObject po) {
-        return IntStream.range(0, po.getFileStoreCount()).mapToObj(i -> po.getFileStore(i))
-            .collect(Collectors.toList());
+        return IntStream.range(0, po.getFileStoreCount()) //
+            .mapToObj(po::getFileStore) //
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -130,14 +131,14 @@ public final class FileStoreUtil {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static void invokeFlush(final FlushCallback flushCallback) throws IOException {
-        if (flushCallback instanceof FileStoreCell) {
-            ((FileStoreCell)flushCallback).callFlushIfNeeded();
-        } else if (flushCallback instanceof FileStorePortObject) {
-            ((FileStorePortObject)flushCallback).callFlushIfNeeded();
+        if (flushCallback instanceof FileStoreCell fsc) {
+            fsc.callFlushIfNeeded();
+        } else if (flushCallback instanceof FileStorePortObject fspo) {
+            fspo.callFlushIfNeeded();
         } else {
             NodeLogger.getLogger(FileStoreUtil.class).coding(
-                "Unknown implementation of a " + FlushCallback.class.getSimpleName() + ": " + flushCallback == null
-                    ? "<null>" : flushCallback.getClass().getName());
+                "Unknown implementation of a " + FlushCallback.class.getSimpleName() + ": " + (flushCallback == null
+                    ? "<null>" : flushCallback.getClass().getName()));
         }
     }
 
@@ -167,7 +168,7 @@ public final class FileStoreUtil {
     public static void retrieveFileStoreHandlers(final FileStorePortObject sourceFSObj,
         final FileStorePortObject resultFSObj, final IWriteFileStoreHandler newHandler) throws IOException {
         List<FileStoreProxy> sourceFSProxies = sourceFSObj.getFileStoreProxies();
-        List<FileStoreKey> sourceFSKeys = new ArrayList<FileStoreKey>(sourceFSProxies.size());
+        List<FileStoreKey> sourceFSKeys = new ArrayList<>(sourceFSProxies.size());
         IDataRepository commonDataRepository = null;
         for (FileStoreProxy proxy : sourceFSProxies) {
             FileStoreKey newKey;
@@ -204,8 +205,8 @@ public final class FileStoreUtil {
      * @since 4.0
      */
     public static Optional<ExecutionContext> getContextFrom(final FileStoreFactory fileStoreFactory) {
-        if (fileStoreFactory instanceof WorkflowFileStoreFactory) {
-            Optional.of(((WorkflowFileStoreFactory)fileStoreFactory).getExec());
+        if (fileStoreFactory instanceof WorkflowFileStoreFactory wfsf) {
+            return Optional.of(wfsf.getExec());
         }
         return Optional.empty();
     }
