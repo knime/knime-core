@@ -653,6 +653,7 @@
       </portType>
       <portType
             color="#ff4b4b"
+            hidden="true"
             name="Database Connection"
             objectClass="org.knime.core.node.port.database.DatabaseConnectionPortObject"
             objectSerializer="org.knime.core.node.port.database.DatabaseConnectionPortObject$Serializer"
@@ -677,6 +678,7 @@
       </portType>
       <portType
             color="#800000"
+            hidden="true"
             name="Database Query"
             objectClass="org.knime.core.node.port.database.DatabasePortObject"
             objectSerializer="org.knime.core.node.port.database.DatabasePortObject$Serializer"
