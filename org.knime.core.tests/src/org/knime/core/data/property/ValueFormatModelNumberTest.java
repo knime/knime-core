@@ -48,9 +48,14 @@
  */
 package org.knime.core.data.property;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
@@ -69,12 +74,26 @@ class ValueFormatModelNumberTest {
     // after each test, check that the model is unchanged
 
     private static ValueFormatModelNumber createModel() throws InvalidSettingsException {
-        return new ValueFormatModelNumber(
-            NumberFormatter.builder()
-            .setAlwaysShowDecimalSeparator(false)
-            .setMaximumDecimals(0)
-            .setGroupSeparator(",")
-            .build());
+        return new ValueFormatModelNumber(//
+            NumberFormatter.builder()//
+                .setAlwaysShowDecimalSeparator(false)//
+                .setMaximumDecimals(0)//
+                .setGroupSeparator(",")//
+                .build());
+    }
+
+    private static ValueFormatModelNumber createModelWithStyles() throws InvalidSettingsException {
+        return new ValueFormatModelNumber(//
+            NumberFormatter.builder()//
+                .setAlwaysShowDecimalSeparator(false)//
+                .setMaximumDecimals(0)//
+                .setGroupSeparator(",")//
+                .build(),
+            "custom-style: yes;");
+    }
+
+    private static Stream<ValueFormatModelNumber> getModels() throws InvalidSettingsException {
+        return Stream.of(createModel(), createModelWithStyles());
     }
 
     /**
@@ -82,14 +101,14 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testInt() throws InvalidSettingsException {
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testInt(final ValueFormatModelNumber model) throws InvalidSettingsException {
         // given
-        ValueFormatModelNumber model = createModel();
-        IntCell intCell = new IntCell(123456789);
+        var intCell = new IntCell(123456789);
 
         // when
-        String formatted = model.getHTML(intCell);
+        var formatted = model.getPlaintext(intCell);
 
         // then
         assertEquals("123,456,789", formatted, "Value is formatted incorrectly.");
@@ -100,14 +119,14 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testLong() throws InvalidSettingsException {
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testLong(final ValueFormatModelNumber model) throws InvalidSettingsException {
         // given
-        ValueFormatModelNumber model = createModel();
-        LongCell longCell = new LongCell(499999999000000001L);
+        var longCell = new LongCell(499999999000000001L);
 
         // when
-        String formatted = model.getHTML(longCell);
+        var formatted = model.getPlaintext(longCell);
 
         // then
         assertEquals("499,999,999,000,000,001", formatted, "Value is formatted incorrectly.");
@@ -118,14 +137,14 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testDouble() throws InvalidSettingsException {
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testDouble(final ValueFormatModelNumber model) throws InvalidSettingsException {
         // given
-        DoubleCell doubleCell = new DoubleCell(123456789.987654321);
-        ValueFormatModelNumber model = createModel();
+        var doubleCell = new DoubleCell(123456789.987654321);
 
         // when
-        String formatted = model.getHTML(doubleCell);
+        var formatted = model.getPlaintext(doubleCell);
 
         // then
         assertEquals("123,456,790", formatted, "Value is formatted incorrectly.");
@@ -136,14 +155,14 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testNonNumeric() throws InvalidSettingsException {
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testNonNumeric(final ValueFormatModelNumber model) throws InvalidSettingsException {
         // given
-        ValueFormatModelNumber model = createModel();
-        StringCell stringCell = new StringCell("abc");
+        var stringCell = new StringCell("abc");
 
         // when
-        String formatted = model.getHTML(stringCell);
+        var formatted = model.getPlaintext(stringCell);
 
         // then
         assertEquals("", formatted, "Empty string expected for non-numeric value.");
@@ -154,13 +173,13 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testMissing() throws InvalidSettingsException {
-        // given
-        ValueFormatModelNumber model = createModel();
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testMissing(final ValueFormatModelNumber model) throws InvalidSettingsException {
+        // given the model ^
 
         // when
-        String formatted = model.getHTML(null);
+        var formatted = model.getPlaintext(null);
 
         // then
         assertEquals("", formatted, "Empty string expected for missing value.");
@@ -171,11 +190,11 @@ class ValueFormatModelNumberTest {
      *
      * @throws InvalidSettingsException
      */
-    @Test
-    void testHandler() throws InvalidSettingsException {
+    @ParameterizedTest
+    @MethodSource("getModels")
+    void testHandler(final ValueFormatModelNumber model) throws InvalidSettingsException {
         // given
-        ValueFormatModelNumber model = createModel();
-        ValueFormatHandler handler = new ValueFormatHandler(model);
+        var handler = new ValueFormatHandler(model);
 
         // when saving and loading the model
         var config = new ModelContent("persistence");
@@ -183,7 +202,41 @@ class ValueFormatModelNumberTest {
         var loadedHandler = ValueFormatHandler.load(config);
 
         // then
-        assertEquals(handler.getFormatModel(), loadedHandler.getFormatModel(), "Loaded model is not equal to saved model.");
+        assertEquals(handler.getFormatModel(), loadedHandler.getFormatModel(),
+            "Loaded model is not equal to saved model.");
+    }
+
+    /**
+     * Test that additional styles are indeed added to the HTML string, but not the plaintext output
+     *
+     * @throws InvalidSettingsException
+     */
+    @Test
+    void testAdditionalStyles() throws InvalidSettingsException {
+        // given handlers and number cell
+        var modelNoStyles = createModel();
+        var modelWithStyles = createModelWithStyles();
+        var cell = new DoubleCell(123456.123);
+
+        // when formatting
+        var plaintextNoStyles = modelNoStyles.getPlaintext(cell);
+        var htmlNoStyles = modelNoStyles.getHTML(cell);
+        var plaintextWithStyles = modelWithStyles.getPlaintext(cell);
+        var htmlWithStyles = modelWithStyles.getHTML(cell);
+
+        // then
+        assertEquals(plaintextNoStyles, plaintextWithStyles,
+            "Additional styles should not change anything about the plaintext output");
+        assertEquals(plaintextNoStyles, "123,456", "The plaintext should be formatted correctly.");
+        checkDiamonds(htmlWithStyles, htmlNoStyles);
+        assertTrue(htmlWithStyles.contains("style=\"custom-style: yes;\""));
+    }
+
+    private static void checkDiamonds(final String ...htmls) {
+        for (var html : htmls) {
+            assertEquals(html.chars().filter(c -> c == '<').count(),
+                html.chars().filter(c -> c == '>').count(), "The number of < and > should equal.");
+        }
     }
 
 }

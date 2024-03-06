@@ -70,6 +70,24 @@ public interface ValueFormatModel {
     String getHTML(DataValue dataValue);
 
     /**
+     * Formats a data value to a plaintext / non-HTML String, representing the underlying value. This might not apply
+     * all configured formatting options, but only those that can be realized without HTML / CSS Tags
+     *
+     * This string might not be properly escaped for usage in an HTML context, e.g. it might return "I <3 you", and not
+     * "I &lt;3 you". Therefore, if this string is rendered in an HTML context, it needs to be escaped.
+     *
+     * By default, this method delegates to the "getHTML" method, although it should be implemented by all implementing
+     * classes.
+     *
+     * @param dataValue
+     * @return a String that represents the data value
+     * @since 5.3
+     */
+    default String getPlaintext(final DataValue dataValue) {
+        return getHTML(dataValue);
+    }
+
+    /**
      * Saves the settings of the formatter to a provided {@link ConfigWO} object. Override this method if your formatter
      * has any settings that need to be persisted
      *

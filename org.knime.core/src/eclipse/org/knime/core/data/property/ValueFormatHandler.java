@@ -97,6 +97,15 @@ public final class ValueFormatHandler implements PropertyHandler {
     }
 
     /**
+     * @param dv to format
+     * @return a plaintext string representation of the data value. Never <code>null</code>.
+     * @since 5.3
+     */
+    public String getPlaintext(final DataValue dv) {
+        return m_model.getPlaintext(dv);
+    }
+
+    /**
      * Saves the parameters of the value formatter.
      * @param config empty subtree to save to
      * @throws NullPointerException if the <i>config</i> is <code>null</code>

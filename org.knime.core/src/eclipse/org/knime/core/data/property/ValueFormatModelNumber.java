@@ -47,6 +47,8 @@
  */
 package org.knime.core.data.property;
 
+import java.util.Optional;
+
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.LongValue;
@@ -54,6 +56,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.util.valueformat.NumberFormatter;
+
+import com.google.common.html.HtmlEscapers;
 
 /**
  * Defines a transformation from numbers to html.
@@ -69,11 +73,26 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
      */
     final NumberFormatter m_formatter;
 
+    final Optional<String> m_additionalStyles;
+
+    private static final String CONFIG_STYLES = "styles";
+
     /**
      * @param formatter to handle value to markup conversion
      */
     public ValueFormatModelNumber(final NumberFormatter formatter) {
         m_formatter = formatter;
+        m_additionalStyles = Optional.empty();
+    }
+
+    /**
+     * @param formatter to handle value to markup conversion
+     * @param additionalStyles more styles to add to the HTML output, can be null
+     * @since 5.3
+     */
+    public ValueFormatModelNumber(final NumberFormatter formatter, final String additionalStyles) {
+        m_formatter = formatter;
+        m_additionalStyles = Optional.ofNullable(additionalStyles).map(HtmlEscapers.htmlEscaper()::escape);
     }
 
     /**
@@ -81,12 +100,19 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
      * @return markup of the formatted value or an empty string if the value is not numeric.
      */
     @Override
-    public String getHTML(final DataValue dv) {
+    public String getPlaintext(final DataValue dv) {
         var value = unpack(dv);
         if (value == null) {
             return "";
         }
         return m_formatter.format(value);
+    }
+
+    @Override
+    public String getHTML(final DataValue dv) {
+        var pt = HtmlEscapers.htmlEscaper().escape(getPlaintext(dv));
+        return "<span title=\"%s\"%s>%s</span>".formatted(pt,
+            m_additionalStyles.map(" style=\"%s\""::formatted).orElse(""), pt);
     }
 
     /**
@@ -114,6 +140,7 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
     @Override
     public void save(final ConfigWO config) {
         NumberFormatter.Persistor.save(config, m_formatter);
+        config.addString(CONFIG_STYLES, m_additionalStyles.orElse(null));
     }
 
     /**
@@ -123,12 +150,17 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
      */
     public static ValueFormatModelNumber load(final ConfigRO config) throws InvalidSettingsException {
         var numberFormatter = NumberFormatter.Persistor.load(config);
-        return new ValueFormatModelNumber(numberFormatter);
+        var styles = config.getString(CONFIG_STYLES, null);
+        return new ValueFormatModelNumber(numberFormatter, styles);
     }
 
     @Override
     public String toString() {
-        return "Number FormatModel (pattern=<" + m_formatter.toString() + ">)";
+        var str = "Number FormatModel (pattern=<" + m_formatter.toString() + ">";
+        if (m_additionalStyles.isPresent()) {
+            str += ",styles=<" + m_additionalStyles.get() + ">";
+        }
+        return str + ")";
     }
 
     @Override
@@ -140,12 +172,12 @@ public final class ValueFormatModelNumber implements ValueFormatModel {
             return false;
         }
         ValueFormatModelNumber cmodel = (ValueFormatModelNumber)obj;
-        return m_formatter.equals(cmodel.m_formatter);
+        return m_formatter.equals(cmodel.m_formatter) && m_additionalStyles.equals(cmodel.m_additionalStyles);
     }
 
     @Override
     public int hashCode() {
-        return m_formatter.hashCode();
+        return m_formatter.hashCode() ^ m_additionalStyles.hashCode();
     }
 
     /**
