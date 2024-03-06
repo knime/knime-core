@@ -333,5 +333,4 @@ public final class BufferedTableBackend implements TableBackend {
         final DataTableSpec newSpec, final IntSupplier tableIDSupplier) {
         return new TableSpecReplacerTable(table, newSpec);
     }
-
 }

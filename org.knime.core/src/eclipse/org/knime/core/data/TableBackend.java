@@ -45,17 +45,20 @@
  */
 package org.knime.core.data;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -333,4 +336,33 @@ public interface TableBackend {
     KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
         final DataTableSpec newSpec, IntSupplier tableIDSupplier);
 
+    /**
+     * Sorts the given table.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @since 5.3
+     */
+    default BufferedDataTable sort(final ExecutionContext exec, final BufferedDataTable table,
+        final Comparator<DataRow> rowComparator) throws CanceledExecutionException {
+        return new BufferedDataTableSorter(table, rowComparator).sort(exec);
+    }
+
+    /**
+     * Sorts the given table and returns a closeable row iterator over the result.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return closeable iterator over the sorted rows
+     * @throws CanceledExecutionException
+     * @since 5.3
+     */
+    default CloseableRowIterator sortedIterator(final ExecutionContext exec, final BufferedDataTable table,
+        final Comparator<DataRow> rowComparator) throws CanceledExecutionException {
+        return new BufferedDataTableSorter(table, rowComparator).sortedIterator(exec);
+    }
 }

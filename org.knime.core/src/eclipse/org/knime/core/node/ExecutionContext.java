@@ -47,6 +47,7 @@ package org.knime.core.node;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -60,6 +61,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
@@ -661,6 +663,34 @@ public class ExecutionContext extends ExecutionMonitor {
     BufferedDataTable createSlicedTable(final BufferedDataTable table, final Selection slice) {
         var slicedTable = getTableBackend().slice(this, table, slice, m_dataRepository::generateNewID);
         return wrapTableFromBackend(slicedTable);
+    }
+
+    /**
+     * Sorts the given table.
+     *
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @since 5.3
+     */
+    public BufferedDataTable sort(final BufferedDataTable table, final Comparator<DataRow> rowComparator)
+            throws CanceledExecutionException {
+        return getTableBackend().sort(this, table, rowComparator);
+    }
+
+    /**
+     * Sorts the given table and returns a closeable row iterator over the result.
+     *
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return closeable iterator over the sorted rows
+     * @throws CanceledExecutionException
+     * @since 5.3
+     */
+    public CloseableRowIterator sortedIterator(final BufferedDataTable table, final Comparator<DataRow> rowComparator)
+            throws CanceledExecutionException {
+        return getTableBackend().sortedIterator(this, table, rowComparator);
     }
 
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {
