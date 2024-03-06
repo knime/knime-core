@@ -55,6 +55,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.apache.hc.core5.net.URIBuilder;
@@ -90,6 +91,90 @@ public abstract class KnimeUrlResolver {
     static final Pattern LEADING_SLASHES = Pattern.compile("^/+");
 
     /**
+     * Almost identical to {@link KnimeUrlType}, but distinguishes between path-based and ID-based absolute URLs.
+     */
+    public enum KnimeUrlVariant {
+        /** Node-relative KNIME URL. */
+        NODE_RELATIVE(KnimeUrlType.NODE_RELATIVE, "node-relative"),
+        /** Workflow-relative KNIME URL. */
+        WORKFLOW_RELATIVE(KnimeUrlType.WORKFLOW_RELATIVE, "workflow-relative"),
+        /** Space-relative KNIME URL. */
+        SPACE_RELATIVE(KnimeUrlType.HUB_SPACE_RELATIVE, "space-relative"),
+        /** Mountpoint-relative KNIME URL. */
+        MOUNTPOINT_RELATIVE(KnimeUrlType.MOUNTPOINT_RELATIVE, "mountpoint-relative"),
+        /** Mountpoint-absolute, path-based KNIME URL. */
+        MOUNTPOINT_ABSOLUTE_PATH(KnimeUrlType.MOUNTPOINT_ABSOLUTE, "mountpoint-absolute"),
+        /** Mountpoint-absolute, Hub-ID-based KNIME URL. */
+        MOUNTPOINT_ABSOLUTE_ID(KnimeUrlType.MOUNTPOINT_ABSOLUTE, "mountpoint-absolute (ID-based)");
+
+        private final KnimeUrlType m_type;
+        private final String m_desc;
+
+        KnimeUrlVariant(final KnimeUrlType type, final String desc) {
+            m_type = type;
+            m_desc = desc;
+        }
+
+        /**
+         * @return description for the variant, like {@code "workflow-relative"} or
+         *         {@code "mountpoint-absolute (ID-based)"}
+         */
+        public String getDescription() {
+            return m_desc;
+        }
+
+        /**
+         * @return the base URL type (generalizing {@link #MOUNTPOINT_ABSOLUTE_PATH} and
+         *         {@link #MOUNTPOINT_ABSOLUTE_ID})
+         */
+        public KnimeUrlType getType() {
+            return m_type;
+        }
+
+        /**
+         * Checks whether or not the given URL is a KNIME URL (under the {@code knime:} scheme) and returns the URL
+         * variant if it is.
+         *
+         * @param url URL to get the type of
+         * @return KNIME URL type if applicable, {@code null} otherwise
+         * @throws IllegalArgumentException if the KNIME URL is malformed (missing {@link URL#getAuthority()
+         *         authority component})
+         */
+        public static Optional<KnimeUrlVariant> getVariant(final URL url) {
+            final var urlType = KnimeUrlType.getType(url);
+            return urlType.isEmpty() ? Optional.empty() : Optional.of(switch (urlType.get()) {
+                case NODE_RELATIVE -> KnimeUrlVariant.NODE_RELATIVE;
+                case WORKFLOW_RELATIVE -> KnimeUrlVariant.WORKFLOW_RELATIVE;
+                case HUB_SPACE_RELATIVE -> KnimeUrlVariant.SPACE_RELATIVE;
+                case MOUNTPOINT_RELATIVE -> KnimeUrlVariant.MOUNTPOINT_RELATIVE;
+                case MOUNTPOINT_ABSOLUTE -> isHubIdUrl(getPath(url)) ? KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID // NOSONAR
+                    : KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH;
+            });
+        }
+
+        /**
+         * Checks whether or not the URL represented by the given URI is a KNIME URL (under the {@code knime:} scheme)
+         * and returns the URL variant if it is.
+         *
+         * @param uri URI to get the type of
+         * @return KNIME URL variant if applicable, {@code null} otherwise
+         * @throws IllegalArgumentException if the KNIME URL is malformed (missing {@link URI#getAuthority()
+         *         authority component})
+         */
+        public static Optional<KnimeUrlVariant> getVariant(final URI uri) {
+            final var urlType = KnimeUrlType.getType(uri);
+            return urlType.isEmpty() ? Optional.empty() : Optional.of(switch (urlType.get()) {
+                case NODE_RELATIVE -> KnimeUrlVariant.NODE_RELATIVE;
+                case WORKFLOW_RELATIVE -> KnimeUrlVariant.WORKFLOW_RELATIVE;
+                case HUB_SPACE_RELATIVE -> KnimeUrlVariant.SPACE_RELATIVE;
+                case MOUNTPOINT_RELATIVE -> KnimeUrlVariant.MOUNTPOINT_RELATIVE;
+                case MOUNTPOINT_ABSOLUTE -> isHubIdUrl(getPath(uri)) ? KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID // NOSONAR
+                    : KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH;
+            });
+        }
+    }
+
+    /**
      * Result of a successfully resolved KNIME URL.
      *
      * @param mountID mount ID of the enclosing mountpoint
@@ -101,6 +186,9 @@ public abstract class KnimeUrlResolver {
      */
     record ResolvedURL(String mountID, IPath path, HubItemVersion version, IPath pathInsideWorkflow,
         URL resourceURL, boolean canBeRelativized) {
+        ResolvedURL withPath(final IPath newPath) {
+            return new ResolvedURL(mountID, newPath, version, pathInsideWorkflow, resourceURL, canBeRelativized);
+        }
     }
 
     /**
@@ -206,6 +294,11 @@ public abstract class KnimeUrlResolver {
      * @throws ResourceAccessException if the URL could not be resolved
      */
     public Optional<URL> resolveToAbsolute(final URL url) throws ResourceAccessException {
+        if (KnimeUrlType.getType(url).orElse(null) == KnimeUrlType.MOUNTPOINT_ABSOLUTE) {
+            // nothing to do
+            return Optional.of(url);
+        }
+
         final var optResolved = resolveInternal(url);
         if (optResolved.isEmpty()) {
             return Optional.empty();
@@ -229,35 +322,83 @@ public abstract class KnimeUrlResolver {
      * @return mapping from available URL types to the respective URL
      * @throws ResourceAccessException if the URL could not be resolved
      */
-    public Map<KnimeUrlType, URL> changeLinkType(final URL url) throws ResourceAccessException { //NOSONAR too complex
+    public Map<KnimeUrlVariant, URL> changeLinkType(final URL url) throws ResourceAccessException {
+        return changeLinkType(url, null);
+    }
+
+    /**
+     * Result of the translation between path-based and ID-based KNIME Hub URLs.
+     *
+     * @param itemId Hub item ID
+     * @param itemPath item path
+     */
+    public record IdAndPath(String itemId, IPath itemPath) {}
+
+    /**
+     * Computes alternative representations of the same KNIME URL.
+     *
+     * @param url initial URL
+     * @param hubUrlTranslator translator between path-based and ID-based Hub URLs, may be {@code null}
+     * @return mapping from available URL variants to the respective URL
+     * @throws ResourceAccessException if the URL could not be resolved
+     */
+    public Map<KnimeUrlVariant, URL> changeLinkType(final URL url, // NOSONAR
+            final Function<URL, Optional<IdAndPath>> hubUrlTranslator) throws ResourceAccessException {
         final var optResolved = resolveInternal(url);
         if (optResolved.isEmpty()) {
             return Map.of();
         }
 
-        final var resolved = optResolved.get();
-        final var out = new EnumMap<KnimeUrlType, URL>(KnimeUrlType.class);
+        var resolved = optResolved.get();
+        final var originalVariant = KnimeUrlVariant.getVariant(url).orElseThrow();
+        IdAndPath idAndPath = null;
+        var translationRequested = false;
+        if (hubUrlTranslator != null && originalVariant == KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID) {
+            // We need to call `resolveInternal(...)` with a path-based URL so the we can check all whether or not the
+            // URL can be rewritten to a relative one (must be in same the space). If we can't determine the path, no
+            // relative paths will be available in the output.
+            // We also cache the result of the translation request because it may require a REST request.
+            idAndPath = hubUrlTranslator.apply(url).orElse(null);
+            translationRequested = true;
 
+            if (idAndPath != null) {
+                final var pathUrl = createKnimeUrl(resolved.mountID, idAndPath.itemPath(), resolved.version);
+                resolved = resolveInternal(pathUrl).orElseThrow();
+            }
+        }
+
+        final var out = new EnumMap<KnimeUrlVariant, URL>(KnimeUrlVariant.class);
 
         if (resolved.mountID != null && resolved.pathInsideWorkflow == null) {
-            out.put(KnimeUrlType.MOUNTPOINT_ABSOLUTE,
-                createKnimeUrl(resolved.mountID, resolved.path, resolved.version));
+            final var absoluteUrl = createKnimeUrl(resolved.mountID, resolved.path, resolved.version);
+            if (hubUrlTranslator != null && !translationRequested) {
+                // if the input is a path-based URL, translate it to an ID-based one (other direction was handled above)
+                idAndPath = hubUrlTranslator.apply(absoluteUrl).orElse(null);
+            }
+
+            if (idAndPath != null) {
+                out.put(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID,
+                    createKnimeUrl(resolved.mountID, Path.forPosix(idAndPath.itemId()), resolved.version));
+                out.put(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH,
+                    createKnimeUrl(resolved.mountID, idAndPath.itemPath(), resolved.version));
+            } else if (isHubIdUrl(resolved.path)) {
+                out.put(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID, absoluteUrl);
+            } else {
+                out.put(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH, absoluteUrl);
+            }
         }
 
         if (!resolved.canBeRelativized()) {
-            // only absolute URLs can reference resources across mountpoints
+            // preserve original URL as-is, without normalization in the dialog,
+            // e.g. `knime://Mount-ID/foo/../bar?spaceVersion=3` instead of `knime://Mount-ID//bar?version=3`
+            out.put(originalVariant, url);
             return out;
-        }
-
-        if (KnimeUrlType.NODE_RELATIVE.getAuthority().equals(url.getAuthority())) {
-            // we only offer node-relative URLs if that's what came in
-            out.put(KnimeUrlType.NODE_RELATIVE, url);
         }
 
         final var optContextPaths = getContextPaths();
         if (resolved.pathInsideWorkflow != null) {
             // workflow-relative URL into the workflow
-            out.put(KnimeUrlType.WORKFLOW_RELATIVE, createKnimeUrl(KnimeUrlType.WORKFLOW_RELATIVE.getAuthority(),
+            out.put(KnimeUrlVariant.WORKFLOW_RELATIVE, createKnimeUrl(KnimeUrlType.WORKFLOW_RELATIVE.getAuthority(),
                 resolved.pathInsideWorkflow, null));
 
         } else if (optContextPaths.isPresent()) {
@@ -265,16 +406,19 @@ public abstract class KnimeUrlResolver {
 
             // workflow-relative URL outside the workflow
             final var pathRelativeToWorkflow = resolved.path.makeRelativeTo(contextPaths.workflowPath);
-            out.put(KnimeUrlType.WORKFLOW_RELATIVE, createKnimeUrl(KnimeUrlType.WORKFLOW_RELATIVE.getAuthority(),
-                pathRelativeToWorkflow, resolved.version));
+            out.put(KnimeUrlVariant.WORKFLOW_RELATIVE, createKnimeUrl(KnimeUrlType.WORKFLOW_RELATIVE.getAuthority(),
+                pathRelativeToWorkflow, null));
 
             // mountpoint-relative and space-relative links are synonymous
             final var pathInsideSpace = resolved.path.makeRelativeTo(contextPaths.spacePath);
-            for (final var type : Set.of(KnimeUrlType.HUB_SPACE_RELATIVE, KnimeUrlType.MOUNTPOINT_RELATIVE)) {
-                out.put(type, createKnimeUrl(type.getAuthority(), pathInsideSpace, resolved.version));
+            for (final var variant : Set.of(KnimeUrlVariant.SPACE_RELATIVE, KnimeUrlVariant.MOUNTPOINT_RELATIVE)) {
+                out.put(variant, createKnimeUrl(variant.getType().getAuthority(), pathInsideSpace, null));
             }
         }
 
+        // preserve original URL as-is, without normalization in the dialog,
+        // e.g. `knime://Mount-ID/foo/../bar?spaceVersion=3` instead of `knime://Mount-ID//bar?version=3`
+        out.put(originalVariant, url);
         return out;
     }
 
@@ -440,7 +584,7 @@ public abstract class KnimeUrlResolver {
                 .setHost(mountId) //
                 .setPathSegments(Arrays.asList(path.segments()));
         if (version != null) {
-            version.addVersionToURI(builder);
+            version.addVersionToURI(builder, false);
         }
         return URLResolverUtil.toURL(builder);
     }

@@ -112,7 +112,8 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
                 .<Set<String>>map(id -> new HashSet<>(List.of(id, defaultMountId))) // `Set.of(X,Y)` hates duplicates
                 .orElseGet(() -> Set.of(defaultMountId));
 
-        final var canBeRelativized = candidates.contains(mountId) && getSpacePath(m_locationInfo).isPrefixOf(path);
+        final var canBeRelativized = candidates.contains(mountId) && getSpacePath(m_locationInfo).isPrefixOf(path)
+                && !(version != null && version.isVersioned());
         return new ResolvedURL(mountId, path, version, null, url, canBeRelativized);
     }
 

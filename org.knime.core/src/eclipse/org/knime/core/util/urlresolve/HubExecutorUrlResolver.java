@@ -92,10 +92,9 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         }
 
         // we're on a Hub executor, resolve workflow locally via the repository
-
-        final var versionInfo = HubItemVersion.of(url).orElse(null);
-        final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), versionInfo, path);
-        final var canBeRelativized = !isHubIdUrl(path) && getSpacePath(m_locationInfo).isPrefixOf(path);
+        final var resourceUrl = createRepoUrl(m_locationInfo.getRepositoryAddress(), version, path);
+        final var canBeRelativized = !isHubIdUrl(path) && getSpacePath(m_locationInfo).isPrefixOf(path)
+                && !(version != null && version.isVersioned());
         return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }
 
@@ -185,7 +184,8 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         builder.setPathSegments(pathSegments);
 
         if (version != null) {
-            version.addVersionToURI(builder);
+            // add both old and new version parameter for backwards compatibility with old Hubs
+            version.addVersionToURI(builder, true);
         }
 
         return URLResolverUtil.toURL(builder);

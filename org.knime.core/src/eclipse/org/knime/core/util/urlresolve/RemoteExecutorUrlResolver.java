@@ -110,7 +110,8 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
         // the rest is done by the ExplorerFileStore instance from the ExplorerMountTable
         var canBeRelativized = m_hubLocationInfo == null ||
-                (!isHubIdUrl(path) && getSpacePath(m_hubLocationInfo).isPrefixOf(path));
+                (!isHubIdUrl(path) && getSpacePath(m_hubLocationInfo).isPrefixOf(path)
+                        && !(version != null && version.isVersioned()));
         final var resourceUrl = createKnimeUrl(m_localMountId, path, version);
         return new ResolvedURL(mountId, path, version, null, resourceUrl, canBeRelativized);
     }

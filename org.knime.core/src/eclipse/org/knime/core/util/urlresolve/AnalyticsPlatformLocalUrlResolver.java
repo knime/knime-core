@@ -96,7 +96,8 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
                 .map(Pair::getFirst) //
                 .filter(uri -> Objects.equals(uri.getAuthority(), mountId)) //
                 .isPresent();
-        return new ResolvedURL(mountId, path, version, null, url, sameMountpoint);
+        final var isVersioned = version != null && version.isVersioned();
+        return new ResolvedURL(mountId, path, version, null, url, sameMountpoint && !isVersioned);
     }
 
     @Override

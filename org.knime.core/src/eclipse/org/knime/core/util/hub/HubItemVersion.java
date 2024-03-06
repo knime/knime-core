@@ -243,23 +243,39 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     }
 
     /**
+     * Adds the new {@code version=[...]} query parameter and optionally the legacy {@code spaceVersion=[...]} to the
+     * given builder if this version needs them.
+     *
+     * @param uriBuilder URI builder
+     * @param addSpaceVersion if {@code true}, the {@code spaceVersion=[...]} is also being added
+     * @since 5.3
+     */
+    public void addVersionToURI(final URIBuilder uriBuilder, final boolean addSpaceVersion) {
+        if (isVersioned()) {
+            if (linkType == LinkType.LATEST_VERSION) {
+                uriBuilder.addParameter(LinkType.VERSION_QUERY_PARAM, LinkType.LATEST_VERSION.getIdentifier());
+                if (addSpaceVersion) {
+                    uriBuilder.addParameter(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM,
+                        LinkType.LATEST_VERSION.getLegacyIdentifier());
+                }
+            } else {
+                final var versionNo = versionNumber.toString();
+                uriBuilder.addParameter(LinkType.VERSION_QUERY_PARAM, versionNo);
+                if (addSpaceVersion) {
+                    uriBuilder.addParameter(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM, versionNo);
+                }
+            }
+        }
+    }
+
+    /**
      * Adds both the legacy {@code spaceVersion=[...]} and the new {@code version=[...]} query parameter to the given
      * builder if this version needs them.
      *
      * @param uriBuilder URI builder
      */
     public void addVersionToURI(final URIBuilder uriBuilder) {
-        if (isVersioned()) {
-            if (linkType == LinkType.LATEST_VERSION) {
-                uriBuilder.addParameter(LinkType.VERSION_QUERY_PARAM, LinkType.LATEST_VERSION.getIdentifier());
-                uriBuilder.addParameter(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM,
-                    LinkType.LATEST_VERSION.getLegacyIdentifier());
-            } else {
-                final var versionNo = versionNumber.toString();
-                uriBuilder.addParameter(LinkType.VERSION_QUERY_PARAM, versionNo);
-                uriBuilder.addParameter(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM, versionNo);
-            }
-        }
+        addVersionToURI(uriBuilder, true);
     }
 
     /**

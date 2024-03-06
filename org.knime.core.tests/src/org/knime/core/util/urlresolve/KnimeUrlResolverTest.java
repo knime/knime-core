@@ -66,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.Functions;
 import org.junit.Assume;
@@ -81,6 +82,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.urlresolve.KnimeUrlResolver.IdAndPath;
+import org.knime.core.util.urlresolve.KnimeUrlResolver.KnimeUrlVariant;
 import org.knime.core.util.urlresolve.URLMethodSources.Context;
 import org.knime.core.util.urlresolve.URLMethodSources.WorkspaceType;
 
@@ -177,10 +180,19 @@ class KnimeUrlResolverTest {
 
         final var resolver = context.getResolver(localMountId, type);
 
+        final Function<URL, Optional<IdAndPath>> hubURlConverter;
+        final var locatedOnHub = Set.of(Context.AP_HUB, Context.HUB_HUB, Context.HUB_HUB_RWE).contains(context);
+        if (locatedOnHub) {
+            hubURlConverter = url -> Optional.of(new IdAndPath("*9999",
+                org.eclipse.core.runtime.Path.forPosix("Users/John Döë/Private/group/workflow2")));
+        } else {
+            hubURlConverter = path -> Optional.empty();
+        }
+
         final var expectedRelative = new HashMap<>(Map.of(
-            KnimeUrlType.MOUNTPOINT_RELATIVE, new URL("knime://knime.mountpoint/group/workflow2"),
-            KnimeUrlType.HUB_SPACE_RELATIVE, new URL("knime://knime.space/group/workflow2"),
-            KnimeUrlType.WORKFLOW_RELATIVE, new URL("knime://knime.workflow/../workflow2")));
+            KnimeUrlVariant.MOUNTPOINT_RELATIVE, new URL("knime://knime.mountpoint/group/workflow2"),
+            KnimeUrlVariant.SPACE_RELATIVE, new URL("knime://knime.space/group/workflow2"),
+            KnimeUrlVariant.WORKFLOW_RELATIVE, new URL("knime://knime.workflow/../workflow2")));
 
         // make sure that all possible versions of absolute URLs are present
         final var pathInMountpoint = spacePath + "/group/workflow2";
@@ -195,31 +207,45 @@ class KnimeUrlResolverTest {
         if (context != Context.SERVER_SERVER_RWE) {
             allInputs.add(absoluteDefaultId);
         }
+        if (locatedOnHub) {
+            allInputs.add(new URL("knime://MountID/*9999"));
+            allInputs.add(new URL("knime://" + localMountId + "/*9999"));
+        }
 
         for (final var initialUrl : allInputs) {
             final var resolvedUrl = resolver.resolveInternal(initialUrl).orElseThrow();
             Optional.ofNullable(resolvedUrl.path()).ifPresent(p -> assertFalse(p.isAbsolute()));
             Optional.ofNullable(resolvedUrl.pathInsideWorkflow()).ifPresent(p -> assertFalse(p.isAbsolute()));
 
-            final var converted = resolver.changeLinkType(initialUrl);
+            final var converted = resolver.changeLinkType(initialUrl, hubURlConverter);
             for (final var e : expectedRelative.entrySet()) {
                 final var urlType = e.getKey();
                 final var expectedUrl = e.getValue();
-                assertThat(converted.get(urlType)).as("Converting " + initialUrl + " to " + urlType)
+                assertThat(converted.get(urlType)).as("Converting " + initialUrl + " to " + urlType) //
                     .isEqualTo(expectedUrl);
             }
 
-            final var inputType = KnimeUrlType.getType(initialUrl).orElseThrow();
-            // If an absolute URL is the input, it should come out unchanged
-            final var expectedAbsUrl = inputType == KnimeUrlType.MOUNTPOINT_ABSOLUTE ? initialUrl
-                // on Server executors we ignore the default mount ID for historical reasons
-                : context == Context.SERVER_SERVER_RWE ? absoluteRenamedId
-                    // in all other cases the URL should work in the workflow's location (using the default mount ID)
-                    : absoluteDefaultId;
+            final var inputVariant = KnimeUrlVariant.getVariant(initialUrl).orElseThrow();
 
-            assertThat(converted.get(KnimeUrlType.MOUNTPOINT_ABSOLUTE)) //
-                .as("Converting " + initialUrl + " to MOUNTPOINT_ABSOLUTE") //
+            // If an absolute URL is the input, it should come out unchanged, in all other cases the URL should work in
+            // the workflow's location (using the default mount ID)
+            final var expectedAbsMountId =
+                    inputVariant.getType() == KnimeUrlType.MOUNTPOINT_ABSOLUTE ? initialUrl.getAuthority() : "MountID";
+
+            // on Server executors we ignore the default mount ID for historical reasons
+            final var expectedAbsUrl = context == Context.SERVER_SERVER_RWE ? absoluteRenamedId
+                    : new URL("knime", expectedAbsMountId, absoluteDefaultId.getPath());
+
+            assertThat(converted.get(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH)) //
+                .as("Converting " + initialUrl + " to " + KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_PATH) //
                 .isEqualTo(expectedAbsUrl);
+
+            if (locatedOnHub) {
+                final var expectedIdUrl = new URL("knime://" + expectedAbsMountId + "/*9999");
+                assertThat(converted.get(KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID)) //
+                    .as("Converting " + initialUrl + " to " + KnimeUrlVariant.MOUNTPOINT_ABSOLUTE_ID) //
+                    .isEqualTo(expectedIdUrl);
+            }
         }
     }
 
