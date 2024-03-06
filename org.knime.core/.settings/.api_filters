@@ -7,12 +7,24 @@
                 <message_argument value="5.1.0"/>
             </message_arguments>
         </filter>
+        <filter comment="Minor version bump" id="923795461">
+            <message_arguments>
+                <message_argument value="5.2.2"/>
+                <message_argument value="5.1.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.port.PortSerializerContext">
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.node.port.PortSerializerContext"/>
                 <message_argument value="org.knime.core_5.2.1"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Minor version bump" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.PortSerializerContext"/>
+                <message_argument value="org.knime.core_5.2.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -2495,10 +2507,22 @@
                 <message_argument value="org.knime.core_5.2.1"/>
             </message_arguments>
         </filter>
+        <filter comment="Minor version bump" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.Orientation"/>
+                <message_argument value="org.knime.core_5.2.2"/>
+            </message_arguments>
+        </filter>
         <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PageMargins"/>
                 <message_argument value="org.knime.core_5.2.1"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Minor version bump" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PageMargins"/>
+                <message_argument value="org.knime.core_5.2.2"/>
             </message_arguments>
         </filter>
         <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
@@ -2507,10 +2531,22 @@
                 <message_argument value="org.knime.core_5.2.1"/>
             </message_arguments>
         </filter>
+        <filter comment="Minor version bump" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PageSize"/>
+                <message_argument value="org.knime.core_5.2.2"/>
+            </message_arguments>
+        </filter>
         <filter comment="reporting refactoring -- accepting breaking changes" id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PixelDimension"/>
                 <message_argument value="org.knime.core_5.2.1"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Minor version bump" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.ReportConfiguration.PixelDimension"/>
+                <message_argument value="org.knime.core_5.2.2"/>
             </message_arguments>
         </filter>
     </resource>
