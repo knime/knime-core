@@ -1310,7 +1310,8 @@ public final class SubNodeContainer extends SingleNodeContainer
     boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch,
         final boolean keepNodeMessage) {
         assert rawInSpecs.length == m_inports.length;
-        m_subnodeScopeContext.inactiveScope(Node.containsInactiveSpecs(rawInSpecs));
+        final boolean isInInactiveScope = getFlowObjectStack().peekScopeContext(FlowScopeContext.class, true) != null;
+        m_subnodeScopeContext.inactiveScope(isInInactiveScope || Node.containsInactiveSpecs(rawInSpecs));
         final NodeMessage oldMessage;
         if (keepNodeMessage) {
             oldMessage = getNodeMessage();

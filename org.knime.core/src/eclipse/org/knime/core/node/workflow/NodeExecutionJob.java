@@ -144,13 +144,10 @@ public abstract class NodeExecutionJob implements Runnable {
         NodeContainerExecutionStatus status = null;
         // handle inactive branches -- do not delegate to custom job
         // manager (the node will just return inactive branch objects)
-        boolean executeInactive = false;
-        if (m_nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)m_nc;
-            if (!snc.isInactiveBranchConsumer() && Node.containsInactiveObjects(getPortObjects())) {
-                executeInactive = true;
-            }
-        }
+
+        final boolean executeInactive = m_nc instanceof SingleNodeContainer snc //
+            && (snc.getFlowObjectStack().peekScopeContext(FlowScopeContext.class, true) != null //
+                || (!snc.isInactiveBranchConsumer() && Node.containsInactiveObjects(getPortObjects())));
 
         if (!isReConnecting()) {
             try {

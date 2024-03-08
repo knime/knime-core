@@ -66,6 +66,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.apache.commons.lang3.ArrayUtils;
@@ -1006,14 +1007,12 @@ public final class Node {
         // an inactive scope or loop so this check is not trivial...
 
         // are we not a consumer and any of the incoming branches are inactive?
-        boolean isInactive = !isInactiveBranchConsumer() && containsInactiveObjects(rawInData);
-
         // are we a consumer but in the middle of an inactive scope?
-        FlowObjectStack inStack = getFlowObjectStack();
-        FlowScopeContext peekfsc = inStack.peek(FlowScopeContext.class);
-        if (peekfsc != null) {
-            isInactive = isInactive || peekfsc.isInactiveScope();
-        }
+        final var flowObjectStack = getFlowObjectStack();
+        final var isInInactiveScope = flowObjectStack.peekScopeContext(FlowScopeContext.class, true) != null;
+        var isInactive = isInInactiveScope || (!isInactiveBranchConsumer() && containsInactiveObjects(rawInData));
+
+        final var peekfsc = flowObjectStack.peek(FlowScopeContext.class);
 
         PortObject[] newOutData;
         if (isInactive) {
@@ -1081,7 +1080,6 @@ public final class Node {
                 } else {
                     // check if we are inside a try-catch block (only if it was a real
                     // error - not when canceled!)
-                    FlowObjectStack flowObjectStack = getFlowObjectStack();
                     FlowTryCatchContext tcslc = flowObjectStack.peek(FlowTryCatchContext.class);
                     if ((tcslc != null) && (!tcslc.isInactiveScope())) {
                         // failure inside an active try-catch:
@@ -1907,37 +1905,16 @@ public final class Node {
                         } else {
                             return false;
                         }
-                        // TODO: did we really need a warning here??
-                        // throw new InvalidSettingsException(
-                        // "Node is not executable until all predecessors "
-                        // + "are configured and/or executed.");
                     }
                 }
 
-                // check if the node is part of a skipped branch and return
-                // appropriate specs without actually configuring the node.
-                // Note that we must also check the incoming variable port!
-                boolean isInactive = false;
-                if (!isInactiveBranchConsumer()) {
-                    for (int i = 0; i < rawInSpecs.length; i++) {
-                        if (rawInSpecs[i] instanceof InactiveBranchPortObjectSpec) {
-                            isInactive = true;
-                            break;
-                        }
-                    }
-                } else {
-                    FlowLoopContext flc = getFlowObjectStack().peek(FlowLoopContext.class);
-                    if (flc != null && flc.isInactiveScope()) {
-                        isInactive = true;
-                    }
-                }
+                final boolean isInInactiveScope =
+                    getFlowObjectStack().peekScopeContext(FlowScopeContext.class, true) != null;
+                final boolean isInactive =
+                    isInInactiveScope || (!isInactiveBranchConsumer() && containsInactiveSpecs(rawInSpecs));
+
                 if (isInactive) {
-                    for (int j = 0; j < m_outputs.length; j++) {
-                        m_outputs[j].spec = InactiveBranchPortObjectSpec.INSTANCE;
-                    }
-                    if (success) {
-                        LOGGER.debug("Configure skipped. (" + getName() + " in inactive branch.)");
-                    }
+                    Stream.of(m_outputs).forEach(output -> output.spec = InactiveBranchPortObjectSpec.INSTANCE);
                     return true;
                 }
                 if (configureHelper != null) {
@@ -1982,6 +1959,7 @@ public final class Node {
                     }
                 }
                 m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
+                LOGGER.debugWithFormat("Configure succeeded. (%s)", getName());
                 success = true;
             } catch (InvalidSettingsException ise) {
                 final Message message;
@@ -1995,9 +1973,6 @@ public final class Node {
                 var error = String.format("Configure failed (%s): %s", t.getClass().getSimpleName(), t.getMessage());
                 createErrorMessageAndNotify(Message.fromSummary(error), t);
             }
-        }
-        if (success) {
-            LOGGER.debug("Configure succeeded. (" + this.getName() + ")");
         }
         return success;
     }
