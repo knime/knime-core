@@ -94,7 +94,6 @@ import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -841,11 +840,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
                     newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
                 }
             } else {
-                // Note on a potentially null-upStreamFSHandler:
-                // nodes in inactive branches don't have a file store handler set
-                // -> need to be taken into consideration when setting up the file store handler
-                // for an 'InactiveBranchConsumer-loop end'
-                assert this.isModelCompatibleTo(InactiveBranchConsumer.class);
+                // in a loop but no file store handler set ... must be an inactive loop or a loop in an inactive context
+                assert upstreamFLC.isInactiveScope()
+                    || getFlowObjectStack().peekScopeContext(FlowScopeContext.class, true) != null;
             }
         }
         return newFSHandler;
