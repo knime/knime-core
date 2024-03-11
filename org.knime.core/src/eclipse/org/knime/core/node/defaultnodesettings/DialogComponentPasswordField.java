@@ -65,6 +65,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.crypto.Encrypter;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
@@ -356,7 +357,10 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param password Char array.
      * @return The password encrypt.
      * @throws Exception If something goes wrong.
+     * @deprecated Use a {@link SettingsModelPassword} with this class. If you use this method to encrypt arbitrary
+     *   content, consider using {@link Encrypter} instead.
      */
+    @Deprecated(since = "5.3", forRemoval = true)
     public static final String encrypt(final char[] password) throws Exception {
         return KnimeEncryption.encrypt(password);
     }
@@ -367,7 +371,9 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param password The password to decrypt.
      * @return The decrypted password.
      * @throws Exception If something goes wrong.
+     * @deprecated Use a {@link SettingsModelPassword} with this class. This method is kept for backwards-compatibility.
      */
+    @Deprecated(since = "5.3", forRemoval = false)
     public static final String decrypt(final String password) throws Exception {
         return KnimeEncryption.decrypt(password);
     }

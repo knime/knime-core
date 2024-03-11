@@ -59,6 +59,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.crypto.Encrypter;
 
 /**
  * This class handles the encryption and decryption with the static stored key.
@@ -66,7 +67,9 @@ import org.knime.core.node.NodeLogger;
  * key is available.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @deprecated The {@link Encrypter} should be preferred to this class.
  */
+@Deprecated(since = "5.3.0", forRemoval = true)
 public final class KnimeEncryption {
 
     private static final NodeLogger LOGGER =
@@ -94,7 +97,7 @@ public final class KnimeEncryption {
     }
 
     /**
-     * Enrypts password.
+     * Encrypts password.
      *
      * @param password as char array
      * @return The password encrypt.
@@ -114,7 +117,7 @@ public final class KnimeEncryption {
     }
 
     /**
-     * Enrypts password with the given <code>SecrectKey</code>.
+     * Encrypts password with the given <code>SecrectKey</code>.
      *
      * @param secretKey <code>SecretKey</code> used to encrypt the password
      * @param password as char array
