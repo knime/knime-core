@@ -68,7 +68,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.rules.TestWatcher;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -77,6 +79,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLoggerConfig;
+import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
@@ -105,6 +110,7 @@ public abstract class WorkflowTestCase {
     private WorkflowManager m_manager;
 
     private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>(0);
+    
 
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
@@ -578,7 +584,7 @@ public abstract class WorkflowTestCase {
         assertTrue(newDanglingWorkflows.size() + " new dangling workflow(s) detected: " + newDanglingWorkflows,
             newDanglingWorkflows.isEmpty());
     }
-
+    
     private static ArrayList<NodeContainer> getDanglingWorkflows() {
         return WorkflowManager.ROOT.getNodeContainers().stream()
             .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
@@ -636,7 +642,19 @@ public abstract class WorkflowTestCase {
         return m_logger;
     }
 
-    /** Utility 'rule' that will cause test failures to log the current call stack to NodeLogger.error IF the
+    /** Called before any tests are run to enable sysout debug output, workaround for DEVOPS-2250. */
+    @BeforeClass
+	public static void beforeAllEnableSysoutLogger() {
+		KNIMELogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.FATAL);
+	}
+
+    /** Called after all tests to disable sysout debug output, workaround for DEVOPS-2250. */
+	@AfterClass
+	public static void afterAllDisableSysoutLogger() {
+		KNIMELogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.FATAL, LEVEL.FATAL);
+	}
+
+	/** Utility 'rule' that will cause test failures to log the current call stack to NodeLogger.error IF the
      * failure cause is of a certain exception class.
      * 
      * <p>
