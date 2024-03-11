@@ -515,6 +515,7 @@ public class KnimeStringUtils {
      */
     public static String md5Checksum(final String str) {
         try {
+            // NOFLUID no specific use-case associated with this instance
             MessageDigest m = MessageDigest.getInstance("MD5");
             m.reset();
             m.update(str.getBytes());

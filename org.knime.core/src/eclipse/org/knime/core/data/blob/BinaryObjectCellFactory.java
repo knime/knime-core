@@ -180,6 +180,7 @@ public final class BinaryObjectCellFactory implements FromInputStream {
     private static MessageDigest newMD5Digest() throws IOException {
         MessageDigest md5MessageDigest;
         try {
+            // NOFLUID usage for integrity checking of binary data which does not need security guarantees
             md5MessageDigest = MessageDigest.getInstance("MD5");
         } catch (Exception e) {
             throw new IOException("Couldn't get MD5 digest from system", e);

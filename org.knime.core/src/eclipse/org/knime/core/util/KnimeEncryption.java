@@ -84,6 +84,7 @@ public final class KnimeEncryption {
     static {
 
         try {
+            // NOFLUID all encryption code paths are deprecated, decryption kept for backwards-compatibility
             cipher = Cipher.getInstance(ENCRYPTION_METHOD);
         } catch (Exception e) {
             LOGGER.error("Cipher <" + ENCRYPTION_METHOD
@@ -222,6 +223,7 @@ public final class KnimeEncryption {
         }
         try {
             byte[] key = newKey.getBytes();
+            // NOFLUID encryption code paths are deprecated, decryption is kept for backwards-compatibility
             return SecretKeyFactory.getInstance("DES").generateSecret(
                             new DESKeySpec(key));
         } catch (Exception e) {

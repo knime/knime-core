@@ -457,6 +457,7 @@ final class WorkflowCipher implements Cloneable {
         if (password == null) {
             return null;
         }
+        // NOFLUID The feature of "locking components/metanodes" is used for obfuscation and not for secure encryption
         return MessageDigest.getInstance("SHA1").digest(password.getBytes());
     }
 
