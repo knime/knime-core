@@ -196,6 +196,14 @@ public final class TableFilter {
 
     /**
      * Create a new {@link TableFilter} corresponding to the given {@link Selection}.
+     * <p>
+     * {@code TableFilter} are used in the {@code BufferedDataTable} API, where the row key column is always present and
+     * is not included in the column count. {@code Selection} is used in the {@code RowAccessible} API, where the row
+     * key column is not treated separately and is just column 0. Therefore, column index {@code i} in the
+     * {@code Selection} becomes column index {@code i-1} in the {@code TableFilter}, and the {@code Selection} must
+     * always contain column {@code 0}.
+     * <p>
+     * TODO: Should we throw an exception if {@code selection} does not contain column {@code 0}?
      *
      * @param selection the selected columns and row range
      * @param table The table in order to extract/bound table dimensions. Unlike this {@code TableFilter} a
