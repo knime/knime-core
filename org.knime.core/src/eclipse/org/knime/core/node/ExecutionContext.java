@@ -47,7 +47,6 @@ package org.knime.core.node;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -75,6 +74,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.sort.RowComparator;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -674,7 +674,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws CanceledExecutionException
      * @since 5.3
      */
-    public BufferedDataTable sort(final BufferedDataTable table, final Comparator<DataRow> rowComparator)
+    public BufferedDataTable sort(final BufferedDataTable table, final RowComparator rowComparator)
             throws CanceledExecutionException {
         return getTableBackend().sort(this, table, rowComparator);
     }
@@ -688,7 +688,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws CanceledExecutionException
      * @since 5.3
      */
-    public CloseableRowIterator sortedIterator(final BufferedDataTable table, final Comparator<DataRow> rowComparator)
+    public CloseableRowIterator sortedIterator(final BufferedDataTable table, final RowComparator rowComparator)
             throws CanceledExecutionException {
         return getTableBackend().sortedIterator(this, table, rowComparator);
     }

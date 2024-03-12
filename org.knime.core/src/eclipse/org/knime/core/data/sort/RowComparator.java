@@ -50,6 +50,7 @@
 package org.knime.core.data.sort;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -72,7 +73,7 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class RowComparator implements Comparator<DataRow> {//NOSONAR
 
-    private final List<Comparator<DataRow>> m_comparators;
+    private final List<IndexedRowComparator> m_comparators;
 
     /**
      * @param indices Array of sort column indices (-1 indicates the RowKey).
@@ -272,7 +273,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
         }
     }
 
-    private static final class ColumnComparator implements Comparator<DataRow> {//NOSONAR
+    private static final class ColumnComparator implements IndexedRowComparator {//NOSONAR
 
         private final int m_colIdx;
 
@@ -288,9 +289,18 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
             return m_cellComparator.compare(o1.getCell(m_colIdx), o2.getCell(m_colIdx));
         }
 
+        @Override
+        public OptionalInt getColumnIndex() {
+            return OptionalInt.of(m_colIdx);
+        }
+
     }
 
-    private static final class RowKeyComparator implements Comparator<DataRow> {//NOSONAR
+    private interface IndexedRowComparator extends Comparator<DataRow> {
+        OptionalInt getColumnIndex();
+    }
+
+    private static final class RowKeyComparator implements IndexedRowComparator {//NOSONAR
 
         private final Comparator<String> m_rowKeyComparator;
 
@@ -303,6 +313,11 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
             return m_rowKeyComparator.compare(o1.getKey().getString(), o2.getKey().getString());
         }
 
+        @Override
+        public OptionalInt getColumnIndex() {
+            return OptionalInt.empty();
+        }
+
     }
 
     /**
@@ -312,7 +327,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      */
     public static final class RowComparatorBuilder {
 
-        private final LinkedHashMap<OptionalInt, Comparator<DataRow>> m_columnComparators = new LinkedHashMap<>();
+        private final LinkedHashMap<OptionalInt, IndexedRowComparator> m_columnComparators = new LinkedHashMap<>();
 
         private final DataTableSpec m_spec;
 
@@ -401,8 +416,34 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      * Compare rows based on the given comparators.
      * @param columns column comparators to compare
      */
-    private RowComparator(final List<Comparator<DataRow>> comparators) {
+    private RowComparator(final List<IndexedRowComparator> comparators) {
         m_comparators = comparators;
+    }
+
+    /**
+     *
+     * @since 5.3
+     */
+    public record SortKeyColumns(BitSet columnIndexes, boolean comparesRowKey) {
+    }
+
+    /**
+     *
+     * @return
+     * @since 5.3
+     */
+    public SortKeyColumns getSortKeyColumns() {
+        var comparesRowKey = false;
+        final var columnIndexes = new BitSet();
+        for (final var cmp : m_comparators) {
+            final var optIdx = cmp.getColumnIndex();
+            if (optIdx.isPresent()) {
+                columnIndexes.set(optIdx.getAsInt());
+            } else {
+                comparesRowKey = true;
+            }
+        }
+        return new SortKeyColumns(columnIndexes, comparesRowKey);
     }
 
     @Override

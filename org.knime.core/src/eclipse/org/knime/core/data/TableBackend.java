@@ -45,7 +45,6 @@
  */
 package org.knime.core.data;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
@@ -59,6 +58,7 @@ import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.sort.BufferedDataTableSorter;
+import org.knime.core.data.sort.RowComparator;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -347,7 +347,7 @@ public interface TableBackend {
      * @since 5.3
      */
     default BufferedDataTable sort(final ExecutionContext exec, final BufferedDataTable table,
-        final Comparator<DataRow> rowComparator) throws CanceledExecutionException {
+        final RowComparator rowComparator) throws CanceledExecutionException {
         return new BufferedDataTableSorter(table, rowComparator).sort(exec);
     }
 
@@ -362,7 +362,7 @@ public interface TableBackend {
      * @since 5.3
      */
     default CloseableRowIterator sortedIterator(final ExecutionContext exec, final BufferedDataTable table,
-        final Comparator<DataRow> rowComparator) throws CanceledExecutionException {
+        final RowComparator rowComparator) throws CanceledExecutionException {
         return new BufferedDataTableSorter(table, rowComparator).sortedIterator(exec);
     }
 }
