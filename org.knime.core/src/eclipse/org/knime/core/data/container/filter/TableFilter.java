@@ -214,6 +214,41 @@ public final class TableFilter {
     }
 
     /**
+     * Get the {@link Selection} corresponding to this given {@link TableFilter}.
+     * <p>
+     * {@code TableFilter} are used in the {@code BufferedDataTable} API, where the row key column is always present and
+     * is not included in the column count. {@code Selection} is used in the {@code RowAccessible} API, where the row
+     * key column is not treated separately and is just column 0. Therefore, column index {@code i} in the
+     * {@code TableFilter} becomes column index {@code i+1} in the {@code Selection}, and the returned {@code Selection}
+     * always contains column {@code 0} (the row key).
+     * <p>
+     * {@code TableFilter} may express an open row range, where all rows are retained, starting from a given index.
+     * {@code Selection} cannot express this. It includes either all rows, or a closed row range. The {@code numRows}
+     * argument is used to determine the upper bound of the row range of the {@code Selection}, if the
+     * {@code TableFilter} contains an open row range with only the start index given. (Otherwise, {@code numRows} is
+     * ignored).
+     *
+     * @param numRows the number of rows in the table.
+     * @return a {@code Selection} corresponding to this {@code TableFilter}
+     */
+    public Selection toSelection(final long numRows) {
+        Selection selection = Selection.all();
+        if (m_columnIndices.isPresent()) {
+            final int[] cols = IntStream.concat( //
+                IntStream.of(0), // the row key column is always included and therefore not subject to TableFilter
+                m_columnIndices.get().stream().mapToInt(i -> i + 1) // adjust for the row key column
+            ).toArray();
+            selection = selection.retainColumns(cols);
+        }
+        if (m_fromRowIndex.isPresent() || m_toRowIndex.isPresent()) {
+            final long fromIndex = m_fromRowIndex.orElse(0L);
+            final long toIndex = m_toRowIndex.orElse(numRows - 1) + 1; // TableFilter toRowIndex is inclusive, Selection toIndex is exclusive
+            selection = selection.retainRows(fromIndex, toIndex);
+        }
+        return selection;
+    }
+
+    /**
      * Implementation of the builder design pattern for the {@link TableFilter} class.
      */
     public final static class Builder {
