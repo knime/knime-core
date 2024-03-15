@@ -59,6 +59,7 @@ import org.knime.core.data.v2.RowRead;
  * The underlying {@code DataRow} can be changed via {@link #setDataRow}.
  *
  * @author Tobias Pietzsch
+ * @since 5.3
  */
 public final class DataRowRead implements RowRead {
 

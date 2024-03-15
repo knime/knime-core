@@ -61,9 +61,15 @@ import java.io.Closeable;
 public interface RowWriteCursor extends Closeable {
 
     // new API v1
+    /**
+     * @since 5.3
+     */
     RowWrite row();
 
     // new API v1
+    /**
+     * @since 5.3
+     */
     void commit();
 
     // new API v2
@@ -71,6 +77,9 @@ public interface RowWriteCursor extends Closeable {
     //            but it needs one additional layer of buffering in case the RowWrite row() is written to directly.
     //            How important is this?
     //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
+    /**
+     * @since 5.3
+     */
     void commit(RowRead row);
 
     /**
