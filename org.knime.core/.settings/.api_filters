@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/data/v2/RowWriteCursor.java" type="org.knime.core.data.v2.RowWriteCursor">
+        <filter comment="Haha" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="commit()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Okay" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="commit(RowRead)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="HAHAHA" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="row()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Foo" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="canForward()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Okay" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="forward()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
         <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
             <message_arguments>
