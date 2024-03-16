@@ -64,6 +64,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.Functions.FailableRunnable;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.junit.After;
@@ -78,9 +79,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.Version;
@@ -537,7 +538,41 @@ public abstract class WorkflowTestCase {
         }
     }
 
-    @After
+	/**
+	 * Calls a workflow-modifying method on the workflow and returns only after the
+	 * async workflow listener event was sent.
+	 * 
+	 * <p>
+	 * This method was added as part of AP-21327 - test cases would modify the
+	 * workflow and perform another action immediately afterwards. The state of the
+	 * workflow is then changed async'ly due to a delayed workflow event. So far
+	 * it's an artifact of the test since workflow modifications involve user
+	 * interaction.
+	 * 
+	 * @param manager  To register on
+	 * @param runnable A runnable that changes the manager, e.g. adds a node, marks
+	 *                 it dirty, swaps connection
+	 * @throws Exception If the runnable throws an exception.
+	 * @deprecated Only added temporarily on 2023-12 and 2023-07 branches, fixed
+	 *             differently on master, see AP-20402
+	 * 
+	 */
+    @Deprecated(forRemoval = true)
+	static void doAndWaitForWorkflowEvent(final WorkflowManager manager, FailableRunnable<Exception> runnable)
+			throws Exception {
+		final Object waitable = new Object();
+		manager.addListener(e -> {
+			synchronized (waitable) {
+				waitable.notifyAll();
+			}
+		});
+		synchronized (waitable) {
+			runnable.run();
+			waitable.wait();
+		}
+	}
+
+	@After
     public void tearDown() throws Exception {
         closeWorkflow();
         

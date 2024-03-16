@@ -95,12 +95,13 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     @Test
     public void testSwappedConnections_SubNodeGenerate() throws Exception {
     	executeAllAndWait();
-        MetaPortInfo[] outPorts = getManager().getSubnodeOutputPortInfo(m_subNodeGenerate_5);
+        final WorkflowManager manager = getManager();
+		MetaPortInfo[] outPorts = manager.getSubnodeOutputPortInfo(m_subNodeGenerate_5);
         MetaPortInfo[] newOutPorts = new MetaPortInfo[3];
         newOutPorts[0] = outPorts[0];
         newOutPorts[1] = MetaPortInfo.builder(outPorts[2]).setNewIndex(1).build();
         newOutPorts[2] = MetaPortInfo.builder(outPorts[1]).setNewIndex(2).build();
-        getManager().changeSubNodeOutputPorts(m_subNodeGenerate_5, newOutPorts);
+        doAndWaitForWorkflowEvent(manager, () -> manager.changeSubNodeOutputPorts(m_subNodeGenerate_5, newOutPorts));
         checkState(m_subNodeGenerate_5, InternalNodeContainerState.CONFIGURED);
         checkState(m_subNodeTest_9, InternalNodeContainerState.IDLE);
         executeAllAndWait();
@@ -113,23 +114,24 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     @Test
     public void testSwappedConnections_MetaNodeGenerate() throws Exception {
     	executeAllAndWait();
-        MetaPortInfo[] outPorts = getManager().getMetanodeOutputPortInfo(m_metaNodeGenerate_6);
+        final WorkflowManager manager = getManager();
+		MetaPortInfo[] outPorts = manager.getMetanodeOutputPortInfo(m_metaNodeGenerate_6);
         MetaPortInfo[] newOutPorts = new MetaPortInfo[2];
         newOutPorts[0] = MetaPortInfo.builder(outPorts[1]).setNewIndex(0).build();
         newOutPorts[1] = MetaPortInfo.builder(outPorts[0]).setNewIndex(1).build();
-        getManager().changeMetaNodeOutputPorts(m_metaNodeGenerate_6, newOutPorts);
+        doAndWaitForWorkflowEvent(manager, () -> manager.changeMetaNodeOutputPorts(m_metaNodeGenerate_6, newOutPorts));
 		Awaitility
 				.await().atMost(5, TimeUnit.SECONDS).pollInterval(10,
 						TimeUnit.MILLISECONDS)
 				.untilAsserted(() -> assertThat("State of metanode output port 0 after port switch",
-						getManager().getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(0)
+						manager.getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(0)
 								.getNodeState(),
 						is(InternalNodeContainerState.EXECUTED)));
 		Awaitility
 				.await().atMost(5, TimeUnit.SECONDS).pollInterval(10,
 						TimeUnit.MILLISECONDS)
 				.untilAsserted(() -> assertThat("State of metanode output port 1 after port switch",
-						getManager().getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(1)
+						manager.getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(1)
 								.getNodeState(),
 						is(InternalNodeContainerState.EXECUTED)));
         checkState(m_subNodeTest_12, InternalNodeContainerState.CONFIGURED);
@@ -143,22 +145,23 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     @Test
     public void testSwappedConnections_SubNodeTest() throws Exception {
     	executeAllAndWait();
-        MetaPortInfo[] inPorts = getManager().getSubnodeInputPortInfo(m_subNodeTest_9);
+        final WorkflowManager manager = getManager();
+		MetaPortInfo[] inPorts = manager.getSubnodeInputPortInfo(m_subNodeTest_9);
         MetaPortInfo[] newInPorts = new MetaPortInfo[3];
         newInPorts[0] = inPorts[0];
         newInPorts[1] = MetaPortInfo.builder(inPorts[2]).setNewIndex(1).build();
         newInPorts[2] = MetaPortInfo.builder(inPorts[1]).setNewIndex(2).build();
-        getManager().changeSubNodeInputPorts(m_subNodeTest_9, newInPorts);
+        manager.changeSubNodeInputPorts(m_subNodeTest_9, newInPorts);
         checkState(m_subNodeGenerate_5, InternalNodeContainerState.EXECUTED);
         checkState(m_subNodeTest_9, InternalNodeContainerState.CONFIGURED);
 
-        MetaPortInfo[] inPorts2 = getManager().getSubnodeInputPortInfo(m_subNodeTest_12);
+        MetaPortInfo[] inPorts2 = manager.getSubnodeInputPortInfo(m_subNodeTest_12);
         MetaPortInfo[] newInPorts2 = new MetaPortInfo[3];
         newInPorts2[0] = inPorts2[0];
         newInPorts2[1] = MetaPortInfo.builder(inPorts2[2]).setNewIndex(1).build();
         newInPorts2[2] = MetaPortInfo.builder(inPorts2[1]).setNewIndex(2).build();
-        getManager().changeSubNodeInputPorts(m_subNodeTest_12, newInPorts2);
-		assertThat("State of metanode output port 0 after port switch", getManager()
+        manager.changeSubNodeInputPorts(m_subNodeTest_12, newInPorts2);
+		assertThat("State of metanode output port 0 after port switch", manager
 				.getNodeContainer(m_metaNodeGenerate_6, WorkflowManager.class, true).getOutPort(0).getNodeState(),
 				is(InternalNodeContainerState.EXECUTED));
         checkState(m_subNodeTest_12, InternalNodeContainerState.CONFIGURED);
