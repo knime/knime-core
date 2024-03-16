@@ -232,7 +232,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
     /** Remove "Fail in Execution" node, run the entire rest (all executed afterwards), return the inner WFM. */
 	private WorkflowManager removeFailNodeAndExecute() throws Exception {
 		final var subnodeWFM = getSubnodeWFM();
-		subnodeWFM.removeNode(m_fail_7_2); // because it would fail the execution
+		doAndWaitForWorkflowEvent(subnodeWFM, () -> subnodeWFM.removeNode(m_fail_7_2)); // because it would fail the execution
 		executeAllAndWait();
 		return subnodeWFM;
 	}
