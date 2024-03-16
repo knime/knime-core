@@ -1028,7 +1028,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
                 setDirty();
             }
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
-            LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
+            LOGGER.debug(() -> String.format("%s has new state: %s", this.getNameWithID(), m_state));
         }
         return changesMade;
     }
@@ -1598,7 +1598,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public void setDirty() {
         if (setDirty(getNodeContainerDirectory())) {
-            LOGGER.debug("Setting dirty flag on " + getNameWithID());
+            LOGGER.debug(() -> String.format("Setting dirty flag on %s", getNameWithID()));
         }
         setDirty(getAutoSaveDirectory());
         NodeContainerParent directNCParent = getDirectNCParent();

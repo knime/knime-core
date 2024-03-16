@@ -490,7 +490,7 @@ public final class WorkflowManager extends NodeContainer
             // asserted in check -- even from constructor
             lock.queueCheckForNodeStateChangeNotification(false); // get default state right
         }
-        LOGGER.debug("Created subworkflow " + this.getID());
+        LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
     }
 
     private NodeContainerParent assertParentAssignments(final NodeContainerParent directNCParent,
@@ -606,7 +606,7 @@ public final class WorkflowManager extends NodeContainer
             m_dataRepository = workflowDataRepository;
         }
         m_wfmListeners = new CopyOnWriteArrayList<>();
-        LOGGER.debug("Created subworkflow " + this.getID());
+        LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
     }
 
     /**
@@ -655,7 +655,7 @@ public final class WorkflowManager extends NodeContainer
                 : new WorkflowDataRepository();
             m_workflowContext = null;
         }
-        LOGGER.debug("Created subworkflow " + this.getID());
+        LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
     }
 
     /**
@@ -801,7 +801,7 @@ public final class WorkflowManager extends NodeContainer
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true,
             creationHelper.getWorkflowContext(), creationHelper.getWorkflowDataRepository(), null, null);
-        LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
+        LOGGER.debug(() -> String.format("Created project %s", wfm.getID()));
         return wfm;
     }
 
@@ -816,16 +816,17 @@ public final class WorkflowManager extends NodeContainer
             NodeContainer nc = getNodeContainer(id);
             if (nc instanceof WorkflowManager wfm && wfm.isProject()) {
                 final String nameAndID = "\"" + nc.getNameWithID() + "\"";
-                LOGGER.debug("Removing project " + nameAndID);
+                LOGGER.debugWithFormat("Removing project %s", nameAndID);
                 wfm.shutdown();
                 removeNode(id);
-                LOGGER.debug("Project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
+                LOGGER.debugWithFormat("Project %s removed (%d remaining)", nameAndID, m_workflow.getNrNodes());
             } else if (nc instanceof SubNodeContainer snc) {
                 final String nameAndID = "\"" + snc.getNameWithID() + "\"";
-                LOGGER.debug("Removing component project " + nameAndID);
+                LOGGER.debugWithFormat("Removing component project %s", nameAndID);
                 snc.getWorkflowManager().shutdown();
                 removeNode(id);
-                LOGGER.debug("Component project " + nameAndID + " removed (" + m_workflow.getNrNodes() + " remaining)");
+                LOGGER.debugWithFormat("Component project %s removed (%d remaining)", nameAndID,
+                    m_workflow.getNrNodes());
             } else {
                 throw new IllegalArgumentException("Node: " + id + " is neither a workflow nor component project!");
             }
@@ -875,7 +876,7 @@ public final class WorkflowManager extends NodeContainer
             if (creationConfig != null && creationConfig.getURLConfig().isPresent()) {
                 container.saveModelSettingsToDefault();
             }
-            LOGGER.debug("Added new node " + id);
+            LOGGER.debugWithFormat("Added new node %s", id);
             setDirty();
             return id;
         }
@@ -1241,7 +1242,7 @@ public final class WorkflowManager extends NodeContainer
             wfm = new WorkflowManager(null, this, newID, inPorts, outPorts, isNewProject, context, name,
                 fileStoreRepositoryOptional, Optional.ofNullable(nodeAnno));
             addNodeContainer(wfm, true);
-            LOGGER.debug("Added new subworkflow " + newID);
+            LOGGER.debugWithFormat("Added new subworkflow %s", newID);
         }
         setDirty();
         return wfm;
@@ -1431,8 +1432,8 @@ public final class WorkflowManager extends NodeContainer
         }
         // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
-        LOGGER.debug("Added new connection from node " + source + "(" + sourcePort + ")" + " to node " + dest + "("
-            + destPort + ")");
+        LOGGER.debugWithFormat("Added new connection from node %s(%d) to node %s(%d)", source, sourcePort, dest,
+            destPort);
         return newConn;
     }
 
@@ -3398,7 +3399,7 @@ public final class WorkflowManager extends NodeContainer
     boolean doBeforePreExecution(final NodeContainer nc) {
         assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
-            LOGGER.debug(nc.getNameWithID() + " doBeforePreExecution");
+            LOGGER.debug(() -> String.format("%s doBeforePreExecution", nc.getNameWithID()));
             if (nc.performStateTransitionPREEXECUTE()) {
                 lock.queueCheckForNodeStateChangeNotification(true);
                 return true;
@@ -3418,13 +3419,11 @@ public final class WorkflowManager extends NodeContainer
     void doBeforePostExecution(final NodeContainer nc, final NodeContainerExecutionStatus status) {
         assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
-            LOGGER.debug(nc.getNameWithID() + " doBeforePostExecution");
-            if (nc instanceof NativeNodeContainer && status.isSuccess()) {
-                NativeNodeContainer nnc = (NativeNodeContainer)nc;
-                if (nnc.getExecutionEnvironment().getUseAsDefault()) {
-                    // interactive nodes may have new defaults
-                    nnc.saveModelSettingsToDefault();
-                }
+            LOGGER.debug(() -> String.format("%s doBeforePostExecution", nc.getNameWithID()));
+            if (nc instanceof NativeNodeContainer nnc && status.isSuccess()
+                && nnc.getExecutionEnvironment().getUseAsDefault()) {
+                // interactive nodes may have new defaults
+                nnc.saveModelSettingsToDefault();
             }
             nc.performStateTransitionPOSTEXECUTE();
             lock.queueCheckForNodeStateChangeNotification(true);
@@ -3444,7 +3443,7 @@ public final class WorkflowManager extends NodeContainer
         assert !nc.isLocalWFM() : "No execution of local metanodes";
         try (WorkflowLock lock = lock()) {
             // allow NNC to update states etc
-            LOGGER.debug(nc.getNameWithID() + " doBeforeExecution");
+            LOGGER.debug(() -> String.format("%s doBeforeExecution", nc.getNameWithID()));
             nc.getNodeTimer().startExec();
             if (nc instanceof SingleNodeContainer) {
                 FlowObjectStack flowObjectStack = nc.getFlowObjectStack();
@@ -3466,8 +3465,8 @@ public final class WorkflowManager extends NodeContainer
                     if (nnc.isModelCompatibleTo(ScopeEndNode.class)) {
                         // if this is an END to a loop/scope, make sure it knows its head
                         if (fsc == null) {
-                            LOGGER.debug("Incoming flow object stack for " + nnc.getNameWithID() + ":\n"
-                                + flowObjectStack.toDeepString());
+                            LOGGER.debug(() -> String.format("Incoming flow object stack for %s:%n%s",
+                                nnc.getNameWithID(), flowObjectStack.toDeepString()));
                             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
                                 throw new IllegalFlowObjectStackException(
                                     "Encountered loop-end without corresponding head!");
@@ -3480,10 +3479,10 @@ public final class WorkflowManager extends NodeContainer
                         if (headNode == null) {
                             if (nnc.isModelCompatibleTo(LoopEndNode.class)) {
                                 throw new IllegalFlowObjectStackException(
-                                    "Loop start and end nodes are not in the" + " same workflow");
+                                    "Loop start and end nodes are not in the same workflow");
                             } else {
                                 throw new IllegalFlowObjectStackException(
-                                    "Scope start and end nodes are not in the" + " same workflow");
+                                    "Scope start and end nodes are not in the same workflow");
                             }
                         } else if (headNode instanceof NativeNodeContainer
                             && ((NativeNodeContainer)headNode).isModelCompatibleTo(ScopeStartNode.class)) {
@@ -3559,8 +3558,8 @@ public final class WorkflowManager extends NodeContainer
         boolean success = status.isSuccess();
         try (WorkflowLock lock = lock()) {
             nc.getNodeTimer().endExec(success);
-            String st = success ? " - success" : " - failure";
-            LOGGER.debug(nc.getNameWithID() + " doAfterExecute" + st);
+            LOGGER.debug(() -> String.format("%s doAfterExecute%s", nc.getNameWithID(),
+                status.isSuccess() ? " - success" : " - failure"));
             if (!success) {
                 disableNodeForExecution(nc.getID());
             }
@@ -3586,7 +3585,7 @@ public final class WorkflowManager extends NodeContainer
                             } else {
                                 // can happen during regular use
                                 // (e.g. wrong end node)
-                                LOGGER.debug("parallelizeLoop failed: " + e, e);
+                                LOGGER.debug(() -> String.format("parallelizeLoop failed: %s", e), e);
                             }
                             // make sure the start node is reset and
                             // and appropriate message is set.
@@ -5114,7 +5113,7 @@ public final class WorkflowManager extends NodeContainer
             // this method is called from the parent's doAfterExecute
             // we don't propagate state changes (i.e. argument flag is false)
             // since the check for state changes in the parent will happen next
-            if (!sweep(m_workflow.getNodeIDs())) {
+            if (!sweep(m_workflow.getNodeIDs()) && LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Some states were invalid, old states are:");
                 LOGGER.debug(stateList);
                 LOGGER.debug("The new (corrected) states are: ");
@@ -6735,24 +6734,27 @@ public final class WorkflowManager extends NodeContainer
                     // should not happen but could if reset has worked on slightly
                     // different nodes than configure, for instance.
                     // FIXME: report errors again, once configure follows only ports, not nodes.
-                    LOGGER.debug("configure found " + snc.getInternalState() + " node: " + snc.getNameWithID());
+                    LOGGER.debug(() -> String.format("configure found %s node: %s", snc.getInternalState(),
+                        snc.getNameWithID()));
                     break;
                 case PREEXECUTE:
                 case POSTEXECUTE:
                 case EXECUTING:
                     // should not happen but could if reset has worked on slightly
                     // different nodes than configure, for instance.
-                    LOGGER.debug("configure found " + snc.getInternalState() + " node: " + snc.getNameWithID());
+                    LOGGER.debug(() -> String.format("configure found %s node: %s", snc.getInternalState(),
+                        snc.getNameWithID()));
                     break;
                 case CONFIGURED_QUEUED:
                 case EXECUTED_QUEUED:
                     // should not happen but could if reset has worked on slightly
                     // different nodes than configure, for instance.
-                    LOGGER.debug("configure found " + snc.getInternalState() + " node: " + snc.getNameWithID());
+                    LOGGER.debug(() -> String.format("configure found %s node: %s", snc.getInternalState(),
+                        snc.getNameWithID()));
                     break;
                 default:
-                    LOGGER
-                        .error("configure found weird state (" + snc.getInternalState() + "): " + snc.getNameWithID());
+                    LOGGER.error(() -> String.format("configure found weird state (%s): %s", snc.getInternalState(),
+                        snc.getNameWithID()));
             }
             if (doConfigure) {
                 // the stack that previously would have been propagated,
@@ -6764,7 +6766,7 @@ public final class WorkflowManager extends NodeContainer
                 try {
                     scsc = createAndSetFlowObjectStackFor(snc, sos);
                 } catch (IllegalFlowObjectStackException e) {
-                    LOGGER.warn("Unable to merge flow object stacks: " + e.getMessage(), e);
+                    LOGGER.warn(() -> String.format("Unable to merge flow object stacks: %s", e.getMessage()), e);
                     scsc = new FlowObjectStack(sncID);
                     flowStackConflict = true;
                 }
@@ -8028,8 +8030,8 @@ public final class WorkflowManager extends NodeContainer
             if (linksChecked == 0) {
                 LOGGER.debug("No metanode links in workflow, nothing updated");
             } else {
-                LOGGER.debug(
-                    "Workflow contains " + linksChecked + " metanode link(s), " + linksUpdated + " were updated");
+                LOGGER.debugWithFormat("Workflow contains %d metanode link(s), %d were updated", linksChecked,
+                    linksUpdated);
             }
             return update;
         } finally {
@@ -8226,9 +8228,7 @@ public final class WorkflowManager extends NodeContainer
      * @param listener new listener
      */
     public void addListener(final WorkflowListener listener) {
-        if (!m_wfmListeners.contains(listener)) {
-            m_wfmListeners.add(listener);
-        }
+        m_wfmListeners.addIfAbsent(listener);
     }
 
     /**
@@ -8777,8 +8777,8 @@ public final class WorkflowManager extends NodeContainer
         exec.setMessage("Loading workflow structure from \"" + refDirectory + "\"");
         exec.checkCanceled();
         LoadVersion version = persistor.getLoadVersion();
-        LOGGER.debug("Loading workflow from \"" + refDirectory + "\" (version \"" + version + "\" with loader class \""
-            + persistor.getClass().getSimpleName() + "\")");
+        LOGGER.debug(() -> String.format("Loading workflow from \"%s\" (version \"%s\" with loader class \"%s\")",
+            refDirectory, version, persistor.getClass().getSimpleName()));
         // data files are loaded using a repository of reference tables;
         Map<Integer, BufferedDataTable> tblRep = new HashMap<Integer, BufferedDataTable>();
         persistor.preLoadNodeContainer(null, null, result);
@@ -8790,10 +8790,8 @@ public final class WorkflowManager extends NodeContainer
         try {
             m_loadVersion = persistor.getLoadVersion();
             NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
-            if (newIDs.length != 1) {
-                throw new InvalidSettingsException(
-                    "Loading workflow failed, " + "couldn't identify child sub flow (typically " + "a project)");
-            }
+            CheckUtils.checkSetting(newIDs.length == 1,
+                "Loading workflow failed, couldn't identify child sub flow (typically a project)");
             loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
         } finally {
             lock.unlock();
@@ -9563,9 +9561,10 @@ public final class WorkflowManager extends NodeContainer
             File f = deletedNodeDir.getFile();
             if (f.exists()) {
                 if (FileUtil.deleteRecursively(f)) {
-                    LOGGER.debug("Deleted obsolete node directory \"" + f.getAbsolutePath() + "\"");
+                    LOGGER.debug(() -> String.format("Deleted obsolete node directory \"%s\"", f.getAbsolutePath()));
                 } else {
-                    LOGGER.warn("Deletion of obsolete node directory \"" + f.getAbsolutePath() + "\" failed");
+                    LOGGER.warn(
+                        () -> String.format("Deletion of obsolete node directory \"%s\" failed", f.getAbsolutePath()));
                 }
             }
         }
