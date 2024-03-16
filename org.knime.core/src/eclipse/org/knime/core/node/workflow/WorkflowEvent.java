@@ -187,4 +187,7 @@ public class WorkflowEvent {
         b.append("]");
         return b.toString();
     }
+
+    /** Utility record that remembers if a listener is to be notified asynchronously. */
+    record WorkflowListenerAndAsyncFlag(WorkflowListener listener, boolean isAsync) { }
 }

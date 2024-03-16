@@ -60,6 +60,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.POSTEXECUTE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.PREEXECUTE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
+import static org.knime.core.node.workflow.WorkflowEvent.Type.CONTEXT_CHANGED;
 import static org.knime.core.node.workflow.WorkflowEvent.Type.NODE_PORTS_CHANGED;
 
 import java.io.File;
@@ -175,6 +176,7 @@ import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
 import org.knime.core.node.workflow.Workflow.NodeAndInports;
+import org.knime.core.node.workflow.WorkflowEvent.WorkflowListenerAndAsyncFlag;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -355,7 +357,7 @@ public final class WorkflowManager extends NodeContainer
     private boolean m_isWorkflowDirectoryReadonly;
 
     /** Listeners interested in status changes. */
-    private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
+    private final CopyOnWriteArrayList<WorkflowListenerAndAsyncFlag> m_wfmListeners;
 
     /**
      * Semaphore to make sure we never deal with inconsistent nodes within the workflow. Changes to state or outputs
@@ -484,7 +486,7 @@ public final class WorkflowManager extends NodeContainer
         m_dataRepository = dataRepositoryOptional.orElseGet(() -> new WorkflowDataRepository());
         m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
-        m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
+        m_wfmListeners = new CopyOnWriteArrayList<>();
         m_templateInformation = MetaNodeTemplateInformation.NONE;
         try (WorkflowLock lock = lock()) {
             // asserted in check -- even from constructor
@@ -1429,9 +1431,8 @@ public final class WorkflowManager extends NodeContainer
                     resetAndConfigureNode(dest);
                 }
             }
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
         }
-        // and finally notify listeners
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
         LOGGER.debugWithFormat("Added new connection from node %s(%d) to node %s(%d)", source, sourcePort, dest,
             destPort);
         return newConn;
@@ -8150,9 +8151,9 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 LOGGER.debug("Setting " + msg);
             }
+            notifyNodePropertyChangedListener(NodeProperty.LockStatus);
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
         }
-        notifyNodePropertyChangedListener(NodeProperty.LockStatus);
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
     }
 
     /**
@@ -8223,12 +8224,21 @@ public final class WorkflowManager extends NodeContainer
     ///////////////////////////////////
 
     /**
-     * Add listener to list.
+     * Add (an asynchronous) listener to list.
      *
-     * @param listener new listener
+     * @param listener new listener, not null.
      */
     public void addListener(final WorkflowListener listener) {
-        m_wfmListeners.addIfAbsent(listener);
+        addListener(listener, true);
+    }
+
+    /** Add listener to listener list.
+     * @param listener The non-null listener
+     * @param isAsync True if the listener should is to be called asynchronously, false (=sync) only for internal
+     * listeners.
+     */
+    void addListener(final WorkflowListener listener, final boolean isAsync) {
+        m_wfmListeners.addIfAbsent(new WorkflowListenerAndAsyncFlag(listener, isAsync));
     }
 
     /**
@@ -8237,7 +8247,7 @@ public final class WorkflowManager extends NodeContainer
      * @param listener listener to be removed
      */
     public void removeListener(final WorkflowListener listener) {
-        m_wfmListeners.remove(listener);
+        m_wfmListeners.removeIf(l -> l.listener().equals(listener));
     }
 
     /**
@@ -8252,21 +8262,20 @@ public final class WorkflowManager extends NodeContainer
         if (m_wfmListeners.isEmpty()) {
             return;
         }
-        // the iterator is based on the current(!) set of listeners
-        // (problem was: during load the addNodeContainer method fired an event
-        // by using this method - the event got delivered at a point where
-        // the workflow editor was registered and marked the flow as being dirty
-        // although it was freshly loaded)
-        final Iterator<WorkflowListener> it = m_wfmListeners.iterator();
-        WORKFLOW_NOTIFIER.execute(new Runnable() {
-            /** {@inheritDoc} */
-            @Override
-            public void run() {
-                while (it.hasNext()) {
-                    it.next().workflowChanged(evt);
-                }
-            }
-        });
+
+        final var partitionedListeners =
+            m_wfmListeners.stream().collect(Collectors.partitioningBy(WorkflowListenerAndAsyncFlag::isAsync));
+        final var asyncListeners = partitionedListeners.get(Boolean.TRUE);
+        final var syncListeners = partitionedListeners.get(Boolean.FALSE);
+
+        // invoke sync listeners
+        syncListeners.forEach(sync -> sync.listener().workflowChanged(evt));
+
+        // invoke async listeners
+        // the stream is based on the current(!) set of listeners (problem was: during load the addNodeContainer method
+        // fired an event by using this method - the event got delivered at a point where the workflow editor was
+        // registered and marked the flow as being dirty although it was freshly loaded)
+        WORKFLOW_NOTIFIER.execute(() -> asyncListeners.forEach(async -> async.listener().workflowChanged(evt)));
     }
 
     // bug fix 1810, notify children about possible job manager changes
@@ -9478,8 +9487,8 @@ public final class WorkflowManager extends NodeContainer
                 saveExec = exec;
             }
             save(directory, saveExec, true);
+            notifyWorkflowListeners(new WorkflowEvent(CONTEXT_CHANGED, getID(), oldContext, newContext));
         }
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONTEXT_CHANGED, getID(), oldContext, newContext));
     }
 
     /**

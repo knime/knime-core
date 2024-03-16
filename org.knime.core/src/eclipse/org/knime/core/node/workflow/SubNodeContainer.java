@@ -582,7 +582,7 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** Creates listener, adds it to m_wfm and sets the class field. */
     private WorkflowListener createAndAddWorkflowListener() {
         WorkflowListener listener = e -> onWFMStructureChange(e);
-        m_wfm.addListener(listener);
+        m_wfm.addListener(listener, false);
         return listener;
     }
 
