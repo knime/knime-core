@@ -13,7 +13,7 @@
 	<packaging>${packaging.default}</packaging>
 
 	<properties>
-		<revision>5.2.2</revision>
+		<revision>5.2.3</revision>
 	</properties>
 
 	<build>
