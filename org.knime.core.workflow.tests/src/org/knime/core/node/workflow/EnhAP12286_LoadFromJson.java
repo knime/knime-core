@@ -55,7 +55,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -76,7 +75,6 @@ import jakarta.json.JsonValue;
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-@Ignore
 public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
     @Rule

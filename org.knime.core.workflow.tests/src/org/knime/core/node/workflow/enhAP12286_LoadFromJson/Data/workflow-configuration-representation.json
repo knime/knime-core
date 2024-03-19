@@ -265,6 +265,9 @@
         "promptUsername": true,
         "useServerLoginCredentials": false,
         "errorMessage": "",
-        "noDisplay": false
+        "noDisplay": false,
+        "usernameLabel": "User",
+    	"passwordLabel": "Password"
+        
     }
 }
