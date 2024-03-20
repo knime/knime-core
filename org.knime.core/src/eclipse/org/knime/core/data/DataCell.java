@@ -121,19 +121,19 @@ public abstract class DataCell implements DataValue, Serializable {
      * @see DataType#getType(Class)
      */
     public final DataType getType() {
-        DataType type = classToTypeMap.get(getClass());
+        final var type = classToTypeMap.get(getClass());
         if (type != null) {
             return type;
         }
         DataType elementType = null;
         List<Class<? extends DataValue>> adapterValueList = null;
-        if (this instanceof CollectionDataValue) {
-            elementType = ((CollectionDataValue)this).getElementType();
+        if (this instanceof CollectionDataValue coll) {
+            elementType = coll.getElementType();
         }
-        if (this instanceof AdapterValue) {
-            adapterValueList = new ArrayList<Class<? extends DataValue>>(((AdapterValue)this).getAdapterMap().keySet());
+        if (this instanceof AdapterValue adapter) {
+            adapterValueList = new ArrayList<>(adapter.getAdapterMap().keySet());
         }
-        DataType newType = DataType.getType(getClass(), elementType, adapterValueList);
+        final var newType = DataType.getType(getClass(), elementType, adapterValueList);
         if (adapterValueList == null && elementType == null) {
             classToTypeMap.put(getClass(), newType);
         }
@@ -202,13 +202,13 @@ public abstract class DataCell implements DataValue, Serializable {
             return false;
         }
         DataCell thisDelegate = this;
-        while (thisDelegate instanceof BlobWrapperDataCell) {
-            thisDelegate = ((BlobWrapperDataCell)thisDelegate).getCell();
+        while (thisDelegate instanceof BlobWrapperDataCell blob) {
+            thisDelegate = blob.getCell();
         }
 
         DataCell otherDelegate = (DataCell)o;
-        while (otherDelegate instanceof BlobWrapperDataCell) {
-            otherDelegate = ((BlobWrapperDataCell)otherDelegate).getCell();
+        while (otherDelegate instanceof BlobWrapperDataCell blob) {
+            otherDelegate = blob.getCell();
         }
 
         // if both cells are missing they are equal

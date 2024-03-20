@@ -50,31 +50,64 @@ package org.knime.core.data;
 
 import java.util.Comparator;
 
+import org.knime.core.data.v2.RowRead;
+
 /**
- * Comparator of data cells that compares missing cells as smaller or larger than any non-missing cell.
- *
- * @param <T> type to be compared
+ * TODO Comparator of data cells that compares missing cells as smaller or larger than any non-missing cell.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
- * @deprecated Use {@link MissingValueHandling#compareWithMissing(Comparator, boolean)}
+ * @since 5.3
  */
-@Deprecated(since = "5.3", forRemoval = true)
-public class MissingDataCellComparator<T extends DataCell> implements Comparator<T> {
+public final class MissingValueHandling {
 
-    private final Comparator<T> m_wrapped;
+    private MissingValueHandling() {
+    }
+
+    private static int compareWithMissings(final boolean leftMiss, final boolean rightMiss,
+        final boolean missingLargest) {
+        if (leftMiss && rightMiss) {
+            return 0;
+        } else if (leftMiss) {
+            return missingLargest ? 1 : -1;
+        } else {
+            return missingLargest ? -1 : 1;
+        }
+    }
 
     /**
      * Wrap a data cell comparator to sort missing cells smaller or larger than non-missing cells
-     * @param wrapped wrapped comparator
-     * @param largest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @param index column index
+     * @param valueComparator wrapped comparator
+     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @return TODO
      */
-    public MissingDataCellComparator(final Comparator<T> wrapped, final boolean largest) {
-        m_wrapped = MissingValueHandling.compareWithMissing(wrapped, largest);
+    public static Comparator<RowRead> compareWithMissing(final int index,
+        final Comparator<? extends DataValue> valueComparator, final boolean missingLargest) {
+        return (left, right) -> {
+            final var leftMiss = left.isMissing(index);
+            final var rightMiss = right.isMissing(index);
+            if (leftMiss || rightMiss) {
+                return compareWithMissings(leftMiss, rightMiss, missingLargest);
+            }
+            return valueComparator.compare(left.getValue(index), right.getValue(index));
+        };
     }
 
-    @Override
-    public int compare(final T left, final T right) {
-        return m_wrapped.compare(left, right);
+    /**
+     * Wrap a data cell comparator to sort missing cells smaller or larger than non-missing cells
+     * @param cellComparator wrapped comparator
+     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @return TODO
+     */
+    public static <T extends DataCell> Comparator<T> compareWithMissing(final Comparator<T> cellComparator,
+            final boolean missingLargest) {
+        return (left, right) -> {
+            final var leftMiss = left.isMissing();
+            final var rightMiss = right.isMissing();
+            if (leftMiss || rightMiss) {
+                return compareWithMissings(leftMiss, rightMiss, missingLargest);
+            }
+            return cellComparator.compare(left, right);
+        };
     }
-
 }

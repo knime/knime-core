@@ -65,7 +65,7 @@ import org.junit.Test;
  */
 public class AlphanumericComparatorTest {
 
-    private static final Comparator<String> COMP = new AlphanumericComparator(Comparator.naturalOrder());
+    private static final Comparator<String> COMP = AlphanumericComparator.NATURAL_ORDER;
 
 
     private static List<String> asMutableList(final String... items) {

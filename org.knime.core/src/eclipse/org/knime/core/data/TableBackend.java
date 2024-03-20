@@ -45,6 +45,7 @@
  */
 package org.knime.core.data;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
@@ -57,9 +58,9 @@ import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.data.sort.RowComparator;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -333,23 +334,42 @@ public interface TableBackend {
      * @return the table with the new spec
      * @since 5.1
      */
-    KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
-        final DataTableSpec newSpec, IntSupplier tableIDSupplier);
+    KnowsRowCountTable replaceSpec(ExecutionContext exec, BufferedDataTable table,
+        DataTableSpec newSpec, IntSupplier tableIDSupplier);
 
     /**
      * Sorts the given table.
      *
      * @param exec for reporting progress and creation of tables
+     * @param tableIDSupplier
      * @param table to sort
+     * @param tableId
      * @param rowComparator comparator determining the order of the rows in the output
      * @return the sorted table
      * @throws CanceledExecutionException
+     * @throws IOException
      * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
      */
-    default BufferedDataTable sort(final ExecutionContext exec, final BufferedDataTable table,
-        final RowComparator rowComparator) throws CanceledExecutionException {
-        return new BufferedDataTableSorter(table, rowComparator).sort(exec);
-    }
+    KnowsRowCountTable sortIntoTable(ExecutionContext exec, IntSupplier tableIDSupplier, BufferedDataTable table,
+        RowComparator rowComparator) throws CanceledExecutionException, IOException;
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    RowCursor sortIntoCursor(ExecutionContext exec, BufferedDataTable table, RowComparator rowComparator)
+        throws CanceledExecutionException, IOException;
 
     /**
      * Sorts the given table and returns a closeable row iterator over the result.
@@ -359,10 +379,11 @@ public interface TableBackend {
      * @param rowComparator comparator determining the order of the rows in the output
      * @return closeable iterator over the sorted rows
      * @throws CanceledExecutionException
+     * @throws IOException
      * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
      */
-    default CloseableRowIterator sortedIterator(final ExecutionContext exec, final BufferedDataTable table,
-        final RowComparator rowComparator) throws CanceledExecutionException {
-        return new BufferedDataTableSorter(table, rowComparator).sortedIterator(exec);
-    }
+    CloseableRowIterator sortIntoIterator(ExecutionContext exec, BufferedDataTable table, RowComparator rowComparator)
+        throws CanceledExecutionException, IOException;
 }

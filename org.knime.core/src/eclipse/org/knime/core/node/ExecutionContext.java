@@ -76,6 +76,7 @@ import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.sort.RowComparator;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.port.PortObject;
@@ -672,11 +673,14 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param rowComparator comparator determining the order of the rows in the output
      * @return the sorted table
      * @throws CanceledExecutionException
+     * @throws IOException
      * @since 5.3
      */
-    public BufferedDataTable sort(final BufferedDataTable table, final RowComparator rowComparator)
-            throws CanceledExecutionException {
-        return getTableBackend().sort(this, table, rowComparator);
+    public BufferedDataTable sortedTable(final BufferedDataTable table, final RowComparator rowComparator)
+            throws CanceledExecutionException, IOException {
+        final var sortedTable = getTableBackend() //
+                .sortIntoTable(this, m_dataRepository::generateNewID, table, rowComparator);
+        return wrapTableFromBackend(sortedTable);
     }
 
     /**
@@ -686,11 +690,27 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param rowComparator comparator determining the order of the rows in the output
      * @return closeable iterator over the sorted rows
      * @throws CanceledExecutionException
+     * @throws IOException
      * @since 5.3
      */
     public CloseableRowIterator sortedIterator(final BufferedDataTable table, final RowComparator rowComparator)
-            throws CanceledExecutionException {
-        return getTableBackend().sortedIterator(this, table, rowComparator);
+            throws CanceledExecutionException, IOException {
+        return getTableBackend().sortIntoIterator(this, table, rowComparator);
+    }
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param table to sort
+     * @param rowComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    public RowCursor sortedCursor(final BufferedDataTable table, final RowComparator rowComparator)
+            throws CanceledExecutionException, IOException {
+        return getTableBackend().sortIntoCursor(this, table, rowComparator);
     }
 
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {
@@ -876,8 +896,8 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     private void registerAsLocalTableIfContainerTable(final KnowsRowCountTable table) {
-        if (table instanceof ContainerTable) {
-            m_localTableRepository.addTable((ContainerTable)table);
+        if (table instanceof ContainerTable containerTable) {
+            m_localTableRepository.addTable(containerTable);
         }
     }
 
@@ -893,10 +913,8 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws NoSuchMethodException of the job class does not have
      * a default constructor
      */
-    public Future<PortObject[]> submitJob(final PortObject[] input,
-            final NodeSettingsRO settings,
-            final Class<? extends KNIMEJob> jobClass,
-            final ExecutionMonitor exec) throws NoSuchMethodException {
+    public Future<PortObject[]> submitJob(final PortObject[] input, final NodeSettingsRO settings,
+            final Class<? extends KNIMEJob> jobClass, final ExecutionMonitor exec) throws NoSuchMethodException {
         final Constructor<? extends KNIMEJob> cons = jobClass.getConstructor();
 
         Callable<PortObject[]> task = new Callable<PortObject[]>() {

@@ -48,17 +48,23 @@
  */
 package org.knime.core.data.container;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.sort.BufferedDataTableSorter;
+import org.knime.core.data.sort.RowComparator;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
@@ -332,5 +338,84 @@ public final class BufferedTableBackend implements TableBackend {
     public KnowsRowCountTable replaceSpec(final ExecutionContext exec, final BufferedDataTable table,
         final DataTableSpec newSpec, final IntSupplier tableIDSupplier) {
         return new TableSpecReplacerTable(table, newSpec);
+    }
+
+    @Override
+    public KnowsRowCountTable sortIntoTable(final ExecutionContext exec, final IntSupplier tableIDSupplier,
+            final BufferedDataTable table, final RowComparator rowComparator)
+            throws CanceledExecutionException, IOException {
+        return new WrappedTable(new BufferedDataTableSorter(table, rowComparator).sort(exec));
+    }
+
+    @Override
+    public CloseableRowIterator sortIntoIterator(final ExecutionContext exec, final BufferedDataTable table,
+        final RowComparator rowComparator) throws CanceledExecutionException {
+        return new BufferedDataTableSorter(table, rowComparator).sortedIterator(exec);
+    }
+
+    @Override
+    public RowCursor sortIntoCursor(final ExecutionContext exec, final BufferedDataTable table,
+        final RowComparator rowComparator) throws CanceledExecutionException {
+        final var numColumns = table.getSpec().getNumColumns();
+
+        return new RowCursor() { // NOSONAR
+
+            private CloseableRowIterator m_iterator = sortIntoIterator(exec, table, rowComparator);
+
+            private DataRow m_current;
+
+            private final RowRead m_read = new RowRead() {
+
+                @Override
+                public boolean isMissing(final int index) {
+                    return m_current.getCell(index).isMissing();
+                }
+
+                @SuppressWarnings("unchecked")
+                @Override
+                public <D extends DataValue> D getValue(final int index) {
+                    return (D)m_current.getCell(index);
+                }
+
+                @Override
+                public int getNumColumns() {
+                    return numColumns;
+                }
+
+                @Override
+                public RowKeyValue getRowKey() {
+                    return m_current.getKey();
+                }
+            };
+
+            @Override
+            public int getNumColumns() {
+                return numColumns;
+            }
+
+            @Override
+            public boolean canForward() {
+                return m_iterator != null && m_iterator.hasNext();
+            }
+
+            @Override
+            public RowRead forward() {
+                if (!canForward()) {
+                    close();
+                    return null;
+                }
+                m_current = m_iterator.next();
+                return m_read;
+            }
+
+            @Override
+            public void close() {
+                if (m_iterator != null) {
+                    m_iterator.close();
+                    m_iterator = null;
+                    m_current = null;
+                }
+            }
+        };
     }
 }

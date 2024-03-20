@@ -52,7 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayDeque;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -189,7 +188,7 @@ class AbstractTableSorterTest {
     private static void checkResult(final CloseableRowIterator iter, final double[] doublesSorted) {
         final var n = 2 * doublesSorted.length;
         final var rowKeyComp = RowComparator.on(SPEC) //
-                .thenComparingRowKey(new AlphanumericComparator(Comparator.naturalOrder())) //
+                .thenComparingRowKey(AlphanumericComparator.NATURAL_ORDER) //
                 .build();
 
         var seen = 0;
