@@ -2694,7 +2694,10 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** {@inheritDoc} */
     @Override
     public boolean isInactive() {
-        return getVirtualInNode().isInactive();
+        // temporary solution to work around a problem surfaced as part of AP-21327 and to be fixed with AP-22241:
+        // this method might be called immediately post construction before the in/out nodes are assigned
+        final var inNNC = getWorkflowManager().getNodeContainer(getVirtualInNodeID(), NativeNodeContainer.class, false);
+        return inNNC != null && inNNC.isInactive();
     }
 
     /**
