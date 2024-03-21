@@ -213,10 +213,6 @@ public abstract class NodeFactory<T extends NodeModel> {
             isDynamicNodeFactory = true;
             factoryIdUniquifier = dynamicNodeFactory.getFactoryIdUniquifier();
         }
-        else if (this instanceof IDynamicNodeFactory iDynamicNodeFactory) {
-            isDynamicNodeFactory = true;
-            factoryIdUniquifier = iDynamicNodeFactory.getFactoryIdUniquifier();
-        }
 
         return NodeFactoryId.compose(factoryClassName, isDynamicNodeFactory, factoryIdUniquifier, this::getNodeName);
     }

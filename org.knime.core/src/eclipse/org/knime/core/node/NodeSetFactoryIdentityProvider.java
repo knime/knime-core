@@ -44,18 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jan 25, 2024 (jonasklotz): created
+ *   Jan 25, 2024 (Jonas Klotz): created
  */
 package org.knime.core.node;
 
-import java.util.Optional;
-
 /**
  *
- * @author David Arnold, Jonas Klotz
+ * @author Jonas Klotz
  * @since 5.3
  */
-public interface IDynamicNodeFactory {
+public interface NodeSetFactoryIdentityProvider {
 
     /**
      * Returns a string that globally uniquifies the factory id because the factory-class-name is not sufficient to
@@ -70,20 +68,4 @@ public interface IDynamicNodeFactory {
      */
     public String getFactoryIdUniquifier();
 
-
-    /**
-     *
-     * The only use case is if a deriving class (e.g. part of plugin A) uses information provided by yet another
-     * plugin B (i.e. plugin A has an extension point that is extended by plugin B). In consequence, in order for
-     * this node to work, plugin B needs to be available. However, if plugin B is not installed yet, the framework
-     * should be able to install it automatically based on the bundle information stored with the particular node. Thus,
-     * this method provides the necessary bundle information of plugin B that is finally stored with the node (since
-     * plugin B depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed,
-     * too).
-     *
-     *
-     * @return the bundle name or an empty optional if bundle name can not be provided
-     * @since 4.0
-     */
-    public Optional<String> getBundleName();
 }
