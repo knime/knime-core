@@ -58,12 +58,15 @@ import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.customization.APCustomizationProviderService;
+import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -102,13 +105,21 @@ public class CorePlugin implements BundleActivator {
      */
     private ServiceTracker<IReportService, IReportService> m_reportServiceTracker;
 
-        /**
-     * {@inheritDoc}
+    /** A service updated by the core plug-in. Updated when
+     * profiles are read asynchronously from a remote endpoint. */
+    private ServiceRegistration<APCustomizationProviderService> m_customizationServiceRegistration;
+
+    /**
+     * The tracker for the customization (currently in the same bundle). Using service tracking events just like any
+     * other bundle should be notified when the service changes.
      */
+    private ServiceTracker<APCustomizationProviderService, APCustomizationProviderService>
+            m_customizationServiceTracker;
+
     @Override
-    public void start(final org.osgi.framework.BundleContext context)
+    public void start(final BundleContext context)
         throws Exception {
-        instance = this;
+        instance = this; // NOSONAR (static assignment)
 
         /* Unfortunately we have to activate the plugin
          * org.eclipse.ecf.filetransfer explicitly by accessing one of the
@@ -121,6 +132,11 @@ public class CorePlugin implements BundleActivator {
         } catch (ClassNotFoundException e) {
             // this may happen in a non-Eclipse OSGi environment
         }
+
+        m_customizationServiceRegistration = context.registerService(APCustomizationProviderService.class,
+            new APCustomizationProviderServiceImpl(), null);
+        m_customizationServiceTracker = new ServiceTracker<>(context, APCustomizationProviderService.class, null);
+        m_customizationServiceTracker.open();
 
         readMimeTypes();
         m_reportServiceTracker = new ServiceTracker<>(context, IReportService.class, null);
@@ -143,6 +159,10 @@ public class CorePlugin implements BundleActivator {
     public void stop(final BundleContext context) throws Exception {
         m_reportServiceTracker.close();
         m_reportServiceTracker = null;
+        m_customizationServiceTracker.close();
+        m_customizationServiceTracker = null;
+        m_customizationServiceRegistration.unregister();
+        m_customizationServiceRegistration = null;
         instance = null;
     }
 
