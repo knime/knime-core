@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,38 +41,75 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.property.hilite;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.core.data.RowKey;
 
 /**
- * This mapper has to be implemented by all classes that are interested in 
+ * This mapper has to be implemented by all classes that are interested in
  * mapping hilite events between {@link RowKey}s.
- * 
+ *
  * @see HiLiteTranslator
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface HiLiteMapper {
-    
+
     /**
      * Returns a set of <code>RowKey</code> elements which are associated
      * by the specified <b>key</b> or <code>null</code> if no mapping
      * is available.
-     * 
+     *
      * @param key the key to get the mapping for
      * @return a set of mapped <code>RowKey</code> elements
      */
     Set<RowKey> getKeys(RowKey key);
-    
+
     /**
-     * Returns an unmodifiable set of key (source) for hiliting. 
+     * Returns an unmodifiable set of key (source) for hiliting.
      * @return A set of keys to hilite.
      */
     Set<RowKey> keySet();
+
+    /**
+     * Used to propagate events downstream.
+     *
+     * @param hilitInputKeys to compute hilit output keys for
+     * @return the union of the row key sets that the input keys are mapped to
+     */
+    default Set<RowKey> applyUnion(final Iterable<RowKey> hilitInputKeys) {
+        Set<RowKey> fireSet = new LinkedHashSet<>();
+        for (RowKey key : hilitInputKeys) {
+            Set<RowKey> s = getKeys(key);
+            if (s != null && !s.isEmpty()) {
+                fireSet.addAll(s);
+            }
+        }
+        return fireSet;
+    }
+
+    /**
+     * Used to propagate events upstream.
+     *
+     * @param hilitOutputKeys to compute hilit input keys for
+     * @return all input keys whose associated output keys are all hilit
+     */
+    default Set<RowKey> inverseCovered(final Collection<RowKey> hilitOutputKeys) {
+        final var covered = new LinkedHashSet<RowKey>();
+        for (RowKey key : keySet()) {
+            final var requiredKeys = getKeys(key);
+            if (hilitOutputKeys.containsAll(requiredKeys)) {
+                covered.add(key);
+            }
+        }
+        return covered;
+    }
+
 }

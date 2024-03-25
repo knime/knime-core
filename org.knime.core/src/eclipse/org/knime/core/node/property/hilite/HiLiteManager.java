@@ -49,8 +49,12 @@ package org.knime.core.node.property.hilite;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 /**
+ * Similar to {@link HiLiteTranslator} but just passing through hilite events
+ * without a re-mapping row keys.
+ *
  * A manager for hilite events between one source (from) {@link HiLiteHandler}
  * and a number of target handlers (to). This class provides one source hilite
  * handler instantiated within the constructor. The target hilite handlers can
@@ -64,101 +68,51 @@ import java.util.Set;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class HiLiteManager {
+public sealed class HiLiteManager permits HiLiteTranslator {
 
     /** Target handler used for hiliting on the aggregation side. */
-    private final Set<HiLiteHandler> m_targetHandlers;
+    protected final Set<HiLiteHandler> m_targetHandlers;
 
     /** Source handlers used for hiliting for single items. */
-    private final HiLiteHandler m_sourceHandler;
+    protected final HiLiteHandler m_sourceHandler;
 
-    private final Object m_eventSource = this;
+    protected final Object m_eventSource = this;
 
-    /**
-     * Listener on the source handler used to forward events
-     * to all registered target handlers.
-     */
-    private final HiLiteListener m_sourceListener = new HiLiteListener() {
-        /**
-         * {@inheritDoc}
-         */
+    protected abstract class AbstractPropagatingHiLiteListener implements HiLiteListener {
+        abstract void propagate(final KeyEvent event, final BiConsumer<HiLiteHandler, KeyEvent> consumer);
+
         @Override
         public void hiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            for (HiLiteHandler h : m_targetHandlers) {
-                h.fireHiLiteEvent(new KeyEvent(m_eventSource, event.keys()));
-            }
+            propagate(event, HiLiteHandler::fireHiLiteEvent);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void unHiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            for (HiLiteHandler h : m_targetHandlers) {
-                h.fireUnHiLiteEvent(
-                        new KeyEvent(m_eventSource, event.keys()));
-            }
+            propagate(event, HiLiteHandler::fireUnHiLiteEvent);
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void unHiLiteAll(final KeyEvent event) {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            for (HiLiteHandler h : m_targetHandlers) {
-                h.fireClearHiLiteEvent(
-                        new KeyEvent(m_eventSource, event.keys()));
-            }
+            m_targetHandlers.forEach(h -> h.fireClearHiLiteEvent(new KeyEvent(m_eventSource)));
+        }
+    }
+
+    /** Propagates hilite events downstream. */
+    private final HiLiteListener m_sourceListener = new AbstractPropagatingHiLiteListener() {
+        @Override
+        void propagate(final KeyEvent event, final BiConsumer<HiLiteHandler, KeyEvent> consumer) {
+            m_targetHandlers.forEach(h -> consumer.accept(h, new KeyEvent(m_eventSource, event.keys())));
         }
     };
 
-    /**
-     * Listener to all target handlers that send clear hilite
-     * events to the source handler.
-     */
-    private final HiLiteListener m_targetListener = new HiLiteListener() {
-        /**
-         * {@inheritDoc}
-         */
+    /** Propagates hilite events upstream. */
+    private final HiLiteListener m_targetListener = new AbstractPropagatingHiLiteListener() {
         @Override
-        public void hiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            m_sourceHandler.fireHiLiteEvent(
-                    new KeyEvent(m_eventSource, event.keys()));
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            m_sourceHandler.fireUnHiLiteEvent(
-                                new KeyEvent(m_eventSource, event.keys()));
-
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLiteAll(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            m_sourceHandler.fireClearHiLiteEvent(
-                    new KeyEvent(m_eventSource, event.keys()));
+        void propagate(final KeyEvent event, final BiConsumer<HiLiteHandler, KeyEvent> consumer) {
+            consumer.accept(m_sourceHandler, new KeyEvent(m_eventSource, event.keys()));
         }
     };
 
@@ -167,8 +121,8 @@ public final class HiLiteManager {
      */
     public HiLiteManager() {
         m_sourceHandler = new HiLiteHandler();
-        m_sourceHandler.addHiLiteManager(this);
-        m_targetHandlers = new LinkedHashSet<HiLiteHandler>();
+        m_sourceHandler.addHiLiteManager(this); // TODO
+        m_targetHandlers = new LinkedHashSet<>();
     }
 
     /**

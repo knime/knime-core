@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.knime.core.data.RowKey;
 
@@ -71,152 +72,45 @@ import org.knime.core.data.RowKey;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class HiLiteTranslator {
-
-    /** Target handler used for hiliting on the aggregation side. */
-    private final Set<HiLiteHandler> m_targetHandlers;
-
-    /** Source handlers used for hiliting for single items. */
-    private final HiLiteHandler m_sourceHandler;
+public final class HiLiteTranslator extends HiLiteManager {
 
     /** Contains the mapping between aggregation and single items. */
     private HiLiteMapper m_mapper;
 
-    /** Event source used to indicate hilite events fired by this translator. */
-    private final Object m_eventSource = this;
-
-    /**
-     * Listener on the source handler used to forward events
-     * to all registered target handlers.
-     */
-    private final HiLiteListener m_sourceListener = new HiLiteListener() {
-        /**
-         * {@inheritDoc}
-         */
+    /** Propagates hilite events downstream. */
+    private final HiLiteListener m_sourceListener = new AbstractPropagatingHiLiteListener() {
+        // apply the mapper to compute affected row keys and invoke a function on all target handlers
         @Override
-        public void hiLite(final KeyEvent event) {
+        protected void propagate(final KeyEvent event, final BiConsumer<HiLiteHandler, KeyEvent> consumer) {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            if (m_mapper != null && m_targetHandlers.size() > 0) {
-                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
-                for (RowKey key : event.keys()) {
-                    Set<RowKey> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }
+            if (m_mapper != null && !m_targetHandlers.isEmpty()) {
+                final var union = m_mapper.applyUnion(event.keys());
+                if (!union.isEmpty()) {
+                    m_targetHandlers.forEach(h -> consumer.accept(h, new KeyEvent(m_eventSource, union)));
                 }
-                if (!fireSet.isEmpty()) {
-                    for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireHiLiteEvent(new KeyEvent(m_eventSource, fireSet));
-                    }
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            if (m_mapper != null && m_targetHandlers.size() > 0) {
-                Set<RowKey> fireSet = new LinkedHashSet<RowKey>();
-                for (RowKey key : event.keys()) {
-                    Set<RowKey> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }
-                }
-                if (!fireSet.isEmpty()) {
-                    for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireUnHiLiteEvent(
-                            new KeyEvent(m_eventSource, fireSet));
-                    }
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLiteAll(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            for (HiLiteHandler h : m_targetHandlers) {
-                h.fireClearHiLiteEvent(new KeyEvent(m_eventSource));
             }
         }
     };
 
-    /**
-     * Listener to all target handlers that send clear hilite
-     * events to the source handler.
-     */
-    private final HiLiteListener m_targetListener = new HiLiteListener() {
-        /**
-         * {@inheritDoc}
-         */
+    /** Propagates hilite events upstream. */
+    private final HiLiteListener m_targetListener = new AbstractPropagatingHiLiteListener() {
+        // apply the mapper to compute affected row keys and invoke a function on all target handlers
         @Override
-        public void hiLite(final KeyEvent event) {
+        protected void propagate(final KeyEvent event, final BiConsumer<HiLiteHandler, KeyEvent> consumer) {
             if (event.getSource() == m_eventSource) {
                 return;
             }
             if (m_mapper != null) {
-                // add all hilite keys from the event and all hilite keys
-                // from the target hilite handlers
-                final Set<RowKey> all = new LinkedHashSet<RowKey>(
-                        event.keys());
-                for (HiLiteHandler hdl : m_targetHandlers) {
-                    all.addAll(hdl.getHiLitKeys());
-                }
-                // check overlap with all mappings
-                for (RowKey key : m_mapper.keySet()) {
-                    final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if all mapped keys are hilite then fire event
-                    if (all.containsAll(keys)) {
-                        m_sourceHandler.fireHiLiteEvent(
-                            new KeyEvent(m_eventSource, key));
-                    }
-                }
+                // hilite is additive: add all keys from the event to the currently hilit keys by all handlers
+                final var hilitOutput = new LinkedHashSet<RowKey>(event.keys());
+                m_targetHandlers.forEach(hdl -> hilitOutput.addAll(hdl.getHiLitKeys()));
+
+                // compute hilit input row keys
+                final var hilitInput = m_mapper.inverseCovered(hilitOutput);
+                consumer.accept(m_sourceHandler, new KeyEvent(m_eventSource, hilitInput));
             }
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLite(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            if (m_mapper != null) {
-                // check all mappings
-                for (RowKey key : m_mapper.keySet()) {
-                    final Set<RowKey> keys = m_mapper.getKeys(key);
-                    // if at least one item is unhilite then fire event
-                    for (RowKey hilite : event.keys()) {
-                        if (keys.contains(hilite)) {
-                            m_sourceHandler.fireUnHiLiteEvent(
-                                new KeyEvent(m_eventSource, key));
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void unHiLiteAll(final KeyEvent event) {
-            if (event.getSource() == m_eventSource) {
-                return;
-            }
-            m_sourceHandler.fireClearHiLiteEvent(new KeyEvent(m_eventSource));
         }
     };
 
@@ -284,6 +178,7 @@ public final class HiLiteTranslator {
      *
      * @param targetHandler the target hilite handler to remove
      */
+    @Override
     public void removeToHiLiteHandler(final HiLiteHandler targetHandler) {
         if (targetHandler != null) {
             m_sourceListener.unHiLite(new KeyEvent(targetHandler,
@@ -304,6 +199,7 @@ public final class HiLiteTranslator {
      *
      * @param targetHandler the target hilite handler to add
      */
+    @Override
     public void addToHiLiteHandler(final HiLiteHandler targetHandler) {
         if (targetHandler != null) {
             if (m_targetHandlers.isEmpty()) {
@@ -322,6 +218,7 @@ public final class HiLiteTranslator {
      *
      * @return the set of target hilite handlers
      */
+    @Override
     public Set<HiLiteHandler> getToHiLiteHandlers() {
         return Collections.unmodifiableSet(m_targetHandlers);
     }
@@ -331,6 +228,7 @@ public final class HiLiteTranslator {
      * used from the node that instantiates this instance when a new
      * connection is made.
      */
+    @Override
     public void removeAllToHiliteHandlers() {
         Set<HiLiteHandler> copy = new HashSet<HiLiteHandler>(m_targetHandlers);
         for (HiLiteHandler hh : copy) {
@@ -345,6 +243,7 @@ public final class HiLiteTranslator {
      *
      * @return source hilite handler
      */
+    @Override
     public HiLiteHandler getFromHiLiteHandler() {
         return m_sourceHandler;
     }
