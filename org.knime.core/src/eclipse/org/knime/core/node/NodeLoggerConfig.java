@@ -50,6 +50,7 @@ package org.knime.core.node;
 
 import java.io.Writer;
 import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
 
 import org.apache.log4j.Layout;
 import org.knime.core.node.NodeLogger.LEVEL;
@@ -57,13 +58,29 @@ import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.util.Pair;
 
 /**
- * All configuration-relevant NodeLogger functionality. Includes adding and removing writers,
- * getting and setting log level ranges, and translating between KNIME and Log4J Level enums.
+ * All configuration-relevant NodeLogger functionality. Includes adding and removing writers, and
+ * getting and setting log level ranges.
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @since 5.1
  */
 public final class NodeLoggerConfig {
+
+    /**
+     * Hides the constructor.
+     */
+    private NodeLoggerConfig() {
+    }
+
+    /**
+     * Modifier for the appender level range, where the first argument is the current minimum level, the second argument
+     * is the current maximum level, and the returned pair consists of the new minimum and maximum levels.
+     * All levels can be {@code null}, meaning no minimum/maximum.
+     *
+     * @since 5.3
+     */
+    public interface LevelRangeModifier extends BiFunction<LEVEL, LEVEL, Pair<LEVEL, LEVEL>> {
+    }
 
 
     /**
@@ -107,7 +124,7 @@ public final class NodeLoggerConfig {
      * @param level new minimum logging level
      * @deprecated use {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setLevel(final LEVEL level) {
         KNIMELogger.setLevel(level);
     }
@@ -118,11 +135,20 @@ public final class NodeLoggerConfig {
      *
      * @param appenderName Name of the appender.
      * @return Pair of (minLogLevel, maxLogLevel).
-     * @deprecated Use {@link #getAppenderLevelRange(String)}
      */
-    @Deprecated
     public static Pair<LEVEL, LEVEL> getAppenderLevelRange(final String appenderName) {
         return KNIMELogger.getAppenderLevelRange(appenderName);
+    }
+
+    /**
+     * Configure the appender of the given name.
+     *
+     * @param appenderName name of appender to modify
+     * @param rangeModifier level range modifier for levels accepted by the appender
+     * @since 5.3
+     */
+    public static void configureAppender(final String appenderName, final LevelRangeModifier rangeModifier) {
+        KNIMELogger.configureAppender(appenderName, rangeModifier);
     }
 
     /**
@@ -132,17 +158,11 @@ public final class NodeLoggerConfig {
      * @param min the minimum logging level
      * @param max the maximum logging level
      * @throws NoSuchElementException if the given appender does not exist
-     * @deprecated use {@link NodeLogger#setAppenderLevelRange(String, LEVEL, LEVEL)}
+     * @deprecated use {@link NodeLoggerConfig#configureAppender(String, LevelRangeModifier)}
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
         throws NoSuchElementException {
-        KNIMELogger.setAppenderLevelRange(appenderName, min, max);
-    }
-
-    /**
-     * Hides the constructor.
-     */
-    private NodeLoggerConfig() {
+        KNIMELogger.configureAppender(appenderName, (oldMin, oldMax) -> Pair.create(min, max));
     }
 }

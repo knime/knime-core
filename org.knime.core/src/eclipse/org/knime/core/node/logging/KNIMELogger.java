@@ -69,6 +69,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Appender;
@@ -92,6 +93,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.NodeLogger.NodeContextInformation;
+import org.knime.core.node.NodeLoggerConfig.LevelRangeModifier;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.EclipseUtil;
@@ -628,26 +630,26 @@ public final class KNIMELogger {
     }
 
     /**
-     * Sets an new minimum logging level for all internal appenders, that are, log file, and <code>System.out</code> and
-     * <code>System.err</code> appender. The maximum logging level stays <code>LEVEL.ALL</code> for all appenders.
+     * Sets an new minimum logging level for all internal appenders, that are, logfile and <code>System.out</code>.
+     * The maximum logging level will be <code>LEVEL.FATAL</code> for all appenders.
      *
      * <p>
      * Logger must be in <b>initialized</b> state.
      *
      * @param level new minimum logging level
-     * @deprecated use {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
+     * @deprecated use {@link #configureAppender(String, LevelRangeModifier)} instead for more fine-grained control
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setLevel(final LEVEL level) {
         checkInitializedState();
         NodeLogger.getLogger(NodeLogger.class).info("Changing logging level to " + level.toString());
         try {
-            setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, level, LEVEL.FATAL);
+            configureAppender(NodeLogger.STDOUT_APPENDER, (min, max) -> Pair.create(level, LEVEL.FATAL));
         } catch (NoSuchElementException ex) { // NOSONAR
             // ignore it
         }
         try {
-            setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, level, LEVEL.FATAL);
+            configureAppender(NodeLogger.LOGFILE_APPENDER, (min, max) -> Pair.create(level, LEVEL.FATAL));
         } catch (NoSuchElementException ex) { // NOSONAR
             // ignore it
         }
@@ -709,19 +711,27 @@ public final class KNIMELogger {
         return null;
     }
 
+    private static Pair<Level, Level> mapToLog4jLevel(final Pair<LEVEL, LEVEL> knimeRange) {
+        final var first = knimeRange.getFirst();
+        final var second = knimeRange.getSecond();
+        return Pair.create(first != null ? translateKnimeToLog4JLevel(first) : null,
+            second != null ? translateKnimeToLog4JLevel(second) : null);
+    }
+
+    private static Pair<LEVEL, LEVEL> mapToKNIMELevel(final Pair<Level, Level> log4jRange) {
+        final var first = log4jRange.getFirst();
+        final var second = log4jRange.getSecond();
+        return Pair.create(first != null ? translateLog4JToKnimeLevel(first) : null,
+            second != null ? translateLog4JToKnimeLevel(second) : null);
+    }
+
     /**
-     * Sets a level range filter on the given appender.
+     * Configure the appender of the given name.
      *
-     * <p>
-     * Logger must be in <b>initialized</b> state.
-     *
-     * @param appenderName the name of the appender
-     * @param min the minimum logging level
-     * @param max the maximum logging level
-     * @throws NoSuchElementException if the given appender does not exist
+     * @param appenderName name of appender to modify
+     * @param rangeModifier level range modifier for levels accepted by the appender
      */
-    public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
-        throws NoSuchElementException {
+    public static void configureAppender(final String appenderName, final LevelRangeModifier rangeModifier) {
         checkInitializedState();
         final var root = Logger.getRootLogger();
         final var appender = root.getAppender(appenderName);
@@ -733,18 +743,23 @@ public final class KNIMELogger {
         while ((filter != null) && !(filter instanceof LevelRangeFilter)) {
             filter = filter.getNext();
         }
+
+        final UnaryOperator<Pair<Level, Level>> modifier = range -> range
+                .map(p -> mapToKNIMELevel(p))
+                .map(rangeModifier)
+                .map(p -> mapToLog4jLevel(p));
+
+        final LevelRangeFilter rangeFilter = filter != null ? ((LevelRangeFilter)filter) : new LevelRangeFilter();
+
+        final var newRange = modifier.apply(Pair.create(rangeFilter.getLevelMin(), rangeFilter.getLevelMax()));
+        rangeFilter.setLevelMin(newRange.getFirst());
+        rangeFilter.setLevelMax(newRange.getSecond());
+
         if (filter == null) {
-            // add a new level range filter
-            var levelFilter = new LevelRangeFilter();
-            levelFilter.setLevelMin(translateKnimeToLog4JLevel(min));
-            levelFilter.setLevelMax(translateKnimeToLog4JLevel(max));
-            appender.addFilter(levelFilter);
-        } else {
-            // modify existing level range filter
-            ((LevelRangeFilter)filter).setLevelMin(translateKnimeToLog4JLevel(min));
-            ((LevelRangeFilter)filter).setLevelMax(translateKnimeToLog4JLevel(max));
+            appender.addFilter(rangeFilter);
         }
-        updateLog4JKNIMELoggerLevel();
+
+        updateLog4JKNIMELoggerLevelInternal();
     }
 
     /**
