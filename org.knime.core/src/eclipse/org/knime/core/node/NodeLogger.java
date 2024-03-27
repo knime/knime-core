@@ -48,6 +48,7 @@ import java.io.Writer;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.apache.log4j.Layout;
@@ -55,6 +56,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.helpers.LogLog;
 import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.util.Pair;
 
 /**
  * The general logger used to write info, warnings, errors , debugging, assert
@@ -729,12 +731,13 @@ public final class NodeLogger {
      * @param max the maximum logging level
      * @throws NoSuchElementException if the given appender does not exist
      * @since 2.8
-     * @deprecated use {@link NodeLoggerConfig#setAppenderLevelRange(String, LEVEL, LEVEL)}
+     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)} for more fine-graned
+     *     control about existing minimum and maximum values
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
             throws NoSuchElementException {
-        KNIMELogger.setAppenderLevelRange(appenderName, min, max);
+        KNIMELogger.modifyAppenderLevelRange(appenderName, (oldMin, oldMax) -> Pair.create(min, max));
     }
 
     /**

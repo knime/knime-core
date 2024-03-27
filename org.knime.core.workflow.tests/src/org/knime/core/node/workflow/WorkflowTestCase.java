@@ -645,13 +645,15 @@ public abstract class WorkflowTestCase {
     /** Called before any tests are run to enable sysout debug output, workaround for DEVOPS-2250. */
     @BeforeClass
 	public static void beforeAllEnableSysoutLogger() {
-		KNIMELogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.FATAL);
+        KNIMELogger.modifyAppenderLevelRange(NodeLogger.STDOUT_APPENDER, //
+            (min, max) -> org.knime.core.util.Pair.create(LEVEL.DEBUG, LEVEL.FATAL));
 	}
 
     /** Called after all tests to disable sysout debug output, workaround for DEVOPS-2250. */
 	@AfterClass
 	public static void afterAllDisableSysoutLogger() {
-		KNIMELogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.FATAL, LEVEL.FATAL);
+        NodeLoggerConfig.modifyAppenderLevelRange(NodeLogger.STDOUT_APPENDER, //
+            (min, max) -> org.knime.core.util.Pair.create(LEVEL.FATAL, LEVEL.FATAL));
 	}
 
 	/** Utility 'rule' that will cause test failures to log the current call stack to NodeLogger.error IF the
