@@ -61,12 +61,15 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.node.port.report.IReportService;
+import org.knime.core.util.auth.DelegatingAuthenticator;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -141,6 +144,16 @@ public class CorePlugin implements BundleActivator {
         readMimeTypes();
         m_reportServiceTracker = new ServiceTracker<>(context, IReportService.class, null);
         m_reportServiceTracker.open();
+
+        /*
+         * Listening on the proxy service initialization, we can apply our popup suppressor (SuppressingAuthenticator).
+         * Needs to happen early to avoid interference with org.apache.cxf.transport.http.ReferencingAuthenticator.
+         */
+        context.addServiceListener(event -> {
+            if (event.getType() == ServiceEvent.REGISTERED) {
+                DelegatingAuthenticator.installAuthenticators();
+            }
+        }, String.format("(%s=org.eclipse.core.net.proxy.IProxyService)", Constants.OBJECTCLASS));
     }
 
     private void readMimeTypes() throws IOException {
