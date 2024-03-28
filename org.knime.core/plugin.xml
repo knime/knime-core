@@ -777,8 +777,8 @@
    <extension
 	   point="org.knime.core.EarlyStartup">
       <provider
-	   callBeforeKNIMEApplicationStart="false"
-	   class="org.knime.core.eclipseUtil.NetAuthenticatorSuppressor">
+	   callBeforeKNIMEApplicationStart="true"
+	   class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
       </provider>
    </extension>
    <extension
