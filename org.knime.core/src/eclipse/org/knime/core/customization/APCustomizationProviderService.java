@@ -48,9 +48,10 @@
  */
 package org.knime.core.customization;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 /**
- * {@link org.osgi.framework.ServiceRegistration Service} definition of AP customizations, driven by eclipse
- * preferences.
+ * {@link org.osgi.framework.ServiceRegistration Service} definition of AP customizations.
  *
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
@@ -59,9 +60,9 @@ package org.knime.core.customization;
 public interface APCustomizationProviderService {
 
     /**
-     * Gets, possible creates, the current customization settings.
+     * Gets, possibly creates, the current customization settings.
      *
      * @return current {@link APCustomization}.
      */
-    APCustomization getCustomization();
+    @NonNull APCustomization getCustomization();
 }

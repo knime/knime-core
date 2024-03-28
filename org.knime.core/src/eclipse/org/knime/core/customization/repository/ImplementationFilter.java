@@ -56,7 +56,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Bernd Wiswedel
  */
-final class ImplementationFilter implements INodeFilter {
+final class ImplementationFilter implements NodeFilter {
 
     private final boolean m_hasModernDialog;
 

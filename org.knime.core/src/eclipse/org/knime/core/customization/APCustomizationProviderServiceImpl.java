@@ -64,8 +64,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
- * Implementation of {@link APCustomizationProviderService}, loading {@link APCustomization}
- * from a YAML configuration file specified in Eclipse preferences.
+ * Provides an {@link APCustomization} based on a YAML configuration file specified in Eclipse preferences.
  *
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
@@ -82,7 +81,7 @@ public final class APCustomizationProviderServiceImpl implements APCustomization
      * If not already loaded, it attempts to read the customization settings from a YAML file
      * whose path is retrieved from Eclipse preferences.
      *
-     * @return The loaded {@link APCustomization} instance, or {@link APCustomization#NOOP} on failure.
+     * @return The loaded {@link APCustomization} instance, or {@link APCustomization#DEFAULT} on failure.
      */
     @Override
     public synchronized APCustomization getCustomization() {
@@ -92,7 +91,7 @@ public final class APCustomizationProviderServiceImpl implements APCustomization
             } catch (IOException ioe) {
                 NodeLogger.getLogger(CorePlugin.class)
                     .error("Unable to read customization, using fallback (noop) customization", ioe);
-                m_apCustomization = APCustomization.NOOP;
+                m_apCustomization = APCustomization.DEFAULT;
             }
         }
         return m_apCustomization;
@@ -107,7 +106,7 @@ public final class APCustomizationProviderServiceImpl implements APCustomization
                 .get(PREF_KEY_CUSTOMIZATION_CONFIG_PATH, null);
 
         if (StringUtils.isBlank(ymlConfigFilePathS)) {
-            return APCustomization.NOOP;
+            return APCustomization.DEFAULT;
         } else {
             final Path ymlConfigFilePath = Path.of(ymlConfigFilePathS);
             CheckUtils.check(Files.isRegularFile(ymlConfigFilePath) && Files.isReadable(ymlConfigFilePath),

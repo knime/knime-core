@@ -52,7 +52,7 @@ package org.knime.core.customization.repository;
  *
  * @author Bernd Wiswedel
  */
-final class TrueFilter implements INodeFilter {
+final class TrueFilter implements NodeFilter {
 
     static final TrueFilter INSTANCE = new TrueFilter();
 

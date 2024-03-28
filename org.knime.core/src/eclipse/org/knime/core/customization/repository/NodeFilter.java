@@ -61,7 +61,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
     @JsonSubTypes.Type(value = PatternFilter.class, name = "pattern"),
     @JsonSubTypes.Type(value = ImplementationFilter.class, name = "implementation")
 })
-sealed interface INodeFilter permits PatternFilter, ImplementationFilter, TrueFilter {
+sealed interface NodeFilter permits PatternFilter, ImplementationFilter, TrueFilter {
 
     /**
      * Determines whether a given node identifier matches this filter.

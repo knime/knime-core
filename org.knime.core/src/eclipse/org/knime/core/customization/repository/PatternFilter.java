@@ -60,7 +60,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Bernd Wiswedel
  */
-final class PatternFilter implements INodeFilter {
+final class PatternFilter implements NodeFilter {
 
     private final List<Pattern> m_patterns;
 

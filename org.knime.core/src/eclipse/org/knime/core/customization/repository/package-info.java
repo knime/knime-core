@@ -46,7 +46,7 @@
  *   Mar 24, 2024 (wiswedel): created
  */
 /**
- * Customization via profiles that allow the node repository to be filtered.
+ * Customization facilities that affect the node repository.
  *
  * @author Bernd Wiswedel
  */

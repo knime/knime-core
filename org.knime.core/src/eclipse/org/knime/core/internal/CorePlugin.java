@@ -105,7 +105,7 @@ public class CorePlugin implements BundleActivator {
      */
     private ServiceTracker<IReportService, IReportService> m_reportServiceTracker;
 
-    /** A service updated by the core plug-in. Used to control node repository etc. Updated when
+    /** A service updated by the core plug-in. Updated when
      * profiles are read asynchronously from a remote endpoint. */
     private ServiceRegistration<APCustomizationProviderService> m_customizationServiceRegistration;
 

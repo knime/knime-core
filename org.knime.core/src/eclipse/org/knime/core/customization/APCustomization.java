@@ -83,7 +83,7 @@ public final class APCustomization {
     /**
      * Default (no) customization.
      */
-    public static final APCustomization NOOP =
+    public static final APCustomization DEFAULT =
             new APCustomization(List.of(NodesCustomization.USE_ALL, NodesCustomization.VIEW_ALL));
 
     private final List<NodesCustomization> m_nodesCustomization;

@@ -64,11 +64,11 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public final class NodesCustomization {
 
-    /** Used in NOOP customization, allows all installed nodes to be viewed. */
+    /** Allows all installed nodes to be viewed. */
     public static final NodesCustomization VIEW_ALL =
             new NodesCustomization(GovernEnum.VIEW, RuleEnum.WHITELIST, TrueFilter.INSTANCE);
 
-    /** Used in NOOP customization, allows all installed nodes to be used. */
+    /** Allows all installed nodes to be used. */
     public static final NodesCustomization USE_ALL =
             new NodesCustomization(GovernEnum.USE, RuleEnum.WHITELIST, TrueFilter.INSTANCE);
 
@@ -128,7 +128,7 @@ public final class NodesCustomization {
 
     private final GovernEnum m_govern;
     private final RuleEnum m_rule;
-    private final INodeFilter m_filter;
+    private final NodeFilter m_filter;
 
     /**
      * Jackson deserializer.
@@ -137,7 +137,7 @@ public final class NodesCustomization {
     NodesCustomization( //
         @JsonProperty("govern") final GovernEnum govern, //
         @JsonProperty("rule") final RuleEnum rule, //
-        @JsonProperty("filter") final INodeFilter filter) {
+        @JsonProperty("filter") final NodeFilter filter) {
         m_govern = CheckUtils.checkArgumentNotNull(govern, "GovernEnum cannot be null");
         m_rule = CheckUtils.checkArgumentNotNull(rule, "RuleEnum cannot be null");
         m_filter = CheckUtils.checkArgumentNotNull(filter, "Filter cannot be null");
@@ -154,7 +154,7 @@ public final class NodesCustomization {
         return m_rule;
     }
 
-    INodeFilter getFilter() {
+    NodeFilter getFilter() {
         return m_filter;
     }
 
