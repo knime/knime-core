@@ -73,7 +73,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.base.ConfigPasswordEntry;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
-import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -697,8 +696,9 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         NodeSettingsWO stackSet = settings.addNodeSettings("flow_stack");
         FlowObjectStack stack = nc.getOutgoingFlowObjectStack();
         @SuppressWarnings("unchecked")
-        Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST : stack.getFlowObjectsOwnedBy(nc.getID(), /*exclude*/
-            Scope.Local);
+        Iterable<FlowObject> myObjs = stack == null //
+            ? Collections.emptyList() //
+            : stack.getFlowObjectsOwnedBy(nc.getID()); // includes "local" variable (see AP-16515)
         int c = 0;
         for (FlowObject s : myObjs) {
             if (s instanceof FlowVariable) {

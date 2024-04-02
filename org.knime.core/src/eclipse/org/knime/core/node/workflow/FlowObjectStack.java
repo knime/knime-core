@@ -677,6 +677,56 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     }
 
     /**
+     * Used by nodes to determine the result stack of a node after the input stack is combined with the 'output' stack.
+     * The latter is the collection of variables pushed by the node itself. Also pops all variables and the top most
+     * scope context in case the owning node is a scope end (e.g. loop end) and eliminates variables from the output
+     * that the node specifies for removal (AP-16515).
+     *
+     * @param ownerID The ID of the node, it's the owner of the resulting stack.
+     * @param st The input stack of the node.
+     * @param outgoingStack The stack collecting variables pushed by the node (naming has always been bad).
+     * @param isPopToTopMostScopeContext True if this node is a scope end (removes top-most scope context)
+     * @return A new stack, owned by the node, with all relevant variables and remaining scopes.
+     * @since 5.3
+     */
+    static FlowObjectStack createOutgoingFlowObjectStack(final NodeID ownerID, final FlowObjectStack st,
+        final FlowObjectStack outgoingStack, final boolean isPopToTopMostScopeContext) {
+        final FlowObjectStack finalStack = new FlowObjectStack(ownerID, st);
+        final List<FlowObject> flowObjectsOwnedByThis;
+        final Set<String> variablesForRemovalSet;
+        if (outgoingStack == null) { // not configured -> no stack
+            flowObjectsOwnedByThis = Collections.emptyList();
+            variablesForRemovalSet = Collections.emptySet();
+        } else {
+            flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(ownerID, Scope.Local);
+            variablesForRemovalSet = outgoingStack.m_stack.stream() //
+                    .filter(fv -> fv instanceof FlowVariable f && f.getScope() == Scope.Local) //
+                    .map(FlowVariable.class::cast)
+                    .filter(fv -> fv.getVariableType().equals(VariableType.StringType.INSTANCE)) //
+                    .filter(fv -> fv.getName().endsWith(FlowVariable.HIDE_SUFFIX)) //
+                    .map(FlowVariable::getValueAsString) //
+                    .collect(Collectors.toSet());
+        }
+        if (isPopToTopMostScopeContext) {
+            CheckUtils.checkState(variablesForRemovalSet.isEmpty(), "Scope End node cannot remove variables");
+            finalStack.pop(FlowScopeContext.class);
+        } else if (!variablesForRemovalSet.isEmpty()) {
+            for (int i = finalStack.m_stack.size() - 1; i >= 0; i--) {
+                FlowObject o = finalStack.m_stack.get(i);
+                if (o instanceof FlowScopeContext) {
+                    // can only remove variables in the same scope (design decision)
+                    break;
+                }
+                if (o instanceof FlowVariable fv && variablesForRemovalSet.contains(fv.getName())) {
+                    finalStack.m_stack.remove(i);
+                }
+            }
+        }
+        flowObjectsOwnedByThis.stream().forEach(finalStack::push);
+        return finalStack;
+    }
+
+    /**
      * Clones the argument but unsets the owner. This method is here with public scope to not further pollute the
      * class FlowObject (which happens to be API as per
      * {@link org.knime.core.node.NodeModel#getAvailableFlowVariables()}.

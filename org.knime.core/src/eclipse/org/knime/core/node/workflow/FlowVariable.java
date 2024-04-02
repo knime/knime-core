@@ -77,6 +77,15 @@ public final class FlowVariable extends FlowObject {
     public static final String GLOBAL_CONST_ID = "knime";
 
     /**
+     * Framework constant to identify local scope variables that denote flow variable removal.
+     *
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    // Added as part of AP-16515
+    public static final String HIDE_SUFFIX = "(hide)";
+
+    /**
      * The type of a variable.
      *
      * @deprecated use {@link VariableType} instead
@@ -413,7 +422,8 @@ public final class FlowVariable extends FlowObject {
     public static FlowVariable load(final NodeSettingsRO sub) throws InvalidSettingsException {
         final String name = CheckUtils.checkSettingNotNull(sub.getString("name"), "name must not be null");
         final VariableValue<?> value = VariableType.load(sub);
-        return new FlowVariable(name, value, Scope.Flow);
+        Scope scope = StringUtils.startsWith(name, Scope.Local.getPrefix()) ? Scope.Local : Scope.Flow;
+        return new FlowVariable(name, value, scope);
     }
 
     /**
@@ -453,6 +463,23 @@ public final class FlowVariable extends FlowObject {
     @Override
     public int hashCode() {
         return getType().hashCode() ^ getName().hashCode();
+    }
+
+    /**
+     * Framework method to create a {@link Scope#Local local} string variable to denote that variables name that is to
+     * be removed from a node's variable stack.
+     *
+     * @param s The name of the variable to be removed/hidden in a node's output.
+     * @return A new flow variable with a predefined name that is used by the node's output stack creation to filter
+     *         variables.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    // added as part of AP-16515
+    public static FlowVariable newHidingVariable(final String s) {
+        return new FlowVariable(String.format("%s %s %s", Scope.Local.getPrefix(), s, HIDE_SUFFIX), s,
+            FlowVariable.Scope.Local);
     }
 
 }

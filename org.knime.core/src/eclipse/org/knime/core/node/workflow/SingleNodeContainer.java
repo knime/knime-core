@@ -69,7 +69,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -1199,22 +1198,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @return Such a (new!) stack. */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
-            FlowObjectStack st = getFlowObjectStack();
-            FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
-            if (this.isModelCompatibleTo(ScopeEndNode.class)) {
-                finalStack.pop(FlowScopeContext.class);
-            }
-            FlowObjectStack outgoingStack = getOutgoingFlowObjectStack();
-            List<FlowObject> flowObjectsOwnedByThis;
-            if (outgoingStack == null) { // not configured -> no stack
-                flowObjectsOwnedByThis = Collections.emptyList();
-            } else {
-                flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(getID(), Scope.Local);
-            }
-            for (FlowObject v : flowObjectsOwnedByThis) {
-                finalStack.push(v);
-            }
-            return finalStack;
+            final NodeID ownerID = getID();
+            final FlowObjectStack st = getFlowObjectStack();
+            final FlowObjectStack outgoingStack = getOutgoingFlowObjectStack();
+            final boolean isPopTopMostScopeContext = isModelCompatibleTo(ScopeEndNode.class);
+            return FlowObjectStack.createOutgoingFlowObjectStack(ownerID, st, outgoingStack, isPopTopMostScopeContext);
         }
     }
 
