@@ -52,7 +52,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
-import static org.junit.Assume.assumeThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.util.Optional;
@@ -85,7 +84,6 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     
     @Before
     public void setUp() throws Exception {
-    	assumeThat("Disabled on Mac due to DEVOPS-2105", Platform.getOS(), not(equalTo(Platform.OS_MACOSX)));
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
