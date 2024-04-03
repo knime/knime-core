@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
@@ -64,13 +65,15 @@ import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.sort.BufferedExternalSorter;
+import org.knime.core.data.sort.RowReadComparator;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
-import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -106,7 +109,7 @@ public final class BufferedTableBackend implements TableBackend {
     public RowContainer create(final ExecutionContext context, final DataTableSpec spec,
         final DataContainerSettings settings, final IDataRepository repository, final IWriteFileStoreHandler handler) {
         final BufferedDataContainer container = context.createDataContainer(spec, settings);
-        final ValueSchema schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, handler);
+        final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, handler);
         return new BufferedRowContainer(container, schema);
     }
 
@@ -170,16 +173,12 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public KnowsRowCountTable append(final ExecutionContext exec, final IntSupplier tableIdSupplier,
-        final AppendConfig config, final BufferedDataTable left, final BufferedDataTable right)
-        throws CanceledExecutionException {
-        switch (config.getRowIDMode()) {
-            case FROM_TABLE:
-                return appendWithIDFromTable(exec, config.getRowIDTableIndex(), left, right);
-            case MATCHING:
-                return JoinedTable.create(left, right, exec);
-            default:
-                throw new UnsupportedOperationException("Unsupported RowIDMode: " + config.getRowIDMode());
-        }
+            final AppendConfig config, final BufferedDataTable left, final BufferedDataTable right)
+            throws CanceledExecutionException {
+        return switch (config.getRowIDMode()) {
+            case FROM_TABLE -> appendWithIDFromTable(exec, config.getRowIDTableIndex(), left, right);
+            case MATCHING   -> JoinedTable.create(left, right, exec);
+        };
     }
 
     private static KnowsRowCountTable appendWithIDFromTable(final ExecutionContext exec, final int tableId,
@@ -465,4 +464,44 @@ public final class BufferedTableBackend implements TableBackend {
         return new TableSpecReplacerTable(table, newSpec);
     }
 
+    @Override
+    public KnowsRowCountTable sortedTable(final ExecutionContext exec, final IDataRepository repository,
+        final IWriteFileStoreHandler handler, final IntSupplier tableIDSupplier,
+            final BufferedDataTable table, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        final var memService = MemoryAlertSystem.getInstance();
+        final var sorted = new BufferedExternalSorter(memService, table.getSpec(), rowReadComparator) //
+            .sortedTable(exec, table, OptionalLong.of(table.size()));
+        return new WrappedTable(sorted.orElse(table));
+    }
+
+    @Override
+    public RowCursor sortedCursor(final ExecutionContext exec, final IDataRepository repository,
+            final IWriteFileStoreHandler handler, final IntSupplier tableIDSupplier, final BufferedDataTable table,
+            final RowReadComparator rowReadComparator) throws CanceledExecutionException, IOException {
+        final var memService = MemoryAlertSystem.getInstance();
+        return new BufferedExternalSorter(memService, table.getSpec(), rowReadComparator) //
+            .sortedCursor(exec, table, OptionalLong.of(table.size())).orElseGet(table::cursor);
+    }
+
+    @Override
+    public RowCursor sortedCursor(final ExecutionContext exec, final IDataRepository repository,
+            final IWriteFileStoreHandler handler, final IntSupplier tableIDSupplier, final DataTableSpec spec,
+            final RowCursor rowCursor, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        final var memService = MemoryAlertSystem.getInstance();
+        return new BufferedExternalSorter(memService, spec, rowReadComparator) //
+            .sortedCursor(exec, rowCursor, OptionalLong.empty()).orElseThrow();
+    }
+
+    @Override
+    public KnowsRowCountTable sortedTable(final ExecutionContext exec, final IDataRepository repository,
+            final IWriteFileStoreHandler handler, final IntSupplier tableIDSupplier, final DataTableSpec spec,
+            final RowCursor rowCursor, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        final var memService = MemoryAlertSystem.getInstance();
+        final var sorted = new BufferedExternalSorter(memService, spec, rowReadComparator) //
+            .sortedTable(exec, rowCursor, OptionalLong.empty()).orElseThrow();
+        return new WrappedTable(sorted);
+    }
 }

@@ -45,6 +45,7 @@
  */
 package org.knime.core.data;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.IntSupplier;
@@ -56,7 +57,9 @@ import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.sort.RowReadComparator;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -330,7 +333,88 @@ public interface TableBackend {
      * @return the table with the new spec
      * @since 5.1
      */
-    KnowsRowCountTable replaceSpec(ExecutionContext exec, final BufferedDataTable table,
-        final DataTableSpec newSpec, IntSupplier tableIDSupplier);
+    KnowsRowCountTable replaceSpec(ExecutionContext exec, BufferedDataTable table,
+        DataTableSpec newSpec, IntSupplier tableIDSupplier);
 
+    /**
+     * Sorts the given table and returns a sorted table.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param repository data repository
+     * @param handler file store handler
+     * @param tableIDSupplier supplier for table IDs
+     * @param table data table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    KnowsRowCountTable sortedTable(ExecutionContext exec, IDataRepository repository, IWriteFileStoreHandler handler,
+        IntSupplier tableIDSupplier, BufferedDataTable table, RowReadComparator rowReadComparator)
+        throws CanceledExecutionException, IOException;
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param repository data repository
+     * @param handler file store handler
+     * @param tableIDSupplier supplier for table IDs
+     * @param table data table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    RowCursor sortedCursor(ExecutionContext exec, IDataRepository repository, IWriteFileStoreHandler handler,
+        IntSupplier tableIDSupplier, BufferedDataTable table, RowReadComparator rowReadComparator)
+        throws CanceledExecutionException, IOException;
+
+    /**
+     * Sorts the given cursor and returns a sorted table.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param repository data repository
+     * @param handler file store handler
+     * @param tableIDSupplier supplier for table IDs
+     * @param spec table spec of the rows
+     * @param rowCursor cursor over the rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    KnowsRowCountTable sortedTable(ExecutionContext exec, IDataRepository repository, IWriteFileStoreHandler handler,
+        IntSupplier tableIDSupplier, DataTableSpec spec, RowCursor rowCursor, RowReadComparator rowReadComparator)
+        throws CanceledExecutionException, IOException;
+
+    /**
+     * Sorts the given cursor and returns a cursor over the result.
+     *
+     * @param exec for reporting progress and creation of tables
+     * @param repository data repository
+     * @param handler file store handler
+     * @param tableIDSupplier supplier for table IDs
+     * @param spec table spec of the rows
+     * @param rowCursor cursor over the rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    RowCursor sortedCursor(ExecutionContext exec, IDataRepository repository, IWriteFileStoreHandler handler,
+        IntSupplier tableIDSupplier, DataTableSpec spec, RowCursor rowCursor, RowReadComparator rowReadComparator)
+        throws CanceledExecutionException, IOException;
 }

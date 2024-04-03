@@ -48,10 +48,14 @@
  */
 package org.knime.core.node;
 
+import java.io.IOException;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.sort.RowReadComparator;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -141,5 +145,73 @@ public final class InternalTableAPI {
     public static BufferedDataContainer createDataContainer(final ExecutionContext exec, final DataTableSpec spec,
         final IWriteFileStoreHandler writeFileStoreHandler) {
         return exec.createDataContainer(spec, DataContainerSettings.getDefault(), writeFileStoreHandler);
+    }
+
+    /**
+     * Sorts the given table.
+     *
+     * @param exec the {@link ExecutionContext} to use when creating the data container
+     * @param table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    public static BufferedDataTable sortedTable(final ExecutionContext exec, final BufferedDataTable table,
+            final RowReadComparator rowReadComparator) throws CanceledExecutionException, IOException {
+        return exec.sortedTable(table, rowReadComparator);
+    }
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param exec the {@link ExecutionContext} to use when creating the data container
+     * @param table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    public static RowCursor sortedCursor(final ExecutionContext exec, final BufferedDataTable table,
+            final RowReadComparator rowReadComparator) throws CanceledExecutionException, IOException {
+        return exec.sortedCursor(table, rowReadComparator);
+    }
+
+    /**
+     * Sorts the given table.
+     *
+     * @param exec the {@link ExecutionContext} to use when creating the data container
+     * @param tableSpec table spec matching the rows of the given cursor
+     * @param rowCursor rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    public static BufferedDataTable sortedTable(final ExecutionContext exec, final DataTableSpec tableSpec,
+            final RowCursor rowCursor, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        return exec.sortedTable(tableSpec, rowCursor, rowReadComparator);
+    }
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param exec the {@link ExecutionContext} to use when creating the data container
+     * @param tableSpec table spec matching the rows of the given cursor
+     * @param rowCursor rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    public static RowCursor sortedCursor(final ExecutionContext exec, final DataTableSpec tableSpec,
+            final RowCursor rowCursor, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        return exec.sortedCursor(tableSpec, rowCursor, rowReadComparator);
     }
 }
