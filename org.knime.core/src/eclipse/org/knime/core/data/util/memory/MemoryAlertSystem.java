@@ -90,7 +90,8 @@ public final class MemoryAlertSystem {
      * @noimplement This interface is not intended to be implemented by clients.
      * @noextend This interface is not intended to be extended by clients.
      */
-    public interface MemoryActionIndicator {
+    @FunctionalInterface
+    public interface MemoryActionIndicator { // NOSONAR equivalent to `BooleanSupplier`, but already API
         /**
          * Returns <code>true</code> if an action because of a low memory condition is required. Subsequent calls will
          * return <code>false</code> until the next GC events, because it is assumed that the action freed memory.

@@ -72,7 +72,9 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.sort.RowReadComparator;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -668,6 +670,74 @@ public class ExecutionContext extends ExecutionMonitor {
                 .toArray(BufferedDataTable[]::new);
     }
 
+    /**
+     * Sorts the given table.
+     *
+     * @param table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    BufferedDataTable sortedTable(final BufferedDataTable table, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        final var sortedTable = getTableBackend().sortedTable(this, getDataRepository(), getFileStoreHandler(),
+            m_dataRepository::generateNewID, table, rowReadComparator);
+        return wrapTableFromBackend(sortedTable);
+    }
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param table to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    RowCursor sortedCursor(final BufferedDataTable table, final RowReadComparator rowReadComparator)
+            throws CanceledExecutionException, IOException {
+        return getTableBackend().sortedCursor(this, getDataRepository(), getFileStoreHandler(),
+            m_dataRepository::generateNewID, table, rowReadComparator);
+    }
+
+    /**
+     * Sorts the given table.
+     *
+     * @param tableSpec table spec matching the rows of the given cursor
+     * @param rowCursor rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return the sorted table
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    BufferedDataTable sortedTable(final DataTableSpec tableSpec, final RowCursor rowCursor,
+            final RowReadComparator rowReadComparator) throws CanceledExecutionException, IOException {
+        final var sortedTable = getTableBackend().sortedTable(this, getDataRepository(), getFileStoreHandler(),
+            m_dataRepository::generateNewID, tableSpec, rowCursor, rowReadComparator);
+        return wrapTableFromBackend(sortedTable);
+    }
+
+    /**
+     * Sorts the given table and returns a cursor over the result.
+     *
+     * @param tableSpec table spec matching the rows of the given cursor
+     * @param rowCursor rows to sort
+     * @param rowReadComparator comparator determining the order of the rows in the output
+     * @return cursor over the sorted rows
+     * @throws CanceledExecutionException
+     * @throws IOException
+     * @since 5.3
+     */
+    RowCursor sortedCursor(final DataTableSpec tableSpec, final RowCursor rowCursor,
+            final RowReadComparator rowReadComparator) throws CanceledExecutionException, IOException {
+        return getTableBackend().sortedCursor(this, getDataRepository(), getFileStoreHandler(),
+            m_dataRepository::generateNewID, tableSpec, rowCursor, rowReadComparator);
+    }
+
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {
         registerAsLocalTableIfContainerTable(table);
         var out = BufferedDataTable.wrapTableFromTableBackend(table, getDataRepository());
@@ -865,8 +935,8 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     private void registerAsLocalTableIfContainerTable(final KnowsRowCountTable table) {
-        if (table instanceof ContainerTable) {
-            m_localTableRepository.addTable((ContainerTable)table);
+        if (table instanceof ContainerTable containerTable) {
+            m_localTableRepository.addTable(containerTable);
         }
     }
 
@@ -882,10 +952,8 @@ public class ExecutionContext extends ExecutionMonitor {
      * @throws NoSuchMethodException of the job class does not have
      * a default constructor
      */
-    public Future<PortObject[]> submitJob(final PortObject[] input,
-            final NodeSettingsRO settings,
-            final Class<? extends KNIMEJob> jobClass,
-            final ExecutionMonitor exec) throws NoSuchMethodException {
+    public Future<PortObject[]> submitJob(final PortObject[] input, final NodeSettingsRO settings,
+            final Class<? extends KNIMEJob> jobClass, final ExecutionMonitor exec) throws NoSuchMethodException {
         final Constructor<? extends KNIMEJob> cons = jobClass.getConstructor();
 
         Callable<PortObject[]> task = new Callable<PortObject[]>() {

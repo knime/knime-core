@@ -279,8 +279,10 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     static BufferedDataTable wrapTableFromTableBackend(final KnowsRowCountTable table,
         final IDataRepository dataRepository) {
-        if (table instanceof RearrangeColumnsTable) {
-            return new BufferedDataTable((RearrangeColumnsTable)table, dataRepository);
+        if (table instanceof RearrangeColumnsTable rearrangeColsTable) {
+            return new BufferedDataTable(rearrangeColsTable, dataRepository);
+        } else if (table instanceof ContainerTable containerTable) {
+            return new BufferedDataTable(table, containerTable.getTableId(), dataRepository);
         } else {
             return new BufferedDataTable(table, dataRepository.generateNewID(), dataRepository);
         }
