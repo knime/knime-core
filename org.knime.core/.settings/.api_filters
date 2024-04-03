@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="5.4.0"/>
+                <message_argument value="5.3.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver">
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
@@ -151,51 +159,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.sort.AlphanumericComparator"/>
                 <message_argument value="NATURAL_ORDER"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationISOValueRenderer.java" type="org.knime.core.data.time.duration.DurationISOValueRenderer">
-        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
-            <message_arguments>
-                <message_argument value="3.3"/>
-                <message_argument value="5.3"/>
-                <message_argument value="org.knime.core.data.time.duration.DurationISOValueRenderer"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationLongValueRenderer.java" type="org.knime.core.data.time.duration.DurationLongValueRenderer">
-        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
-            <message_arguments>
-                <message_argument value="3.3"/>
-                <message_argument value="5.3"/>
-                <message_argument value="org.knime.core.data.time.duration.DurationLongValueRenderer"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationShortValueRenderer.java" type="org.knime.core.data.time.duration.DurationShortValueRenderer">
-        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
-            <message_arguments>
-                <message_argument value="3.3"/>
-                <message_argument value="5.3"/>
-                <message_argument value="org.knime.core.data.time.duration.DurationShortValueRenderer"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/time/localdate/LocalDateValue.java" type="org.knime.core.data.time.localdate.LocalDateValue">
-        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
-            <message_arguments>
-                <message_argument value="3.3"/>
-                <message_argument value="5.3"/>
-                <message_argument value="org.knime.core.data.time.localdate.LocalDateValue"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/time/localdate/LocalDateValueRenderer.java" type="org.knime.core.data.time.localdate.LocalDateValueRenderer">
-        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
-            <message_arguments>
-                <message_argument value="3.3"/>
-                <message_argument value="5.3"/>
-                <message_argument value="org.knime.core.data.time.localdate.LocalDateValueRenderer"/>
             </message_arguments>
         </filter>
     </resource>
