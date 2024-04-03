@@ -65,6 +65,7 @@ public interface RowCursor extends Closeable {
      *
      * @param numColumns number of columns, as returned by {@link RowCursor#getNumColumns()}
      * @return empty row cursor
+     *
      * @since 5.3
      */
     static RowCursor empty(final int numColumns) {
