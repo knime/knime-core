@@ -81,7 +81,7 @@ public interface RowValueRead {
     <D extends DataValue> D getValue(int index);
 
     /**
-     * If <code>true</<code>, calls to {@link #getValue(int)} are non-deterministic.
+     * If <code>true</code>, calls to {@link #getValue(int)} are non-deterministic.
      *
      * @param index column index
      * @return <code>true</code> if value at index is missing

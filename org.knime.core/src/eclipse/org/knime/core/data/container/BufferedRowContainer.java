@@ -193,8 +193,13 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         public void setFrom(final RowRead row) {
             // TODO performance
             setRowKey(row.getRowKey());
-            for (int i = 1; i < m_writeValues.length; i++) {
-                m_writeValues[i].setValue(row.getValue(i));
+            final var numCells = row.getNumColumns();
+            for (var i = 0; i < numCells; i++) {
+                if (row.isMissing(i)) {
+                    setMissing(i);
+                } else {
+                    m_writeValues[i + 1].setValue(row.getValue(i));
+                }
             }
         }
 
