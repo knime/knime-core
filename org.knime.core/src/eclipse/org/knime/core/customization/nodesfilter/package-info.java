@@ -45,29 +45,9 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.repository;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 /**
- * Interface defining a predicate for node identifiers, used to determine if a node should be visible or usable
- * according to the filter settings.
+ * Customization facilities that affect the node repository.
  *
  * @author Bernd Wiswedel
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = PatternNodePredicate.class, name = "pattern")
-})
-sealed interface NodePredicate permits PatternNodePredicate, TruePredicate {
-
-    /**
-     * Determines whether a given node identifier matches this predicate.
-     *
-     * @param nodeAndId The node identifier (as per {@link org.knime.core.node.NodeFactoryId}) to check against this
-     *            predicate
-     * @return {@code true} if the node identifier matches the predicate, otherwise {@code false}.
-     */
-    boolean matches(final String nodeAndId);
-}
+package org.knime.core.customization.nodesfilter;

@@ -59,7 +59,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.knime.core.customization.repository.NodesFilter;
+import org.knime.core.customization.nodesfilter.NodesFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
@@ -97,8 +97,8 @@ public class APCustomizationProviderServiceImplTest {
     void testGetCustomization() {
         APCustomizationProviderServiceImpl serviceImpl = new APCustomizationProviderServiceImpl();
         APCustomization customization = serviceImpl.getCustomization();
-        assertEquals(1, customization.getNodesCustomization().size());
-        NodesFilter nodesFilter = customization.getNodesCustomization().get(0);
+        assertEquals(1, customization.getNodesFilters().size());
+        NodesFilter nodesFilter = customization.getNodesFilters().get(0);
         // can't check internals because class have package scope
         assertThat("debug description of customization", nodesFilter.toString(), containsString("ALLOW"));
         assertThat("debug description of customization", nodesFilter.toString(), containsString("VIEW"));

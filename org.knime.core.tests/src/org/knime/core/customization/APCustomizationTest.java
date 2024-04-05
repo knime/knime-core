@@ -76,14 +76,16 @@ public class APCustomizationTest {
                       isRegex: true
                 """;
 
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(customization.isViewAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertFalse(customization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
+        assertTrue(
+            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertTrue(nodesCustomization.isViewAllowed("com.knime.extension.package.KNIMENodeFactory"));
+        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
 
-        assertTrue(customization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(customization.isUsageAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertTrue(customization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+        assertTrue(
+            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertTrue(nodesCustomization.isUsageAllowed("com.knime.extension.package.KNIMENodeFactory"));
+        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
     }
 
     @Test
@@ -98,13 +100,15 @@ public class APCustomizationTest {
                         - org\\.community\\.somepackage\\..+
                       isRegex: true
                 """;
-    
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-    
-        assertTrue(customization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(customization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+
+        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
+        assertTrue(
+            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+
+        assertTrue(
+            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
     }
 
     @Test
@@ -121,11 +125,13 @@ public class APCustomizationTest {
                 """;
 
         APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        assertTrue(customization.nodes()
+            .isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertFalse(customization.nodes().isViewAllowed("org.community.somepackage.BetterNodeFactory"));
 
-        assertTrue(customization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+        assertTrue(customization.nodes()
+            .isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertFalse(customization.nodes().isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
     }
 
     @Test
@@ -142,11 +148,13 @@ public class APCustomizationTest {
                       isRegex: true
                 """;
 
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
+        assertTrue(
+            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
 
-        assertTrue(customization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+        assertTrue(
+            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
+        assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
     }
 }

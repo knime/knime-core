@@ -45,7 +45,7 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.repository;
+package org.knime.core.customization.nodesfilter;
 
 import java.util.Arrays;
 
@@ -76,8 +76,15 @@ public final class NodesFilter {
      * Defines scope of this filter: node visibility (VIEW) or usability (USE) in the node repository.
      */
     public enum ScopeEnum {
-        VIEW("view"), //
-        USE("use");
+            /**
+             * Whether a node is listed in the node repository.
+             */
+            VIEW("view"), //
+            /**
+             * Whether a node is allowed to be instantiated in general (for listing in the node repository, for workflow
+             * loading etc.). I.e. this scope 'includes' the view-scope.
+             */
+            USE("use");
 
         private final String m_value;
 
@@ -161,11 +168,11 @@ public final class NodesFilter {
     /**
      * Checks if a node matches the customization rules.
      *
-     * @param nodeAndID Node identifier, as per {@link org.knime.core.node.NodeFactoryId}.
+     * @param factoryId Node identifier, as per {@link org.knime.core.node.NodeFactoryId}.
      * @return true if the node matches the rules, false otherwise.
      */
-    public boolean isAllowed(final String nodeAndID) {
-        final var isMatchFilter = m_predicate.matches(nodeAndID);
+    public boolean isAllowed(final String factoryId) {
+        final var isMatchFilter = m_predicate.matches(factoryId);
         return (m_rule == RuleEnum.ALLOW) == isMatchFilter;
     }
 

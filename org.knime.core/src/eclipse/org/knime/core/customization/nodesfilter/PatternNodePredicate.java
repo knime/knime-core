@@ -45,9 +45,49 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
+package org.knime.core.customization.nodesfilter;
+
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
- * Customization facilities that affect the node repository.
+ * A predicate for node identifiers based on regular expressions or plain text patterns.
+ * It determines node matches for filter/customization settings.
  *
  * @author Bernd Wiswedel
  */
-package org.knime.core.customization.repository;
+final class PatternNodePredicate implements NodePredicate {
+
+    private final List<Pattern> m_patterns;
+
+    /** Jackson deserializer. */
+    @JsonCreator
+    PatternNodePredicate(@JsonProperty("patterns") final List<String> patternStrings,
+        @JsonProperty("isRegex") final boolean isRegex) {
+        m_patterns = patternStrings.stream() //
+            .map(patternString -> isRegex ? //
+                Pattern.compile(patternString) : //
+                Pattern.compile(Pattern.quote(patternString))) //
+            .toList();
+    }
+
+    List<Pattern> getPatterns() {
+        return m_patterns;
+    }
+
+    @Override
+    public boolean matches(final String nodeAndId) {
+        return m_patterns.stream().anyMatch(pattern -> pattern.matcher(nodeAndId).matches());
+    }
+
+    @Override
+    public String toString() {
+        String patternStrings = m_patterns.stream().map(Pattern::pattern).collect(Collectors.joining(", "));
+        return String.format("PatternFilter{patterns=[%s]}", patternStrings);
+    }
+
+}

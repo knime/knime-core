@@ -50,8 +50,8 @@ package org.knime.core.customization;
 import java.util.Collections;
 import java.util.List;
 
-import org.knime.core.customization.repository.NodesFilter;
-import org.knime.core.customization.repository.NodesFilter.ScopeEnum;
+import org.knime.core.customization.nodesfilter.NodesFilter;
+import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -86,15 +86,15 @@ public final class APCustomization {
     public static final APCustomization DEFAULT =
             new APCustomization(List.of(NodesFilter.USE_ALL, NodesFilter.VIEW_ALL));
 
-    private final List<NodesFilter> m_nodesFilter;
+    private final List<NodesFilter> m_nodesFilters;
 
     /**
      * Only used for deserialization.
      */
     @JsonCreator
     APCustomization(@JsonProperty("nodesFilter") final List<NodesFilter> nodesFilter) {
-        m_nodesFilter = Collections
-            .unmodifiableList(CheckUtils.checkArgumentNotNull(nodesFilter, "nodesCustomization cannot be null"));
+        m_nodesFilters = Collections
+            .unmodifiableList(CheckUtils.checkArgumentNotNull(nodesFilter, "nodeFilters cannot be null"));
     }
 
     /**
@@ -102,34 +102,48 @@ public final class APCustomization {
      *
      * @return An unmodifiable list of {@link NodesFilter}.
      */
-    public List<NodesFilter> getNodesCustomization() {
-        return m_nodesFilter;
+    List<NodesFilter> getNodesFilters() {
+        return m_nodesFilters;
     }
 
     /**
-     * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
-     *
-     * @param nodeNameAndID as per {@link org.knime.core.node.NodeFactoryId}
-     * @return if the node can be instantiated.
+     * @return customization for nodes
      */
-    public boolean isUsageAllowed(final String nodeNameAndID) {
-        return m_nodesFilter.stream().filter(t -> t.getScope() == ScopeEnum.USE)
-            .allMatch(t -> t.isAllowed(nodeNameAndID));
+    public Nodes nodes() {
+        return new Nodes();
     }
 
     /**
-     * Determines if a given node is allowed to be listed ("viewed") in the node repository.
-     *
-     * @param nodeNameAndID as per {@link org.knime.core.node.NodeFactoryId}
-     * @return this property.
+     * Customizations for nodes.
      */
-    public boolean isViewAllowed(final String nodeNameAndID) {
-        // ignore scope property - not to be used nodes are also not visible.
-        return m_nodesFilter.stream().allMatch(t -> t.isAllowed(nodeNameAndID));
+    public final class Nodes {
+
+        /**
+         * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
+         *
+         * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
+         * @return if the node can be instantiated.
+         */
+        public boolean isUsageAllowed(final String factoryId) {
+            return m_nodesFilters.stream().filter(t -> t.getScope() == ScopeEnum.USE)
+                .allMatch(t -> t.isAllowed(factoryId));
+        }
+
+        /**
+         * Determines if a given node is allowed to be listed ("viewed") in the node repository.
+         *
+         * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
+         * @return this property.
+         */
+        public boolean isViewAllowed(final String factoryId) {
+            // ignore scope property - not to be used nodes are also not visible.
+            return m_nodesFilters.stream().allMatch(t -> t.isAllowed(factoryId));
+        }
+
     }
 
     @Override
     public String toString() {
-        return String.format("APCustomization{nodesFilter=%s}", m_nodesFilter);
+        return String.format("APCustomization{nodesFilters=%s}", m_nodesFilters);
     }
 }

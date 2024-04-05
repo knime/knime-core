@@ -45,28 +45,29 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.repository;
+package org.knime.core.customization.nodesfilter;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
- * A predicate always returning {@code true}, effectively allowing all nodes.
+ * Interface defining a predicate for node identifiers, used to determine if a node should be visible or usable
+ * according to the filter settings.
  *
  * @author Bernd Wiswedel
  */
-final class TruePredicate implements NodePredicate {
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = PatternNodePredicate.class, name = "pattern")
+})
+sealed interface NodePredicate permits PatternNodePredicate, TruePredicate {
 
-    static final TruePredicate INSTANCE = new TruePredicate();
-
-    private TruePredicate() {
-        // singleton
-    }
-
-    @Override
-    public boolean matches(final String nodeAndId) {
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "TrueFilter";
-    }
+    /**
+     * Determines whether a given node identifier matches this predicate.
+     *
+     * @param nodeAndId The node identifier (as per {@link org.knime.core.node.NodeFactoryId}) to check against this
+     *            predicate
+     * @return {@code true} if the node identifier matches the predicate, otherwise {@code false}.
+     */
+    boolean matches(final String nodeAndId);
 }
