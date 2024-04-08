@@ -50,9 +50,11 @@ package org.knime.core.data.container;
 import java.io.Closeable;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.v2.RowCursor;
 
 /**
  * A {@link RowIterator row iterator} that can be closed in order to save resources. Iterator of this class are returned
@@ -101,6 +103,36 @@ public abstract class CloseableRowIterator extends RowIterator implements Closea
             return closeableIter;
         }
         return iterator instanceof AutoCloseable closeable ? from(iterator, closeable) : wrap(iterator);
+    }
+
+    /**
+     * Adapts the given {@link RowCursor} so it materializes all of its rows one-by-one and can be used as an iterator.
+     *
+     * @param cursor row cursor to be adapted
+     * @return resulting row iterator
+     * @since 5.3
+     */
+    public static CloseableRowIterator from(final RowCursor cursor) {
+        return new CloseableRowIterator() {
+
+            @Override
+            public boolean hasNext() {
+                return cursor.canForward();
+            }
+
+            @Override
+            public DataRow next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                return cursor.forward().materializeDataRow();
+            }
+
+            @Override
+            public void close() {
+                cursor.close();
+            }
+        };
     }
 
     /**

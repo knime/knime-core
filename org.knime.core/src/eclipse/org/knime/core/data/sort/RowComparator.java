@@ -49,20 +49,18 @@
  */
 package org.knime.core.data.sort;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.MissingDataCellComparator;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.StringValue;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.data.sort.RowReadComparator.SortKeyColumns;
+import org.knime.core.data.v2.RowRead;
 
 /**
  * The RowComparator is used to compare two DataRows. It implements the Comparator-interface, so we can use the
@@ -72,7 +70,7 @@ import org.knime.core.node.util.CheckUtils;
  */
 public final class RowComparator implements Comparator<DataRow> {//NOSONAR
 
-    private final List<Comparator<DataRow>> m_comparators;
+    private final RowReadComparator m_delegate;
 
     /**
      * @param indices Array of sort column indices (-1 indicates the RowKey).
@@ -98,7 +96,17 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
                     .withMissingsLast(sortMissingsToEnd));
             }
         }
-        m_comparators = rc.build().m_comparators;
+        m_delegate = rc.build().m_delegate;
+    }
+
+    /**
+     * Adapts this comparator so it can be used to compare {@link RowRead}s.
+     *
+     * @return adapted comparator
+     * @since 5.3
+     */
+    public RowReadComparator toRowReadComparator() {
+        return m_delegate;
     }
 
     private static boolean isRowKey(final int index) {
@@ -112,19 +120,14 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      */
     public static final class ColumnComparatorBuilder {
 
-        private final int m_index;
-        private final DataType m_type;
+        private final RowReadComparator.ColumnComparatorBuilder m_delegateBuilder;
 
-        private boolean m_alphanum;
-        private boolean m_descending;
-        private boolean m_missingsLast;
-
-        private ColumnComparatorBuilder(final int columnIndex, final DataType type) {
+        private ColumnComparatorBuilder(final int columnIndex,
+            final RowReadComparator.ColumnComparatorBuilder delegateBuilder) {
             if (columnIndex < 0) {
                 throw new IllegalArgumentException("Expected non-negative column index.");
             }
-            m_type = type;
-            m_index = columnIndex;
+            m_delegateBuilder = delegateBuilder;
         }
 
         /**
@@ -143,13 +146,14 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with alphanumeric comparison configured or exception if column datatype is not
          *           string-compatible
          */
-        public ColumnComparatorBuilder withAlphanumericComparison(final boolean alphanum) {
+        public ColumnComparatorBuilder withAlphanumericComparison(final boolean alphanum) { // NOSONAR
             if (alphanum) {
-                CheckUtils.checkState(m_type.isCompatible(StringValue.class), "Only string-compatible columns can"
-                    + " be sorted alphanumerically. Column at %d of type %s is not string-compatible.", m_index,
-                    m_type);
+                final Comparator<StringValue> alphaNumComparator = Comparator.comparing(
+                    RowComparator::extractStringFromValue, AlphanumericComparator.NATURAL_ORDER);
+                m_delegateBuilder.withValueComparator(alphaNumComparator, StringValue.class);
+            } else {
+                m_delegateBuilder.withDefaultValueComparator();
             }
-            m_alphanum = alphanum;
             return this;
         }
 
@@ -158,7 +162,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with descending sort order
          */
         public ColumnComparatorBuilder withDescendingSortOrder() {
-            return withDescendingSortOrder(true);
+            m_delegateBuilder.withDescendingSortOrder();
+            return this;
         }
 
         /**
@@ -167,7 +172,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with descending sort order configured
          */
         public ColumnComparatorBuilder withDescendingSortOrder(final boolean descending) {
-            m_descending = descending;
+            m_delegateBuilder.withDescendingSortOrder(descending);
             return this;
         }
 
@@ -176,7 +181,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder which sorts missing cells to the end of the table
          */
         public ColumnComparatorBuilder withMissingsLast() {
-            return withMissingsLast(true);
+            m_delegateBuilder.withMissingsLast();
+            return this;
         }
 
         /**
@@ -185,27 +191,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder configured to sort missing cells to end of table
          */
         public ColumnComparatorBuilder withMissingsLast(final boolean missingsLast) {
-            m_missingsLast = missingsLast;
+            m_delegateBuilder.withMissingsLast(missingsLast);
             return this;
-        }
-
-        private RowComparatorBuilder build(final RowComparatorBuilder rowComparatorBuilder) {
-            Comparator<DataCell> cellComp;
-            if (this.m_alphanum) {
-                // compares column on string representation in alphanumerical order
-                cellComp = Comparator.comparing(
-                    dc -> CheckUtils.checkCast(dc, StringValue.class, IllegalStateException::new,
-                        "Comparing non-string compatible column").getStringValue(),
-                    new AlphanumericComparator(Comparator.naturalOrder()));
-            } else {
-                cellComp = m_type.getComparator();
-            }
-            // the condition is such that missing cells never get sorted to the top of a table if sorted in DESC order
-            cellComp = new MissingDataCellComparator<>(cellComp, m_missingsLast && !m_descending);
-            if (m_descending) {
-                cellComp = cellComp.reversed();
-            }
-            return rowComparatorBuilder.thenComparingColumn(m_index, cellComp);
         }
     }
 
@@ -217,10 +204,10 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      */
     public static final class RowKeyComparatorBuilder {
 
-        private boolean m_alphanum;
-        private boolean m_descending;
+        private final RowReadComparator.RowKeyComparatorBuilder m_delegateBuilder;
 
-        private RowKeyComparatorBuilder() {
+        private RowKeyComparatorBuilder(final RowReadComparator.RowKeyComparatorBuilder delegateBuilder) {
+            m_delegateBuilder = delegateBuilder;
         }
 
         /**
@@ -228,7 +215,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with alphanumeric comparison enabled
          */
         public RowKeyComparatorBuilder withAlphanumericComparison() {
-            return withAlphanumericComparison(true);
+            m_delegateBuilder.withComparator(AlphanumericComparator.NATURAL_ORDER);
+            return this;
         }
 
         /**
@@ -236,9 +224,13 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @param alphanum {@code true} if enabled, {@code false} otherwise
          * @return builder with alphanumeric comparison configured
          */
-        public RowKeyComparatorBuilder withAlphanumericComparison(final boolean alphanum) {
-            m_alphanum = alphanum;
-            return this;
+        public RowKeyComparatorBuilder withAlphanumericComparison(final boolean alphanum) { // NOSONAR
+            if (alphanum) {
+                return withAlphanumericComparison();
+            } else {
+                m_delegateBuilder.withDefaultValueComparator();
+                return this;
+            }
         }
 
         /**
@@ -246,7 +238,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with descending sort order
          */
         public RowKeyComparatorBuilder withDescendingSortOrder() {
-            return withDescendingSortOrder(true);
+            m_delegateBuilder.withDescendingSortOrder();
+            return this;
         }
 
         /**
@@ -255,54 +248,9 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with descending sort order configured
          */
         public RowKeyComparatorBuilder withDescendingSortOrder(final boolean descending) {
-            m_descending = descending;
+            m_delegateBuilder.withDescendingSortOrder(descending);
             return this;
         }
-
-        private RowComparatorBuilder build(final RowComparatorBuilder rowComparatorBuilder) {
-            Comparator<String> comp = Comparator.naturalOrder();
-            if (m_alphanum) {
-                // since row keys are compared as strings, they are always string-compatible
-                comp = new AlphanumericComparator(comp);
-            }
-            if (m_descending) {
-                comp = comp.reversed();
-            }
-            return rowComparatorBuilder.thenComparingRowKey(comp);
-        }
-    }
-
-    private static final class ColumnComparator implements Comparator<DataRow> {//NOSONAR
-
-        private final int m_colIdx;
-
-        private final Comparator<DataCell> m_cellComparator;
-
-        ColumnComparator(final int colIdx, final Comparator<DataCell> cellComparator) {
-            m_colIdx = colIdx;
-            m_cellComparator = cellComparator;
-        }
-
-        @Override
-        public int compare(final DataRow o1, final DataRow o2) {
-            return m_cellComparator.compare(o1.getCell(m_colIdx), o2.getCell(m_colIdx));
-        }
-
-    }
-
-    private static final class RowKeyComparator implements Comparator<DataRow> {//NOSONAR
-
-        private final Comparator<String> m_rowKeyComparator;
-
-        RowKeyComparator(final Comparator<String> rowKeyComparator) {
-            m_rowKeyComparator = rowKeyComparator;
-        }
-
-        @Override
-        public int compare(final DataRow o1, final DataRow o2) {
-            return m_rowKeyComparator.compare(o1.getKey().getString(), o2.getKey().getString());
-        }
-
     }
 
     /**
@@ -312,12 +260,10 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      */
     public static final class RowComparatorBuilder {
 
-        private final LinkedHashMap<OptionalInt, Comparator<DataRow>> m_columnComparators = new LinkedHashMap<>();
+        private final RowReadComparator.Builder m_delegateBuilder;
 
-        private final DataTableSpec m_spec;
-
-        private RowComparatorBuilder(final DataTableSpec spec) {
-            m_spec = spec;
+        private RowComparatorBuilder(final RowReadComparator.Builder builder) {
+            m_delegateBuilder = builder;
         }
 
         /**
@@ -328,8 +274,11 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          */
         public RowComparatorBuilder thenComparingColumn(final int columnIndex,
             final UnaryOperator<ColumnComparatorBuilder> comp) {
-            return comp.apply(new ColumnComparatorBuilder(columnIndex, m_spec.getColumnSpec(columnIndex).getType()))
-                    .build(this);
+            m_delegateBuilder.thenComparingColumn(columnIndex, colBuilder -> {
+                comp.apply(new ColumnComparatorBuilder(columnIndex, colBuilder));
+                return colBuilder;
+            });
+            return this;
         }
 
         /**
@@ -339,13 +288,14 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingColumn(final int columnIndex, final Comparator<DataCell> cellComp) {
-            final var colIdx = OptionalInt.of(columnIndex);
-            if (m_columnComparators.containsKey(colIdx)) {
-                throw new IllegalArgumentException(String.format("Row comparator already contains column #%d",
-                    columnIndex));
-            }
-            m_columnComparators.put(colIdx, new ColumnComparator(columnIndex, cellComp));
+            m_delegateBuilder.thenComparingColumn(columnIndex,
+                Comparator.comparing(read -> materializeDataCell(read, columnIndex), cellComp));
             return this;
+        }
+
+        private static DataCell materializeDataCell(final RowRead read, final int columnIndex) {
+            return read.isMissing(columnIndex) ? DataType.getMissingCell()
+                : read.getValue(columnIndex).materializeDataCell();
         }
 
         /**
@@ -354,7 +304,11 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingRowKey(final UnaryOperator<RowKeyComparatorBuilder> comp) {
-            return comp.apply(new RowKeyComparatorBuilder()).build(this);
+            m_delegateBuilder.thenComparingRowKey(keyCompBuilder -> {
+                comp.apply(new RowKeyComparatorBuilder(keyCompBuilder));
+                return keyCompBuilder;
+            });
+            return this;
         }
 
         /**
@@ -362,7 +316,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingRowKey() {
-            return new RowKeyComparatorBuilder().build(this);
+            m_delegateBuilder.thenComparingRowKey(Comparator.naturalOrder());
+            return this;
         }
 
         /**
@@ -371,11 +326,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return the row comparator builder instance
          */
         public RowComparatorBuilder thenComparingRowKey(final Comparator<String> comp) {
-            final var rowKeyIdx = OptionalInt.empty();
-            if (m_columnComparators.containsKey(rowKeyIdx)) {
-                throw new IllegalArgumentException("Row comparator already contains row key");
-            }
-            m_columnComparators.put(rowKeyIdx, new RowKeyComparator(comp));
+            m_delegateBuilder.thenComparingRowKey(comp);
             return this;
         }
 
@@ -384,8 +335,19 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return row comparator
          */
         public RowComparator build() {
-            return new RowComparator(new ArrayList<>(m_columnComparators.values()));
+            return new RowComparator(m_delegateBuilder.build());
         }
+    }
+
+    /**
+     * Adapts the given comparator on {@link RowRead}s to be usable as a {@link RowComparator}.
+     *
+     * @param comparator comparator on row reads
+     * @return adapted comparator accepting {@link DataRow}s
+     * @since 5.3
+     */
+    public static RowComparator fromRowReadComparator(final Comparator<RowRead> comparator) {
+        return new RowComparator(RowReadComparator.fromRowReadComparator(comparator));
     }
 
     /**
@@ -394,37 +356,33 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
      * @return builder to configure row comparator
      */
     public static RowComparatorBuilder on(final DataTableSpec spec) {
-        return new RowComparatorBuilder(spec);
+        return new RowComparatorBuilder(RowReadComparator.on(spec));
+    }
+
+    private RowComparator(final RowReadComparator delegate) {
+        m_delegate = delegate;
+    }
+
+    private static String extractStringFromValue(final DataValue dataValue) {
+        if (dataValue instanceof StringValue str) {
+            return str.getStringValue();
+        }
+        final var dataCell = dataValue.materializeDataCell();
+        throw new IllegalStateException("Unexpected value of type %s in String-compatible column: %s" //
+            .formatted(dataCell.getType(), dataCell));
     }
 
     /**
-     * Compare rows based on the given comparators.
-     * @param columns column comparators to compare
+     * @return record describing whether or not each columns and the row key are used by this comparator,
+     * {@link Optional#empty()} if unknown
+     * @since 5.3
      */
-    private RowComparator(final List<Comparator<DataRow>> comparators) {
-        m_comparators = comparators;
+    public Optional<SortKeyColumns> getSortKeyColumns() {
+        return m_delegate.getSortKeyColumns();
     }
 
     @Override
     public int compare(final DataRow dr1, final DataRow dr2) {
-        if (dr1 == dr2) {
-            return 0;
-        }
-        if (dr1 == null) {
-            return 1;
-        }
-        if (dr2 == null) {
-            return -1;
-        }
-        assert dr1.getNumCells() == dr2.getNumCells() : String.format( // NOSONAR run time performance
-            "The rows %s and %s don't contain the same number of cells.", dr1.getKey(), dr2.getKey()); //
-
-        for (var comparator : m_comparators) {
-            var comparison = comparator.compare(dr1, dr2);
-            if (comparison != 0) {
-                return comparison;
-            }
-        }
-        return 0;
+        return m_delegate.compare(RowRead.from(dr1), RowRead.from(dr2));
     }
 }

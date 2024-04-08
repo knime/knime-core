@@ -44,61 +44,72 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2020 (dietzc): created
+ *   Mar 28, 2024 (leonard.woerteler): created
  */
 package org.knime.core.data.v2;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import java.util.Iterator;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.container.CloseableRowIterator;
 
 /**
- * Read access to a row.
+ * Adapter from an {@link Iterator Iterator&lt;DataRow>} to the more recently introduced {@link RowCursor} API.
  *
- * @author Christian Dietz
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
+ * @since 5.3
  */
-public interface RowValueRead {
+public class IteratorAdapterRowCursor implements RowCursor {
+
+    private final int m_numColumns;
+
+    private CloseableRowIterator m_iterator;
+
+    private DataRow m_current;
+
+    private final RowRead m_read;
 
     /**
-     * @return number of columns.
+     * Creates a {@link RowRead} which can be used to read the values of the given row iterator. If {@code iterator}
+     * is {@link AutoCloseable}, it will be closed by this cursor when it is drained or its {@link #close()} method is
+     * called.
+     *
+     * @param iterator iterator to be adapted
+     * @param numColumns number of columns of the rows returned by {code iterator}, will be returned
+     *        by {@link #getNumColumns()}
      */
-    int getNumColumns();
+    public IteratorAdapterRowCursor(final Iterator<DataRow> iterator, final int numColumns) {
+        m_iterator = CloseableRowIterator.from(iterator);
+        m_numColumns = numColumns;
+        m_read = RowRead.suppliedBy(() -> m_current, numColumns);
+    }
 
-    /**
-     * Get a {@link DataValue} at a given position.
-     * <b>NOTE:</b> The DataValues are transient and may return a different value if the {@link RowCursor} producing
-     * this RowValueRead is {@link RowCursor#forward() forwarded}. If you need to store the underlying value, access them
-     * via the corresponding access methods that the concrete DataValue interface provides.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> value of returned {@link DataValue} is not deterministic.
-     */
-    <D extends DataValue> D getValue(int index);
+    @Override
+    public int getNumColumns() {
+        return m_numColumns;
+    }
 
-    /**
-     * If <code>true</code>, calls to {@link #getValue(int)} are non-deterministic.
-     *
-     * @param index column index
-     * @return <code>true</code> if value at index is missing
-     */
-    boolean isMissing(int index);
+    @Override
+    public boolean canForward() {
+        return m_iterator != null && m_iterator.hasNext();
+    }
 
-    /**
-     * Materializes the value in the column with the given index as {@link DataCell} via
-     * {@link DataValue#materializeDataCell()}.  If the value is missing, {@link DataType#getMissingCell()} is returned.
-     *
-     * @param index column index
-     * @return materialized data cell
-     * @since 5.3
-     */
-    default DataCell getAsDataCell(final int index) {
-        return isMissing(index) ? DataType.getMissingCell() : getValue(index).materializeDataCell();
+    @Override
+    public RowRead forward() {
+        if (!canForward()) {
+            close();
+            return null;
+        }
+        m_current = m_iterator.next();
+        return m_read;
+    }
+
+    @Override
+    public void close() {
+        if (m_iterator != null) {
+            m_iterator.close();
+            m_iterator = null;
+            m_current = null;
+        }
     }
 }
