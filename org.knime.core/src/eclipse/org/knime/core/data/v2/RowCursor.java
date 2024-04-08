@@ -61,6 +61,37 @@ import java.io.Closeable;
 public interface RowCursor extends Closeable {
 
     /**
+     * Creates an empty row cursor of rows with a given number of columns.
+     *
+     * @param numColumns number of columns, as returned by {@link RowCursor#getNumColumns()}
+     * @return empty row cursor
+     * @since 5.3
+     */
+    static RowCursor empty(final int numColumns) {
+        return new RowCursor() {
+
+            @Override
+            public int getNumColumns() {
+                return numColumns;
+            }
+
+            @Override
+            public RowRead forward() {
+                return null;
+            }
+
+            @Override
+            public void close() { // NOSONAR
+            }
+
+            @Override
+            public boolean canForward() {
+                return false;
+            }
+        };
+    }
+
+    /**
      * Forwards the cursor by one to the next element. This next element is not guaranteed to be a new instance.
      *
      * @return the element at the current cursor position or null if no new element available
@@ -87,5 +118,4 @@ public interface RowCursor extends Closeable {
      */
     @Override
     void close();
-
 }

@@ -61,6 +61,12 @@ import java.util.Comparator;
  */
 public class AlphanumericComparator implements Comparator<String> {
 
+    /**
+     * Alpha-numerical comparator which compares non-digit characters using {@link Character#compareTo(Character)}.
+     * @since 5.3
+     */
+    public static final AlphanumericComparator NATURAL_ORDER = new AlphanumericComparator(Comparator.naturalOrder());
+
     private Comparator<String> m_stringComparator;
 
     /**

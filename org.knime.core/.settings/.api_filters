@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/data/sort/AlphanumericComparator.java" type="org.knime.core.data.sort.AlphanumericComparator">
+        <filter comment="`AlphanumericComparator` is not supposed to be subclassed." id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.sort.AlphanumericComparator"/>
+                <message_argument value="NATURAL_ORDER"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
         <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
             <message_arguments>

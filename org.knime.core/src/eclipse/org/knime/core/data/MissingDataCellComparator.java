@@ -56,11 +56,12 @@ import java.util.Comparator;
  * @param <T> type to be compared
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @deprecated Use {@link MissingValueHandling#compareWithMissing(Comparator, boolean)}
  */
+@Deprecated(since = "5.3", forRemoval = true)
 public class MissingDataCellComparator<T extends DataCell> implements Comparator<T> {
 
     private final Comparator<T> m_wrapped;
-    private boolean m_largest;
 
     /**
      * Wrap a data cell comparator to sort missing cells smaller or larger than non-missing cells
@@ -68,21 +69,11 @@ public class MissingDataCellComparator<T extends DataCell> implements Comparator
      * @param largest {@code true} to compare missing cells as largest, {@code false} smallest
      */
     public MissingDataCellComparator(final Comparator<T> wrapped, final boolean largest) {
-        m_wrapped = wrapped;
-        m_largest = largest;
+        m_wrapped = MissingValueHandling.compareWithMissing(wrapped, largest);
     }
 
     @Override
     public int compare(final T left, final T right) {
-        final var leftMiss = left.isMissing();
-        final var rightMiss = right.isMissing();
-        if (leftMiss && rightMiss) {
-            return 0;
-        } else if (leftMiss) {
-            return m_largest ? 1 : -1;
-        } else if (rightMiss) {
-            return m_largest ? -1 : 1;
-        }
         return m_wrapped.compare(left, right);
     }
 

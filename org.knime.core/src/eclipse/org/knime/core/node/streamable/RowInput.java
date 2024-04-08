@@ -47,8 +47,11 @@
  */
 package org.knime.core.node.streamable;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.v2.RowRead;
 
 /**
  * A streamable data input.
@@ -57,6 +60,101 @@ import org.knime.core.data.DataTableSpec;
  * @since 2.6
  */
 public abstract class RowInput extends PortInput {
+
+    /**
+     * Returns a view of the row input as a {@link RowCursor}.
+     * <p>
+     * <b>Warnings:</b>
+     * <ul>
+     *   <li>The {@link InterruptibleRowCursor#canForward()} and {@link InterruptibleRowCursor#forward()} methods may
+     *   throw an {@link InterruptedException} from an underlying call to {@link #poll()} even though they don't declare
+     *   this checked exception.</li>
+     *   <li>The returned row cursor caches one {@link DataRow} from the underlying row input to support the
+     * {@link RowCursor#canForward()} operation.</li>
+     * </ul>
+     * @return adapter to use the row input as a row cursor
+     *
+     * @since 5.3
+     */
+    public InterruptibleRowCursor asCursor() {
+        return new InterruptibleRowCursor();
+    }
+
+    /**
+     * An adapter for {@link RowInput}s which in which {@link #canForward()} and {@link #forward()} methods may
+     *   throw an undeclared {@link InterruptedException} from an underlying call to {@link RowInput#poll()}.
+     *
+     * @since 5.3
+     */
+    @SuppressWarnings("javadoc")
+    public final class InterruptibleRowCursor implements RowCursor {
+
+        private DataRow m_current;
+
+        private final RowRead m_rowRead = RowRead.suppliedBy(() -> m_current, getNumColumns());
+
+        private DataRow m_next;
+
+        private boolean m_closed;
+
+        private InterruptibleRowCursor() {
+        }
+
+        @Override
+        public int getNumColumns() {
+            return getDataTableSpec().getNumColumns();
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @throws InterruptedException undeclared via {@link ExceptionUtils#rethrow(Throwable)}
+         */
+        @Override
+        public boolean canForward() {
+            if (m_closed) {
+                return false;
+            }
+            if (m_next == null) {
+                try {
+                    m_next = poll();
+                    if (m_next == null) {
+                        m_closed = true;
+                        return false;
+                    }
+                } catch (final InterruptedException ex) { // NOSONAR exception is rethrown
+                    throw ExceptionUtils.<RuntimeException>rethrow(ex);
+                }
+
+            }
+            return true;
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @throws InterruptedException undeclared via {@link ExceptionUtils#rethrow(Throwable)}
+         */
+        @Override
+        public RowRead forward() {
+            if (!canForward()) {
+                return null;
+            }
+            m_current = m_next;
+            m_next = null;
+            return m_rowRead;
+        }
+
+        @Override
+        public void close() {
+            if (!m_closed) {
+                RowInput.this.close();
+                m_current = null;
+                m_next = null;
+                m_closed = true;
+            }
+        }
+    }
 
     /**
      * The table spec of the input.

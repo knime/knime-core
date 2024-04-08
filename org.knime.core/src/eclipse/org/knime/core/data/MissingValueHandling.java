@@ -44,61 +44,72 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2020 (dietzc): created
+ *   9 Nov 2022 (manuelhotz): created
  */
-package org.knime.core.data.v2;
+package org.knime.core.data;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import java.util.Comparator;
+
+import org.knime.core.data.v2.RowRead;
 
 /**
- * Read access to a row.
+ * Comparators for data cells that compare missing cells as smaller or larger than any non-missing cell.
  *
- * @author Christian Dietz
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @since 5.3
  */
-public interface RowValueRead {
+public final class MissingValueHandling {
+
+    private MissingValueHandling() {
+    }
+
+    private static int compareWithMissings(final boolean leftMissing, final boolean rightMissing,
+            final boolean missingLargest) {
+        if (leftMissing && rightMissing) {
+            return 0;
+        } else if (leftMissing) {
+            return missingLargest ? 1 : -1;
+        } else {
+            return missingLargest ? -1 : 1;
+        }
+    }
 
     /**
-     * @return number of columns.
-     */
-    int getNumColumns();
-
-    /**
-     * Get a {@link DataValue} at a given position.
-     * <b>NOTE:</b> The DataValues are transient and may return a different value if the {@link RowCursor} producing
-     * this RowValueRead is {@link RowCursor#forward() forwarded}. If you need to store the underlying value, access them
-     * via the corresponding access methods that the concrete DataValue interface provides.
-     *
-     * @param <D> type of the {@link DataValue}
-     * @param index the column index
-     *
-     * @return the {@link DataValue} at column index or <source>null</source> if {@link DataValue} is not available, for
-     *         example if the column has been filtered out. In case {@link #isMissing(int)} returns
-     *         <source>true</source> value of returned {@link DataValue} is not deterministic.
-     */
-    <D extends DataValue> D getValue(int index);
-
-    /**
-     * If <code>true</code>, calls to {@link #getValue(int)} are non-deterministic.
+     * Wrap a row read comparator to sort missing values in a {@link RowRead} smaller or larger than non-missing values.
      *
      * @param index column index
-     * @return <code>true</code> if value at index is missing
+     * @param valueComparator wrapped comparator
+     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @return resulting comparator on {@link RowRead}s
      */
-    boolean isMissing(int index);
+    public static Comparator<RowRead> compareWithMissing(final int index,
+            final Comparator<? extends DataValue> valueComparator, final boolean missingLargest) {
+        return (left, right) -> {
+            final var leftMissing = left.isMissing(index);
+            final var rightMissing = right.isMissing(index);
+            if (leftMissing || rightMissing) {
+                return compareWithMissings(leftMissing, rightMissing, missingLargest);
+            }
+            return valueComparator.compare(left.getValue(index), right.getValue(index));
+        };
+    }
 
     /**
-     * Materializes the value in the column with the given index as {@link DataCell} via
-     * {@link DataValue#materializeDataCell()}.  If the value is missing, {@link DataType#getMissingCell()} is returned.
+     * Wrap a data cell comparator to sort missing cells smaller or larger than non-missing cells.
      *
-     * @param index column index
-     * @return materialized data cell
-     * @since 5.3
+     * @param cellComparator wrapped comparator
+     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @return resulting comparator on {@link DataCell}s
      */
-    default DataCell getAsDataCell(final int index) {
-        return isMissing(index) ? DataType.getMissingCell() : getValue(index).materializeDataCell();
+    public static <T extends DataCell> Comparator<T> compareWithMissing(final Comparator<T> cellComparator,
+            final boolean missingLargest) {
+        return (left, right) -> {
+            final var leftMissing = left.isMissing();
+            final var rightMissing = right.isMissing();
+            if (leftMissing || rightMissing) {
+                return compareWithMissings(leftMissing, rightMissing, missingLargest);
+            }
+            return cellComparator.compare(left, right);
+        };
     }
 }
