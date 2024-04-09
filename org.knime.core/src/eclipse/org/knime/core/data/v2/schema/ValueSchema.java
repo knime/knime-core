@@ -53,6 +53,7 @@ import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
+import org.knime.core.table.schema.ColumnarSchema;
 
 /**
  * Decorates a DataTableSpec with ValueFactories for all columns (including the RowKey).
@@ -63,7 +64,7 @@ import org.knime.core.table.access.WriteAccess;
  * @noimplement This interface is not intended to be implemented by clients.
  * @noextend This interface is not intended to be extended by clients.
  */
-public interface ValueSchema {
+public interface ValueSchema extends ColumnarSchema {
 
     /**
      * @return the underlying {@link DataTableSpec}.
