@@ -81,4 +81,7 @@ public interface RowContainer extends AutoCloseable {
      * @throws IOException
      */
     BufferedDataTable finish() throws IOException;
+
+    @Override
+    void close() throws IOException;
 }

@@ -892,7 +892,7 @@ public class ExecutionContext extends ExecutionMonitor {
         }
 
         @Override
-        public void close() throws Exception {
+        public void close() throws IOException {
             m_backendDelegate.close();
         }
 
