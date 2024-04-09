@@ -72,8 +72,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
 
 /**
  * A ValueSchema wraps a {@link DataTableSpec} by mapping each {@link DataColumnSpec} via it's {@link DataType} to a
@@ -86,11 +84,7 @@ import org.knime.core.table.access.WriteAccess;
  * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("deprecation")
-final class SerializerFactoryValueSchema implements ValueSchema {
-
-    private final DataTableSpec m_spec;
-
-    private final ValueFactory<?, ?>[] m_factories;
+final class SerializerFactoryValueSchema extends DefaultValueSchema implements ValueSchema {
 
     private final Map<DataType, String> m_factoryMapping;
 
@@ -100,22 +94,13 @@ final class SerializerFactoryValueSchema implements ValueSchema {
         final ValueFactory<?, ?>[] colFactories, //
         final Map<DataType, String> factoryMapping, //
         final DataCellSerializerFactory factory) {
-        m_spec = spec;
-        m_factories = colFactories;
+        super(spec, colFactories);
         m_factoryMapping = factoryMapping;
         m_factory = factory;
     }
 
     DataCellSerializerFactory getSerializerFactory() {
         return m_factory;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public final DataTableSpec getSourceSpec() {
-        return m_spec;
     }
 
     /**
@@ -205,7 +190,7 @@ final class SerializerFactoryValueSchema implements ValueSchema {
         public static final void save(final SerializerFactoryValueSchema schema, final NodeSettingsWO settings) {
 
             // save row key config
-            settings.addString(CFG_ROW_KEY_CONFIG, schema.m_factories[0].getClass().getName());
+            settings.addString(CFG_ROW_KEY_CONFIG, schema.getValueFactory(0).getClass().getName());
 
             // We need to remember which datatypes have been mapped to which ValueFactory
             final Map<DataType, String> factoryMapping = schema.m_factoryMapping;
@@ -300,16 +285,5 @@ final class SerializerFactoryValueSchema implements ValueSchema {
             return ValueFactoryUtils.instantiateValueFactory(type);
         }
 
-    }
-
-    @Override
-    public int numFactories() {
-        return m_factories.length;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return (ValueFactory<R, W>)m_factories[index];
     }
 }
