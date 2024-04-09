@@ -54,7 +54,9 @@ import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -63,7 +65,6 @@ import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
-import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
@@ -223,9 +224,12 @@ public final class BufferedTableBackend implements TableBackend {
 
         private final DataTableSpec m_slicedSpec;
 
+        private final boolean m_allColumnsIncluded;
+
         TableSlicer(final DataTableSpec spec, final Selection slice) {
             var filterColumns = slice.columns();
-            if (!filterColumns.allSelected()) {
+            m_allColumnsIncluded = filterColumns.allSelected(0, spec.getNumColumns() + 1);
+            if (!m_allColumnsIncluded) {
                 var cols = filterColumns.getSelected();
                 m_slice = Selection.all()//
                         .retainRows(slice.rows())//
@@ -269,12 +273,17 @@ public final class BufferedTableBackend implements TableBackend {
             }
             try (var readCursor = table.cursor(TableFilter.fromSelection(sliceFromFirstRow))) {
                 long r = moveToSlice(readCursor, exec, numRows);
-                for (; readCursor.canForward(); r++) {
-                    var rowWrite = writeCursor.row();
-                    var rowRead = readCursor.forward();
-                    copyRow(rowWrite, rowRead);
-                    writeCursor.commit();
-                    exec.setProgress(r / numRows);
+                if (m_allColumnsIncluded) {
+                    for (; readCursor.canForward(); r++) {
+                        writeCursor.commit(readCursor.forward());
+                        exec.setProgress(r / numRows);
+                    }
+                } else {
+                    var selCursor = new SelectionRowRead(readCursor);
+                    for (; selCursor.canForward(); r++) {
+                        writeCursor.commit(selCursor.forward());
+                        exec.setProgress(r / numRows);
+                    }
                 }
             }
         }
@@ -293,15 +302,46 @@ public final class BufferedTableBackend implements TableBackend {
             return r;
         }
 
-        private void copyRow(final RowWrite rowWrite, final RowRead rowRead) {
-            rowWrite.setRowKey(rowRead.getRowKey());
-            for (int i = 0; i < m_slicedSpec.getNumColumns(); i++) { //NOSONAR
-                var oldIndex = m_indexMap.applyAsInt(i);
-                if (rowRead.isMissing(oldIndex)) {
-                    rowWrite.setMissing(i);
-                } else {
-                    rowWrite.getWriteValue(i).setValue(rowRead.getValue(oldIndex));
-                }
+        private class SelectionRowRead implements RowRead {
+
+            private final RowCursor m_readCursor;
+
+            private RowRead m_rowRead;
+
+            boolean canForward()
+            {
+                return m_readCursor.canForward();
+            }
+
+            RowRead forward()
+            {
+                m_rowRead = m_readCursor.forward();
+                return this;
+            }
+
+            SelectionRowRead(final RowCursor readCursor)
+            {
+                m_readCursor = readCursor;
+            }
+
+            @Override
+            public int getNumColumns() {
+               return  m_slicedSpec.getNumColumns();
+            }
+
+            @Override
+            public <D extends DataValue> D getValue(final int index) {
+                return m_rowRead.getValue(m_indexMap.applyAsInt(index));
+            }
+
+            @Override
+            public boolean isMissing(final int index) {
+                return m_rowRead.isMissing(m_indexMap.applyAsInt(index));
+            }
+
+            @Override
+            public RowKeyValue getRowKey() {
+                return m_rowRead.getRowKey();
             }
         }
 
