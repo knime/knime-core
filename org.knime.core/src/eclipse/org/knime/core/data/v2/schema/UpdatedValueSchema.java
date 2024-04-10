@@ -44,124 +44,96 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 13, 2021 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Oct 6, 2020 (dietzc): created
  */
 package org.knime.core.data.v2.schema;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.schema.ColumnarSchema;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 
-import com.google.common.collect.Iterators;
-
 /**
- * Default implementation of a ValueSchema. (As of KNIME Analytics Platform 4.5.0)
+ * {@link ValueSchema} that is based on another schema, but has an updated {@link DataTableSpec}.
  *
- * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
-sealed class DefaultValueSchema implements ValueSchema permits SerializerFactoryValueSchema {
+final class UpdatedValueSchema implements ValueSchema {
 
-    private final DataTableSpec m_sourceSpec;
+    private final DataTableSpec m_updatedSpec;
 
-    private final ValueFactory<?, ?>[] m_factories;
+    private final ValueSchema m_delegate;
 
-    private final DataSpec[] m_specs;
-
-    private final DataTraits[] m_traits;
-
-    DefaultValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
-        m_sourceSpec = sourceSpec;
-        m_factories = factories;
-        m_specs = new DataSpec[factories.length];
-        Arrays.setAll(m_specs, i -> factories[i].getSpec());
-        m_traits = new DataTraits[factories.length];
-        Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
+    UpdatedValueSchema(final DataTableSpec spec, final ValueSchema delegate) {
+        m_updatedSpec = spec;
+        m_delegate = delegate;
     }
+
+    ValueSchema getDelegate() {
+        return m_delegate;
+    }
+
+    // -------- ValueSchema --------
 
     @Override
     public DataTableSpec getSourceSpec() {
-        return m_sourceSpec;
+        return m_updatedSpec;
     }
 
     @Override
     public int numFactories() {
-        return m_factories.length;
+        return m_delegate.numFactories();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return (ValueFactory<R, W>)m_factories[boundsCheckedColumnIndex(index)];
-    }
-
-    private int boundsCheckedColumnIndex(final int index)
-    {
-        if (index < 0) {
-            throw new IndexOutOfBoundsException(String.format("Column index %d smaller than 0.", index));
-        } else if (index >= numColumns()) {
-            throw new IndexOutOfBoundsException(
-                String.format("Column index %d greater than largest column index (%d).", index, numColumns() - 1));
-        }
-        return index;
+        return m_delegate.getValueFactory(index);
     }
 
     // -------- ColumnarSchema --------
 
     @Override
-    public int numColumns() {
-        return numFactories();
-    }
-
-    @Override
     public DataSpec getSpec(final int index) {
-        return m_specs[boundsCheckedColumnIndex(index)];
+        return m_delegate.getSpec(index);
     }
 
     @Override
     public DataTraits getTraits(final int index) {
-        return m_traits[boundsCheckedColumnIndex(index)];
+        return m_delegate.getTraits(index);
     }
 
     @Override
-    public Stream<DataSpec> specStream() {
-        return Arrays.stream(m_specs);
+    public int numColumns() {
+        return m_delegate.numColumns();
     }
 
     @Override
     public Iterator<DataSpec> iterator() {
-        return Arrays.stream(m_specs).iterator();
+        return m_delegate.iterator();
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(m_specs);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (!(obj instanceof ColumnarSchema)) { // NOSONAR
-            return false;
-        }
-        final ColumnarSchema other = (ColumnarSchema)obj;
-        if (numColumns() != other.numColumns()) {
-            return false;
-        }
-        return Iterators.elementsEqual(iterator(), other.iterator());
+        return m_delegate.hashCode();
     }
 
     @Override
     public String toString() {
-        return "Columns (" + m_specs.length + ") "
-            + StringUtils.join(specStream().map(Object::toString).iterator(), ",");
+        return m_delegate.toString();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        return m_delegate.equals(obj);
+    }
+
+    @Override
+    public Stream<DataSpec> specStream() {
+        return m_delegate.specStream();
     }
 }
