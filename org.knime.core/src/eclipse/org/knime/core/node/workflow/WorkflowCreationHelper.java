@@ -46,6 +46,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 
 /**
@@ -58,6 +60,7 @@ import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 public class WorkflowCreationHelper {
     private WorkflowContextV2 m_context;
     private WorkflowDataRepository m_workflowDataRepository;
+    private WorkflowTableBackendSettings m_tableBackendSettings;
 
     /**
      * Workflow creation helper without a workflow context.
@@ -129,6 +132,22 @@ public class WorkflowCreationHelper {
      */
     public WorkflowDataRepository getWorkflowDataRepository() {
         return m_workflowDataRepository;
+    }
+
+    /**
+     * @return custom table backend settings
+     * @since 5.3
+     */
+    public Optional<WorkflowTableBackendSettings> getTableBackendSettings() {
+        return Optional.ofNullable(m_tableBackendSettings);
+    }
+
+    /**
+     * @param tableBackendSettings custom table backend settings, {@code null} for default settings
+     * @since 5.3
+     */
+    public void setTableBackendSettings(final WorkflowTableBackendSettings tableBackendSettings) {
+        m_tableBackendSettings = tableBackendSettings;
     }
 
 }
