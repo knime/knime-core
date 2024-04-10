@@ -96,6 +96,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowTableBackendSettings;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
@@ -229,8 +230,7 @@ public final class SandboxedNodeCreator {
                     .withUserId(oldExecInfo.getUserId())
                     .withLocalWorkflowPath(workflowDir)
                     .withTempFolder(oldExecInfo.getTempFolder()); // handing over the temp directory here
-            if (oldExecInfo instanceof AnalyticsPlatformExecutorInfo) {
-                final var apExecInfo = (AnalyticsPlatformExecutorInfo) oldExecInfo;
+            if (oldExecInfo instanceof AnalyticsPlatformExecutorInfo apExecInfo) {
                 execInfoBuilder.withBatchMode(apExecInfo.isBatchMode());
             }
             newContext = WorkflowContextV2.builder()
@@ -240,6 +240,8 @@ public final class SandboxedNodeCreator {
         }
 
         final var creationHelper = new WorkflowCreationHelper(newContext);
+        final var optSettings = WorkflowTableBackendSettings.getSettings(parent);
+        creationHelper.setTableBackendSettings(optSettings.orElse(null));
         if (!m_copyDataIntoNewContext) {
             creationHelper.setWorkflowDataRepository(parent.getWorkflowDataRepository());
         }
