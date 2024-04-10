@@ -49,11 +49,16 @@
 package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.IntStream;
 
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
@@ -111,7 +116,9 @@ public final class ValueSchemaUtils {
      * @param settings the settings to save the ValueSchema to.
      */
     public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
-        if (schema instanceof SerializerFactoryValueSchema) {
+        if (schema instanceof UpdatedValueSchema s) {
+            save(s.getDelegate(), settings);
+        } else if (schema instanceof SerializerFactoryValueSchema) {
             SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
         } else if (schema instanceof DefaultValueSchema) {
             // nothing to save
@@ -172,7 +179,63 @@ public final class ValueSchemaUtils {
      * @return true if the schema was created before KNIME AP 4.5.0
      */
     public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
-        return schema instanceof SerializerFactoryValueSchema;
+        if (schema instanceof UpdatedValueSchema s) {
+            return storesDataCellSerializersSeparately(s.getDelegate());
+        } else if (schema instanceof SerializerFactoryValueSchema) {
+            return true;
+        } else if (schema instanceof DefaultValueSchema) {
+            return false;
+        } else {
+            throw new IllegalArgumentException("Unsupported schema type: " + schema.getClass());
+        }
+    }
+
+    /**
+     * Updates the {@link DataTableSpec} of the passed source scheme with a new {@link DataTableSpec}, including the
+     * domains provided in the {@link Map}.
+     *
+     * @param schema schema to update
+     * @param domainMap the domains used for update.
+     * @param metadataMap the columnar metadata used to update
+     *
+     * @return the updated {@link ValueSchema}
+     */
+    public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
+        final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
+        final var result = new DataColumnSpec[schema.numColumns() - 1];
+        for (int i = 0; i < result.length; i++) {//NOSONAR
+            final DataColumnSpec colSpec = schema.getSourceSpec().getColumnSpec(i);
+            final DataColumnDomain domain = domainMap.get(i + 1);
+            final DataColumnMetaData[] metadata = metadataMap.get(i + 1);
+
+            if (domain == null && metadata == null) {
+                result[i] = colSpec;
+            } else {
+                final var creator = new DataColumnSpecCreator(colSpec);
+                if (domain != null) {
+                    creator.setDomain(domain);
+                }
+
+                for (final DataColumnMetaData element : metadata) {
+                    creator.addMetaData(element, true);
+                }
+
+                result[i] = creator.createSpec();
+            }
+        }
+        final var sourceName = schema.getSourceSpec().getName();
+        return new UpdatedValueSchema(new DataTableSpec(sourceName, result), schema);
+    }
+
+    /**
+     * Changes the {@code DataTableSpec} in the {@code schema}.
+     *
+     * @param schema schema to update
+     * @param spec to update the schema with (may have e.g. a different domains or different column names)
+     * @return the schema with the updated spec
+     */
+    public static final ValueSchema updateDataTableSpec(final ValueSchema schema, final DataTableSpec spec) {
+        return new UpdatedValueSchema(spec, schema);
     }
 
     private ValueSchemaUtils() {
