@@ -84,7 +84,7 @@ import org.knime.core.node.util.CheckUtils;
  * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("deprecation")
-final class SerializerFactoryValueSchema extends DefaultValueSchema implements ValueSchema {
+final class SerializerFactoryValueSchema extends DefaultValueSchema {
 
     private final Map<DataType, String> m_factoryMapping;
 
