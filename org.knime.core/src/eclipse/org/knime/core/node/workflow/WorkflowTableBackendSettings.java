@@ -142,15 +142,29 @@ public final class WorkflowTableBackendSettings {
      * @return The backend for the current workflow, not null.
      */
     public static TableBackend getTableBackendForCurrentContext() {
-        NodeContext context = NodeContext.getContext();
+        final var  context = NodeContext.getContext();
         if (context != null) {
-            WorkflowManager wfm = context.getWorkflowManager();
-            if (wfm != null) {
-                return wfm.getTableBackendSettings().map(WorkflowTableBackendSettings::getTableBackend)
-                    .orElse(TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows());
+            final var optSettings = getSettings(context.getWorkflowManager());
+            if (optSettings.isPresent()) {
+                return optSettings.get().getTableBackend();
             }
         }
         return TableBackendRegistry.getInstance().getDefaultBackendForNewWorkflows();
+    }
+
+    /**
+     * @param workflowManager
+     * @return
+     * @since 5.3
+     */
+    public static Optional<WorkflowTableBackendSettings> getSettings(final WorkflowManager workflowManager) {
+        for (var wfm = workflowManager; wfm != null; wfm = wfm.getParent()) {
+            final var optSettings = wfm.getTableBackendSettings();
+            if (optSettings.isPresent()) {
+                return optSettings;
+            }
+        }
+        return Optional.empty();
     }
 
     @Override

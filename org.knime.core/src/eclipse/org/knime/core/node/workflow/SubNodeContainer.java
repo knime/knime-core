@@ -480,7 +480,8 @@ public final class SubNodeContainer extends SingleNodeContainer
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
                 parent.getContextV2(), name,
-                Optional.of(parent.getWorkflowDataRepository()), Optional.empty());
+                Optional.of(parent.getWorkflowDataRepository()), Optional.empty(),
+                parent.getTableBackendSettings().orElse(new WorkflowTableBackendSettings()));
         m_wfm.setJobManager(null);
         m_subnodeScopeContext = new FlowSubnodeScopeContext(this);
         // initialize NodeContainer inports
