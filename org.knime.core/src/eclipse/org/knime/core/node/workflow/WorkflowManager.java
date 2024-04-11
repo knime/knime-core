@@ -7794,9 +7794,12 @@ public final class WorkflowManager extends NodeContainer
         MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
         assert templInfo.getRole() == Role.Link;
         final var sourceURI = templInfo.getSourceURI();
-        NodeContainerTemplate tempLink;
-        if (visitedTemplateMap.get(sourceURI) == null) {
+
+        NodeContainerTemplate tempLink = Optional.ofNullable(visitedTemplateMap.get(sourceURI)) //
+                .map(TemplateUpdateCheckResult::template).orElse(null);
+        if (tempLink == null) {
             try {
+                // we need a template to perform the update, download it unconditionally (see AP-22321)
                 tempLink = TemplateUpdateUtil.loadMetaNodeTemplate(tnc, loadHelper, loadRes);
                 visitedTemplateMap.put(sourceURI, new TemplateUpdateCheckResult(tempLink, templInfo));
             } catch (IOException e) {
@@ -7810,9 +7813,8 @@ public final class WorkflowManager extends NodeContainer
                 loadRes.addError(error);
                 return null;
             }
-        } else {
-            tempLink = visitedTemplateMap.get(sourceURI).template();
         }
+
         try (WorkflowLock lock = lock()) {
             final var ncSettings = new NodeSettings("metanode_settings"); // current settings, re-apply after update
             saveNodeSettings(id, ncSettings);

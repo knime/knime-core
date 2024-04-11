@@ -53,7 +53,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.net.URIBuilder;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
@@ -440,9 +441,19 @@ public class WorkflowLoadHelper {
         }
         if (templateInfo != null) {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI, isTemplateProject()));
-            final var name = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
-                    .map(KNIMEURIDescription::getName).orElse(FilenameUtils.getName(templateSourceURI.toString()));
-            persistor.setNameOverwrite(name);
+            final var optName = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
+                    .map(KNIMEURIDescription::getName);
+            if (optName.isPresent()) {
+                // we could get the template's name via the resolver
+                persistor.setNameOverwrite(optName.get());
+            } else {
+                // try to extract the name from the URL, best-effort
+                new URIBuilder(templateSourceURI).getPathSegments().stream() // decoded path segments, never `null`
+                    .filter(StringUtils::isNotEmpty) // skip empty segments introduced by trailing slashes
+                    .reduce((before, after) -> after) // reduce to the last segment
+                    .filter(lastSegment -> !lastSegment.startsWith("*")) // reject Hub Item IDs
+                    .ifPresent(persistor::setNameOverwrite);
+            }
         }
         if (isSetDirtyAfterLoad) {
             persistor.setDirtyAfterLoad();
