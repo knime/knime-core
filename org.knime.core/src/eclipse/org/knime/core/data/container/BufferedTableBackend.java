@@ -50,7 +50,6 @@ package org.knime.core.data.container;
 
 import java.util.Optional;
 import java.util.function.IntSupplier;
-import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataTableSpec;
@@ -220,28 +219,27 @@ public final class BufferedTableBackend implements TableBackend {
 
         private final Selection m_slice;
 
-        private final IntUnaryOperator m_indexMap;
-
         private final DataTableSpec m_slicedSpec;
 
-        private final boolean m_allColumnsIncluded;
+        // if null, then selection contains all columns
+        private final int[] m_colsWithoutRowKey;
 
         TableSlicer(final DataTableSpec spec, final Selection slice) {
-            var filterColumns = slice.columns();
-            m_allColumnsIncluded = filterColumns.allSelected(0, spec.getNumColumns() + 1);
-            if (!m_allColumnsIncluded) {
-                var cols = filterColumns.getSelected();
+            // TODO (TP) Currently the Selection slice has TableFilter meaning (rowkey not included, column indices -1). This should be fixed.
+            final boolean allColumnsIncluded = slice.columns().allSelected(0, spec.getNumColumns());
+            if (!allColumnsIncluded) {
+                m_colsWithoutRowKey = slice.columns().getSelected();
                 m_slice = Selection.all()//
                         .retainRows(slice.rows())//
                         .retainColumns(IntStream.concat(//
                     IntStream.of(0), // slice does not include the row index
                     IntStream.of(slice.columns().getSelected()).map(i -> i + 1)//
                 ).toArray());
-                m_indexMap = i -> cols[i];
-                m_slicedSpec = sliceSpec(spec, cols);
+                m_slicedSpec = sliceSpec(spec, m_colsWithoutRowKey);
             } else {
-                m_slice = slice;
-                m_indexMap = i -> i;
+                m_colsWithoutRowKey = null;
+                m_slice = Selection.all()//
+                        .retainRows(slice.rows());
                 m_slicedSpec = spec;
             }
         }
@@ -273,7 +271,7 @@ public final class BufferedTableBackend implements TableBackend {
             }
             try (var readCursor = table.cursor(TableFilter.fromSelection(sliceFromFirstRow))) {
                 long r = moveToSlice(readCursor, exec, numRows);
-                if (m_allColumnsIncluded) {
+                if (m_colsWithoutRowKey == null) {
                     for (; readCursor.canForward(); r++) {
                         writeCursor.commit(readCursor.forward());
                         exec.setProgress(r / numRows);
@@ -308,35 +306,32 @@ public final class BufferedTableBackend implements TableBackend {
 
             private RowRead m_rowRead;
 
-            boolean canForward()
-            {
+            boolean canForward() {
                 return m_readCursor.canForward();
             }
 
-            RowRead forward()
-            {
+            RowRead forward() {
                 m_rowRead = m_readCursor.forward();
                 return this;
             }
 
-            SelectionRowRead(final RowCursor readCursor)
-            {
+            SelectionRowRead(final RowCursor readCursor) {
                 m_readCursor = readCursor;
             }
 
             @Override
             public int getNumColumns() {
-               return  m_slicedSpec.getNumColumns();
+                return m_slicedSpec.getNumColumns();
             }
 
             @Override
             public <D extends DataValue> D getValue(final int index) {
-                return m_rowRead.getValue(m_indexMap.applyAsInt(index));
+                return m_rowRead.getValue(m_colsWithoutRowKey[index]);
             }
 
             @Override
             public boolean isMissing(final int index) {
-                return m_rowRead.isMissing(m_indexMap.applyAsInt(index));
+                return m_rowRead.isMissing(m_colsWithoutRowKey[index]);
             }
 
             @Override
