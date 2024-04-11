@@ -61,15 +61,12 @@ import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
-import org.knime.core.util.Version;
 
 /**
  * Utilities for tests using functionality related to the {@link WorkflowManager}.
@@ -91,17 +88,10 @@ public final class WorkflowManagerUtil {
     private static WorkflowManager loadWorkflow(final File workflowDir, final WorkflowContextV2 workflowContext)
             throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
-        final var loadHelper = new WorkflowLoadHelper() {
+        final var loadHelper = new TryAlwaysWorkflowLoadHelper() {
             @Override
             public WorkflowContextV2 getWorkflowContext() {
                 return workflowContext;
-            }
-
-            @Override
-            public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
-                final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
-                final boolean isNightlyBuild) {
-                return UnknownKNIMEVersionLoadPolicy.Try;
             }
         };
 
