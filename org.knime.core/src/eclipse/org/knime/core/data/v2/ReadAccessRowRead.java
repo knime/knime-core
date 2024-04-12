@@ -44,40 +44,69 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 10, 2020 (dietzc): created
+ *   20 Feb 2024 (pietzsch): created
  */
 package org.knime.core.data.v2;
 
-import java.io.Closeable;
+import java.util.Arrays;
+
+import org.knime.core.data.DataValue;
+import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.schema.ValueSchema;
+import org.knime.core.table.row.ReadAccessRow;
 
 /**
- * Cursor over RowWrites
+ * Implements a {@link RowRead} based on a {@link ReadAccessRow}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Tobias Pieztsch
  */
-public interface RowWriteCursor extends Closeable {
+public class ReadAccessRowRead implements RowRead {
 
-    // new API v2
-    // TODO (TP): This should be preferably be the only method,
-    //            but it needs one additional layer of buffering in case the RowWrite row() is written to directly.
-    //            How important is this?
-    //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
-    /**
-     * @since 5.3
-     */
-    void commit(RowRead row);
+    private final ReadAccessRow m_accesses;
+
+    private final ReadValue[] m_values;
+
+    private final RowKeyReadValue m_rowKeyValue;
 
     /**
-     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
-     * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
-     * side effects.<br>
+     * Constructor.
      *
-     * Potential IOException will be logged.
+     * @param schema of the table
+     * @param readAccessRow provides values and isMissing
      */
-    @Override
-    void close();
+    public ReadAccessRowRead(final ValueSchema schema, final ReadAccessRow readAccessRow) {
+        m_accesses = readAccessRow;
+        m_values = new ReadValue[schema.numFactories()];
+        Arrays.setAll(m_values, i -> {
+            // NB: some ReadAccesses might be null, if the ReadAccessRow is from a Cursor with a ColumnSelection
+            var access = m_accesses.getAccess(i);
+            return access == null ? null : schema.getValueFactory(i).createReadValue(access);
+        });
+        m_rowKeyValue = (RowKeyReadValue)m_values[0];
+    }
 
+
+    @Override
+    public int getNumColumns() {
+        // the row key is not a column in KNIME AP
+        return m_values.length - 1;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <D extends DataValue> D getValue(final int index) {
+        // the row key is not a column in KNIME AP
+        return (D)m_values[index + 1];
+    }
+
+    @Override
+    public boolean isMissing(final int index) {
+        // the row key is not a column in KNIME AP
+        return m_accesses.getAccess(index + 1).isMissing();
+    }
+
+    @Override
+    public RowKeyValue getRowKey() {
+        return m_rowKeyValue;
+    }
 }

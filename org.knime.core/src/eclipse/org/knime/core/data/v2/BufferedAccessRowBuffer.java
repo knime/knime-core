@@ -44,40 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 10, 2020 (dietzc): created
+ *   12 Apr 2024 (pietzsch): created
  */
 package org.knime.core.data.v2;
 
-import java.io.Closeable;
+import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.schema.ValueSchema;
+import org.knime.core.table.access.BufferedAccesses;
+import org.knime.core.table.access.BufferedAccesses.BufferedAccessRow;
 
 /**
- * Cursor over RowWrites
+ * This class implements both {@code RowRead} and {@code RowWrite}.
+ * It can be used as a "staging row" for preparing a {@code RowRead} to be {@link RowWriteCursor#commit(RowRead) committed} to a {@code RowWriteCursor}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Tobias Pietzsch
  */
-public interface RowWriteCursor extends Closeable {
+public class BufferedAccessRowBuffer extends ReadAccessRowRead implements RowBuffer {
 
-    // new API v2
-    // TODO (TP): This should be preferably be the only method,
-    //            but it needs one additional layer of buffering in case the RowWrite row() is written to directly.
-    //            How important is this?
-    //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
-    /**
-     * @since 5.3
-     */
-    void commit(RowRead row);
+    private WriteAccessRowWrite m_writeDelegate;
 
-    /**
-     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
-     * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
-     * side effects.<br>
-     *
-     * Potential IOException will be logged.
-     */
+    public BufferedAccessRowBuffer(final ValueSchema schema) {
+        this(schema, BufferedAccesses.createBufferedAccessRow(schema));
+    }
+
+    public BufferedAccessRowBuffer(final ValueSchema schema, final BufferedAccessRow bufferedAccessRow) {
+        super(schema, bufferedAccessRow);
+        m_writeDelegate = new WriteAccessRowWrite(schema, bufferedAccessRow);
+    }
+
     @Override
-    void close();
+    public void setFrom(final RowRead values) {
+        m_writeDelegate.setFrom(values);
+    }
 
+    @Override
+    public <W extends WriteValue<?>> W getWriteValue(final int index) {
+        return m_writeDelegate.getWriteValue(index);
+    }
+
+    @Override
+    public void setMissing(final int index) {
+        m_writeDelegate.setMissing(index);
+    }
+
+    @Override
+    public void setRowKey(final String rowKey) {
+        m_writeDelegate.setRowKey(rowKey);
+    }
+
+    @Override
+    public void setRowKey(final RowKeyValue rowKey) {
+        m_writeDelegate.setRowKey(rowKey);
+    }
 }

@@ -44,40 +44,15 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 10, 2020 (dietzc): created
+ *   15 Apr 2024 (pietzsch): created
  */
 package org.knime.core.data.v2;
 
-import java.io.Closeable;
-
 /**
- * Cursor over RowWrites
+ * Extends both {@code RowRead} and {@code RowWrite}. A {@code RowBuffer} can be used as a "staging row" for preparing a
+ * {@code RowRead} to be {@link RowWriteCursor#commit(RowRead) committed} to a {@code RowWriteCursor}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Tobias Pietzsch
  */
-public interface RowWriteCursor extends Closeable {
-
-    // new API v2
-    // TODO (TP): This should be preferably be the only method,
-    //            but it needs one additional layer of buffering in case the RowWrite row() is written to directly.
-    //            How important is this?
-    //            Another possibility would be to add this method directly to RowContainer, so remove RowWriteCursor completely.
-    /**
-     * @since 5.3
-     */
-    void commit(RowRead row);
-
-    /**
-     * Closes this resource, relinquishing any underlying resources. This method is invoked automatically on objects
-     * managed by the try-with-resources statement. This method is idempotent, i.e., it can be called repeatedly without
-     * side effects.<br>
-     *
-     * Potential IOException will be logged.
-     */
-    @Override
-    void close();
-
+public interface RowBuffer extends RowRead, RowWrite {
 }

@@ -44,58 +44,90 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 9, 2020 (dietzc): created
+ *   Jul 28, 2021 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.data.v2;
 
-import java.io.IOException;
+import java.util.Arrays;
 
+import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.v2.schema.ValueSchema;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.table.cursor.LookaheadCursor;
+import org.knime.core.table.row.WriteAccessRow;
 
 /**
- * Container to store new rows. RowContainers automatically extend themselves in case more rows are added.
+ * Implements a {@link RowWrite} based on a {@link WriteAccessRow}.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
- *
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-public interface RowContainer extends AutoCloseable {
+// TODO (TP) replace with BufferedRowWrite
+//           --> I think this TODO is outdated now?
+public final class WriteAccessRowWrite implements RowWrite {
+
+    // TODO with a bit of refactoring this could also be used in BufferedRowContainer
+    // TODO (TP) --> I think this TODO is outdated now?
+
+    private final WriteAccessRow m_accesses;
+
+    private final WriteValue<?>[] m_values;
+
+    private final RowKeyWriteValue m_rowKeyValue;
 
     /**
-     * TODO (TP) javadoc
+     * Constructor.
      *
-     * @return
+     * @param schema of the table
+     * @param writeAccess to write to
      */
-    ValueSchema getSchema();
-
-    /**
-     * TODO (TP) javadoc
-     *
-     * @return
-     */
-    default RowBuffer createRowBuffer() {
-        return new BufferedAccessRowBuffer(getSchema());
+    public WriteAccessRowWrite(final ValueSchema schema, final WriteAccessRow writeAccess) {
+        m_accesses = writeAccess;
+        m_values = new WriteValue<?>[schema.numFactories()];
+        Arrays.setAll(m_values, i -> schema.getValueFactory(i).createWriteValue(m_accesses.getWriteAccess(i)));
+        m_rowKeyValue = (RowKeyWriteValue)m_values[0];
     }
 
-    /**
-     * Create a new {@link LookaheadCursor} over {@link RowWrite}s.
-     *
-     * @implNote NB: Currently only a single cursor is supported i.e. always the same cursor will be returned by this
-     *           method.
-     *
-     * @return a cursor.
-     */
-    RowWriteCursor createCursor();
+    @Override
+    public void setFrom(final RowRead values) {
 
-    /**
-     * Turn {@link RowContainer} content into a {@link BufferedDataTable}. Subsequent calls to {@link #close()} will be
-     * ignored.
-     *
-     * @return a new BufferedDataTable representing
-     * @throws IOException
-     */
-    BufferedDataTable finish() throws IOException;
+        // TODO (TP) We could check instanceof ReadAccessRowRead here and directly
+        //           set our WriteAccessRow from their ReadAccessRow
+        //           Would that improve performance in any way?
+        //           Is it always ok to do this? Or do we need to check for compatibility
+        //           of ValueFactories somehow?
+
+        assert values.getNumColumns() == getNumColumns();
+        setRowKey(values.getRowKey());
+        for (int i = 0; i < getNumColumns(); i++) {
+            if (values.isMissing(i)) {
+                setMissing(i);
+            } else {
+                m_values[i + 1].setValue(values.getValue(i));
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <W extends WriteValue<?>> W getWriteValue(final int index) {
+        return (W)m_values[index + 1];
+    }
+
+    @Override
+    public int getNumColumns() {
+        return m_values.length - 1;
+    }
+
+    @Override
+    public void setMissing(final int index) {
+        m_accesses.getWriteAccess(index + 1).setMissing();
+    }
+
+    @Override
+    public void setRowKey(final String rowKey) {
+        m_rowKeyValue.setRowKey(rowKey);
+    }
+
+    @Override
+    public void setRowKey(final RowKeyValue rowKey) {
+        m_rowKeyValue.setRowKey(rowKey);
+    }
 }
