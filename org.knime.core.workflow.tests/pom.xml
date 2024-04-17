@@ -131,6 +131,14 @@
 					</dependency-resolution>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<configuration>
+					<argLine> ${failsafeArgLine} --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED -Djakarta.ws.rs.ext.RuntimeDelegate=org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl -Djakarta.ws.rs.client.ClientBuilder=org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl -Dorg.apache.cxf.bus.factory=org.knime.cxf.core.fragment.KNIMECXFBusFactory -Dorg.apache.cxf.transport.http.forceURLConnection=true
+					</argLine>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>
