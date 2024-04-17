@@ -668,10 +668,8 @@ public final class NodeLogger {
     }
 
     /**
-     * Sets an new minimum logging level for all internal appenders, that are,
-     * log file, and <code>System.out</code> and <code>System.err</code>
-     * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
-     * all appenders.
+     * Sets an new minimum logging level for all internal appenders (log file and <code>System.out</code>).
+     * The maximum logging level will be set to <code>LEVEL.FATAL</code> for all appenders.
      *
      * @param level new minimum logging level
      * @deprecated use {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
