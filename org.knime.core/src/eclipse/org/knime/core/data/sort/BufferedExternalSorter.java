@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.Functions.FailableConsumer;
@@ -113,10 +114,8 @@ public final class BufferedExternalSorter extends ExternalSorter<BufferedDataTab
         }
 
         try (final var rowCursor = inputTable.cursor()) {
-            final var lowMemIndicator = m_memService.newIndicator();
-            return Optional.of(createInitialRunsGreedy(exec, lowMemIndicator::lowMemoryActionRequired,
-                    m_numRunsPerMerge, rowCursor, inputTable.size(), initialPhaseProgress, rowsReadCounter) //
-                .toArray(BufferedDataTable[]::new));
+            return Optional.of( //
+                createInitialRuns(exec, rowCursor, inputTable.size(), initialPhaseProgress, rowsReadCounter));
         }
     }
 
@@ -124,9 +123,9 @@ public final class BufferedExternalSorter extends ExternalSorter<BufferedDataTab
     protected BufferedDataTable[] createInitialRuns(final ExecutionContext exec, final RowCursor input,
             final long optNumRows, final Progress initialPhaseProgress, final AtomicLong rowsReadCounter)
             throws IOException, CanceledExecutionException {
-        final var lowMemIndicator = m_memService.newIndicator();
-        return createInitialRunsGreedy(exec, lowMemIndicator::lowMemoryActionRequired, m_numRunsPerMerge, input,
-            optNumRows, initialPhaseProgress, rowsReadCounter).toArray(BufferedDataTable[]::new);
+        final BooleanSupplier hasLowMemory = () -> true; // m_memService.newIndicator()::lowMemoryActionRequired;
+        return createInitialRunsGreedy(exec, hasLowMemory, 1_000_000, input, optNumRows, initialPhaseProgress,
+            rowsReadCounter).toArray(BufferedDataTable[]::new);
     }
 
     @Override
@@ -178,8 +177,8 @@ public final class BufferedExternalSorter extends ExternalSorter<BufferedDataTab
 
     @Override
     protected BufferedDataTable mergeToTable(final ExecutionContext exec, final List<BufferedDataTable> runsToMerge,
-            final Progress progress, final AtomicLong rowsProcessedCounter, final long numOutputRows,
-            final Runnable beforeFinishing) throws CanceledExecutionException, IOException {
+            final boolean isLast, final Progress progress, final AtomicLong rowsProcessedCounter,
+            final long numOutputRows, final Runnable beforeFinishing) throws CanceledExecutionException, IOException {
         // merge the `k` chunks together and add the combined chunk to the chunks writer
         try (final var mergeCursor = createMergedCursor(exec, runsToMerge)) {
             return writeTable(exec, false, container -> {

@@ -126,6 +126,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public final class ValueFactoryUtils {
 
+    /**
+     * @since 5.3
+     */
+    public static final boolean USE_DICT_ENCODING = false;
+
     private static final String CFG_VALUE_FACTORY_CLASS = "value_factory_class";
 
     private static final String CFG_DATA_TYPE = "data_type";
