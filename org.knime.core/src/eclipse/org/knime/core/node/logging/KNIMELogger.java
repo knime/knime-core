@@ -772,11 +772,13 @@ public final class KNIMELogger {
      */
     private static Level translateKnimeToLog4JLevel(final LEVEL level) {
         return switch (level) {
+            case ALL -> Level.ALL;
             case DEBUG -> Level.DEBUG;
             case INFO -> Level.INFO;
             case WARN -> Level.WARN;
             case ERROR -> Level.ERROR;
             case FATAL -> Level.FATAL;
+            case OFF -> Level.OFF;
             default -> Level.ALL;
         };
     }
@@ -790,11 +792,13 @@ public final class KNIMELogger {
     private static LEVEL translateLog4JToKnimeLevel(final Level level) {
         // A null level defaults to log level ALL.
         return switch (Objects.requireNonNullElse(level, Level.ALL).toInt()) {
+            case Priority.ALL_INT -> LEVEL.ALL;
             case Priority.DEBUG_INT -> LEVEL.DEBUG;
             case Priority.INFO_INT -> LEVEL.INFO;
             case Priority.WARN_INT -> LEVEL.WARN;
             case Priority.ERROR_INT -> LEVEL.ERROR;
             case Priority.FATAL_INT -> LEVEL.FATAL;
+            case Priority.OFF_INT -> LEVEL.OFF;
             default -> LEVEL.ALL;
         };
     }

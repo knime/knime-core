@@ -88,7 +88,13 @@ public final class NodeLogger {
         /** includes fatal and more critical messages. */
         FATAL,
         /** includes all messages. */
-        ALL
+        ALL,
+        /** includes no messages.
+         * @since 5.3
+         * */
+        /* Added to make the Log4j level of the same name, which can be set in the XML config, visible in the
+         * preferences page. */
+        OFF
     }
 
     /**
