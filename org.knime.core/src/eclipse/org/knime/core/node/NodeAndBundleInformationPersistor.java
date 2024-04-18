@@ -345,9 +345,9 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
         @SuppressWarnings("rawtypes")
         final Class<? extends NodeFactory> facClass = factory.getClass();
         Bundle bundle = null;
-        if (factory instanceof DynamicNodeFactory) {
+        if (factory instanceof BundleNameProvider) {
             @SuppressWarnings({"unchecked", "rawtypes"})
-            Optional<String> bundleName = ((DynamicNodeFactory)factory).getBundleName();
+            Optional<String> bundleName = ((BundleNameProvider)factory).getBundleName2();
             if (bundleName.isPresent()) {
                 bundle = Platform.getBundle(bundleName.get());
             }

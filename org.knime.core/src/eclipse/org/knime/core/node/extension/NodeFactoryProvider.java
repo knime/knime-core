@@ -61,7 +61,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.FactoryIDUniquifierProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
@@ -186,8 +186,8 @@ public final class NodeFactoryProvider {
 
         if (optFactory.isPresent()) {
             final var uninitialized = optFactory.get();
-            if (uninitialized instanceof DynamicNodeFactory<?> dynamic) {
-                dynamic.loadAdditionalFactorySettings(nodeSpec.factory().factorySettings());
+            if (uninitialized instanceof FactoryIDUniquifierProvider) {
+                uninitialized.loadAdditionalFactorySettings(nodeSpec.factory().factorySettings());
             }
             if (nodeSpec.deprecated()) {
                 Node.invokeNodeFactorySetDeprecated(uninitialized);

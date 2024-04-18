@@ -84,7 +84,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.FactoryIDUniquifierProvider;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
@@ -569,7 +569,7 @@ public final class WorkflowSummaryCreator {
 
         private static NodeFactoryKey createNodeFactoryKey(final NodeFactory<NodeModel> factory) {
             final String settingsString;
-            if (factory instanceof DynamicNodeFactory) {
+            if (factory instanceof FactoryIDUniquifierProvider) {
                 final NodeSettings settings = new NodeSettings("settings");
                 factory.saveAdditionalFactorySettings(settings);
                 settingsString = JSONConfig.toJSONString(settings, WriterConfig.DEFAULT);

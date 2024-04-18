@@ -66,8 +66,8 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ConfigurableNodeFactory;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.FactoryIDUniquifierProvider;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
@@ -560,8 +560,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         // It's persisted such that the complete factory-id can be re-created without the need to
         // instantiate the node factory but just by reading the node settings.
         var factory = node.getFactory();
-        if (factory instanceof DynamicNodeFactory dynamicNodeFactory) {
-            settings.addString("factory-id-uniquifier", dynamicNodeFactory.getFactoryIdUniquifier());
+
+        if (factory instanceof FactoryIDUniquifierProvider factoryWithUniquifier) {
+            settings.addString("factory-id-uniquifier", factoryWithUniquifier.getFactoryIdUniquifier());
+
         }
 
         NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");

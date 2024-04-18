@@ -64,6 +64,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.FactoryIDUniquifierProvider;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
@@ -74,10 +75,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.ports.ConfigurablePortGroup;
 import org.knime.core.node.context.ports.PortGroupConfiguration;
-import org.knime.core.node.extension.NodeSpec.Factory;
-import org.knime.core.node.extension.NodeSpec.Metadata;
 import org.knime.core.node.extension.NodeSpec.Metadata.Vendor;
-import org.knime.core.node.extension.NodeSpec.Ports;
 import org.knime.core.node.extension.NodeSpec.Ports.Port;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.CoreToDefUtil;
@@ -212,8 +210,8 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             var id = factory.getFactoryId();
             var className = factory.getClass().getName();
             NodeSettings factorySettings = null;
-            //only set settings in case of a dynamic node factory
-            if (DynamicNodeFactory.class.isAssignableFrom(factory.getClass())) {
+            // We only save additional factory settings if the factory can create multiple nodes
+            if (factory instanceof FactoryIDUniquifierProvider) {
                 factorySettings = new NodeSettings("settings");
                 try {
                     factory.saveAdditionalFactorySettings(factorySettings);

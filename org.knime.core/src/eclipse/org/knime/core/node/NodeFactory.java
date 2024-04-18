@@ -87,59 +87,77 @@ public abstract class NodeFactory<T extends NodeModel> {
      * N.B New additions to this enum should also be added to org.knime.workbench.editor2.figures.DisplayableNodeType
      */
     public static enum NodeType {
-        /** A data producing node. */
-        Source,
-        /** A data consuming node. */
-        Sink,
-        /** A learning node. */
-        Learner,
-        /** A predicting node. */
-        Predictor,
-        /** A data manipulating node. */
-        Manipulator,
-        /** A visualizing node. */
-        Visualizer,
-        /** A widget node.
-         * @since 4.2*/
-        Widget,
-        /** A metanode. */
-        Meta,
-        /** Start node of a loop. */
-        LoopStart,
-        /** End node of a loop. */
-        LoopEnd,
-        /** Start node of a scope.
-         * @since 2.8*/
-        ScopeStart,
-        /** End node of a scope.
-         * @since 2.8*/
-        ScopeEnd,
-        /** A node contributing to quick/web form.
-         * @deprecated use {@link #Widget} instead */
-        @Deprecated
-        QuickForm,
-        /** A node contributing a configuration input to a component dialog.
-         * @since 4.2*/
-        Configuration,
-        /** All other nodes. */
-        Other,
-        /** A missing node (framework use only).
-         * @since 2.7 */
-        Missing,
-        /** If not specified. */
-        Unknown,
-        /** @since 2.10 */
-        Subnode,
-        /** @since 2.10 */
-        VirtualIn,
-        /** @since 2.10 */
-        VirtualOut,
-        /**
-         * Container nodes (input and output).
-         * Framework use only.
-         * @since 4.2
-         */
-        Container
+            /** A data producing node. */
+            Source,
+            /** A data consuming node. */
+            Sink,
+            /** A learning node. */
+            Learner,
+            /** A predicting node. */
+            Predictor,
+            /** A data manipulating node. */
+            Manipulator,
+            /** A visualizing node. */
+            Visualizer,
+            /**
+             * A widget node.
+             *
+             * @since 4.2
+             */
+            Widget,
+            /** A metanode. */
+            Meta,
+            /** Start node of a loop. */
+            LoopStart,
+            /** End node of a loop. */
+            LoopEnd,
+            /**
+             * Start node of a scope.
+             *
+             * @since 2.8
+             */
+            ScopeStart,
+            /**
+             * End node of a scope.
+             *
+             * @since 2.8
+             */
+            ScopeEnd,
+            /**
+             * A node contributing to quick/web form.
+             *
+             * @deprecated use {@link #Widget} instead
+             */
+            @Deprecated
+            QuickForm,
+            /**
+             * A node contributing a configuration input to a component dialog.
+             *
+             * @since 4.2
+             */
+            Configuration,
+            /** All other nodes. */
+            Other,
+            /**
+             * A missing node (framework use only).
+             *
+             * @since 2.7
+             */
+            Missing,
+            /** If not specified. */
+            Unknown,
+            /** @since 2.10 */
+            Subnode,
+            /** @since 2.10 */
+            VirtualIn,
+            /** @since 2.10 */
+            VirtualOut,
+            /**
+             * Container nodes (input and output). Framework use only.
+             *
+             * @since 4.2
+             */
+            Container
     }
 
     private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");
@@ -151,8 +169,8 @@ public abstract class NodeFactory<T extends NodeModel> {
         try {
             p = new NodeDescriptionParser();
         } catch (ParserConfigurationException ex) {
-            NodeLogger.getLogger(NodeFactory.class).error(
-                "Could not create node description parser:" + ex.getMessage(), ex);
+            NodeLogger.getLogger(NodeFactory.class).error("Could not create node description parser:" + ex.getMessage(),
+                ex);
         }
         PARSER = p;
     }
@@ -209,11 +227,10 @@ public abstract class NodeFactory<T extends NodeModel> {
 
         var isDynamicNodeFactory = false;
         String factoryIdUniquifier = null;
-        if (this instanceof DynamicNodeFactory dynamicNodeFactory) {
+        if (this instanceof FactoryIDUniquifierProvider factoryWithIDUniquifier) {
             isDynamicNodeFactory = true;
-            factoryIdUniquifier = dynamicNodeFactory.getFactoryIdUniquifier();
+            factoryIdUniquifier = factoryWithIDUniquifier.getFactoryIdUniquifier();
         }
-
         return NodeFactoryId.compose(factoryClassName, isDynamicNodeFactory, factoryIdUniquifier, this::getNodeName);
     }
 
@@ -271,8 +288,16 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Creates an input stream containing the properties for the node. This
-     * can be overridden by subclasses to provide this information dynamically.
+     * @return whether the factory is initialized
+     * @since 5.3
+     */
+    public boolean isInitialized() {
+        return m_initialized;
+    }
+
+    /**
+     * Creates an input stream containing the properties for the node. This can be overridden by subclasses to provide
+     * this information dynamically.
      *
      * @return the input stream to read the properties from
      * @since 2.6
@@ -328,14 +353,11 @@ public abstract class NodeFactory<T extends NodeModel> {
         }
     }
 
-
-
     /**
-     * Resolves the icon using the classloader. If not available or
-     * the icon is not readable, a default icon is returned.
+     * Resolves the icon using the classloader. If not available or the icon is not readable, a default icon is
+     * returned.
      * <p>
-     * This method does not return <code>null</code> as the icon is optional, i.e. it doesn't
-     * hurt if it is missing.
+     * This method does not return <code>null</code> as the icon is optional, i.e. it doesn't hurt if it is missing.
      *
      * @return the icon as given in the xml attribute <i>icon</i>
      */
@@ -368,17 +390,16 @@ public abstract class NodeFactory<T extends NodeModel> {
             if (iconFile.exists() && iconFile.isFile()) {
                 try {
                     iconURL = iconFile.toURI().toURL();
-                } catch (MalformedURLException e) { /*do nothing */ }
+                } catch (MalformedURLException e) {
+                    /*do nothing */ }
             }
         }
 
         return iconURL;
     }
 
-
     /**
-     * The XML description can be used with the
-     * <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
+     * The XML description can be used with the <code>NodeFactoryHTMLCreator</code> in order to get a converted HTML
      * description of it, which fits the overall KNIME HTML style.
      *
      * @return XML description of this node
@@ -387,37 +408,35 @@ public abstract class NodeFactory<T extends NodeModel> {
         return m_nodeDescription.getXMLDescription();
     }
 
-
     /**
-     * Loads additional settings to this instance that were saved using
-     * the {@link #saveAdditionalFactorySettings(ConfigWO)}.
+     * Loads additional settings to this instance that were saved using the
+     * {@link #saveAdditionalFactorySettings(ConfigWO)}.
      *
-     * <p>See {@link #saveAdditionalFactorySettings(ConfigWO)} for details on
-     * when to overwrite this method.
+     * <p>
+     * See {@link #saveAdditionalFactorySettings(ConfigWO)} for details on when to overwrite this method.
      *
-     * <p>This method is called immediately after instantiation is not intended
-     * to be called by client code.
+     * <p>
+     * This method is called immediately after instantiation is not intended to be called by client code.
      *
      * @param config The config to read from.
-     * @throws InvalidSettingsException If the settings are invalid (which
-     * will result in an error during workflow load -- the node will not load!)
+     * @throws InvalidSettingsException If the settings are invalid (which will result in an error during workflow load
+     *             -- the node will not load!)
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
      */
-    public void loadAdditionalFactorySettings(final ConfigRO config)
-            throws InvalidSettingsException {
+    public void loadAdditionalFactorySettings(final ConfigRO config) throws InvalidSettingsException {
         // overwritten in subclasses
         init();
     }
 
-    /** Saves additional settings of this instance. This method is called by
-     * the framework upon workflow save and may be overwritten by subclasses.
+    /**
+     * Saves additional settings of this instance. This method is called by the framework upon workflow save and may be
+     * overwritten by subclasses.
      *
-     * <p>This method is mainly used in a dynamic context, where node factories
-     * are defined through a different extension that generates a set of
-     * node factories and not just a single one.  Most derived node factories
-     * will therefore not overwrite this method (e.g. none of the
-     * wizard-generated factories).
+     * <p>
+     * This method is mainly used in a dynamic context, where node factories are defined through a different extension
+     * that generates a set of node factories and not just a single one. Most derived node factories will therefore not
+     * overwrite this method (e.g. none of the wizard-generated factories).
      *
      * @param config To read from.
      * @since 2.6
@@ -599,30 +618,27 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param viewIndex The index for the view to create.
      * @param nodeModel the underlying model
      * @return a new node view for the given index
-     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is
-     *         smaller 0 or greater or equal to the values returned by
-     *         {@link #getNrNodeViews()}
+     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is smaller 0 or greater or equal to the values
+     *             returned by {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
     public abstract NodeView<T> createNodeView(final int viewIndex, final T nodeModel);
 
-    /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
-     * creation of a more flexible {@link AbstractNodeView}. Implementations
-     * will typically overwrite the {@link #createNodeView(int, NodeModel)}
-     * method unless they wish to return, e.g. an
-     * {@link ExternalApplicationNodeView}.
+    /**
+     * Generalization of {@link #createNodeView(int, NodeModel)} to allow for creation of a more flexible
+     * {@link AbstractNodeView}. Implementations will typically overwrite the {@link #createNodeView(int, NodeModel)}
+     * method unless they wish to return, e.g. an {@link ExternalApplicationNodeView}.
      *
-     * <p><strong>Note:</strong>This method is going to be removed in KNIME
-     * v3.0, whereby the return type of the
-     * {@link #createNodeView(int, NodeModel)} will be changed
-     * to {@link AbstractNodeView}. (This change is postponed to v3.0 in order
-     * to ensure binary compatibility of 2.0.x plugins with the 2.x series).
+     * <p>
+     * <strong>Note:</strong>This method is going to be removed in KNIME v3.0, whereby the return type of the
+     * {@link #createNodeView(int, NodeModel)} will be changed to {@link AbstractNodeView}. (This change is postponed to
+     * v3.0 in order to ensure binary compatibility of 2.0.x plugins with the 2.x series).
+     *
      * @param viewIndex The index for the view to create
      * @param nodeModel the underlying model
      * @return a new node view for the given index
-     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is
-     *         smaller 0 or greater or equal to the values returned by
-     *         {@link #getNrNodeViews()}
+     * @throws IndexOutOfBoundsException If the <code>viewIndex</code> is smaller 0 or greater or equal to the values
+     *             returned by {@link #getNrNodeViews()}
      * @since 2.1
      */
     public AbstractNodeView<T> createAbstractNodeView(final int viewIndex, final T nodeModel) {
@@ -630,24 +646,20 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Returns <code>true</code> if this node provides a dialog to adjust
-     * node specific settings.
+     * Returns <code>true</code> if this node provides a dialog to adjust node specific settings.
      *
-     * @return <code>true</code> if a <code>NodeDialogPane</code> is
-     *         available
+     * @return <code>true</code> if a <code>NodeDialogPane</code> is available
      * @see #createNodeDialogPane()
      */
     protected abstract boolean hasDialog();
 
     /**
-     * Creates and returns a new node dialog pane, if {@link #hasDialog()}
-     * returns <code>true</code>.
+     * Creates and returns a new node dialog pane, if {@link #hasDialog()} returns <code>true</code>.
      *
      * @return node dialog pane
      * @see #hasDialog()
      */
     protected abstract NodeDialogPane createNodeDialogPane();
-
 
     /**
      * Creates and returns a new node dialog pane, if {@link #hasDialog()} returns <code>true</code>.
@@ -730,8 +742,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * Used to return the list of all node factories, deprecated since 4.2 and returning an empty list since then.
      *
      * @return an empty list
-     * @deprecated Removed in 4.2 without replacement. Nodes are now collected in the framework only and not known
-     * to any 3rd party extension.
+     * @deprecated Removed in 4.2 without replacement. Nodes are now collected in the framework only and not known to
+     *             any 3rd party extension.
      */
     @Deprecated
     public static List<String> getLoadedNodeFactories() {
@@ -781,8 +793,8 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Returns whether this node (factory) is deprecated. Ordinary nodes will declare their deprecation through an
      * attribute in the extension point registration. Dynamic nodes (so those registered via the extension point
-     * defining {@link org.knime.core.node.NodeSetFactory}) can overwrite a protected scope
-     * method on {@link DynamicNodeFactory}.
+     * defining {@link org.knime.core.node.NodeSetFactory}) can overwrite a protected scope method on
+     * {@link DynamicNodeFactory}.
      *
      * @return <code>true</code> if the node is deprecated, <code>false</code> otherwise
      * @since 3.0
@@ -792,9 +804,10 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Concrete implementations of {@link DynamicNodeFactory} can overwrite this method,
-     * if they know about the deprecation status of the node they represent.<br>
+     * Concrete implementations of {@link DynamicNodeFactory} can overwrite this method, if they know about the
+     * deprecation status of the node they represent.<br>
      * Default implementation returns deprecated status of node description.
+     *
      * @return <code>true</code> if the node is deprecated, <code>false</code> otherwise
      * @since 3.4
      */
