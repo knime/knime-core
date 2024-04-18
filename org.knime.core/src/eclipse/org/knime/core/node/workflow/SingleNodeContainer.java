@@ -50,6 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.knime.core.node.BufferedDataTable;
@@ -327,6 +328,40 @@ public abstract class SingleNodeContainer extends NodeContainer {
      */
     abstract boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch,
         final boolean keepNodeMessage);
+
+    /**
+     * @return a set of names of model settings that are overwritten by a variable
+     * @throws InvalidSettingsException if settings can't be parsed
+     * @since 5.3
+     */
+    public Set<String> getVariableControlledModelSettings() throws InvalidSettingsException {
+        NodeSettings fromModel = m_settings.getModelSettingsClone();
+        return getVariableControlledSettings(fromModel, m_settings.getVariablesSettings());
+    }
+
+    /**
+     * @return a set of names of model view settings that are overwritten by a variable
+     * @throws InvalidSettingsException if settings can't be parsed
+     * @since 5.3
+     */
+    public Set<String> getVariableControlledViewSettings() throws InvalidSettingsException {
+        NodeSettings fromViewModel = m_settings.getViewSettingsClone();
+        return getVariableControlledSettings(fromViewModel, m_settings.getVariablesSettings());
+    }
+
+    private static Set<String> getVariableControlledSettings(final NodeSettings settings,
+        final NodeSettingsRO variableSettings) throws InvalidSettingsException {
+        if (variableSettings == null) {
+            return Collections.emptySet();
+        }
+        ConfigEditTreeModel configEditor;
+        try {
+            configEditor = ConfigEditTreeModel.create(settings, variableSettings);
+            return configEditor.getVariableControlledParameters();
+        } catch (final InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
+        }
+    }
 
     /** Used before configure, to apply the variable mask to the nodesettings,
      * that is to change individual node settings to reflect the current values
