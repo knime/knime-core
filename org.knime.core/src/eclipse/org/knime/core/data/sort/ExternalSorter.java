@@ -256,6 +256,7 @@ public abstract class ExternalSorter<T> {
      *
      * @param exec execution context
      * @param runsToMerge list of runs to be merged
+     * @param isLast indicating whether or not this is the last merge, creating the final output table
      * @param progress progress reporting
      * @param rowsProcessedCounter updatable counter for the number of rows that have already been written to the output
      * @param numOutputRows total number of rows in all input runs combined
@@ -264,7 +265,7 @@ public abstract class ExternalSorter<T> {
      * @throws CanceledExecutionException if execution was canceled
      * @throws IOException from the backend
      */
-    protected abstract T mergeToTable(ExecutionContext exec, List<T> runsToMerge, Progress progress,
+    protected abstract T mergeToTable(ExecutionContext exec, List<T> runsToMerge, boolean isLast, Progress progress,
             AtomicLong rowsProcessedCounter, long numOutputRows, Runnable beforeFinishing)
             throws CanceledExecutionException, IOException;
 
@@ -649,7 +650,7 @@ public abstract class ExternalSorter<T> {
                 if (m_runs.size() > 1) {
                     // final merge round, different message
                     try (final var subProgress = mergePhaseProgress.createSubProgress(1.0 / numLevels)) { // NOSONAR
-                        performMergeRound(exec, subProgress, () -> new StringBuilder("Writing result table"));
+                        performMergeRound(exec, subProgress, true, () -> new StringBuilder("Writing result table"));
                     }
                 }
 
@@ -677,7 +678,7 @@ public abstract class ExternalSorter<T> {
                 // too many runs, perform one full merge round over the data to ensure stability
                 currentLevel.incrementAndGet();
                 try (final var subProgress = mergePhaseProgress.createSubProgress(1.0 / numLevels)) { // NOSONAR
-                    performMergeRound(exec, subProgress,
+                    performMergeRound(exec, subProgress, false,
                         () -> levelFracBuilder.apply(new StringBuilder("Merging level ")));
                 }
             }
@@ -692,7 +693,7 @@ public abstract class ExternalSorter<T> {
          * @throws CanceledExecutionException if execution was canceled
          * @throws IOException from the backend
          */
-        private void performMergeRound(final ExecutionContext exec, final Progress progress,
+        private void performMergeRound(final ExecutionContext exec, final Progress progress, final boolean isLast,
                 final Supplier<StringBuilder> prefixSupplier) throws CanceledExecutionException, IOException {
             final var rowsTicker = new AtomicLong();
 
@@ -713,7 +714,7 @@ public abstract class ExternalSorter<T> {
                 }
 
                 // merge the `k` runs together and add the combined run back to the queue
-                m_runs.addLast(mergeToTable(exec, runsToMerge, progress, rowsTicker, m_numRows, () -> {
+                m_runs.addLast(mergeToTable(exec, runsToMerge, isLast, progress, rowsTicker, m_numRows, () -> {
                     additionalInfo.set("; Closing table...");
                     progress.update(messageSupplier);
                 }));
