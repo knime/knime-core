@@ -620,6 +620,7 @@ public final class NodeLogger {
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      * @see #addWriter(Writer, Layout, LEVEL, LEVEL)
+     * @deprecated use {@link NodeLoggerConfig#addWriter(Writer, Layout, LEVEL, LEVEL)} instead
      */
     @Deprecated
     public static void addWriter(final Writer writer,
@@ -667,8 +668,10 @@ public final class NodeLogger {
     /**
      * @param level minimum log level
      * @see #setLevel(NodeLogger.LEVEL)
+     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)} in order to also receive
+     *                 existing minimum/maximum values
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public static void setLevelIntern(final LEVEL level) {
         KNIMELogger.setLevel(level);
     }
@@ -678,7 +681,8 @@ public final class NodeLogger {
      * The maximum logging level will be set to <code>LEVEL.FATAL</code> for all appenders.
      *
      * @param level new minimum logging level
-     * @deprecated use {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
+     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)} in order to also receive
+     *                 existing minimum/maximum values
      */
     @Deprecated
     public static void setLevel(final LEVEL level) {
@@ -735,8 +739,8 @@ public final class NodeLogger {
      * @param max the maximum logging level
      * @throws NoSuchElementException if the given appender does not exist
      * @since 2.8
-     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)} for more fine-graned
-     *     control about existing minimum and maximum values
+     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)} in order to also receive
+     *                 existing minimum/maximum values
      */
     @Deprecated(forRemoval = true)
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)

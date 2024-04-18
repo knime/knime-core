@@ -49,20 +49,16 @@
 package org.knime.core.node.logging;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 
 import org.apache.commons.io.output.NullWriter;
-import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 import org.eclipse.core.runtime.Platform;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
@@ -92,6 +88,11 @@ class NodeLoggerInitializationTest {
         WRITER = null;
     }
 
+    @AfterEach
+    void removeWriter() {
+        KNIMELogger.removeWriter(WRITER);
+    }
+
     @Test
     void testBufferDraining() {
         final var buffer = new LogBuffer(3);
@@ -110,7 +111,7 @@ class NodeLoggerInitializationTest {
     void testNoBuffering() {
         // initializing the object instance is automatic
         final var loggerName = "org.knime.bufferedloggertest";
-        final var logStack = new LogStack(loggerName);
+        final var logStack = new LogInterceptor(loggerName);
         KNIMELogger.addWriter(WRITER, logStack, LEVEL.DEBUG, LEVEL.FATAL);
         // add twice to test removal logic
         KNIMELogger.addWriter(WRITER, logStack, LEVEL.DEBUG, LEVEL.FATAL);
@@ -122,10 +123,10 @@ class NodeLoggerInitializationTest {
         // should be a no-op
         KNIMELogger.initializeLogging(false);
 
-        assertFalse(logStack.m_stack.isEmpty(), "Expected at least one log message");
+        assertFalse(logStack.isEmpty(), "Expected at least one log message");
         final var middleMsg = "Middle message";
         testLogger.info(middleMsg);
-        assertFalse(logStack.m_stack.isEmpty(), "Expected some log messages");
+        assertFalse(logStack.isEmpty(), "Expected some log messages");
 
         // this should have no effect, since we should have never buffered
         KNIMELogger.logBufferedMessages();
@@ -161,16 +162,16 @@ class NodeLoggerInitializationTest {
         KNIMELogger.initializeLogging(false);
         assertTrue(Platform.getInstanceLocation().isSet(), "Instance location should have been set implicitly");
         // install our writer in between initialization and buffer draining
-        final var logStack = new LogStack(loggerName);
+        final var logStack = new LogInterceptor(loggerName);
         KNIMELogger.addWriter(WRITER, logStack, LEVEL.DEBUG, LEVEL.FATAL);
 
-        assertTrue(logStack.m_stack.isEmpty(), "Unexpected log messages; expected none");
+        assertTrue(logStack.isEmpty(), "Unexpected log messages; expected none");
         final var middleMsg = "Middle message";
         testLogger.info(middleMsg);
-        assertFalse(logStack.m_stack.isEmpty(), "No log messages; expected some");
+        assertFalse(logStack.isEmpty(), "No log messages; expected some");
 
         KNIMELogger.logBufferedMessages();
-        assertFalse(logStack.m_stack.isEmpty(), "No log messages; expected some");
+        assertFalse(logStack.isEmpty(), "No log messages; expected some");
 
         logStack.assertFirstLogMessageEquals(Level.INFO, middleMsg);
         logStack.assertLastLogMessageEquals(Level.INFO, beforeMsg);
@@ -178,56 +179,6 @@ class NodeLoggerInitializationTest {
         final var afterMsg = "After setting instance location";
         testLogger.info(afterMsg);
         logStack.assertLastLogMessageEquals(Level.INFO, afterMsg);
-    }
-
-    private record LogMsg(Level level, String msg) {}
-
-    private final class LogStack extends Layout {
-
-        private final Deque<LogMsg> m_stack = new ArrayDeque<>();
-
-        private final String m_filter;
-
-        LogStack(final String filter) {
-            m_filter = filter;
-        }
-
-        @Override
-        public void activateOptions() {
-            // no op
-        }
-
-        @Override
-        public boolean ignoresThrowable() {
-            return false;
-        }
-
-        @Override
-        public String format(final LoggingEvent event) {
-            final var level = event.getLevel();
-            final var msg = event.getMessage().toString();
-
-            if (m_filter.equals(event.getLoggerName())) {
-                m_stack.add(new LogMsg(level, msg));
-            }
-
-            return String.format("%s: %s", level, msg);
-        }
-
-        private void expectLogMessageEquals(final boolean first, final Level level, final String msg) {
-            final var log = first ? m_stack.peekFirst() : m_stack.peekLast();
-            final var s = first ? "first" : "last";
-            assertEquals(msg, log.msg, "Unexpected %s log message".formatted(s));
-            assertEquals(level, log.level, "Unexpected level for %s log message".formatted(s));
-        }
-
-        public void assertLastLogMessageEquals(final Level level, final String expected) {
-            expectLogMessageEquals(false, level, expected);
-        }
-
-        public void assertFirstLogMessageEquals(final Level level, final String expected) {
-            expectLogMessageEquals(true, level, expected);
-        }
     }
 
 }

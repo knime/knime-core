@@ -522,8 +522,29 @@ public final class KNIMELogger {
      * @param maxLevel The maximum level to output.
      */
     public static void addWriter(final Writer writer, final Layout layout, final LEVEL minLevel, final LEVEL maxLevel) {
+        addWriter(null, writer, layout, minLevel, maxLevel);
+    }
+
+    /**
+     * Adds a new {@link java.io.Writer} with the given level to this logger.
+     *
+     * <p>
+     * Logger must be in <b>initialized</b> state.
+     *
+     * @param appenderName The name under which the associated appender should be known, can be {@code null} if the
+     *            appender should be anonymous
+     * @param writer The writer to add.
+     * @param layout the log file layout to use
+     * @param minLevel The minimum level to output.
+     * @param maxLevel The maximum level to output.
+     */
+    static void addWriter(final String appenderName, final Writer writer, final Layout layout,
+            final LEVEL minLevel, final LEVEL maxLevel) {
         checkInitializedState();
         final var appender = new WriterAppender(layout, writer);
+        if (appenderName != null) {
+            appender.setName(appenderName);
+        }
         appender.setImmediateFlush(true);
         final var filter = new LevelRangeFilter();
         filter.setLevelMin(translateKnimeToLog4JLevel(minLevel));
