@@ -695,17 +695,18 @@ public final class KNIMELogger {
      * <p>
      * Logger must be in <b>initialized</b> state.
      *
-     * @param level level to check
+     * @param level non-null level to check
      * @return {@code true} if the logger is enabled for the given level
      */
     public boolean isEnabledFor(final LEVEL level) {
         checkInitializedState();
-        return m_logger.isEnabledFor(translateKnimeToLog4JLevel(level));
+        return m_logger.isEnabledFor(translateKnimeToLog4JLevel(Objects.requireNonNull(level)));
     }
 
     /**
      * Returns the minimum and maximum log level for a given appender name.
-     * If the log level range has not been specified or logging not yet been initialized, returns null.
+     * If the log level range has not been specified or logging not yet been initialized, returns {@code null}.
+     * Also, any of the bounds can be {@code null}.
      *
      * @param appenderName Name of the appender.
      * @return Pair of (minLogLevel, maxLogLevel).
@@ -729,16 +730,6 @@ public final class KNIMELogger {
             filter = filter.getNext();
         }
         return null;
-    }
-
-    private static Pair<Level, Level> mapToLog4jLevel(final LEVEL first, final LEVEL second) {
-        return Pair.create(first != null ? translateKnimeToLog4JLevel(first) : null,
-            second != null ? translateKnimeToLog4JLevel(second) : null);
-    }
-
-    private static Pair<LEVEL, LEVEL> mapToKNIMELevel(final Level first, final Level second) {
-        return Pair.create(first != null ? translateLog4JToKnimeLevel(first) : null,
-            second != null ? translateLog4JToKnimeLevel(second) : null);
     }
 
     /**
@@ -770,10 +761,10 @@ public final class KNIMELogger {
 
         final LevelRangeFilter rangeFilter = filter != null ? ((LevelRangeFilter)filter) : new LevelRangeFilter();
 
-        final var newRange = Pair.create(rangeFilter.getLevelMin(), rangeFilter.getLevelMax())
-                .reduce(KNIMELogger::mapToKNIMELevel)
-                .reduce(rangeModifier)
-                .reduce(KNIMELogger::mapToLog4jLevel);
+        final var newRange = Pair.create(rangeFilter.getLevelMin(), rangeFilter.getLevelMax()) //
+            .map(KNIMELogger::translateLog4JToKnimeLevel, KNIMELogger::translateLog4JToKnimeLevel) //
+            .reduce(rangeModifier) //
+            .map(KNIMELogger::translateKnimeToLog4JLevel, KNIMELogger::translateKnimeToLog4JLevel);
 
         rangeFilter.setLevelMin(newRange.getFirst());
         rangeFilter.setLevelMax(newRange.getSecond());
@@ -786,12 +777,15 @@ public final class KNIMELogger {
     }
 
     /**
-     * Translates this logging <code>LEVEL</code> into Log4J logging levels.
+     * Translates the given KNIME log level into the corresponding Log4j log {@link LEVEL}.
      *
-     * @param level the <code>LEVEL</code> to translate
-     * @return the Log4J logging level
+     * @param level the {@link LEVEL} to translate
+     * @return the corresponding Log4j log {@link Level}, or {@code null} if the given value was {@code null}
      */
     private static Level translateKnimeToLog4JLevel(final LEVEL level) {
+        if (level == null) {
+            return null;
+        }
         return switch (level) {
             case ALL -> Level.ALL;
             case DEBUG -> Level.DEBUG;
@@ -800,19 +794,20 @@ public final class KNIMELogger {
             case ERROR -> Level.ERROR;
             case FATAL -> Level.FATAL;
             case OFF -> Level.OFF;
-            default -> Level.ALL;
         };
     }
 
     /**
-     * Translates Log4J logging level into this <code>LEVEL</code>.
+     * Translates Log4J logging level into the corresponding KNIME log {@link LEVEL}.
      *
-     * @param level the Level to translate
-     * @return this logging LEVEL
+     * @param level the {@link Level} to translate
+     * @return the corresponding KNIME log {@link LEVEL}, or {@code null} if the given value was {@code null}
      */
     private static LEVEL translateLog4JToKnimeLevel(final Level level) {
-        // A null level defaults to log level ALL.
-        return switch (Objects.requireNonNullElse(level, Level.ALL).toInt()) {
+        if (level == null) {
+            return null;
+        }
+        return switch (level.toInt()) {
             case Priority.ALL_INT -> LEVEL.ALL;
             case Priority.DEBUG_INT -> LEVEL.DEBUG;
             case Priority.INFO_INT -> LEVEL.INFO;
@@ -820,7 +815,8 @@ public final class KNIMELogger {
             case Priority.ERROR_INT -> LEVEL.ERROR;
             case Priority.FATAL_INT -> LEVEL.FATAL;
             case Priority.OFF_INT -> LEVEL.OFF;
-            default -> LEVEL.ALL;
+            // we don't support TRACE (and any other value would be weird, since Log4j 1 only supports these 8 values)
+            default -> throw new IllegalArgumentException("Unsupported Log4j level \"%s\"".formatted(level));
         };
     }
 

@@ -120,7 +120,8 @@ public final class NodeLoggerConfig {
 
     /**
      * Returns the minimum and maximum log level for a given appender name.
-     * If the log level range has not been specified, returns null.
+     * If the log level range has not been specified or logging not yet been initialized, returns {@code null}.
+     * Also, any of the bounds can be {@code null}.
      *
      * @param appenderName Name of the appender.
      * @return Pair of (minLogLevel, maxLogLevel).
@@ -157,7 +158,7 @@ public final class NodeLoggerConfig {
      * @param min the minimum logging level
      * @param max the maximum logging level
      * @throws NoSuchElementException if the given appender does not exist
-     * @deprecated use {@link NodeLoggerConfig#configureAppender(String, LevelRangeModifier)}
+     * @deprecated use {@link NodeLoggerConfig#modifyAppenderLevelRange(String, BiFunction)}
      */
     @Deprecated(forRemoval = true)
     public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
