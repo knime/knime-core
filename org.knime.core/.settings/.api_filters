@@ -2558,6 +2558,18 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getVariableControlledModelSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getVariableControlledViewSettings()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
         <filter comment="not meant as api" id="338792546">
             <message_arguments>
