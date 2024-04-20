@@ -57,7 +57,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
+import org.knime.core.customization.APCustomization;
+import org.knime.core.customization.APCustomizationProviderService;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -201,7 +205,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 "Unable to instantiate creation config for", e);
         }
         m_nodeAndBundleInformation = nodeInfo;
-        m_node = new Node(nodeFactory, creationConfig);
+        Node origNode = new Node(nodeFactory, creationConfig);
+        m_node = replaceNodeByMissingNodeIfUsageIsDisallowed(origNode, additionalFactorySettings);
     }
 
     private void handleExceptionPostNodeFactoryInstantiation(final LoadResult result,
@@ -565,6 +570,39 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     private static void saveCreationConfig(final NodeSettingsWO settings, final Node node) {
         node.getCopyOfCreationConfig().ifPresent(config -> config.saveSettingsTo(settings));
+    }
+
+    /**
+     * @param origNode
+     * @param additionalFactorySettings
+     * @return
+     * @since 5.3
+     */
+    public static Node replaceNodeByMissingNodeIfUsageIsDisallowed(final Node origNode,
+        final NodeSettingsRO additionalFactorySettings) {
+        final String factoryId = origNode.getFactory().getFactoryId();
+        if (CorePlugin.getInstance().getCustomizationService() //
+                .map(APCustomizationProviderService::getCustomization) //
+                .map(APCustomization::nodes) //
+                .map(n -> n.isUsageAllowed(factoryId)) //
+                .orElse(Boolean.TRUE)) {
+            return origNode;
+        } else {
+            LOGGER.debugWithFormat(
+                "Usage of node \"%s\" (\"%s\") disallowed by customization profile, replacing by node placeholder",
+                origNode.getFactory().getNodeName(), factoryId);
+            final NodeAndBundleInformationPersistor info = NodeAndBundleInformationPersistor.create(origNode);
+            final PortType[] inputs = IntStream.range(1, origNode.getNrInPorts()) // skip flow var port
+                    .mapToObj(origNode::getInputType) //
+                    .toArray(PortType[]::new);
+            final PortType[] outputs = IntStream.range(1, origNode.getNrOutPorts()) // skip flow var port
+                    .mapToObj(origNode::getOutputType) //
+                    .toArray(PortType[]::new);
+            MissingNodeFactory factory = new MissingNodeFactory(info, additionalFactorySettings, inputs, outputs);
+            factory.init();
+            final ModifiableNodeCreationConfiguration creationConfig = origNode.getCopyOfCreationConfig().orElse(null);
+            return new Node((NodeFactory)factory, creationConfig);
+        }
     }
 
 }

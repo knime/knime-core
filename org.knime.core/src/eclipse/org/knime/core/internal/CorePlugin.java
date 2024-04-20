@@ -189,11 +189,19 @@ public class CorePlugin implements BundleActivator {
     }
 
     /**
+     * @return the customization service, or an empty {@link Optional} if none is registered.
+     * @since 5.3
+     */
+    public Optional<APCustomizationProviderService> getCustomizationService() {
+        return Optional.ofNullable(m_customizationServiceTracker).map(ServiceTracker::getService);
+    }
+
+    /**
      * @return the report service, or an empty {@link Optional} if none is registered (extension not installed).
      * @since 5.1
      */
     public Optional<IReportService> getReportService() {
-        return Optional.ofNullable(m_reportServiceTracker).map(ser -> ser.getService());
+        return Optional.ofNullable(m_reportServiceTracker).map(ServiceTracker::getService);
     }
 
     /** Fetches a service implementing the {@link URIToFileResolve} interface

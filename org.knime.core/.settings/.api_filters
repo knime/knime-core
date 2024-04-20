@@ -16,6 +16,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec">
+        <filter comment="refactoring of internal API as part of NXT-2570" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.extension.NodeSpec"/>
+                <message_argument value="NodeSpec(NodeSpec.Factory, NodeFactory.NodeType, NodeSpec.Ports, NodeSpec.Metadata, URL, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>

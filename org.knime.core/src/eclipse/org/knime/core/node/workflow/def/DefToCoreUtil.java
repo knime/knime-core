@@ -77,6 +77,7 @@ import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
@@ -156,11 +157,14 @@ public class DefToCoreUtil {
             // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
             throw new RuntimeException(e);
         }
+        Node node;
         try {
-            return new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
+            node = new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
         } catch (InvalidSettingsException e) {
             throw new RuntimeException(e);
         }
+        node = FileNativeNodeContainerPersistor.replaceNodeByMissingNodeIfUsageIsDisallowed(node, nodeCreationSettings);
+        return node;
     }
 
     /**

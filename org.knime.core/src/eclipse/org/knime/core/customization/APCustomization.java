@@ -52,7 +52,10 @@ import java.util.List;
 
 import org.knime.core.customization.nodesfilter.NodesFilter;
 import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -118,6 +121,14 @@ public final class APCustomization {
      */
     public final class Nodes {
 
+        /** Class names of nodes in the core that are always allowed (component input/output nodes). */
+        private static final List<String> ALWAYS_ALLOWED_LIST = List.of( //
+            new VirtualSubNodeInputNodeFactory(), new VirtualSubNodeOutputNodeFactory()) //
+                .stream() //
+                .map(fac -> {fac.init(); return fac; }) //
+                .map(NodeFactory::getFactoryId) //
+                .toList();
+
         /**
          * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
          *
@@ -126,7 +137,7 @@ public final class APCustomization {
          */
         public boolean isUsageAllowed(final String factoryId) {
             return m_nodesFilters.stream().filter(t -> t.getScope() == ScopeEnum.USE)
-                .allMatch(t -> t.isAllowed(factoryId));
+                .allMatch(t -> t.isAllowed(factoryId)) || ALWAYS_ALLOWED_LIST.contains(factoryId);
         }
 
         /**

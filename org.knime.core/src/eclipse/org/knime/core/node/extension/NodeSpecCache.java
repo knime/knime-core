@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -197,39 +198,22 @@ final class NodeSpecCache {
     }
 
     public Map<String, NodeSpec> getNodes() {
-        try {
-            m_initialized.await();
-        } catch (InterruptedException ex) {
-            LOGGER.warn(ex);
-            Thread.currentThread().interrupt();
-            return null; // NOSONAR null is more accurate than an empty map
-        }
-        return m_views.get(View.ALL);
+        return awaitInitialization(() -> m_views.get(View.ALL));
     }
 
     public Map<String, NodeSpec> getActiveNodes() {
-        try {
-            m_initialized.await();
-        } catch (InterruptedException ex) {
-            LOGGER.warn(ex);
-            Thread.currentThread().interrupt();
-            return null; // NOSONAR null is more accurate than an empty map
-        }
-        return m_views.get(View.ACTIVE);
+        return awaitInitialization(() -> m_views.get(View.ACTIVE));
     }
 
     public Map<String, NodeSpec> getHiddenNodes() {
-        try {
-            m_initialized.await();
-        } catch (InterruptedException ex) {
-            LOGGER.warn(ex);
-            Thread.currentThread().interrupt();
-            return null; // NOSONAR null is more accurate than an empty map
-        }
-        return m_views.get(View.HIDDEN);
+        return awaitInitialization(() -> m_views.get(View.HIDDEN));
     }
 
     public Map<String, NodeSpec> getDeprecatedNodes() {
+        return awaitInitialization(() -> m_views.get(View.DEPRECATED));
+    }
+
+    private <T> T awaitInitialization(final Supplier<T> supplierAfterInitialization) {
         try {
             m_initialized.await();
         } catch (InterruptedException ex) {
@@ -237,6 +221,6 @@ final class NodeSpecCache {
             Thread.currentThread().interrupt();
             return null; // NOSONAR null is more accurate than an empty map
         }
-        return m_views.get(View.DEPRECATED);
+        return supplierAfterInitialization.get();
     }
 }
