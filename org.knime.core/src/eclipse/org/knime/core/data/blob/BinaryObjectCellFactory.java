@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.HexDump;
@@ -100,7 +101,6 @@ public final class BinaryObjectCellFactory implements FromInputStream {
     }
 
     private FileStoreFactory m_fileStoreFactory;
-    private int m_fileNameIndex;
 
     /** Create new cell factory based on a node's execution context. The argument object is used to
      * create an extension of {@link org.knime.core.data.filestore.FileStoreCell} that is used to keep the data
@@ -148,25 +148,22 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      */
     @DataCellFactoryMethod(name = "InputStream")
     public DataCell create(final InputStream input) throws IOException {
-        String uniqueFileName = "knime-binary-copy-";
-        String suffix = ".bin";
-        MessageDigest md5MessageDigest = newMD5Digest();
-        DeferredFileOutputStream outStream = new DeferredFileOutputStream(
-            MEMORY_LIMIT, uniqueFileName, suffix, TMP_DIR_FOLDER);
-        DigestInputStream digestInputStream = new DigestInputStream(input, md5MessageDigest);
-        IOUtils.copy(digestInputStream, outStream);
-        digestInputStream.close();
-        outStream.close();
+        final var uniqueFileName = "knime-binary-copy-";
+        final var suffix = ".bin";
+        final var md5MessageDigest = newMD5Digest();
+        final var outStream = new DeferredFileOutputStream(MEMORY_LIMIT, uniqueFileName, suffix, TMP_DIR_FOLDER);
+        try (outStream; var digestInputStream = new DigestInputStream(input, md5MessageDigest)) {
+            IOUtils.copy(digestInputStream, outStream);
+        }
         byte[] md5sum = md5MessageDigest.digest();
         if (outStream.isInMemory()) {
             return new BinaryObjectDataCell(outStream.getData(), md5sum);
         } else {
             FileStore fs;
             synchronized (this) {
-                String name = "binaryObject-" + m_fileNameIndex++;
-                fs = m_fileStoreFactory.createFileStore(name);
+                fs = m_fileStoreFactory.createFileStore(UUID.randomUUID().toString());
             }
-            File f = outStream.getFile();
+            final var f = outStream.getFile();
             assert f.exists() : "File " + f.getAbsolutePath() + " not created by file output stream";
             FileUtils.moveFile(f, fs.getFile());
             return new BinaryObjectFileStoreDataCell(fs, md5sum);
