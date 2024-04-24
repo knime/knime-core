@@ -13,7 +13,8 @@
 		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
 		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot \
-		-Dchromium.multi_threaded_message_loop=true
+		-Dchromium.multi_threaded_message_loop=true \
+		-Dorg.bytedeco.javacpp.logger=slf4j
 		</surefireArgLine>
 		<revision>5.3.0</revision>
 	</properties>
@@ -30,6 +31,11 @@
 							<requirement>
 								<type>eclipse-plugin</type>
 								<id>org.knime.testing.application</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.core.columnar</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
 							<requirement>
@@ -129,6 +135,14 @@
 							</requirement>
 						</extraRequirements>
 					</dependency-resolution>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<argLine> ${failsafeArgLine} --add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED --add-opens=java.base/java.util.regex=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED -Djakarta.ws.rs.ext.RuntimeDelegate=org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl -Djakarta.ws.rs.client.ClientBuilder=org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl -Dorg.apache.cxf.bus.factory=org.knime.cxf.core.fragment.KNIMECXFBusFactory -Dorg.apache.cxf.transport.http.forceURLConnection=true </argLine>
 				</configuration>
 			</plugin>
 		</plugins>

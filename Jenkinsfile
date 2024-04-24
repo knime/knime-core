@@ -62,7 +62,8 @@ try {
             ius: [ 
                 'com.knime.enterprise.client.filehandling',
                 'org.knime.chem.types'
-            ]
+            ],
+            additionalVmArguments: '-Dorg.bytedeco.javacpp.logger=slf4j'
         ]
     )
 

@@ -54,6 +54,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.awt.GraphicsEnvironment;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.UUID;
@@ -343,6 +344,10 @@ public class TableContentModelTest extends TestCase {
      * @throws Exception while sorting
      */
     public final void testSortTable() throws Exception {
+        if (GraphicsEnvironment.isHeadless()) {
+            return;
+        }
+
         final var dts = new DataTableSpec(
             new String[] {"double", "alphanum"},
             new DataType[] {DoubleCell.TYPE, StringCell.TYPE}
