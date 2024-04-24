@@ -30,4 +30,7 @@
             hidden="true">
       </node>
    </extension>
+   <extension point="org.eclipse.ecf.filetransfer.urlStreamHandlerService">
+      <urlStreamHandlerService protocol="knimetest" serviceClass="org.knime.core.node.testurl.TestURLStreamHandler" />
+   </extension>
 </fragment>
