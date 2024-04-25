@@ -68,6 +68,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.CoreConstants;
+import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
 import org.knime.core.util.pathresolve.ResolverUtil;
@@ -441,8 +442,10 @@ public class WorkflowLoadHelper {
         }
         if (templateInfo != null) {
             persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI, isTemplateProject()));
-            final var optName = ResolverUtil.toDescription(templateSourceURI, new NullProgressMonitor())
-                    .map(KNIMEURIDescription::getName);
+            final var optName = Optional.of(templateSourceURI) //
+                .filter(uri -> KnimeUrlType.getType(uri).isPresent()) //
+                .flatMap(uri -> ResolverUtil.toDescription(uri, new NullProgressMonitor())) //
+                .map(KNIMEURIDescription::getName);
             if (optName.isPresent()) {
                 // we could get the template's name via the resolver
                 persistor.setNameOverwrite(optName.get());
