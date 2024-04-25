@@ -58,6 +58,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.MissingValueHandling;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.sort.RowReadComparator.SortKeyColumns;
 import org.knime.core.data.v2.RowRead;
@@ -122,6 +123,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
 
         private final RowReadComparator.ColumnComparatorBuilder m_delegateBuilder;
 
+        private boolean m_missingsLast;
+
         private ColumnComparatorBuilder(final int columnIndex,
             final RowReadComparator.ColumnComparatorBuilder delegateBuilder) {
             if (columnIndex < 0) {
@@ -162,8 +165,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder with descending sort order
          */
         public ColumnComparatorBuilder withDescendingSortOrder() {
-            m_delegateBuilder.withDescendingSortOrder();
-            return this;
+            return withDescendingSortOrder(true);
         }
 
         /**
@@ -173,6 +175,8 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          */
         public ColumnComparatorBuilder withDescendingSortOrder(final boolean descending) {
             m_delegateBuilder.withDescendingSortOrder(descending);
+            // needed because the underlying comparator can represent more states (least/largest + ascending/descending)
+            withMissingsLast(m_missingsLast);
             return this;
         }
 
@@ -181,8 +185,7 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder which sorts missing cells to the end of the table
          */
         public ColumnComparatorBuilder withMissingsLast() {
-            m_delegateBuilder.withMissingsLast();
-            return this;
+            return withMissingsLast(true);
         }
 
         /**
@@ -191,7 +194,9 @@ public final class RowComparator implements Comparator<DataRow> {//NOSONAR
          * @return builder configured to sort missing cells to end of table
          */
         public ColumnComparatorBuilder withMissingsLast(final boolean missingsLast) {
-            m_delegateBuilder.withMissingsLast(missingsLast);
+            m_missingsLast = missingsLast;
+            m_delegateBuilder.withMissingHandling(m_missingsLast && !m_delegateBuilder.m_descending //
+                ? MissingValueHandling.GREATEST : MissingValueHandling.LEAST);
             return this;
         }
     }

@@ -73,7 +73,7 @@ import org.knime.core.node.util.CheckUtils;
 public final class RowReadComparator implements Comparator<RowRead> { // NOSONAR
 
     @SuppressWarnings("unchecked")
-    private abstract static class ComparatorBuilder<SELF, BASE> { // NOSONAR
+    private abstract static class ColumnOrRowKeyComparatorBuilder<SELF, BASE> { // NOSONAR
 
         protected final DataColumnSpec m_columnSpec;
         private final Comparator<BASE> m_defaultBaseComparator;
@@ -83,7 +83,7 @@ public final class RowReadComparator implements Comparator<RowRead> { // NOSONAR
         protected boolean m_descending;
 
 
-        ComparatorBuilder(final DataColumnSpec columnSpec, final Comparator<BASE> baseComparator) {
+        ColumnOrRowKeyComparatorBuilder(final DataColumnSpec columnSpec, final Comparator<BASE> baseComparator) {
             m_columnSpec = columnSpec;
             m_defaultBaseComparator = baseComparator;
             m_baseComparator = baseComparator;
@@ -120,9 +120,10 @@ public final class RowReadComparator implements Comparator<RowRead> { // NOSONAR
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    public static final class ColumnComparatorBuilder extends ComparatorBuilder<ColumnComparatorBuilder, DataValue> {
+    public static final class ColumnComparatorBuilder
+            extends ColumnOrRowKeyComparatorBuilder<ColumnComparatorBuilder, DataValue> {
         private final int m_index;
-        private boolean m_missingsLast;
+        private MissingValueHandling m_missingValueHandling = MissingValueHandling.LEAST;
 
         ColumnComparatorBuilder(final int columnIndex, final DataColumnSpec columnSpec) {
             super(columnSpec, new DataValueComparatorDelegator<>(columnSpec.getType().getComparator()));
@@ -151,29 +152,21 @@ public final class RowReadComparator implements Comparator<RowRead> { // NOSONAR
         }
 
         /**
-         * Enable sorting of missing cells to end of table.
-         * @return builder which sorts missing cells to the end of the table
+         * Sets the handling of missing values in this column. The default value is {@link MissingValueHandling#LEAST}.
+         *
+         * @param missingValueHandling whether missing values should be considered
+         * {@link MissingValueHandling#LEAST smaller} or {@link MissingValueHandling#GREATEST larger} than any
+         * non-missing values
+         * @return this builder
          */
-        public ColumnComparatorBuilder withMissingsLast() {
-            return withMissingsLast(true);
-        }
-
-        /**
-         * Configure handling of missing cells.
-         * @param missingsLast {@code true} to sort missing cells to the end of the table, {@code false} otherwise
-         * @return builder configured to sort missing cells to end of table
-         */
-        public ColumnComparatorBuilder withMissingsLast(final boolean missingsLast) {
-            m_missingsLast = missingsLast;
+        public ColumnComparatorBuilder withMissingHandling(final MissingValueHandling missingValueHandling) {
+            m_missingValueHandling = missingValueHandling;
             return this;
         }
 
         @Override
         Builder build(final Builder builder) {
-            Comparator<DataValue> valueComp = m_baseComparator;
-            // the condition is such that missing cells never get sorted to the top of a table if sorted in DESC order
-            Comparator<RowRead> columnComp = MissingValueHandling.compareWithMissing(m_index, valueComp,
-                m_missingsLast && !m_descending);
+            Comparator<RowRead> columnComp = m_missingValueHandling.compareColumnWithMissing(m_index, m_baseComparator);
             if (m_descending) {
                 columnComp = columnComp.reversed();
             }
@@ -187,7 +180,8 @@ public final class RowReadComparator implements Comparator<RowRead> { // NOSONAR
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    public static final class RowKeyComparatorBuilder extends ComparatorBuilder<RowKeyComparatorBuilder, String> {
+    public static final class RowKeyComparatorBuilder
+            extends ColumnOrRowKeyComparatorBuilder<RowKeyComparatorBuilder, String> {
 
         private RowKeyComparatorBuilder() {
             super(null, Comparator.naturalOrder());

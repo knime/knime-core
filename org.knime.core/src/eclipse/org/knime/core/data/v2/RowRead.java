@@ -54,8 +54,9 @@ import java.util.stream.IntStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.container.BlobSupportDataRow;
 
 /**
  * Read access to a data row.
@@ -136,7 +137,7 @@ public interface RowRead extends RowValueRead {
      * @since 5.3
      */
     default DataRow materializeDataRow() {
-        return new DefaultRow(getRowKey().getString(), IntStream.range(0, getNumColumns()) //
+        return new BlobSupportDataRow(new RowKey(getRowKey().getString()), IntStream.range(0, getNumColumns()) //
             .mapToObj(this::getAsDataCell) //
             .toArray(DataCell[]::new));
     }

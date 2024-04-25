@@ -56,7 +56,7 @@ import java.util.Comparator;
  * @param <T> type to be compared
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
- * @deprecated Use {@link MissingValueHandling#compareWithMissing(Comparator, boolean)}
+ * @deprecated Use {@link MissingValueHandling#applyMissingOrdering(Comparator)}
  */
 @Deprecated(since = "5.3", forRemoval = true)
 public class MissingDataCellComparator<T extends DataCell> implements Comparator<T> {
@@ -69,7 +69,8 @@ public class MissingDataCellComparator<T extends DataCell> implements Comparator
      * @param largest {@code true} to compare missing cells as largest, {@code false} smallest
      */
     public MissingDataCellComparator(final Comparator<T> wrapped, final boolean largest) {
-        m_wrapped = MissingValueHandling.compareWithMissing(wrapped, largest);
+        final var strategy = largest ? MissingValueHandling.GREATEST : MissingValueHandling.LEAST;
+        m_wrapped = strategy.applyMissingOrdering(wrapped);
     }
 
     @Override

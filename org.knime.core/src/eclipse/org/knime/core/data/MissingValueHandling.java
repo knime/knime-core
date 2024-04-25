@@ -53,61 +53,69 @@ import java.util.Comparator;
 import org.knime.core.data.v2.RowRead;
 
 /**
+ * Strategies for treating missing values when comparing or sorting data cells.
+ * <ul>
+ *   <li>{@link #LEAST} treats missing values as smaller than non-missing values.</li>
+ *   <li>{@link #GREATEST} treats missing values as larger than non-missing values.</li>
+ * </ul>
  * Comparators for data cells that compare missing cells as smaller or larger than any non-missing cell.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  * @since 5.3
  */
-public final class MissingValueHandling {
+public enum MissingValueHandling {
 
-    private MissingValueHandling() {
-    }
-
-    private static int compareWithMissings(final boolean leftMissing, final boolean rightMissing,
-            final boolean missingLargest) {
-        if (leftMissing && rightMissing) {
-            return 0;
-        } else if (leftMissing) {
-            return missingLargest ? 1 : -1;
-        } else {
-            return missingLargest ? -1 : 1;
+    /** Compare missing values as <b>smaller</b> than any non-missing value. Two missing values are treated as equal. */
+    LEAST() {
+        @Override
+        public int compareMissings(final boolean leftMissing, final boolean rightMissing) {
+            return !rightMissing ? -1 : (leftMissing ? 0 : 1); // NOSONAR
         }
-    }
+    },
+
+    /** Compare missing values as <b>larger</b> than any non-missing value. Two missing values are treated as equal. */
+    GREATEST() {
+        @Override
+        int compareMissings(final boolean leftMissing, final boolean rightMissing) {
+            return !rightMissing ? 1 : (leftMissing ? 0 : -1); // NOSONAR
+        }
+    };
+
+    abstract int compareMissings(boolean leftMissing, boolean rightMissing);
 
     /**
-     * Wrap a row read comparator to sort missing values in a {@link RowRead} smaller or larger than non-missing values.
+     * Adapts a {@link DataValue} comparator to compare {@link RowRead}s, handling missing values according to this
+     * enumeration entry's strategy.
      *
      * @param index column index
      * @param valueComparator wrapped comparator
-     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
      * @return resulting comparator on {@link RowRead}s
      */
-    public static Comparator<RowRead> compareWithMissing(final int index,
-            final Comparator<? extends DataValue> valueComparator, final boolean missingLargest) {
+    public Comparator<RowRead> compareColumnWithMissing(final int index,
+            final Comparator<? extends DataValue> valueComparator) {
         return (left, right) -> {
             final var leftMissing = left.isMissing(index);
             final var rightMissing = right.isMissing(index);
             if (leftMissing || rightMissing) {
-                return compareWithMissings(leftMissing, rightMissing, missingLargest);
+                return compareMissings(leftMissing, rightMissing);
             }
             return valueComparator.compare(left.getValue(index), right.getValue(index));
         };
     }
 
     /**
-     * Wrap a data cell comparator to sort missing cells smaller or larger than non-missing cells.
+     * Wraps a data cell comparator to handle missing values according to this enumeration entry's strategy.
      *
-     * @param cellComparator wrapped comparator
-     * @param missingLargest {@code true} to compare missing cells as largest, {@code false} smallest
+     * @param cellComparator wrapped comparator, only called with non-missing {@link DataCell}s
      * @return resulting comparator on {@link DataCell}s
      */
-    public static <T extends DataCell> Comparator<T> compareWithMissing(final Comparator<T> cellComparator,
-            final boolean missingLargest) {
+    public <T extends DataCell> Comparator<T> applyMissingOrdering(final Comparator<T> cellComparator) {
         return (left, right) -> {
             final var leftMissing = left.isMissing();
             final var rightMissing = right.isMissing();
             if (leftMissing || rightMissing) {
-                return compareWithMissings(leftMissing, rightMissing, missingLargest);
+                return compareMissings(leftMissing, rightMissing);
             }
             return cellComparator.compare(left, right);
         };
