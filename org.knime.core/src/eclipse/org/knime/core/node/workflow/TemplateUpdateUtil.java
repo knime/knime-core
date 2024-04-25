@@ -73,6 +73,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
 import org.knime.core.util.pathresolve.ResolverUtil;
@@ -375,7 +376,9 @@ public final class TemplateUpdateUtil {
                      * having an inconsistent TemplateInformation#Role, and now, a ResourceAccessException from fetching
                      * the template.
                      */
-                    var uriString = ResolverUtil.toDescription(uri, null) //
+                    var uriString = Optional.of(uri) //
+                            .filter(u -> KnimeUrlType.getType(u).isPresent()) // only KNIME URLs allowed
+                            .flatMap(u -> ResolverUtil.toDescription(uri, null)) //
                             .map(KNIMEURIDescription::toDisplayString) //
                             .orElseGet(uri::toString);
                     var verb = e instanceof ResourceAccessException ? "accessed" : "read";
