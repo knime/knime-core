@@ -8,6 +8,141 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationISOValueRenderer.java" type="org.knime.core.data.time.duration.DurationISOValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.duration.DurationISOValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationLongValueRenderer.java" type="org.knime.core.data.time.duration.DurationLongValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.duration.DurationLongValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/duration/DurationShortValueRenderer.java" type="org.knime.core.data.time.duration.DurationShortValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.duration.DurationShortValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localdate/LocalDateValue.java" type="org.knime.core.data.time.localdate.LocalDateValue">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localdate.LocalDateValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localdate/LocalDateValueRenderer.java" type="org.knime.core.data.time.localdate.LocalDateValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localdate.LocalDateValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localdatetime/LocalDateTimeValue.java" type="org.knime.core.data.time.localdatetime.LocalDateTimeValue">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localdatetime.LocalDateTimeValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localdatetime/LocalDateTimeValueRenderer.java" type="org.knime.core.data.time.localdatetime.LocalDateTimeValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localdatetime.LocalDateTimeValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localtime/LocalTimeValue.java" type="org.knime.core.data.time.localtime.LocalTimeValue">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localtime.LocalTimeValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/localtime/LocalTimeValueRenderer.java" type="org.knime.core.data.time.localtime.LocalTimeValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.localtime.LocalTimeValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/period/PeriodISOValueRenderer.java" type="org.knime.core.data.time.period.PeriodISOValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.period.PeriodISOValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/period/PeriodLongValueRenderer.java" type="org.knime.core.data.time.period.PeriodLongValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.period.PeriodLongValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/period/PeriodShortValueRenderer.java" type="org.knime.core.data.time.period.PeriodShortValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.period.PeriodShortValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/period/PeriodValue.java" type="org.knime.core.data.time.period.PeriodValue">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.period.PeriodValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/zoneddatetime/ZonedDateTimeValue.java" type="org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.zoneddatetime.ZonedDateTimeValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/time/zoneddatetime/ZonedDateTimeValueRenderer.java" type="org.knime.core.data.time.zoneddatetime.ZonedDateTimeValueRenderer">
+        <filter comment="AP-22402: moved from org.knime.time" id="1108344834">
+            <message_arguments>
+                <message_argument value="3.3"/>
+                <message_argument value="5.3"/>
+                <message_argument value="org.knime.core.data.time.zoneddatetime.ZonedDateTimeValueRenderer"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
         <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
             <message_arguments>
