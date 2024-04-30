@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.duration;
 
-import java.time.Duration;
-
 import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
@@ -95,12 +93,12 @@ public final class DurationUtility extends ExtensibleUtilityFactory {
     }
 
     /** Comparator for {@link DurationUtility#getComparator()}. */
-    static class DurationComparator extends DataValueComparator {
+    static class DurationComparator extends DataValueComparator { // NOSONAR class was always not serializable
 
         @Override
         protected int compareDataValues(final DataValue v1, final DataValue v2) {
-            Duration lt1 = ((DurationValue)v1).getDuration();
-            Duration lt2 = ((DurationValue)v2).getDuration();
+            final var lt1 = ((DurationValue)v1).getDuration();
+            final var lt2 = ((DurationValue)v2).getDuration();
             return lt1.compareTo(lt2);
         }
     }

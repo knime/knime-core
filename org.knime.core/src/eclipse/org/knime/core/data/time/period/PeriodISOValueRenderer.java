@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.period;
 
-import java.time.Period;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -80,8 +78,8 @@ public final class PeriodISOValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof PeriodValue) {
-            Period p = ((PeriodValue)value).getPeriod();
+        if (value instanceof PeriodValue periodValue) {
+            final var p = periodValue.getPeriod();
             super.setValue(p.toString());
         } else {
             super.setValue(value);

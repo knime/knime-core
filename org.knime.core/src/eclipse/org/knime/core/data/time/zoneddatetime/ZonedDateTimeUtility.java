@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.zoneddatetime;
 
-import java.time.ZonedDateTime;
-
 import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
@@ -95,12 +93,12 @@ public final class ZonedDateTimeUtility extends ExtensibleUtilityFactory {
     }
 
     /** Comparator for {@link ZonedDateTimeUtility#getComparator()}. */
-    static class ZonedDateTimeComparator extends DataValueComparator {
+    static class ZonedDateTimeComparator extends DataValueComparator { // NOSONAR class was always not serializable
 
         @Override
         protected int compareDataValues(final DataValue v1, final DataValue v2) {
-            ZonedDateTime lt1 = ((ZonedDateTimeValue)v1).getZonedDateTime();
-            ZonedDateTime lt2 = ((ZonedDateTimeValue)v2).getZonedDateTime();
+            final var lt1 = ((ZonedDateTimeValue)v1).getZonedDateTime();
+            final var lt2 = ((ZonedDateTimeValue)v2).getZonedDateTime();
             return lt1.compareTo(lt2);
         }
     }

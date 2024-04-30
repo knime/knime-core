@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.zoneddatetime;
 
-import java.time.ZonedDateTime;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -80,8 +78,8 @@ public final class ZonedDateTimeValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof ZonedDateTimeValue) {
-            ZonedDateTime zdt = ((ZonedDateTimeValue)value).getZonedDateTime();
+        if (value instanceof ZonedDateTimeValue zonedDateTimeValue) {
+            final var zdt = zonedDateTimeValue.getZonedDateTime();
             super.setValue(zdt.toString());
         } else {
             super.setValue(value);

@@ -77,8 +77,8 @@ public final class DurationLongValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof DurationValue) {
-            final Duration duration = ((DurationValue)value).getDuration();
+        if (value instanceof DurationValue dv) {
+            final var duration = dv.getDuration();
             super.setValue(formatDurationLong(duration));
         } else {
             super.setValue(value);

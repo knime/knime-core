@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.duration;
 
-import java.time.Duration;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -80,8 +78,8 @@ public final class DurationISOValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof DurationValue) {
-            Duration d = ((DurationValue)value).getDuration();
+        if (value instanceof DurationValue dv) {
+            final var d = dv.getDuration();
             super.setValue(d.toString());
         } else {
             super.setValue(value);

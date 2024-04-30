@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.localdatetime;
 
-import java.time.LocalDateTime;
-
 import javax.swing.Icon;
 
 import org.knime.core.data.DataValue;
@@ -95,12 +93,12 @@ public final class LocalDateTimeUtility extends ExtensibleUtilityFactory {
     }
 
     /** Comparator for {@link LocalDateTimeUtility#getComparator()}. */
-    static class LocalDateTimeComparator extends DataValueComparator {
+    static class LocalDateTimeComparator extends DataValueComparator { // NOSONAR class was always not serializable
 
         @Override
         protected int compareDataValues(final DataValue v1, final DataValue v2) {
-            LocalDateTime lt1 = ((LocalDateTimeValue)v1).getLocalDateTime();
-            LocalDateTime lt2 = ((LocalDateTimeValue)v2).getLocalDateTime();
+            final var lt1 = ((LocalDateTimeValue)v1).getLocalDateTime();
+            final var lt2 = ((LocalDateTimeValue)v2).getLocalDateTime();
             return lt1.compareTo(lt2);
         }
     }

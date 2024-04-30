@@ -47,8 +47,6 @@
  */
 package org.knime.core.data.time.localtime;
 
-import java.time.LocalTime;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -80,8 +78,8 @@ public final class LocalTimeValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof LocalTimeValue) {
-            LocalTime lt = ((LocalTimeValue)value).getLocalTime();
+        if (value instanceof LocalTimeValue localTimeValue) {
+            final var lt = localTimeValue.getLocalTime();
             super.setValue(lt.toString());
         } else {
             super.setValue(value);

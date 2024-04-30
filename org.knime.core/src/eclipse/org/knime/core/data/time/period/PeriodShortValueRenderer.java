@@ -77,8 +77,8 @@ public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
 
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof PeriodValue) {
-            Period period = ((PeriodValue)value).getPeriod();
+        if (value instanceof PeriodValue periodValue) {
+            final var period = periodValue.getPeriod();
             super.setValue(formatPeriodShort(period));
         } else {
             super.setValue(value);
@@ -106,7 +106,7 @@ public final class PeriodShortValueRenderer extends DefaultDataValueRenderer {
      */
     // Copied from DurationPeriodFormatUtils
     private static String formatPeriodShort(final Period period) {
-        String s = period.toString();
+        var s = period.toString();
         // remove leading 'P'
         s = StringUtils.replaceOnce(s, "P", " ");
 
