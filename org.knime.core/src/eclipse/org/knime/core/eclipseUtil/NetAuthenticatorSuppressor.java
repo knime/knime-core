@@ -48,42 +48,45 @@
  */
 package org.knime.core.eclipseUtil;
 
+import org.eclipse.core.internal.net.ProxyManager;
 import org.eclipse.core.net.proxy.IProxyService;
-import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.IEarlyStartup;
-import org.osgi.util.tracker.ServiceTracker;
+import org.knime.core.util.auth.DelegatingAuthenticator;
 
 /**
- * Initializes Eclipse's proxy service early in the application startup before other plugins (using CXF) can initialize.
+ * Installs custom delegating authenticators globally, before other plugins (using CXF)
+ * can initialize. This prevents interference.
  * <p>
- * The intent is the install a suppressing measure for the {@link org.eclipse.ui.internal.net.auth.NetAuthenticator}
- * since it automatically displays UI popups to the user when authentication failed. The installation happens in the
- * {@link CorePlugin} via a listener on this proxy service initialization.
+ * Conditionally suppressing the {@link org.eclipse.ui.internal.net.auth.NetAuthenticator}
+ * is useful since it automatically displays an popup to the user when authentication failed.
+ * We want to prevent this.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  * @since 5.2
  */
-public class EclipseProxyServiceInitializer implements IEarlyStartup {
+public class NetAuthenticatorSuppressor implements IEarlyStartup {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(EclipseProxyServiceInitializer.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NetAuthenticatorSuppressor.class);
 
-    /**
-     * Ensures that Eclipse's proxy service is initialized. Returns the proxy service object.
-     * To retrieve the actual service object, use a {@link ServiceTracker} on the {@link IProxyService}
-     */
-    public static void ensureInitialized() {
-        /*
-         * Using the proxy service class object initializes the class, as well as its bundle activator
-         * (being org.eclipse.core.internal.net.Activator). This activator starts Eclipse's proxy service
-         * which we want to handle early in the application startup (see above).
-         */
-        IProxyService.class.getName();
-    }
-
+    @SuppressWarnings("restriction")
     @Override
     public void run() {
-        ensureInitialized();
-        LOGGER.debug("Initialized OSGi service '%s'".formatted(IProxyService.class.getName()));
+        final var eclipseProxyService = ProxyManager.getProxyManager();
+        if (eclipseProxyService instanceof ProxyManager proxyManager) {
+            // initializes class `org.eclipse.ui.internal.net.auth.NetAuthenticator`
+            proxyManager.initialize();
+
+            /*
+             * Add custom authenticators, including the ThreadLocalHTTPAuthenticator before CXF can initialize
+             * this avoids interference with the org.apache.cxf.transport.http.ReferencingAuthenticator.
+             */
+            DelegatingAuthenticator.installAuthenticators();
+        } else {
+            LOGGER.error(() -> String.format("Could not install custom authenticators since "
+                + "'org.eclipse.ui.internal.net.auth.NetAuthenticator' could not be initialized. "
+                + "Reason: '%s' implementation is of unexpected type '%s'.",
+                IProxyService.class.getSimpleName(), eclipseProxyService.getClass().getSimpleName()));
+        }
     }
 }
