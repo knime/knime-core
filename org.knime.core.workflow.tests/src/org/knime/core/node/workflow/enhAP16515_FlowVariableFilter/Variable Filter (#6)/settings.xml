@@ -4,7 +4,7 @@
     <config key="flow_stack">
         <config key="Variable_0">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="knime.node int-b (hide)"/>
+            <entry key="name" type="xstring" value="knime.hide (int-b)"/>
             <entry key="class" type="xstring" value="STRING"/>
             <entry key="value" type="xstring" value="int-b"/>
         </config>

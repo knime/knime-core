@@ -32,4 +32,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter comment="removed &quot;OLD&quot; (unused) method" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getNodesInScopeOLD(SingleNodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

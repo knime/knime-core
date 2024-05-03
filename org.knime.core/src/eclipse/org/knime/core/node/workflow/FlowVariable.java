@@ -48,6 +48,9 @@
 package org.knime.core.node.workflow;
 
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -77,21 +80,12 @@ public final class FlowVariable extends FlowObject {
     public static final String GLOBAL_CONST_ID = "knime";
 
     /**
-     * Framework constant to identify local scope variables that denote flow variable removal.
-     *
-     * @noreference This field is not intended to be referenced by clients.
-     * @since 5.3
-     */
-    // Added as part of AP-16515
-    public static final String HIDE_SUFFIX = "(hide)";
-
-    /**
      * The type of a variable.
      *
      * @deprecated use {@link VariableType} instead
      */
     @Deprecated
-    public static enum Type {
+    public enum Type {
         /** double type. */
         DOUBLE,
         /** int type. */
@@ -108,18 +102,22 @@ public final class FlowVariable extends FlowObject {
     }
 
     /** Scope of variable. */
-    public static enum Scope {
+    @SuppressWarnings("java:S115") // naming
+    public enum Scope {
         /** (VM-)Global constant, such as workspace location. */
         Global("knime"),
         /** Ordinary workflow or flow variable. */
         Flow(""),
         /** Node local flow variable, e.g. node drop location. */
-        Local("knime.node");
+        Local("knime.node"),
+        /** Hides any variable definition defined upstream/underneath.
+         * @since 5.3*/
+        Hide("knime.hide");
 
         private final String m_prefix;
 
         /** Create scope with given prefix. */
-        private Scope(final String prefix) {
+        Scope(final String prefix) {
             m_prefix = prefix;
         }
 
@@ -153,12 +151,14 @@ public final class FlowVariable extends FlowObject {
         private static Optional<String> getReservedPrefix(final String name) {
             if (name.startsWith(Local.m_prefix)) {
                 return Optional.of(Local.m_prefix);
+            } else if (name.startsWith(Hide.m_prefix)) {
+                return Optional.of(Hide.m_prefix);
             } else if (name.startsWith(Global.m_prefix)) {
                 return Optional.of(Global.m_prefix);
             } else {
                 return Optional.empty();
             }
-    }
+        }
     }
 
     private final Scope m_scope;
@@ -422,7 +422,8 @@ public final class FlowVariable extends FlowObject {
     public static FlowVariable load(final NodeSettingsRO sub) throws InvalidSettingsException {
         final String name = CheckUtils.checkSettingNotNull(sub.getString("name"), "name must not be null");
         final VariableValue<?> value = VariableType.load(sub);
-        Scope scope = StringUtils.startsWith(name, Scope.Local.getPrefix()) ? Scope.Local : Scope.Flow;
+        final Scope scope = Stream.of(Scope.Local, Scope.Hide).filter(s -> StringUtils.startsWith(name, s.getPrefix()))
+            .findFirst().orElse(Scope.Flow);
         return new FlowVariable(name, value, scope);
     }
 
@@ -465,21 +466,35 @@ public final class FlowVariable extends FlowObject {
         return getType().hashCode() ^ getName().hashCode();
     }
 
+    /** "hiding" flow vars are call like "knime.hide (some name)" and this pattern allows extraction of the var name. */
+    private static final Pattern HIDING_VARIABLE_NAME_PATTERN =
+        Pattern.compile("^" + Pattern.quote(Scope.Hide.getPrefix()) + " \\((.+)\\)$");
+
     /**
-     * Framework method to create a {@link Scope#Local local} string variable to denote that variables name that is to
-     * be removed from a node's variable stack.
+     * Framework method to create a {@link Scope#Hide hidden} string variable to denote that a variable with the given
+     * name is to be removed/hidden from a node's variable stack.
      *
      * @param s The name of the variable to be removed/hidden in a node's output.
-     * @return A new flow variable with a predefined name that is used by the node's output stack creation to filter
-     *         variables.
+     * @return A new flow variable with a predefined name that is used to hide variables.
      *
      * @noreference This method is not intended to be referenced by clients.
      * @since 5.3
      */
     // added as part of AP-16515
     public static FlowVariable newHidingVariable(final String s) {
-        return new FlowVariable(String.format("%s %s %s", Scope.Local.getPrefix(), s, HIDE_SUFFIX), s,
-            FlowVariable.Scope.Local);
+        CheckUtils.checkArgument(StringUtils.isNotBlank(s), "name must not be blank: \"%s\"", s);
+        // can only hide "Flow" scope variables
+        Scope.Flow.verifyName(s);
+        return new FlowVariable(String.format("%s (%s)", Scope.Hide.getPrefix(),s), s, Scope.Hide);
+    }
+
+    /** Extracts the name of the variable hidden by a hiding variable, e.g. "knime.hide (some name)" -> "some name". */
+    static String extractIdentifierFromHidingFlowVariable(final FlowVariable fv) {
+        CheckUtils.checkArgument(fv.getScope() == Scope.Hide, "Variable should be 'Hide' scope: %s", fv.getScope());
+        final Matcher matcher = HIDING_VARIABLE_NAME_PATTERN.matcher(fv.getName());
+        CheckUtils.checkState(matcher.matches(), "Variable name %s did not match naming pattern of 'Hide' variables: ",
+            fv.getName());
+        return matcher.group(1);
     }
 
 }

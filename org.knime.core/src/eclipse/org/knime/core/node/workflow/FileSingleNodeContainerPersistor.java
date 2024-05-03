@@ -698,7 +698,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         @SuppressWarnings("unchecked")
         Iterable<FlowObject> myObjs = stack == null //
             ? Collections.emptyList() //
-            : stack.getFlowObjectsOwnedBy(nc.getID()); // includes "local" variable (see AP-16515)
+            : stack.getNonLocalFlowObjectsOwnedBy(nc.getID());
         int c = 0;
         for (FlowObject s : myObjs) {
             if (s instanceof FlowVariable) {

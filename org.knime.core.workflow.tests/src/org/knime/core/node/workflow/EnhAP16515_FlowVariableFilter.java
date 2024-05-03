@@ -50,9 +50,12 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -127,13 +130,20 @@ public class EnhAP16515_FlowVariableFilter extends WorkflowTestCase {
     }
 
 	protected void checkVariablesOfFilterNodeInScope() {
-		Set<String> flowVarNames = new LinkedHashSet<>(findNodeContainer(m_flowVarFilter_WithScope_15).getOutPort(1)
-				.getFlowObjectStack().getAllAvailableFlowVariables().keySet());
+		final FlowObjectStack flowObjectStack = findNodeContainer(m_flowVarFilter_WithScope_15).getOutPort(1)
+				.getFlowObjectStack();
+		Set<String> flowVarNames = new LinkedHashSet<>(flowObjectStack.getAllAvailableFlowVariables().keySet());
 		flowVarNames.removeIf(s -> s.startsWith(FlowVariable.Scope.Global.getPrefix()));
 		final String msg = "Port output of filter node in scope";
 		
-		// variables are defined outside the scope, can't remove
-    	assertThat(msg, flowVarNames, hasItems("string-a", "int-b"));
+    	assertThat(msg, flowVarNames, hasItems("string-a")); // configured to remain
+		final String valueA = flowObjectStack.peekFlowVariable("string-a", VariableType.StringType.INSTANCE).get()
+				.getStringValue();
+		assertThat("Value of string-a", valueA, is("value-a"));
+		
+    	assertThat(msg, flowVarNames, not(hasItems("int-b"))); // outside variable but configured to be hidden
+		assertTrue("No such variable on stack",
+				flowObjectStack.peekFlowVariable("int-b", VariableType.IntType.INSTANCE).isEmpty());
     	
     	// inside loop variables - they can be removed (not asking if that's a smart idea)
 		assertThat(msg, flowVarNames, not(hasItem("maxIterations")));

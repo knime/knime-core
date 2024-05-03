@@ -4,19 +4,19 @@
     <config key="flow_stack">
         <config key="Variable_0">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="knime.node maxIterations (hide)"/>
+            <entry key="name" type="xstring" value="knime.hide (maxIterations)"/>
             <entry key="class" type="xstring" value="STRING"/>
             <entry key="value" type="xstring" value="maxIterations"/>
         </config>
         <config key="Variable_1">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="knime.node currentIteration (hide)"/>
+            <entry key="name" type="xstring" value="knime.hide (currentIteration)"/>
             <entry key="class" type="xstring" value="STRING"/>
             <entry key="value" type="xstring" value="currentIteration"/>
         </config>
         <config key="Variable_2">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="knime.node int-b (hide)"/>
+            <entry key="name" type="xstring" value="knime.hide (int-b)"/>
             <entry key="class" type="xstring" value="STRING"/>
             <entry key="value" type="xstring" value="int-b"/>
         </config>

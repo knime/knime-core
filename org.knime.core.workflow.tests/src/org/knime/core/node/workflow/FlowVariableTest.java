@@ -48,8 +48,12 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.VariableType.StringType;
 
 /**
@@ -59,25 +63,42 @@ import org.knime.core.node.workflow.VariableType.StringType;
  */
 public class FlowVariableTest {
 
-    /**
-     * Tests that variables of type String operate as they used to in KAP 4.0 and earlier when their value is null.
-     */
-    @Test
-    public void testNullStringVariable() {
-        String nullString = null;
-        FlowVariable var = new FlowVariable("some name", "");
-        FlowVariable nullVar1 = new FlowVariable("some name", nullString);
-        FlowVariable nullVar2 = new FlowVariable("some name", nullString);
+	/**
+	 * Tests that variables of type String operate as they used to in KAP 4.0 and
+	 * earlier when their value is null.
+	 */
+	@Test
+	public void testNullStringVariable() {
+		String nullString = null;
+		FlowVariable var = new FlowVariable("some name", "");
+		FlowVariable nullVar1 = new FlowVariable("some name", nullString);
+		FlowVariable nullVar2 = new FlowVariable("some name", nullString);
 
-        Assert.assertEquals(nullVar1, nullVar2);
-        Assert.assertNotEquals(var, nullVar1);
-        Assert.assertNotEquals(nullVar1, var);
+		Assert.assertEquals(nullVar1, nullVar2);
+		Assert.assertNotEquals(var, nullVar1);
+		Assert.assertNotEquals(nullVar1, var);
 
-        Assert.assertEquals(nullVar1.getStringValue(), nullString);
-        Assert.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
-        Assert.assertEquals(nullVar1.getIntValue(), 0);
-        Assert.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
-        Assert.assertEquals(nullVar1.getValueAsString(), nullString);
-    }
+		Assert.assertEquals(nullVar1.getStringValue(), nullString);
+		Assert.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
+		Assert.assertEquals(nullVar1.getIntValue(), 0);
+		Assert.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
+		Assert.assertEquals(nullVar1.getValueAsString(), nullString);
+	}
+
+	@Test
+	public void testHideVariableNaming() {
+		String[] varNames = new String[] { "abc", "ab\\c", "ab(c", "ab)c", "(", ")", "#`^" };
+		for (String varName : varNames) {
+			FlowVariable fv = FlowVariable.newHidingVariable(varName);
+			assertEquals("Flow var type", Scope.Hide, fv.getScope());
+			assertEquals("Flow Variable Name after exraction", varName,
+					FlowVariable.extractIdentifierFromHidingFlowVariable(fv));
+		}
+		assertThrows("Null name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(null));
+		assertThrows("Empty name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""));
+		assertThrows("Blank name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""));
+		assertThrows("Reserved name", IllegalFlowVariableNameException.class,
+				() -> FlowVariable.newHidingVariable("knime f"));
+	}
 
 }
