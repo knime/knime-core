@@ -57,7 +57,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.ColumnRearranger;
@@ -239,43 +238,45 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     /**
-     * Caches the table argument and returns a reference to a BufferedDataTable
-     * wrapping the content. When saving the workflow, the entire data is
-     * written to disc. This method is provided for convenience. (All it does
-     * is to create a BufferedDataContainer, adding the rows to it and
-     * returning a handle to it.)
-     * <br /><br />Note: If table is already a BufferedDataTable it is simply returned.
-     * <p>This method refers to the first way of storing data,
-     * see <a href="#new_data">here</a>.
+     * Caches the table argument and returns a reference to a BufferedDataTable wrapping the content. When saving the
+     * workflow, the entire data is written to disc. This method is provided for convenience. (All it does is to create
+     * a BufferedDataContainer, adding the rows to it and returning a handle to it.) <br />
+     * <br />
+     * Note: If table is already a BufferedDataTable it is simply returned.
+     * <p>
+     * This method refers to the first way of storing data, see <a href="#new_data">here</a>.
+     *
      * @param table The table to cache.
-     * @param subProgressMon The execution monitor to report progress to. In
-     * most cases this is the object on which this method is invoked. It may
-     * however be an sub progress monitor.
+     * @param subProgressMon The execution monitor to report progress to. In most cases this is the object on which this
+     *            method is invoked. It may however be an sub progress monitor.
      * @return A table ready to be returned in the execute method.
      * @throws CanceledExecutionException If canceled.
      */
-    public BufferedDataTable createBufferedDataTable(final DataTable table,
-            final ExecutionMonitor subProgressMon)
-            throws CanceledExecutionException {
+    public BufferedDataTable createBufferedDataTable(final DataTable table, final ExecutionMonitor subProgressMon)
+        throws CanceledExecutionException {
         if (table instanceof BufferedDataTable) {
-            return (BufferedDataTable) table;
+            return (BufferedDataTable)table;
         }
-        BufferedDataContainer c = createDataContainer(
-                table.getDataTableSpec(), true);
-        int row = 0;
+        final var numRows = table instanceof KnowsRowCountTable rowCountTable ? rowCountTable.size() : 0;
+        final var c = createDataContainer(table.getDataTableSpec(), true);
+        var idx = 0l;
         try {
-            for (RowIterator it = table.iterator(); it.hasNext(); row++) {
-                DataRow next = it.next();
-                String message = "Caching row #" + (row + 1) + " (\""
-                        + next.getKey() + "\")";
-                subProgressMon.setMessage(message);
+            for (final var row : table) {
+                final var finalIdx = idx + 1;
+                if (numRows > 0) {
+                    subProgressMon.setProgress(finalIdx / (double)numRows,
+                        () -> String.format("Caching row %d of %d (\"%s\")", finalIdx, numRows, row.getKey()));
+                } else {
+                    subProgressMon.setMessage(() -> String.format("Caching row %d (\"%s\")", finalIdx, row.getKey()));
+                }
                 subProgressMon.checkCanceled();
-                c.addRowToTable(next);
+                c.addRowToTable(row);
+                idx++;
             }
         } finally {
             c.close();
         }
-        BufferedDataTable out = c.getTable();
+        final var out = c.getTable();
         out.setOwnerRecursively(m_node);
         return out;
     }
