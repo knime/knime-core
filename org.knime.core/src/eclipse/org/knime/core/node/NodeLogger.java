@@ -128,16 +128,6 @@ public final class NodeLogger {
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
-
-    /**
-     * Initializes logger only if the instance location (i.e. workspace) is already set.
-     */
-    static {
-        // this ensures that code which uses the node logger but does not explicitly initialize logging still works
-        // as before
-        KNIMELogger.safeInitializeLogging();
-    }
-
     private final KNIMELogger m_logger;
 
     private NodeLogger(final String name) {

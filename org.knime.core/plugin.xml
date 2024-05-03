@@ -780,24 +780,25 @@
       </TableBackend>
    </extension>
    <extension
-	   point="org.knime.core.DataValueFormatter">
-	<formatter
-	      factoryClass="org.knime.core.data.property.ValueFormatModelNumber$Factory"
-	      formatterClass="org.knime.core.data.property.ValueFormatModelNumber">
-	</formatter>
+         point="org.knime.core.DataValueFormatter">
+      <formatter
+            factoryClass="org.knime.core.data.property.ValueFormatModelNumber$Factory"
+            formatterClass="org.knime.core.data.property.ValueFormatModelNumber">
+      </formatter>
    </extension>
    <extension
-	   point="org.knime.core.EarlyStartup">
+         point="org.knime.core.EarlyStartup">
       <provider
-	   callBeforeKNIMEApplicationStart="true"
-	   class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
+            startupStage="AFTER_WORKSPACE_SET"
+            class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
       </provider>
-   </extension>
-   <extension
-	   point="org.knime.core.EarlyStartup">
       <provider
-	   callBeforeKNIMEApplicationStart="false"
-	   class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
+            startupStage="AFTER_WORKSPACE_SET"
+            class="org.knime.core.node.logging.KNIMELogger$EarlyStartupInitializer">
+      </provider>
+      <provider
+            startupStage="BEFORE_WFM_CLASS_LOADED"
+            class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
       </provider>
    </extension>
 </plugin>

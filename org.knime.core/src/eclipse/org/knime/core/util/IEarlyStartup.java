@@ -48,17 +48,25 @@
  */
 package org.knime.core.util;
 
-import java.util.Iterator;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.EnumUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
+import org.eclipse.osgi.service.datalocation.Location;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 
 /**
  * This interface is used by the extension point <tt>org.knime.core.EarlyStartup</tt>. The {@link #run()} method is
@@ -68,13 +76,40 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @since 3.2
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 @FunctionalInterface
 public interface IEarlyStartup {
+
+    /**
+     * Stages of the startup at which the {@link #run()} method is supposed to be called.
+     *
+     * @since 5.3
+     */
+    enum StartupStage {
+
+        /**
+         * Right at the start of the Eclipse application's
+         * {@link IApplication#start(org.eclipse.equinox.app.IApplicationContext)} method.
+         */
+        EARLIEST,
+        /**
+         * Shortly after {@link #EARLIEST}, but after the user has chosen a workspace for the session (if
+         * applicable).
+         */
+        AFTER_WORKSPACE_SET,
+        /**
+         * Inside a static initializer of the {@link WorkflowManager} class, before the first workflow has been
+         * loaded.
+         */
+        BEFORE_WFM_CLASS_LOADED;
+    }
+
     /**
      * Executes the early startup code.
      */
-    public void run();
+    void run();
 
     /**
      * Helper to execute the code registered at this extension point. Must intentionally be called either before or
@@ -88,35 +123,193 @@ public interface IEarlyStartup {
      *            being shown.
      *
      * @noreference This method is not intended to be referenced by clients.
+     * @deprecated Replaced by code in the Core plugin's activator and {@link #runBeforeWFMClassLoaded()}.
      */
-    public static void executeEarlyStartup(final boolean beforeKNIMEApplicationStart) {
-        var extPointId = "org.knime.core.EarlyStartup";
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(extPointId);
-        assert point != null : "Invalid extension point id: " + extPointId;
+    @Deprecated(forRemoval = true, since = "5.3.0")
+    static void executeEarlyStartup(final boolean beforeKNIMEApplicationStart) {
+        // The first stage is actually handled by the `CorePlugin#start(BundleContext)` method, nothing left to do
+        if (!beforeKNIMEApplicationStart) {
+            runBeforeWFMClassLoaded();
+        }
+    }
 
-        Iterator<IConfigurationElement> it =
-            Stream.of(point.getExtensions()).flatMap(ext -> Stream.of(ext.getConfigurationElements())).iterator();
-        while (it.hasNext()) {
-            IConfigurationElement e = it.next();
-            var callBeforeKNIMEApplicationStart =
-                Boolean.parseBoolean(e.getAttribute("callBeforeKNIMEApplicationStart"));
-            if (callBeforeKNIMEApplicationStart != beforeKNIMEApplicationStart) {
-                continue;
+    /**
+     * To be called exactly once from a static initializer in {@link WorkflowManager}.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    static void runBeforeWFMClassLoaded() {
+        EarlyStartupState.runBeforeWFMClassLoaded();
+    }
+
+    /**
+    * State machine managing the stages of the {@link IEarlyStartup} process.
+    *
+    * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
+    * @since 5.3
+    */
+    final class EarlyStartupState {
+
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(IEarlyStartup.class); // NOSONAR
+
+        private static final IExtensionPoint EXTENSION_POINT;
+        static {
+            final var extPointID = "org.knime.core.EarlyStartup";
+            EXTENSION_POINT = CheckUtils.checkNotNull(Platform.getExtensionRegistry().getExtensionPoint(extPointID),
+                "Invalid extension point ID: " + extPointID);
+        }
+
+        private static final ServiceListener WORKSPACE_LOC_MODIFIED_LISTENER = event -> {
+            if (event.getType() == ServiceEvent.MODIFIED) {
+                moveToStage(StartupStage.AFTER_WORKSPACE_SET);
             }
+        };
+
+        private static StartupStage previousStage;
+
+        private static boolean initializing;
+
+        private static boolean wfmStaticInitializerStageRequested;
+
+        private EarlyStartupState() {
+        }
+
+        /**
+         * Called once in {@link CorePlugin#start(BundleContext)} to initiate the early-startup process.
+         *
+         * @param context bundle context of the core plugin
+         */
+        public static synchronized void initialize(final BundleContext context) {
+            if (previousStage != null) {
+                LOGGER.coding(() -> "EarlyStartup state already initialized", new IllegalStateException());
+                return;
+            }
+
             try {
-                ((IEarlyStartup)e.createExecutableExtension("class")).run();
-            } catch (CoreException ex) {
-                NodeLogger.getLogger(IEarlyStartup.class)
-                    .error("Could not create early startup object od class '" + e.getAttribute("class") + "' "
-                        + "from plug-in '" + e.getContributor().getName() + "': " + ex.getMessage(), ex);
-            } catch (Exception ex) {
-                NodeLogger.getLogger(IEarlyStartup.class)
-                    .error(
-                        "Early startup in '" + e.getAttribute("class") + " from plug-in '"
-                            + e.getContributor().getName() + "' has thrown an uncaught exception: " + ex.getMessage(),
-                        ex);
+                // block the last stage from being triggered by the earlier ones
+                initializing = true;
+
+                moveToStage(StartupStage.EARLIEST);
+
+                if (wfmStaticInitializerStageRequested) {
+                    // `WorkflowManager` has been instantiated at stage 1, execute stages 2 and 3 immediately
+                    moveToStage(StartupStage.BEFORE_WFM_CLASS_LOADED);
+                    return;
+                }
+
+                final var instanceLocation = Platform.getInstanceLocation();
+                if (instanceLocation == null || !instanceLocation.isSet()) {
+                    try {
+                        // wait for workspace location to be set
+                        context.addServiceListener(WORKSPACE_LOC_MODIFIED_LISTENER, Location.INSTANCE_FILTER);
+                        return;
+                    } catch (final InvalidSyntaxException ex) {
+                        LOGGER.coding("Unable to register service listener for the instance location", ex);
+                    }
+                }
+
+                // instance location is already set (via cmd line `-data`), execute right away
+                moveToStage(StartupStage.AFTER_WORKSPACE_SET);
+
+                if (wfmStaticInitializerStageRequested) {
+                    // `WorkflowManager` has been instantiated at stage 2, execute stage 3 immediately
+                    moveToStage(StartupStage.BEFORE_WFM_CLASS_LOADED);
+                }
+
+            } finally {
+                initializing = false;
             }
+        }
+
+        private static synchronized void runBeforeWFMClassLoaded() {
+            if (initializing) {
+                wfmStaticInitializerStageRequested = true;
+            } else {
+                moveToStage(StartupStage.BEFORE_WFM_CLASS_LOADED);
+            }
+        }
+
+        /**
+         * Moves this state machine to the specified stage of the startup process.
+         *
+         * @param targetStage stage to which to move the state machine
+         */
+        private static synchronized void moveToStage(final StartupStage targetStage) {
+            final int start;
+            if (previousStage == null) {
+                start = 0;
+            } else {
+                if (previousStage.compareTo(targetStage) >= 0) {
+                    LOGGER.coding(() -> "Can only move to later stage: %s (current) >= %s (new)" //
+                        .formatted(previousStage, targetStage), new IllegalStateException());
+                    return;
+                }
+                start = previousStage.ordinal() + 1;
+            }
+
+            final var stages = StartupStage.values();
+            if (start < targetStage.ordinal()) {
+                LOGGER.coding(() -> "Stages have been requested out of order: Expected %s, found %s" //
+                    .formatted(stages[start], targetStage), new IllegalStateException());
+            }
+
+            // make sure we execute all stages in order
+            for (var i = start; i <= targetStage.ordinal(); i++) {
+                final var stage = stages[i];
+                runHooksAtStage(stage);
+                previousStage = stage;
+            }
+        }
+
+        private static void runHooksAtStage(final StartupStage stage) {
+            if (stage == StartupStage.AFTER_WORKSPACE_SET) {
+                // unregister the listener, either the workspace is set or the default has been chosen
+                final var bundleContext = FrameworkUtil.getBundle(IEarlyStartup.class).getBundleContext();
+                bundleContext.removeServiceListener(WORKSPACE_LOC_MODIFIED_LISTENER);
+            }
+
+            final var registeredProvidersIter = Stream.of(EXTENSION_POINT.getExtensions()) //
+                .flatMap(ext -> Stream.of(ext.getConfigurationElements())) //
+                .filter(provider -> isRequestedStage(provider, stage)) //
+                .iterator();
+
+            while (registeredProvidersIter.hasNext()) {
+                final IConfigurationElement provider = registeredProvidersIter.next();
+                try {
+                    LOGGER.debug(() -> "Executing startup hook `%s#run()` at stage %s" //
+                        .formatted(provider.getAttribute("class"), stage)); // NOSONAR
+                    ((IEarlyStartup)provider.createExecutableExtension("class")).run();
+                } catch (CoreException e) {
+                    final var message = "Could not create early startup object of class '%s' from plug-in '%s': %s" //
+                        .formatted(provider.getAttribute("class"), provider.getContributor().getName(), e.getMessage());
+                    LOGGER.error(message, e);
+                } catch (Exception e) { // NOSONAR
+                    final var message = "Early startup in '%s' from plug-in '%s' has thrown an uncaught exception: %s"//
+                        .formatted(provider.getAttribute("class"), provider.getContributor().getName(), e.getMessage());
+                    LOGGER.error(message, e);
+                }
+            }
+        }
+
+        private static boolean isRequestedStage(final IConfigurationElement provider, final StartupStage stage) {
+            final var stageAttribute = provider.getAttribute("startupStage");
+            final StartupStage requestedStage;
+            if (stageAttribute == null) {
+                // fallback to the old two-stage model, missing attribute is interpreted as `false`
+                final var earliestStageFlag = provider.getAttribute("callBeforeKNIMEApplicationStart");
+                requestedStage = Boolean.parseBoolean(earliestStageFlag) ? StartupStage.EARLIEST
+                    : StartupStage.BEFORE_WFM_CLASS_LOADED;
+            } else {
+                requestedStage = EnumUtils.getEnum(StartupStage.class, stageAttribute);
+                if (requestedStage == null && stage == StartupStage.EARLIEST) {
+                    // only log the error once in the `EARLIEST` stage
+                    LOGGER.error(() -> "Unknown startup stage '%s' specified in contribution '%s' from plug-in '%s'" //
+                        .formatted(stageAttribute, provider.getAttribute("class"),
+                            provider.getContributor().getName()));
+                }
+            }
+            return requestedStage == stage;
         }
     }
 }

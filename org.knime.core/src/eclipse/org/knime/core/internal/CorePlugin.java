@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
@@ -61,15 +62,18 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.node.port.report.IReportService;
+import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.auth.DelegatingAuthenticator;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -124,6 +128,20 @@ public class CorePlugin implements BundleActivator {
         throws Exception {
         instance = this; // NOSONAR (static assignment)
 
+        // registered as listener (as opposed to being run "inline") to guarantee bundle is fully started
+        final var listenerRef = new AtomicReference<SynchronousBundleListener>();
+        listenerRef.set(event -> {
+            if (event.getType() == BundleEvent.STARTED) {
+                final Bundle bundle = event.getBundle();
+                if (bundle.getSymbolicName().equals("org.knime.core")) {
+                    final BundleContext bundleContext = bundle.getBundleContext();
+                    IEarlyStartup.EarlyStartupState.initialize(bundleContext);
+                    bundleContext.removeBundleListener(listenerRef.get());
+                }
+            }
+        });
+        context.addBundleListener(listenerRef.get());
+
         /* Unfortunately we have to activate the plugin
          * org.eclipse.ecf.filetransfer explicitly by accessing one of the
          * contained classed. This will trigger the initialization of the
@@ -154,6 +172,7 @@ public class CorePlugin implements BundleActivator {
                 DelegatingAuthenticator.installAuthenticators();
             }
         }, String.format("(%s=org.eclipse.core.net.proxy.IProxyService)", Constants.OBJECTCLASS));
+
     }
 
     private void readMimeTypes() throws IOException {

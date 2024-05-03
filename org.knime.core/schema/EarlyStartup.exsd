@@ -36,6 +36,8 @@
             <annotation>
                <documentation>
                   The class that provides the early startup code. It must have a public no-arg constructor.
+                  This extension is not public API; regular KNIME node extensions should not need to interfere with 
+                  the startup process.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.util.IEarlyStartup"/>
@@ -45,9 +47,35 @@
          <attribute name="callBeforeKNIMEApplicationStart" type="boolean">
             <annotation>
                <documentation>
-                  If &apos;true&apos;, the code will be executed quite early, i.e. right before the KNIME application is being started. If &apos;false&apos; it&apos;s executed once most of the KNIME application has been started already.
+                  DEPRECATED since 5.3.0, in favor of &apos;startupStage&apos;.
+                  If &apos;true&apos;, the code will be executed quite early, i.e. right before the KNIME application is
+                  being started. If &apos;false&apos; it&apos;s executed once most of the KNIME application has been
+                  started already.
+               </documentation>
+               <appInfo>
+                  <meta.attribute deprecated="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="startupStage">
+            <annotation>
+               <documentation>
+                  Specifies the stage at which the `run()` method should be run. The options are
+                   (1) at the earliest possible point in time,
+                   (2) right after the workspace has been decided on or
+                   (3) right before the `WorkflowManager` class is loaded.
                </documentation>
             </annotation>
+            <simpleType>
+               <restriction base="string">
+                  <enumeration value="EARLIEST">
+                  </enumeration>
+                  <enumeration value="AFTER_WORKSPACE_SET">
+                  </enumeration>
+                  <enumeration value="BEFORE_WFM_CLASS_LOADED">
+                  </enumeration>
+               </restriction>
+            </simpleType>
          </attribute>
       </complexType>
    </element>

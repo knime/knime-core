@@ -88,7 +88,6 @@ import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
@@ -97,10 +96,8 @@ import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.Pair;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceEvent;
 
 /**
  * The KNIME logging lifecycle starts in "uninitialized" state and can transition once to the "initialized" state.
@@ -130,6 +127,17 @@ import org.osgi.framework.ServiceEvent;
  */
 public final class KNIMELogger {
 
+    /**
+     * This initializer is registered via the {@link IEarlyStartup} extension point at stage
+     * {@link org.knime.core.util.IEarlyStartup.StartupStage#AFTER_WORKSPACE_SET AFTER_WORKSPACE_SET}.
+     */
+    public static final class EarlyStartupInitializer implements IEarlyStartup {
+        @Override
+        public void run() {
+            initializeLogging(true);
+        }
+    }
+
     // shared buffer for all instances used before logging is initialized
     private static final LogBuffer BUFFER = new LogBuffer(1024);
 
@@ -137,31 +145,7 @@ public final class KNIMELogger {
 
     static boolean isInstanceLocationSet() {
         final var loc = Platform.getInstanceLocation();
-        if (loc != null) {
-            return loc.isSet();
-        }
-        return false;
-    }
-
-    /**
-     * Initializes the logging framework in a safe way, i.e. only after the instance location has been set.
-     */
-    public static void safeInitializeLogging() {
-        final var logBufferedMessages = true;
-        if (isInstanceLocationSet()) {
-            initializeLogging(logBufferedMessages);
-        } else {
-            try {
-                FrameworkUtil.getBundle(KNIMELogger.class).getBundleContext().addServiceListener(event -> {
-                    if (event.getType() == ServiceEvent.MODIFIED) {
-                        initializeLogging(logBufferedMessages);
-                    }
-                }, Location.INSTANCE_FILTER);
-            } catch (final InvalidSyntaxException ex) {
-                NodeLogger.getLogger(KNIMELogger.class.getName()).coding(
-                    "Unable to initialize logging via service listener due to invalid filter", ex);
-            }
-        }
+        return loc != null && loc.isSet();
     }
 
     /**
@@ -224,7 +208,7 @@ public final class KNIMELogger {
     }
 
     static synchronized void initializeLogging(final boolean logBufferedLogMessages) {
-        if (isInitialized()) {
+        if (isInitialized) {
             return;
         }
         final var isInstanceLocationSet = isInstanceLocationSet();

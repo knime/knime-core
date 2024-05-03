@@ -423,7 +423,7 @@ public final class WorkflowManager extends NodeContainer
     private File m_tmpDir = null;
 
     static {
-        IEarlyStartup.executeEarlyStartup(false);
+        IEarlyStartup.runBeforeWFMClassLoaded();
     }
 
     ///////////////////////
