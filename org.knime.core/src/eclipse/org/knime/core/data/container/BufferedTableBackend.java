@@ -49,6 +49,7 @@
 package org.knime.core.data.container;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.IntSupplier;
@@ -238,25 +239,25 @@ public final class BufferedTableBackend implements TableBackend {
 
             if (Stream.of(slices).map(Selection::rows).noneMatch(RowRangeSelection::allSelected)) {
                 long from = Stream.of(slices)//
-                        .map(Selection::rows)//
-                        .mapToLong(RowRangeSelection::fromIndex)//
-                        .min()//
-                        .orElseThrow(() -> new IllegalStateException("No slices provided."));
+                    .map(Selection::rows)//
+                    .mapToLong(RowRangeSelection::fromIndex)//
+                    .min()//
+                    .orElseThrow(() -> new IllegalStateException("No slices provided."));
                 long to = Stream.of(slices)//
-                        .map(Selection::rows)//
-                        .mapToLong(RowRangeSelection::toIndex)//
-                        .max()//
-                        .orElseThrow(() -> new IllegalStateException("No slices provided."));
+                    .map(Selection::rows)//
+                    .mapToLong(RowRangeSelection::toIndex)//
+                    .max()//
+                    .orElseThrow(() -> new IllegalStateException("No slices provided."));
                 union = union.retainRows(from, to);
             }
             if (Stream.of(slices).map(Selection::columns).noneMatch(ColumnSelection::allSelected)) {
                 var columns = Stream.of(slices)//
-                        .map(Selection::columns)//
-                        .map(ColumnSelection::getSelected)//
-                        .flatMapToInt(IntStream::of)//
-                        .distinct()//
-                        .sorted()//
-                        .toArray();
+                    .map(Selection::columns)//
+                    .map(ColumnSelection::getSelected)//
+                    .flatMapToInt(IntStream::of)//
+                    .distinct()//
+                    .sorted()//
+                    .toArray();
                 union = union.retainColumns(columns);
             }
             return union;
@@ -281,7 +282,7 @@ public final class BufferedTableBackend implements TableBackend {
         }
 
         private void writeSlices(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
-            final AutoCloseables<TableSliceWriter> writers) {
+            final AutoCloseables<TableSliceWriter> writers) throws CanceledExecutionException {
             var unionSliceFromFirstRow = Selection.all()
                     .retainColumns(m_unionSlice.columns());
             if (!m_unionSlice.rows().allSelected()) {
@@ -290,6 +291,7 @@ public final class BufferedTableBackend implements TableBackend {
             try (var readCursor = table.cursor(TableFilter.fromSelection(m_unionSlice))) {
                 long r = moveToSlice(readCursor, exec, numRows);
                 for (; readCursor.canForward(); r++) {
+                    exec.checkCanceled();
                     var row = readCursor.forward();
                     long rowIndex = r - 1;
                     writers.stream().forEach(w -> w.writeRow(rowIndex, row));
@@ -298,7 +300,8 @@ public final class BufferedTableBackend implements TableBackend {
             }
         }
 
-        private long moveToSlice(final RowCursor cursor, final ExecutionMonitor progress, final double numRows) {
+        private long moveToSlice(final RowCursor cursor, final ExecutionMonitor progress, final double numRows)
+                throws CanceledExecutionException {
             var rows = m_unionSlice.rows();
             if (rows.allSelected() || rows.fromIndex() == 0) {
                 return 0;
@@ -306,6 +309,7 @@ public final class BufferedTableBackend implements TableBackend {
             var firstRow = rows.fromIndex();
             long r = 1;
             for (; r <= firstRow && cursor.canForward(); r++) {
+                progress.checkCanceled();
                 cursor.forward();
                 progress.setProgress(r / numRows);
             }
@@ -335,7 +339,7 @@ public final class BufferedTableBackend implements TableBackend {
         private final List<T> m_closeables;
 
         AutoCloseables(final Stream<T> closeables) {
-            m_closeables = closeables.collect(Collectors.toList());
+            m_closeables = closeables.collect(Collectors.toCollection(ArrayList<T>::new));
         }
 
         Stream<T> stream() {
@@ -346,10 +350,10 @@ public final class BufferedTableBackend implements TableBackend {
         @Override
         public void close() throws Exception {
             var exceptions = m_closeables.stream()//
-            .map(AutoCloseables::tryClose)//
-            .filter(Optional::isPresent)//
-            .map(Optional::get)//
-            .collect(Collectors.toList());
+                .map(AutoCloseables::tryClose)//
+                .filter(Optional::isPresent)//
+                .map(Optional::get)//
+                .toList();
             if (!exceptions.isEmpty()) {
                 var exIter = exceptions.iterator();
                 var first = exIter.next();
