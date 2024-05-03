@@ -752,12 +752,32 @@ public final class NodeLogger {
      * Allows to enable/disable logging in the workflow directory. If enabled log messages that belong to workflow
      * are logged into a log file within the workflow directory itself in addition to the global KNIME log file.
      *
+     * When called with {@code true}, all per-workflow logfile appenders created afterwards will use the filter levels
+     * of the global KNIME log file, but any existing appenders will not be changed.
+     *
      * @param enable <code>true</code> if workflow relative logging should be enabled
      * @since 2.12
      */
     public static void logInWorkflowDir(final boolean enable) {
         KNIMELogger.setLogInWorkflowDir(enable);
         LogLog.debug("Workflow directory logging set to: " + enable);
+    }
+
+    /**
+     * Allows to enable logging in the workflow directory. In contrast to {@link #logInWorkflowDir(boolean)}, this
+     * method sets a filter with the given minimum and maximum levels on the per-workflow logfile appenders and does
+     * not share the filter with the global KNIME log.
+     *
+     * When called, all per-workflow logfile appenders created afterwards will use the filter levels
+     * of the global KNIME log file, but any existing appenders will not be changed.
+     *
+     * @param minIncl minimum level to use (inclusive)
+     * @param maxIncl maximum level to use (inclusive)
+     * @since 5.3
+     */
+    public static void logInWorkflowDir(final LEVEL minIncl, final LEVEL maxIncl) {
+        KNIMELogger.setLogInWorkflowDir(minIncl, maxIncl);
+        LogLog.debug("Workflow directory logging enabled with filter range: [%s, %s]".formatted(minIncl, maxIncl));
     }
 
     /**

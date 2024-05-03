@@ -58,6 +58,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.apache.log4j.Appender;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -66,6 +67,7 @@ import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.Filter;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.RendererSupport;
+import org.apache.log4j.varia.LevelRangeFilter;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.KNIMEConstants;
@@ -109,6 +111,11 @@ final class DelegatingLogger {
     static Layout workflowDirLogfileLayout = new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n");
 
     static boolean logInWFDir;
+
+    /**
+     * Optional filter to use when per-workflow logging is active and should not wrap global logfile filter.
+     */
+    static LevelRangeFilter levelFilter;
 
     static boolean logGlobalInWFDir;
 
@@ -272,57 +279,78 @@ final class DelegatingLogger {
             //if the workflowDir is null we do not need to append an extra log appender
             return;
         }
-        //in this method we have to use the logger directly to prevent a deadlock!!!
-        final var logger = m_logger;
         final String workflowDirPath = workflowDir.getPath();
         if (workflowDirPath == null) {
             return;
         }
+        //in this method we have to use the logger directly to prevent a deadlock!!!
+        final var logger = m_logger;
         var wfAppender = WF_APPENDER.get(workflowDirPath);
         if (wfAppender != null) {
             logger.addAppender(wfAppender);
-        } else {
-            //we do the getAppender twice to prevent the synchronize block on subsequent calls!!!
-            synchronized (WF_APPENDER) {
-                //we need a synchronize block otherwise we might create a second appender that opens a file handle
-                //which never get closed and thus the copying of a full log file to the zip file fails
-                wfAppender = WF_APPENDER.get(workflowDirPath);
-                if (wfAppender == null) {
-                    //use the KNIME specific LogfileAppender that moves larger log files into a separate zip file
-                    //and that implements equals and hash code to ensure that two LogfileAppender
-                    //with the same name are considered equal to prevent duplicate appender registration
-                    final var fileAppender = new LogfileAppender(workflowDir);
-                    fileAppender.setLayout(workflowDirLogfileLayout);
-                    fileAppender.setName(workflowDirPath);
-                    final var mainFilter = logFileAppender.getFilter();
-                    fileAppender.addFilter(new Filter() {
-                        @Override
-                        public int decide(final LoggingEvent event) {
-                            final Object msg = event.getMessage();
-                            if (msg instanceof KNIMELogMessage kmsg) {
-                                final File msgDir = kmsg.workflowDir(); //can be null
-                                if ((logGlobalInWFDir && msgDir == null) || logInWFDir && workflowDir.equals(msgDir)) {
-                                    //return only neutral to let the log level based filters decide if we log this event
-                                    if (mainFilter != null) {
-                                        return mainFilter.decide(event);
-                                    }
-                                    return Filter.NEUTRAL;
-                                }
-                            }
-                            return Filter.DENY;
-                        }
-                    });
-                    //we have to call this function to activate the writer!!!
-                    fileAppender.activateOptions();
-                    logger.addAppender(fileAppender);
-                    WF_APPENDER.put(workflowDirPath, fileAppender);
-                    if (m_listener == null) {
-                        m_listener = new MyWorkflowListener();
-                        WorkflowManager.ROOT.addListener(m_listener);
-                    }
+            return;
+        }
+        //we do the getAppender twice to prevent the synchronize block on subsequent calls!!!
+        synchronized (WF_APPENDER) {
+            //we need a synchronize block otherwise we might create a second appender that opens a file handle
+            //which never get closed and thus the copying of a full log file to the zip file fails
+            wfAppender = WF_APPENDER.get(workflowDirPath);
+            if (wfAppender == null) {
+                final var fileAppender = createWorkflowLogAppender(workflowDirPath, workflowDir);
+                //we have to call this function to activate the writer!!!
+                fileAppender.activateOptions();
+                logger.addAppender(fileAppender);
+                WF_APPENDER.put(workflowDirPath, fileAppender);
+                if (m_listener == null) {
+                    m_listener = new MyWorkflowListener();
+                    WorkflowManager.ROOT.addListener(m_listener);
                 }
             }
         }
+    }
+
+    /**
+     * Creates a new, non-activated, {@link LogfileAppender logfile appender} for the given workflow directory for use
+     * in "per-workflow logging". Call {@link FileAppender#activateOptions()} in order to activate the appender.
+     *
+     * @param appenderName name for the appender, usually the path to the workflow directory
+     * @param workflowDir workflow directory to create knime.log file in
+     * @return log file appender for the given workflow directory
+     */
+    private static LogfileAppender createWorkflowLogAppender(final String appenderName, final File workflowDir) {
+      //use the KNIME specific LogfileAppender that moves larger log files into a separate zip file
+        //and that implements equals and hash code to ensure that two LogfileAppender
+        //with the same name are considered equal to prevent duplicate appender registration
+        final var fileAppender = new LogfileAppender(workflowDir);
+        fileAppender.setLayout(workflowDirLogfileLayout);
+        fileAppender.setName(appenderName);
+
+        // set up filter chain that first removes messages that do not belong into the specific workflow dir
+        // appender and then asks a level range filter (the global logfile filter or a local one)
+        final var workflowDirFilter = new Filter() {
+            @Override
+            public int decide(final LoggingEvent event) {
+                final Object msg = event.getMessage();
+                // decide if this local appender should process any message at all
+                if ((logGlobalInWFDir || logInWFDir) && msg instanceof KNIMELogMessage kmsg) {
+                    final var messageDirectory = kmsg.workflowDir(); //can be null
+                    // global log messages are not associated with a workflow directory
+                    if ((logGlobalInWFDir && messageDirectory == null)
+                        || (logInWFDir && workflowDir.equals(messageDirectory))) {
+                        // let the next filter in the chain decide
+                        return Filter.NEUTRAL;
+                    }
+                }
+                // this will cut off filtering early and not consult the next filter
+                return Filter.DENY;
+            }
+        };
+        // this builds a filter chain (equivalent to calling `setNext` on `workflowDirFilter` and then adding
+        // that one to the appender, or wrapping the level range filter in the `workflowDirFilter`)
+        fileAppender.addFilter(workflowDirFilter);
+        fileAppender.addFilter(levelFilter != null ? levelFilter : logFileAppender.getFilter());
+
+        return fileAppender;
     }
 
     /**

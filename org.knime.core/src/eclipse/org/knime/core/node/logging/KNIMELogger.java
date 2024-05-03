@@ -372,6 +372,17 @@ public final class KNIMELogger {
                 }
             }
         }
+
+        if (DelegatingLogger.levelFilter != null) {
+            // include the workflow logfile appenders' filter (if they are detatched from the main one), see AP-22429
+            // otherwise, we would not instruct the loggers to log to that minimum level if all other appenders
+            // have a higher level.
+            final var min = DelegatingLogger.levelFilter.getLevelMin();
+            if (min != null && minimumLevel.isGreaterOrEqual(min)) {
+                minimumLevel = min;
+            }
+        }
+
         final var minimumLevelFinal = minimumLevel;
         synchronized (LOGGERS) {
             KNOWN_LOGGER_PREFIXES.stream().map(LogManager::getLogger).forEach(l -> l.setLevel(minimumLevelFinal));
@@ -463,10 +474,38 @@ public final class KNIMELogger {
      * Allows to enable/disable logging in the workflow directory. If enabled log messages that belong to workflow
      * are logged into a log file within the workflow directory itself in addition to the global KNIME log file.
      *
+     * When called with {@code true}, all per-workflow logfile appenders created afterwards will use the filter levels
+     * of the global KNIME log file, but any existing appenders will not be changed.
+     *
      * @param enable <code>true</code> if workflow relative logging should be enabled
      */
     public static void setLogInWorkflowDir(final boolean enable) {
         DelegatingLogger.logInWFDir = enable;
+        // null this filter since we will follow the global log again
+        DelegatingLogger.levelFilter = null;
+    }
+
+
+    /**
+     * Allows to enable logging in the workflow directory. In contrast to {@link #setLogInWorkflowDir(boolean)}, this
+     * method sets a filter with the given minimum and maximum levels on the per-workflow logfile appenders and does
+     * not share the filter with the global KNIME log.
+     *
+     * When called, all per-workflow logfile appenders created afterwards will use the filter levels
+     * of the global KNIME log file, but any existing appenders will not be changed.
+     *
+     * @param minIncl minimum level to use (inclusive)
+     * @param maxIncl maximum level to use (inclusive)
+     * @since 5.3
+     */
+    public static void setLogInWorkflowDir(final LEVEL minIncl, final LEVEL maxIncl) {
+        DelegatingLogger.logInWFDir = true;
+        final var filter = new LevelRangeFilter();
+        filter.setLevelMin(KNIMELogger.translateKnimeToLog4JLevel(minIncl));
+        filter.setLevelMax(KNIMELogger.translateKnimeToLog4JLevel(maxIncl));
+        DelegatingLogger.levelFilter = filter;
+        // we need to make sure that the loggers actually log at the level configured here
+        updateLog4JKNIMELoggerLevelInternal();
     }
 
     /**
