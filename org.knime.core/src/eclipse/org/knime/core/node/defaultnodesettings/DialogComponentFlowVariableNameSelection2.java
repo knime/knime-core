@@ -199,7 +199,7 @@ public final class DialogComponentFlowVariableNameSelection2 extends DialogCompo
 
     @Override
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
-        if (!m_selectionIsValid) {
+        if (getModel().isEnabled() && !m_selectionIsValid) {
             throw new InvalidSettingsException("No valid flow variable selected.");
         }
         updateModel();

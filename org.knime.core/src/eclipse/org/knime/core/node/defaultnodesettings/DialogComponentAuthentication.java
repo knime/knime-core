@@ -897,8 +897,6 @@ public final class DialogComponentAuthentication extends DialogComponent impleme
      * <p>
      * This method clears the text fields in the dialog, whose cleared contents are then
      * propagated to the settings model on UI action events.
-     *
-     * @param type authentication type
      */
     private void clearDeselectedFields() {
         final var selectedType = AuthenticationType.get(m_authenticationType.getSelection().getActionCommand());
