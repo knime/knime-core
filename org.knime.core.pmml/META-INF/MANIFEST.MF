@@ -10,7 +10,7 @@ Export-Package: org.dmg.pmml,
   org.dmg.pmml.impl,
   org.knime.core.pmml
 Require-Bundle: org.apache.log4j;bundle-version="[1.2.15,2.0.0)",
- org.apache.xmlbeans5;bundle-version="[5.1.1,6.0.0)";visibility:=reexport
+ org.apache.xmlbeans;bundle-version="[5.1.1,6.0.0)";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Eclipse-BundleShape: dir

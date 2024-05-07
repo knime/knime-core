@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.slf4j.impl;
+package org.knime.slf4j.binding;
 
 import java.io.Serializable;
 

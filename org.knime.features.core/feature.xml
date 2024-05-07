@@ -744,7 +744,7 @@ propagated with or for interoperation with KNIME.
          download-size="0"
          install-size="0"
          version="0.0.0"/>
-         
+
    <plugin
          id="org.knime.core.table"
          download-size="0"
@@ -773,18 +773,19 @@ propagated with or for interoperation with KNIME.
          unpack="false"/>
 
    <plugin
-         id="org.apache.logging.log4j"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         id="org.apache.commons.logging.log4j"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.slf4j.api"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.apache.logging.log4j.api"
+         version="0.0.0"/>
 
    <plugin
          id="org.apache.logging.log4j.log4j-to-slf4j"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>

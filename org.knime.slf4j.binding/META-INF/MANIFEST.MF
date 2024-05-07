@@ -5,10 +5,17 @@ Bundle-SymbolicName: org.knime.slf4j.binding;singleton:=true
 Bundle-Version: 5.3.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Fragment-Host: org.slf4j.api;bundle-version="[1.7.2.v20121108-1250,2)"
+Fragment-Host: slf4j.api;bundle-version="[2,3)"
 Require-Bundle: org.knime.core;bundle-version="[5.3.0,6.0.0)",
- org.apache.log4j;bundle-version="[1.2.21,2.0.0)",
- org.apache.commons.lang3;bundle-version="[3.9.0,4.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+ org.apache.log4j;bundle-version="[1.2.25,2.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.14.0,4.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Bundle-ActivationPolicy: lazy
 Automatic-Module-Name: org.knime.slf4j.binding
+Provide-Capability: osgi.service;objectClass:List<String>="org.slf4j.spi
+ .SLF4JServiceProvider";type=simple;effective:=active,osgi.serviceloader
+ ;osgi.serviceloader="org.slf4j.spi.SLF4JServiceProvider";register:="org
+ .knime.slf4j.binding.NodeLoggerServiceProvider";type=simple
+Require-Capability: osgi.extender;filter:="(&(osgi.extender=osgi.service
+ loader.registrar)(version>=1.0.0)(!(version>=2.0.0)))",osgi.ee;filter:=
+ "(&(osgi.ee=JavaSE)(version=1.8))"

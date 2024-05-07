@@ -6,4 +6,4 @@
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-package org.slf4j.impl;
+package org.knime.slf4j.binding;
