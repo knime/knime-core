@@ -62,12 +62,18 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.util.crypto.Encrypter;
 
 /**
- * This class handles the encryption and decryption with the static stored key.
- * To this class one static key supplier can be registered that is invoked if no
- * key is available.
+ * This class handles the encryption and decryption with the static stored key. To this class one static key supplier
+ * can be registered that is invoked if no key is available.
  *
  * @author Christoph Sieb, University of Konstanz
- * @deprecated The {@link Encrypter} should be preferred to this class.
+ * @deprecated The use of {@link KnimeEncryption} is discouraged and no longer used in KNIME Analytics Platform. The
+ *             class purely exists for backward compatibility reasons to guarantee that old workflows and workspaces are
+ *             still functioning. KNIME's 'master key' concept was discouraged, e.g. by disclaimers in the KNIME UI.
+ *             It's no longer accessible via the KNIME modern UI (version 5). In general, permanently storing sensitive
+ *             information, e.g. passwords, as part of the workflow is discouraged and users are recommended to use flow
+ *             variable credentials instead (which are retrieved on demand, e.g. using a prompt or via functionality of
+ *             KNIME Hub). In cases where data needs to be encrypted, {@link Encrypter} should be preferred to this
+ *             class.
  */
 @Deprecated(since = "5.3.0", forRemoval = true)
 public final class KnimeEncryption {
@@ -75,6 +81,8 @@ public final class KnimeEncryption {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(KnimeEncryption.class);
 
+    /** In case you stumble across this encryption method in a static code analyzer: Read the class
+     * comment on deprecation (in short: the code in this class is no longer of practical relevance.) */
     private static final String ENCRYPTION_METHOD = "DES/ECB/PKCS5Padding";
 
     private static Cipher cipher;
