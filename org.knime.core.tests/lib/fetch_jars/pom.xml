@@ -66,6 +66,7 @@
                             <classifier>sources</classifier>
                             <includeScope>runtime</includeScope>
                             <outputDirectory>../</outputDirectory>
+                            <excludeArtifactIds>slf4j-api,jackson-core,jackson-annotations,jackson-databind,jackson-dataformat-yaml</excludeArtifactIds>
                         </configuration>
                         <phase>package</phase>
                         <goals>
@@ -77,6 +78,7 @@
                         <configuration>
                             <includeScope>runtime</includeScope>
                             <outputDirectory>../</outputDirectory>
+                            <excludeArtifactIds>slf4j-api,jackson-core,jackson-annotations,jackson-databind,jackson-dataformat-yaml</excludeArtifactIds>
                         </configuration>
                         <phase>package</phase>
                         <goals>
