@@ -257,8 +257,12 @@ public interface IEarlyStartup {
             // make sure we execute all stages in order
             for (var i = start; i <= targetStage.ordinal(); i++) {
                 final var stage = stages[i];
-                runHooksAtStage(stage);
-                previousStage = stage;
+                try {
+                    runHooksAtStage(stage);
+                } finally {
+                    // always mark the stage as done even if errors occur, otherwise it is repeated later
+                    previousStage = stage;
+                }
             }
         }
 
@@ -284,7 +288,7 @@ public interface IEarlyStartup {
                     final var message = "Could not create early startup object of class '%s' from plug-in '%s': %s" //
                         .formatted(provider.getAttribute("class"), provider.getContributor().getName(), e.getMessage());
                     LOGGER.error(message, e);
-                } catch (Exception e) { // NOSONAR
+                } catch (Exception | ExceptionInInitializerError e) { // NOSONAR
                     final var message = "Early startup in '%s' from plug-in '%s' has thrown an uncaught exception: %s"//
                         .formatted(provider.getAttribute("class"), provider.getContributor().getName(), e.getMessage());
                     LOGGER.error(message, e);
