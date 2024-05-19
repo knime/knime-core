@@ -59,6 +59,7 @@ import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.BlobDataCell;
 import org.knime.core.data.convert.DataCellFactoryMethod;
+import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -215,12 +216,14 @@ public class XMLCellFactory implements FromComplexString, FromInputStream {
     	if(xml instanceof DataCell) {
     		return (DataCell)xml;
     	} else {
-    		XMLCellContent content = new XMLCellContent(xml.getDocumentSupplier());
-            if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
-                return new XMLBlobCell(content);
-            } else {
-                return new XMLCell(content);
-            }
+    		try (final LockedSupplier<Document> docSupplier = xml.getDocumentSupplier()) {
+                XMLCellContent content = new XMLCellContent(docSupplier);
+                if (content.getStringValue().length() >= MIN_BLOB_SIZE_IN_BYTES) {
+                    return new XMLBlobCell(content);
+                } else {
+                    return new XMLCell(content);
+                }
+    		}
     	}
     }
 

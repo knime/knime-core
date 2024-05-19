@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.lang.ref.SoftReference;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -194,8 +195,8 @@ public class XMLCellContent implements XMLValue<Document>, XMLCellContentProvide
             // normalizeDocument adds e.g. missing xmls attributes
             doc.normalizeDocument();
 
-            s = serialize(documentSupplier.get());
-            m_content = new SoftReference<Document>(null);
+            s = serialize(doc);
+            m_content = new SoftReference<>(null);
         } catch (IOException ex) {
             // should not happen
         }
@@ -265,7 +266,7 @@ public class XMLCellContent implements XMLValue<Document>, XMLCellContentProvide
                 }
             });
         }
-        return os.toString("UTF-8");
+        return os.toString(StandardCharsets.UTF_8);
     }
 
     @SuppressWarnings("deprecation")

@@ -74,7 +74,18 @@ import org.xml.sax.SAXException;
  */
 public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Document>> {
 
-    static final ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> out.writeUTF(value.toString());
+    static final ObjectSerializer<XMLValue<Document>> SERIALIZER = (out, value) -> { // NOSONAR (too long)
+        final String xmlString;
+        if (value instanceof XMLCellContentProvider cntProvider) {
+            xmlString = cntProvider.getXMLCellContent().getStringValue();
+        } else {
+            // this should not have any practical relevance (not expecting implementations outside this package)
+            try (final LockedSupplier<Document> documentSupplier = value.getDocumentSupplier()) {
+                xmlString = new XMLCellContent(documentSupplier).getStringValue();
+            }
+        }
+        out.writeUTF(xmlString);
+    };
 
     static final ObjectDeserializer<XMLValue<Document>> DESERIALIZER = in -> {
         try {
