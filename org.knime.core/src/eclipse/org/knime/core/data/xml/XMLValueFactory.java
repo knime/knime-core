@@ -101,7 +101,7 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         return new XMLWriteValue(access);
     }
 
-    private class XMLReadValue extends TableOrFileStoreReadValue implements XMLValue<Document> {
+    private class XMLReadValue extends TableOrFileStoreReadValue implements XMLValue<Document>, XMLCellContentProvider {
         protected XMLReadValue(final StructReadAccess access) {
             super(access);
         }
@@ -120,9 +120,15 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
 
         @Override
         protected DataCell createCell(final XMLValue<Document> data) {
-            try (var docSupplier = data.getDocumentSupplier()) {
-                return new XMLCell(new XMLCellContent(docSupplier));
+            final XMLCellContent content;
+            if (data instanceof XMLCellContentProvider xmlContentProvider) {
+                content = xmlContentProvider.getXMLCellContent();
+            } else {
+                try (var docSupplier = data.getDocumentSupplier()) {
+                    content = new XMLCellContent(docSupplier);
+                }
             }
+            return new XMLCell(content);
         }
 
         @Override
@@ -133,6 +139,11 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         @Override
         public String toString() {
             return getDataCell().toString();
+        }
+
+        @Override
+        public XMLCellContent getXMLCellContent() {
+            return ((XMLCellContentProvider)getDataCell()).getXMLCellContent();
         }
     }
 

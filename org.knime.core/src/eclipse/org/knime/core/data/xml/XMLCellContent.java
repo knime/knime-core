@@ -74,7 +74,7 @@ import org.xml.sax.SAXParseException;
  *
  * @author Heiko Hofer
  */
-public class XMLCellContent implements XMLValue<Document> {
+public class XMLCellContent implements XMLValue<Document>, XMLCellContentProvider {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(XMLCellContent.class);
 
@@ -239,6 +239,11 @@ public class XMLCellContent implements XMLValue<Document> {
      */
     String getStringValue() {
         return m_xmlString;
+    }
+
+    @Override
+    public XMLCellContent getXMLCellContent() {
+        return this;
     }
 
     private static String serialize(final Document doc) throws IOException {

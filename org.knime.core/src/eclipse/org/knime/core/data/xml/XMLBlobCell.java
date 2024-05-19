@@ -70,7 +70,7 @@ import org.xml.sax.SAXException;
  * @author Heiko Hofer
  */
 @SuppressWarnings("serial")
-public class XMLBlobCell extends BlobDataCell implements XMLValue<Document>, StringValue {
+public class XMLBlobCell extends BlobDataCell implements XMLValue<Document>, StringValue, XMLCellContentProvider {
     /**
      * Serializer for {@link XMLBlobCell}s.
      *
@@ -159,6 +159,11 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue<Document>, Str
     @Override
     public String toString() {
         return m_content.toString();
+    }
+
+    @Override
+    public XMLCellContent getXMLCellContent() {
+        return m_content;
     }
 
     /**

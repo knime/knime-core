@@ -69,7 +69,7 @@ import org.xml.sax.SAXException;
  * @author Heiko Hofer
  */
 @SuppressWarnings("serial")
-public class XMLCell extends DataCell implements XMLValue<Document>, StringValue {
+public class XMLCell extends DataCell implements XMLValue<Document>, StringValue, XMLCellContentProvider {
     /**
      * Type for this cell implementation.
      * Convenience access member for {@link XMLCellFactory#TYPE}.
@@ -186,6 +186,11 @@ public class XMLCell extends DataCell implements XMLValue<Document>, StringValue
     @Override
     public String getStringValue() {
         return m_content.getStringValue();
+    }
+
+    @Override
+    public XMLCellContent getXMLCellContent() {
+        return m_content;
     }
 
     /**

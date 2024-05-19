@@ -65,7 +65,7 @@ import org.w3c.dom.Document;
  */
 @SuppressWarnings("serial")
 public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCellContent>
-    implements XMLValue<Document>, StringValue {
+    implements XMLValue<Document>, StringValue, XMLCellContentProvider {
 
     private static final ObjectSerializer<XMLCellContent> SERIALIZER = XMLValueFactory.SERIALIZER::serialize;
 
@@ -115,6 +115,11 @@ public final class XMLFileStoreCell extends ObjectSerializerFileStoreCell<XMLCel
     @Override
     public String toString() {
         return getContent().toString();
+    }
+
+    @Override
+    public XMLCellContent getXMLCellContent() {
+        return super.getContent();
     }
 
     @SuppressWarnings("unchecked")
