@@ -78,7 +78,7 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
 
     static final ObjectDeserializer<XMLValue<Document>> DESERIALIZER = in -> {
         try {
-            return new XMLCellContent(in.readUTF(), true);
+            return new XMLCellContent(in.readUTF(), false);
         } catch (ParserConfigurationException | SAXException ex) {
             throw new IOException(ex);
         }
