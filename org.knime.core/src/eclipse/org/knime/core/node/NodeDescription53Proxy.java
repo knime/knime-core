@@ -319,7 +319,7 @@ public final class NodeDescription53Proxy extends NodeDescription {
     @Override
     public String getNodeName() {
         String nodeName = m_document.getKnimeNode().getName();
-        if (m_document.getKnimeNode().getDeprecated() && !nodeName.matches("^.+\\s+\\(?[dD]eprecated\\)?$")) {
+        if (m_document.getKnimeNode().getDeprecated() && !nodeName.matches("^.+\\s+\\(?[dD]eprecated\\)?$")) {// NOSONAR
             return nodeName + " (deprecated)";
         } else {
             return nodeName;

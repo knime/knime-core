@@ -57,6 +57,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.impl.values.NamespaceManager;
 import org.apache.xmlbeans.impl.values.XmlObjectBase;
+import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -78,6 +79,8 @@ import org.knime.core.node.testfactories.v28.XSD_v28_noInteractiveView;
 import org.knime.core.node.testfactories.v28.XSD_v28_unsupportedNamespace;
 import org.knime.core.node.testfactories.v41.XSD_v41;
 import org.knime.core.node.testfactories.v41.XSD_v41_ungrouped;
+import org.knime.core.node.testfactories.v53.XSD_v53;
+import org.knime.core.node.testfactories.v53.XSD_v53_invalid;
 
 /**
  * Testcases for the new node description implementation of 2.8.
@@ -205,6 +208,30 @@ public class NodeDescriptionTest {
     }
 
     /**
+     * Tests parsing of a valid test schema in v5.3.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testVersion53XSD() throws Exception {
+        final var description = testValidateDescription(XSD_v53.class, NodeDescription53Proxy.class, true);
+        Assert.assertEquals("Unexpected intro content",
+            "My <b>o<i>w</i>n</b> intro now supports more <em>nest<em>ing</em></em>.",
+            description.getIntro().orElseThrow().strip());
+    }
+
+    /**
+     * Tests parsing of an invalid test schema in v5.3.
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testVersion53XSD_invalid() throws Exception {
+        final var description = testValidateDescription(XSD_v53_invalid.class, NodeDescription53Proxy.class, false);
+        Assert.assertEquals("Unexpected intro content",
+            "My <b>o<i>w</i>n</b> intro now supports more <em>nest<em>ing</em></em>.",
+            description.getIntro().orElseThrow().strip());
+    }
+
+    /**
      * Checks if unsupported doctypes are detected.
      *
      * @throws Exception if something goes wrong
@@ -237,6 +264,29 @@ public class NodeDescriptionTest {
         assertThat(NodeDescription.stripXmlFragment(createTextObjectStub("<fragText</frag>")), is(""));
         assertThat(NodeDescription.stripXmlFragment(createTextObjectStub("<fragText</frag")), is(""));
         assertThat(NodeDescription.stripXmlFragment(createTextObjectStub("frag>Text/frag>")), is(""));
+    }
+
+    /**
+     * Parses the node description for the given factory class and checks that the given proxy class validates or does
+     * not validate the node description document.
+     *
+     * @param factoryClass used to define the description to parse
+     * @param expectedProxyClass proxy class expected for the parsed document
+     * @param expectIsValid {@code true} if the node description should be valid wrt. the proxy class, {@code false}
+     *   otherwise
+     * @return the parsed node description
+     * @throws Exception if something goes wrong
+     */
+    @SuppressWarnings("rawtypes")
+    private static NodeDescription testValidateDescription(final Class<? extends NodeFactory> factoryClass,
+            final Class<? extends NodeDescription> expectedProxyClass, final boolean expectIsValid) throws Exception {
+        final var parser = new NodeDescriptionParser();
+        final var description = parser.parseDescription(factoryClass);
+        final var msg = "Expected node description to be %s but was %s".formatted(expectIsValid ? "valid" : "invalid",
+            expectIsValid ? "invalid" : "valid");
+        MatcherAssert.assertThat(msg, (Boolean)expectedProxyClass.getDeclaredMethod("validate").invoke(description),
+            is(Boolean.valueOf(expectIsValid)));
+        return description;
     }
 
     @SuppressWarnings("rawtypes")

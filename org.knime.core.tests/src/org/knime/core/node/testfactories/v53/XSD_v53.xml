@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="icon.png" type="Other" xmlns="http://knime.org/node/v5.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v5.3 http://knime.org/node/v5.3.xsd">
+    <name>Node Description v5.3</name>
+    <shortDescription>Short description of schema version 5.3</shortDescription>
+    <fullDescription>
+        <intro>
+            My <b>o<i>w</i>n</b> intro now supports more <em>nest<em>ing</em></em>.
+        </intro>
+
+        <tab name="group one">
+            <description>group one description</description>
+            <option name="group one option one">
+                This option demonstrates nested <b>lists</b>.
+                <ul>
+                  <li>I am a nested list:
+                    <ol><li>1</li><li><code>2</code></li></ol>
+                  </li>
+                </ul>
+            </option>
+            <option name="group one option two">
+                <code>echo foo</code>: <samp>foo</samp>
+            </option>
+        </tab>
+
+        <tab name="group two">
+            <option name="group two option one" optional="true">option with <code>optional=true</code></option>
+            <option name="group two option two" optional="false">option with <code>optional=false</code></option>
+            <option name="group two option two">option with optional default</option>
+        </tab>
+
+        <link href="http://www.knime.com/about">
+            textcontent
+        </link>
+    </fullDescription>
+    <interactiveView name="interactive view name">interactive view description</interactiveView>
+    <ports>
+        <inPort index="0" name="in port one name">Left input table</inPort>
+        <inPort index="1" name="in port two name">Right input table</inPort>
+        <dynInPort insert-before="2" name="dyn in port one name" group-identifier="dyn port group one">
+            dyn in port one description
+        </dynInPort>
+        <dynInPort insert-before="2" name="dyn in port two name" group-identifier="dyn port group two">
+            dyn in port two description
+        </dynInPort>
+        <dynInPort insert-before="2" name="dyn in port three name" group-identifier="dyn port group three">
+            dyn in port three description
+        </dynInPort>
+        <outPort index="0" name="out port one name">out port one description</outPort>
+        <outPort index="1" name="out port two name">out port two description</outPort>
+    </ports>
+    <views>
+        <view name="view one name" index="0">view one description</view>
+        <view name="view two name" index="0">view two description</view>
+    </views>
+    <keywords>
+        <keyword>Keyword 1</keyword>
+        <keyword>Keyword 2</keyword>
+    </keywords>
+</knimeNode>
