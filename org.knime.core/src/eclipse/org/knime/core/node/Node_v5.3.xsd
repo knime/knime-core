@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ===============================================================================
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+  ===============================================================================
+
+  This XSD describes node description introduced with KNIME 5.3.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        xmlns="http://knime.org/node/v5.3" targetNamespace="http://knime.org/node/v5.3"
+        elementFormDefault="qualified">
+
+  <xs:annotation>
+    <xs:documentation>Elements for KNIME node-specific parts of the Node Description</xs:documentation>
+  </xs:annotation>
+
+  <xs:element name="knimeNode" type="KnimeNode" />
+
+  <xs:simpleType name="nonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:pattern value=".*[^\s].*" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="KnimeNode">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" />
+      <xs:element name="shortDescription" type="xs:string" />
+      <xs:element name="fullDescription" type="FullDescription" />
+      <xs:element name="interactiveView" minOccurs="0" maxOccurs="1" type="AbstractView" />
+      <xs:element name="ports" type="Ports">
+        <xs:unique name="uniqueInportIndex">
+          <xs:selector xpath="inPort" />
+        <xs:field    xpath="@index" />
+        </xs:unique>
+      <xs:unique name="uniqueOutportIndex">
+          <xs:selector xpath="outPort" />
+          <xs:field    xpath="@index" />
+        </xs:unique>
+      </xs:element>
+      <xs:element minOccurs="0" name="views" type="Views">
+        <xs:unique name="uniqueIndex">
+          <xs:selector xpath="view" />
+          <xs:field    xpath="@index" />
+        </xs:unique>
+      </xs:element>
+      <xs:element name="keywords" minOccurs="0" maxOccurs="1" type="Keywords" />
+    </xs:sequence>
+    <xs:attribute name="icon" type="xs:string" />
+    <xs:attribute name="type" type="NodeType" default="Unknown" />
+    <xs:attribute name="deprecated" default="false" type="xs:boolean" />
+  </xs:complexType>
+
+  <xs:complexType name="FullDescription">
+    <xs:sequence>
+      <xs:element name="intro" type="Intro" />
+      <xs:choice>
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="option" type="Option" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="tab" type="Tab" />
+      </xs:choice>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="link" type="Link" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Option" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="ExtendedDescription">
+        <xs:attribute name="name" type="nonEmptyString" use="required" />
+        <xs:attribute name="optional" default="false" type="xs:boolean" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Tab">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="description" type="Description" />
+      <xs:element maxOccurs="unbounded" name="option" type="Option" />
+    </xs:sequence>
+    <xs:attribute name="name" type="nonEmptyString" use="required" />
+  </xs:complexType>
+
+  <xs:simpleType name="NodeType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="Source" />
+      <xs:enumeration value="Sink" />
+      <xs:enumeration value="Learner" />
+      <xs:enumeration value="Predictor" />
+      <xs:enumeration value="Manipulator" />
+      <xs:enumeration value="Visualizer" />
+      <xs:enumeration value="Widget" />
+      <xs:enumeration value="LoopStart" />
+      <xs:enumeration value="LoopEnd" />
+      <xs:enumeration value="QuickForm" />
+      <xs:enumeration value="Configuration" />
+      <xs:enumeration value="Other" />
+      <xs:enumeration value="Unknown" />
+      <xs:enumeration value="ScopeStart" />
+      <xs:enumeration value="ScopeEnd" />
+      <xs:enumeration value="Container" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Ports">
+    <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="inPort" type="InPort" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="dynInPort" type="DynInPort" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="outPort" type="OutPort" />
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="dynOutPort" type="DynOutPort" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Port" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="ExtendedDescription">
+        <xs:attribute name="index" type="xs:nonNegativeInteger" use="required" />
+        <xs:attribute name="name" type="nonEmptyString" use="required" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="InPort" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="Port" />
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="OutPort" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="Port" />
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="DynPort" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="ExtendedDescription">
+        <xs:attribute name="insert-before" type="xs:nonNegativeInteger" use="required" />
+        <xs:attribute name="name" type="nonEmptyString" use="required" />
+        <xs:attribute name="group-identifier" type="nonEmptyString" use="required" />
+        <xs:attribute name="configurable-via-menu" type="xs:boolean" use="optional" default="true" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+    <xs:complexType name="DynInPort" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="DynPort" />
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="DynOutPort" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="DynPort" />
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Views">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="view" type="View" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="View" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="AbstractView">
+        <xs:attribute name="index" type="xs:nonNegativeInteger"  use="required" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="AbstractView" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="ExtendedDescription">
+      <xs:attribute name="name" type="nonEmptyString" use="required" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="Keywords">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="keyword" type="nonEmptyString" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:annotation>
+    <xs:documentation>Some version of "XHTML" follows</xs:documentation>
+  </xs:annotation>
+
+  <!-- Somewhat standard HTML elements -->
+
+  <xs:element name="p">
+    <xs:complexType mixed="true">
+     <xs:complexContent>
+       <xs:extension base="Description">
+         <xs:attribute name="id" type="xs:string" use="optional" />
+       </xs:extension>
+     </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ul">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="optional" />
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="optional" />
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dl">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="dt" />
+        <xs:element ref="dd" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="dt" type="Inline"/>
+  <xs:element name="dd" type="Intro"/>
+  <xs:element name="li" type="Description" />
+  <xs:element name="h3" type="Inline" />
+  <xs:element name="h4" type="Inline" />
+  <xs:element name="hr" type="xs:string" />
+  <xs:element name="b" type="Inline"/>
+  <xs:element name="i" type="Inline" />
+  <xs:element name="em" type="Inline" />
+  <xs:element name="u" type="Inline" />
+
+  <xs:complexType name="a.content" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <!-- almost Inline, but no nesting of a's -->
+      <xs:group ref="fontstyle" />
+      <xs:group ref="phrase" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:element name="a">
+    <xs:complexType mixed="true">
+      <xs:annotation>
+        <xs:documentation>almost "inline", but no nested a elements</xs:documentation>
+      </xs:annotation>
+      <xs:complexContent>
+        <xs:extension base="a.content">
+          <xs:attribute name="href" use="required" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="code" type="Inline" />
+  <xs:element name="tt" type="Inline" />
+  <xs:element name="s" type="Inline"/>
+  <xs:element name="samp" type="Inline" />
+  <xs:element name="pre">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="a" />
+        <xs:group ref="fontstyle" />
+        <xs:element ref="br" />
+        <xs:element ref="em" />
+        <xs:element ref="code" />
+        <xs:element ref="samp" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sup" type="Inline" />
+  <xs:element name="sub" type="Inline" />
+  <xs:element name="br">
+    <xs:complexType />
+  </xs:element>
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="tr" />
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:string" use="optional" />
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tr">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="th" />
+        <xs:element ref="td" />
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="td">
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Intro">
+          <xs:attribute name="align" />
+          <xs:attribute name="colspan" />
+          <xs:attribute name="rowspan" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="th">
+    <xs:complexType mixed="true">
+      <xs:complexContent>
+        <xs:extension base="Intro">
+          <xs:attribute name="align" />
+          <xs:attribute name="colspan" />
+          <xs:attribute name="rowspan" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:group name="fontstyle">
+    <xs:choice>
+      <xs:element ref="b" />
+      <xs:element ref="i" />
+      <xs:element ref="u" />
+      <xs:element ref="tt" />
+      <xs:element ref="s" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="phrase">
+    <xs:choice>
+      <xs:element ref="em" />
+      <xs:element ref="code" />
+      <xs:element ref="samp" />
+      <xs:element ref="sup" />
+      <xs:element ref="sub" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="inline">
+    <xs:choice>
+      <xs:element ref="a" />
+      <xs:group ref="inline.light" />
+    </xs:choice>
+  </xs:group>
+  <xs:group name="inline.light">
+    <xs:choice>
+      <xs:group ref="fontstyle" />
+      <xs:group ref="phrase" />
+      <xs:element ref="br" />
+    </xs:choice>
+  </xs:group>
+  <xs:complexType name="InlineLight" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="inline.light" />
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="Inline" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="inline" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:group name="block">
+    <xs:choice>
+      <xs:element ref="p" />
+      <xs:element ref="hr" />
+      <xs:element ref="pre" />
+      <xs:group ref="lists" />
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="lists">
+    <xs:choice>
+      <xs:element ref="ul" />
+      <xs:element ref="ol" />
+      <xs:element ref="dl" />
+    </xs:choice>
+  </xs:group>
+
+  <!-- Custom KNIME element types built from "standard" HTML elements -->
+
+  <xs:complexType name="MinimalTags" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="br" />
+      <xs:group ref="fontstyle"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="TextTags" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="fontstyle" />
+      <xs:element ref="br" />
+      <xs:group ref="lists" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="Description" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="inline" />
+      <xs:group ref="lists" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="ExtendedDescription" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="inline" />
+      <xs:group ref="block" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="Intro" mixed="true" >
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:group ref="inline" />
+      <xs:group ref="block" />
+      <xs:element ref="h3" />
+      <xs:element ref="h4" />
+      <xs:element ref="table" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="Link" mixed="true">
+    <xs:attribute name="href" use="required" />
+  </xs:complexType>
+
+</xs:schema>

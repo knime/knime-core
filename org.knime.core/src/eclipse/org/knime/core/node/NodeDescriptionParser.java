@@ -93,6 +93,8 @@ class NodeDescriptionParser {
                 path = "Node_v3.6.xsd";
             } else if ("http://knime.org/node/v4.1.xsd".equals(systemId)) {
                 path = "Node_v4.1.xsd";
+            } else if ("http://knime.org/node/v5.3.xsd".equals(systemId)) {
+                path = "Node_v5.3.xsd";
             } else if ("http://www.knime.org/Node.dtd".equals(systemId)) {
                 path = "Node.dtd";
             } else {
@@ -171,6 +173,9 @@ class NodeDescriptionParser {
                 throw new XmlException("Unsupported document type for node description of " + factoryClass.getName()
                     + ": " + publicId);
             }
+        } else if (namespaceUri.equals(org.knime.node.v53.KnimeNodeDocument.type.getContentModel().getName()
+            .getNamespaceURI())) {
+            return new NodeDescription53Proxy(doc);
         } else if (namespaceUri.equals(org.knime.node.v41.KnimeNodeDocument.type.getContentModel().getName()
             .getNamespaceURI())) {
             return new NodeDescription41Proxy(doc);
