@@ -598,7 +598,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             final PortType[] outputs = IntStream.range(1, origNode.getNrOutPorts()) // skip flow var port
                     .mapToObj(origNode::getOutputType) //
                     .toArray(PortType[]::new);
-            MissingNodeFactory factory = new MissingNodeFactory(info, additionalFactorySettings, inputs, outputs);
+            MissingNodeFactory factory = new MissingNodeFactory(info, additionalFactorySettings, inputs, outputs,
+                    MissingNodeFactory.Reason.FORBIDDEN);
             factory.init();
             final ModifiableNodeCreationConfiguration creationConfig = origNode.getCopyOfCreationConfig().orElse(null);
             return new Node((NodeFactory)factory, creationConfig);

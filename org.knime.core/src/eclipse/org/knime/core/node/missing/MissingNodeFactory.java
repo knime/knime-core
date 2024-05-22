@@ -66,30 +66,49 @@ import org.knime.node2012.PortsDocument.Ports;
 
 /**
  * No API. Factory for missing node placeholder node.
+ * 
  * @author wiswedel
  * @noreference This class is not intended to be referenced by clients.
  */
 public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
     private final NodeAndBundleInformationPersistor m_nodeInfo;
+
     private final PortType[] m_inTypes;
+
     private final PortType[] m_outTypes;
+
     private final NodeSettingsRO m_additionalFactorySettings;
+
+    private final Reason m_reason;
+
     private boolean m_copyInternDirForWorkflowVersionChange;
 
-    /** Constructs factories. Copies as much as possible from original node settings (provided by persistor).
-     * Args are all non-null.
-     * @param nodeInfo ...
-     * @param additionalFactorySettings ...
-     * @param ins ...
-     * @param outs ...
+    /**
+     * @see MissingNodeFactory#MissingNodeFactory(NodeAndBundleInformationPersistor, NodeSettingsRO, PortType[], PortType[], Reason)
      */
-    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo, final NodeSettingsRO additionalFactorySettings,
-                  final PortType[] ins, final PortType[] outs) {
+    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo,
+        final NodeSettingsRO additionalFactorySettings, final PortType[] inPortTypes, final PortType[] outPortTypes) {
+        this(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes, Reason.MISSING);
+    }
+
+    /**
+     * Constructs factories. Copies as much as possible from original node settings (provided by persistor).
+     * Arguments are expected to be non-null.
+     * @param nodeInfo
+     * @param additionalFactorySettings
+     * @param inPortTypes
+     * @param outPortTypes
+     * @param reason
+     */
+    public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo,
+        final NodeSettingsRO additionalFactorySettings, final PortType[] inPortTypes, final PortType[] outPortTypes,
+        Reason reason) {
         m_nodeInfo = nodeInfo;
         m_additionalFactorySettings = additionalFactorySettings;
-        m_inTypes = ins;
-        m_outTypes = outs;
+        m_inTypes = inPortTypes;
+        m_outTypes = outPortTypes;
+        m_reason = reason;
     }
 
     /**
@@ -187,6 +206,27 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
     @Override
     public NodeFactory.NodeType getType() {
         return NodeType.Missing;
+    }
+
+    /**
+     * @return A reason indicating why the original node could not be loaded.
+     */
+    public Reason getReason() {
+        return m_reason;
+    }
+
+    /**
+     * Indicates why the original node was not loaded.
+     */
+    public enum Reason {
+            /**
+             * This missing node placeholder represents a node whose usage was forbidden by Governance features.
+             */
+            FORBIDDEN,
+            /**
+             * This missing node placeholder represents a node that could not be loaded.
+             */
+            MISSING
     }
 
 }
