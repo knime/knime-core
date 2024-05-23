@@ -49,11 +49,13 @@ package org.knime.core.customization;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.knime.core.customization.nodesfilter.NodesFilter;
 import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
+import org.knime.core.customization.ui.UICustomization;
+import org.knime.core.customization.ui.actions.MenuEntry;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 
@@ -75,6 +77,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *     patterns:
  *       - org\\.knime\\.base\\..+
  *     isRegex: true
+ * ui:
+ *   menuEntries:
+ *     - name: "Company Help Portal"
+ *       link: "https://help.company.com/knime"
  * </pre>
  *
  * @since 5.3
@@ -87,17 +93,19 @@ public final class APCustomization {
      * Default (no) customization.
      */
     public static final APCustomization DEFAULT =
-            new APCustomization(List.of(NodesFilter.USE_ALL, NodesFilter.VIEW_ALL));
+        new APCustomization(List.of(NodesFilter.USE_ALL, NodesFilter.VIEW_ALL), UICustomization.NO_UI_CUSTOMIZATION);
 
     private final List<NodesFilter> m_nodesFilters;
+    private final UICustomization m_uiCustomization;
 
     /**
      * Only used for deserialization.
      */
     @JsonCreator
-    APCustomization(@JsonProperty("nodesFilter") final List<NodesFilter> nodesFilter) {
-        m_nodesFilters = Collections
-            .unmodifiableList(CheckUtils.checkArgumentNotNull(nodesFilter, "nodeFilters cannot be null"));
+    APCustomization(@JsonProperty("nodesFilter") final List<NodesFilter> nodesFilter,
+                    @JsonProperty("ui") final UICustomization uiCustomization) {
+        m_nodesFilters = Collections.unmodifiableList(Objects.requireNonNullElse(nodesFilter, List.of()));
+        m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.NO_UI_CUSTOMIZATION);
     }
 
     /**
@@ -110,10 +118,26 @@ public final class APCustomization {
     }
 
     /**
+     * Retrieves the UI customization settings. Only used for testing.
+     *
+     * @return The {@link UICustomization} instance.
+     */
+    UICustomization getUICustomization() {
+        return m_uiCustomization;
+    }
+
+    /**
      * @return customization for nodes
      */
     public Nodes nodes() {
         return new Nodes();
+    }
+
+    /**
+     * @return customization of the UI.
+     */
+    public UI ui() {
+        return new UI();
     }
 
     /**
@@ -153,8 +177,17 @@ public final class APCustomization {
 
     }
 
+    /** Customization of the UI. */
+    public final class UI {
+
+        /** @return the non-null, but possibly empty, list of additional menu entries. */
+        public List<MenuEntry> getMenuEntries() {
+            return m_uiCustomization.getMenuEntries();
+        }
+    }
+
     @Override
     public String toString() {
-        return String.format("APCustomization{nodesFilters=%s}", m_nodesFilters);
+        return String.format("APCustomization{nodesFilters=%s, uiCustomization=%s}", m_nodesFilters, m_uiCustomization);
     }
 }

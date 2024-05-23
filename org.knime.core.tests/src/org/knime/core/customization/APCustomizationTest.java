@@ -47,10 +47,17 @@
  */
 package org.knime.core.customization;
 
+import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
+import org.knime.core.customization.ui.UICustomization;
+import org.knime.core.customization.ui.actions.MenuEntry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -148,7 +155,8 @@ public class APCustomizationTest {
                       isRegex: true
                 """;
 
-        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
+        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
+        APCustomization.Nodes nodesCustomization = customization.nodes();
         assertTrue(
             nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
         assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
@@ -156,5 +164,43 @@ public class APCustomizationTest {
         assertTrue(
             nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
         assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+
+        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION
+        assertEquals(UICustomization.NO_UI_CUSTOMIZATION, customization.getUICustomization());
+    }
+
+
+    @Test
+    void testUICustomization() throws Exception {
+        String ymlInput = """
+                nodesFilter:
+                  - scope: view
+                    rule: allow
+                    predicate:
+                      type: pattern
+                      patterns:
+                        - org\\.knime\\..+
+                        - com\\.knime\\..+
+                      isRegex: true
+                ui:
+                  menuEntries:
+                    - name: "Company Help Portal"
+                      link: "https://help.company.com/knime"
+                """;
+
+        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
+
+        assertNotNull(customization);
+        assertNotNull(customization.getUICustomization());
+        final List<MenuEntry> menuEntries = customization.getUICustomization().getMenuEntries();
+
+        assertSame(menuEntries, customization.ui().getMenuEntries());
+
+        assertEquals(1, menuEntries.size());
+
+        MenuEntry entry = menuEntries.get(0);
+        assertEquals("Company Help Portal", entry.getName());
+        assertEquals("https://help.company.com/knime", entry.getLink());
+
     }
 }
