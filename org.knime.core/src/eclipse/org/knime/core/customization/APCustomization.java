@@ -51,6 +51,7 @@ import java.util.Objects;
 
 import org.knime.core.customization.nodes.NodesCustomization;
 import org.knime.core.customization.ui.UICustomization;
+import org.knime.core.customization.workflow.WorkflowCustomization;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -73,8 +74,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *         isRegex: true
  * ui:
  *   menuEntries:
- *     - name: Company Help Portal
- *       link: 'https://help.company.com/knime'
+ *     - name: "Company Help Portal"
+ *       link: "https://help.company.com/knime"
+ * workflow:
+ *   disablePasswordSaving: true
  * </pre>
  *
  * @since 5.3
@@ -87,19 +90,22 @@ public final class APCustomization {
      * Default (no) customization.
      */
     public static final APCustomization DEFAULT =
-        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT);
+        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT);
 
     private final NodesCustomization m_nodesCustomization;
     private final UICustomization m_uiCustomization;
+    private final WorkflowCustomization m_workflowCustomization;
 
     /**
      * Only used for deserialization.
      */
     @JsonCreator
     APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
-                    @JsonProperty("ui") final UICustomization uiCustomization) {
+                    @JsonProperty("ui") final UICustomization uiCustomization,
+                    @JsonProperty("workflow") final WorkflowCustomization workflowCustomization) {
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
+        m_workflowCustomization = Objects.requireNonNullElse(workflowCustomization, WorkflowCustomization.DEFAULT);
     }
 
     /**
@@ -114,6 +120,13 @@ public final class APCustomization {
      */
     public UICustomization ui() {
         return m_uiCustomization;
+    }
+
+    /**
+     * @return customization of workflow properties.
+     */
+    public WorkflowCustomization workflow() {
+        return m_workflowCustomization;
     }
 
     @Override

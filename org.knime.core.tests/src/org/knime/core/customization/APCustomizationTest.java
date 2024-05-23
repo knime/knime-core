@@ -48,6 +48,7 @@
 package org.knime.core.customization;
 
 import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -58,6 +59,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.ui.actions.MenuEntry;
+import org.knime.core.customization.workflow.WorkflowCustomization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -95,8 +97,10 @@ public class APCustomizationTest {
             nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
         assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
 
-        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION
+        // Assert that the loaded UICustomization is identical to DEFAULT
         assertEquals(UICustomization.DEFAULT, customization.ui());
+
+        assertEquals(WorkflowCustomization.DEFAULT, customization.workflow());
     }
 
 
@@ -132,6 +136,20 @@ public class APCustomizationTest {
         MenuEntry entry = menuEntries.get(0);
         assertEquals("Company Help Portal", entry.getName());
         assertEquals("https://help.company.com/knime", entry.getLink());
+    }
 
+    @Test
+    void testWorkflowCustomization() throws Exception {
+        String ymlInput = """
+                workflow:
+                  disablePasswordSaving: true
+                """;
+
+        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
+
+        assertEquals(UICustomization.DEFAULT, customization.ui());
+
+        assertDoesNotThrow(() -> customization.workflow().toString());
+        assertEquals(true, customization.workflow().isDisablePasswordSaving());
     }
 }
