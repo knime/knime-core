@@ -1,0 +1,14 @@
+{
+    "credentials-1": {
+        "label": "Credentials Input",
+        "type": "object",
+        "username": {
+            "type": "string",
+            "default": "username"
+        },
+        "password": {
+            "type": "string",
+            "default": "*************"
+        }
+    }
+}
