@@ -58,6 +58,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -255,7 +256,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             getLogger().debug(error, ise);
             setDirtyAfterLoad();
         }
-        if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && modelSettings != null
+        if (isDisablePasswordSaving() && modelSettings != null
             && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, false)) {
             result.addWarning(String.format(
                 "Node stores passwords in its configuration. These will be lost when saving "
@@ -310,6 +311,11 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
+    }
+
+    private static boolean isDisablePasswordSaving() {
+        return CorePlugin.getInstance().getCustomizationService() //
+                .map(s -> s.getCustomization().workflow().isDisablePasswordSaving()).orElse(false);
     }
 
     /**
@@ -678,7 +684,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         // default (node uses default configuration after new instantiation), fixes bug 4364
         NodeSettings temp = new NodeSettings("key_ignored");
         snc.saveSNCSettings(temp, true);
-        if (Node.DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION && ConfigPasswordEntry.containsPassword(temp, false)) {
+        if (isDisablePasswordSaving() && ConfigPasswordEntry.containsPassword(temp, false)) {
             ConfigPasswordEntry.replacePasswordsWithNull(temp);
             NodeContext.pushContext(snc);
             try {

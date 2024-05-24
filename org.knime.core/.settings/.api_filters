@@ -143,6 +143,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter comment="Remove static field, previously tagged with @noreference" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
         <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
             <message_arguments>

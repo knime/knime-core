@@ -189,16 +189,6 @@ public final class Node {
     @Deprecated
     public static final String CFG_VARIABLES = "variables";
 
-    /**
-     * A constant that represents the value of the {@link KNIMEConstants#PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN}.
-     *
-     * @since 4.3
-     * @noreference This field is not intended to be referenced by clients.
-     */
-    public static final boolean DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION =
-        Boolean.getBoolean(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN);
-
-
     /** The node's name. */
     private String m_name;
 
