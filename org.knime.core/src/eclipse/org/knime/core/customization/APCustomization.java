@@ -54,7 +54,6 @@ import java.util.Objects;
 import org.knime.core.customization.nodesfilter.NodesFilter;
 import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
 import org.knime.core.customization.ui.UICustomization;
-import org.knime.core.customization.ui.actions.MenuEntry;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
@@ -136,8 +135,8 @@ public final class APCustomization {
     /**
      * @return customization of the UI.
      */
-    public UI ui() {
-        return new UI();
+    public UICustomization ui() {
+        return m_uiCustomization;
     }
 
     /**
@@ -175,15 +174,6 @@ public final class APCustomization {
             return m_nodesFilters.stream().allMatch(t -> t.isAllowed(factoryId));
         }
 
-    }
-
-    /** Customization of the UI. */
-    public final class UI {
-
-        /** @return the non-null, but possibly empty, list of additional menu entries. */
-        public List<MenuEntry> getMenuEntries() {
-            return m_uiCustomization.getMenuEntries();
-        }
     }
 
     @Override
