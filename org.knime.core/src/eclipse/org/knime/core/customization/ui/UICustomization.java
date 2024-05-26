@@ -65,8 +65,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public final class UICustomization {
 
-    /** No customization, no additional entries in the menu etc. */
-    public static final UICustomization NO_UI_CUSTOMIZATION = new UICustomization(List.of());
+    /** No customization, no additional entries in the menu etc.
+     * @noreference This field is not intended to be referenced by clients. */
+    public static final UICustomization DEFAULT = new UICustomization(List.of());
 
     private final List<MenuEntry> m_menuEntries;
 

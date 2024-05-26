@@ -96,7 +96,7 @@ public class APCustomizationTest {
         assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
 
         // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION
-        assertEquals(UICustomization.NO_UI_CUSTOMIZATION, customization.ui());
+        assertEquals(UICustomization.DEFAULT, customization.ui());
     }
 
 

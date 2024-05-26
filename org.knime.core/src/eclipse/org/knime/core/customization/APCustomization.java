@@ -87,7 +87,7 @@ public final class APCustomization {
      * Default (no) customization.
      */
     public static final APCustomization DEFAULT =
-        new APCustomization(NodesCustomization.DEFAULT, UICustomization.NO_UI_CUSTOMIZATION);
+        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT);
 
     private final NodesCustomization m_nodesCustomization;
     private final UICustomization m_uiCustomization;
@@ -99,7 +99,7 @@ public final class APCustomization {
     APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
                     @JsonProperty("ui") final UICustomization uiCustomization) {
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
-        m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.NO_UI_CUSTOMIZATION);
+        m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
     }
 
     /**
