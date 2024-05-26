@@ -47,16 +47,10 @@
  */
 package org.knime.core.customization;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
-import org.knime.core.customization.nodesfilter.NodesFilter;
-import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
+import org.knime.core.customization.nodes.NodesCustomization;
 import org.knime.core.customization.ui.UICustomization;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -68,18 +62,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Instances of this class are not created directly, only restored from yaml that looks similar to this:
  *
  * <pre>
- * nodesFilter:
- * - scope: view
- *   rule: allow
- *   predicate:
- *     type: pattern
- *     patterns:
- *       - org\\.knime\\.base\\..+
- *     isRegex: true
+ * nodes:
+ *   filter:
+ *     - scope: view
+ *       rule: allow
+ *       predicate:
+ *         type: pattern
+ *         patterns:
+ *           - org\\.knime\\.base\\..+
+ *         isRegex: true
  * ui:
  *   menuEntries:
- *     - name: "Company Help Portal"
- *       link: "https://help.company.com/knime"
+ *     - name: Company Help Portal
+ *       link: 'https://help.company.com/knime'
  * </pre>
  *
  * @since 5.3
@@ -92,44 +87,26 @@ public final class APCustomization {
      * Default (no) customization.
      */
     public static final APCustomization DEFAULT =
-        new APCustomization(List.of(NodesFilter.USE_ALL, NodesFilter.VIEW_ALL), UICustomization.NO_UI_CUSTOMIZATION);
+        new APCustomization(NodesCustomization.DEFAULT, UICustomization.NO_UI_CUSTOMIZATION);
 
-    private final List<NodesFilter> m_nodesFilters;
+    private final NodesCustomization m_nodesCustomization;
     private final UICustomization m_uiCustomization;
 
     /**
      * Only used for deserialization.
      */
     @JsonCreator
-    APCustomization(@JsonProperty("nodesFilter") final List<NodesFilter> nodesFilter,
+    APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
                     @JsonProperty("ui") final UICustomization uiCustomization) {
-        m_nodesFilters = Collections.unmodifiableList(Objects.requireNonNullElse(nodesFilter, List.of()));
+        m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.NO_UI_CUSTOMIZATION);
-    }
-
-    /**
-     * Retrieves the list of node customization settings, not null. Only used for testing.
-     *
-     * @return An unmodifiable list of {@link NodesFilter}.
-     */
-    List<NodesFilter> getNodesFilters() {
-        return m_nodesFilters;
-    }
-
-    /**
-     * Retrieves the UI customization settings. Only used for testing.
-     *
-     * @return The {@link UICustomization} instance.
-     */
-    UICustomization getUICustomization() {
-        return m_uiCustomization;
     }
 
     /**
      * @return customization for nodes
      */
-    public Nodes nodes() {
-        return new Nodes();
+    public NodesCustomization nodes() {
+        return m_nodesCustomization;
     }
 
     /**
@@ -139,45 +116,9 @@ public final class APCustomization {
         return m_uiCustomization;
     }
 
-    /**
-     * Customizations for nodes.
-     */
-    public final class Nodes {
-
-        /** Class names of nodes in the core that are always allowed (component input/output nodes). */
-        private static final List<String> ALWAYS_ALLOWED_LIST = List.of( //
-            new VirtualSubNodeInputNodeFactory(), new VirtualSubNodeOutputNodeFactory()) //
-                .stream() //
-                .map(fac -> {fac.init(); return fac; }) //
-                .map(NodeFactory::getFactoryId) //
-                .toList();
-
-        /**
-         * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
-         *
-         * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
-         * @return if the node can be instantiated.
-         */
-        public boolean isUsageAllowed(final String factoryId) {
-            return m_nodesFilters.stream().filter(t -> t.getScope() == ScopeEnum.USE)
-                .allMatch(t -> t.isAllowed(factoryId)) || ALWAYS_ALLOWED_LIST.contains(factoryId);
-        }
-
-        /**
-         * Determines if a given node is allowed to be listed ("viewed") in the node repository.
-         *
-         * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
-         * @return this property.
-         */
-        public boolean isViewAllowed(final String factoryId) {
-            // ignore scope property - not to be used nodes are also not visible.
-            return m_nodesFilters.stream().allMatch(t -> t.isAllowed(factoryId));
-        }
-
-    }
-
     @Override
     public String toString() {
-        return String.format("APCustomization{nodesFilters=%s, uiCustomization=%s}", m_nodesFilters, m_uiCustomization);
+        return String.format("APCustomization{nodesCustomization=%s, uiCustomization=%s}", m_nodesCustomization,
+            m_uiCustomization);
     }
 }

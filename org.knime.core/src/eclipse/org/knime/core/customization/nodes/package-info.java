@@ -45,60 +45,9 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.knime.core.customization.nodes.NodesCustomization;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-
 /**
- * Tests for {@link APCustomizationProviderServiceImpl}.
+ * Customization facilities that affect the node repository.
+ *
+ * @author Bernd Wiswedel
  */
-public class APCustomizationProviderServiceImplTest {
-
-    @TempDir
-    Path tempDir;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        Path testYaml = tempDir.resolve("test.yml");
-        String yamlContent = """
-                nodes:
-                  filter:
-                    - scope: view
-                      rule: allow
-                      predicate:
-                        type: pattern
-                        patterns:
-                          - org\\.knime\\.base\\..+
-                        isRegex: true
-                """;
-        Files.writeString(testYaml, yamlContent);
-
-        // No need to mock Bundle; assuming this test runs as "JUnit Plug-in Test" under OSGi
-        BundleContext context = FrameworkUtil.getBundle(this.getClass()).getBundleContext();
-        IEclipsePreferences prefs = DefaultScope.INSTANCE.getNode(context.getBundle().getSymbolicName());
-
-        prefs.put(APCustomizationProviderServiceImpl.PREF_KEY_CUSTOMIZATION_CONFIG_PATH, testYaml.toString());
-    }
-
-    @Test
-    void testGetCustomization() {
-        final APCustomizationProviderServiceImpl serviceImpl = new APCustomizationProviderServiceImpl();
-        final APCustomization customization = serviceImpl.getCustomization();
-        final NodesCustomization nodes = customization.nodes();
-        assertTrue(nodes.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(nodes.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-    }
-}
+package org.knime.core.customization.nodes;

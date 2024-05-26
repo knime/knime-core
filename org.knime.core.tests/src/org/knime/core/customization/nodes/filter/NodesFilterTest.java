@@ -46,7 +46,7 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.nodesfilter;
+package org.knime.core.customization.nodes.filter;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -56,10 +56,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.knime.core.customization.nodesfilter.NodesFilter;
-import org.knime.core.customization.nodesfilter.PatternNodePredicate;
-import org.knime.core.customization.nodesfilter.NodesFilter.RuleEnum;
-import org.knime.core.customization.nodesfilter.NodesFilter.ScopeEnum;
+import org.knime.core.customization.nodes.filter.NodesFilter.RuleEnum;
+import org.knime.core.customization.nodes.filter.NodesFilter.ScopeEnum;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

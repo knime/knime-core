@@ -86,15 +86,16 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 
 	private static final String DISALLOWED_NODES_CUSTOMIZATION_YML = """
-	    nodesFilter:
-	    - scope: use
-	      rule: deny
-	      predicate:
-	        type: pattern
-	        patterns:
-	          - org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory
-	          - org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory
-	        isRegex: false
+	    nodes:
+	      filter:
+	      - scope: use
+	        rule: deny
+	        predicate:
+	          type: pattern
+	          patterns:
+	            - org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory
+	            - org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory
+	          isRegex: false
 	  """;
 
 	@Rule

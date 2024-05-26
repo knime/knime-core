@@ -45,29 +45,49 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.nodesfilter;
+package org.knime.core.customization.nodes.filter;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Interface defining a predicate for node identifiers, used to determine if a node should be visible or usable
- * according to the filter settings.
+ * A predicate for node identifiers based on regular expressions or plain text patterns.
+ * It determines node matches for filter/customization settings.
  *
  * @author Bernd Wiswedel
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = PatternNodePredicate.class, name = "pattern")
-})
-sealed interface NodePredicate permits PatternNodePredicate, TruePredicate {
+final class PatternNodePredicate implements NodePredicate {
 
-    /**
-     * Determines whether a given node identifier matches this predicate.
-     *
-     * @param nodeAndId The node identifier (as per {@link org.knime.core.node.NodeFactoryId}) to check against this
-     *            predicate
-     * @return {@code true} if the node identifier matches the predicate, otherwise {@code false}.
-     */
-    boolean matches(final String nodeAndId);
+    private final List<Pattern> m_patterns;
+
+    /** Jackson deserializer. */
+    @JsonCreator
+    PatternNodePredicate(@JsonProperty("patterns") final List<String> patternStrings,
+        @JsonProperty("isRegex") final boolean isRegex) {
+        m_patterns = patternStrings.stream() //
+            .map(patternString -> isRegex ? //
+                Pattern.compile(patternString) : //
+                Pattern.compile(Pattern.quote(patternString))) //
+            .toList();
+    }
+
+    List<Pattern> getPatterns() {
+        return m_patterns;
+    }
+
+    @Override
+    public boolean matches(final String nodeAndId) {
+        return m_patterns.stream().anyMatch(pattern -> pattern.matcher(nodeAndId).matches());
+    }
+
+    @Override
+    public String toString() {
+        String patternStrings = m_patterns.stream().map(Pattern::pattern).collect(Collectors.joining(", "));
+        return String.format("PatternFilter{patterns=[%s]}", patternStrings);
+    }
+
 }

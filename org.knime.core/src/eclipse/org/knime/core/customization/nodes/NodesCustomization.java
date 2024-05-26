@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,54 +41,77 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Mar 24, 2024 (wiswedel): created
+ *   May 26, 2024 (wiswedel): created
  */
-package org.knime.core.customization.nodesfilter;
+package org.knime.core.customization.nodes;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
+import org.knime.core.customization.nodes.filter.NodesFilter;
+import org.knime.core.customization.nodes.filter.NodesFilter.ScopeEnum;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A predicate for node identifiers based on regular expressions or plain text patterns.
- * It determines node matches for filter/customization settings.
+ * Customizations for nodes.
  *
  * @author Bernd Wiswedel
+ * @since 5.3
  */
-final class PatternNodePredicate implements NodePredicate {
+public final class NodesCustomization {
 
-    private final List<Pattern> m_patterns;
+    /** Singleton to be used when no filters apply.
+     * @noreference This field is not intended to be referenced by clients. */
+    public static final NodesCustomization DEFAULT =
+        new NodesCustomization(List.of(NodesFilter.USE_ALL, NodesFilter.VIEW_ALL));
 
-    /** Jackson deserializer. */
-    @JsonCreator
-    PatternNodePredicate(@JsonProperty("patterns") final List<String> patternStrings,
-        @JsonProperty("isRegex") final boolean isRegex) {
-        m_patterns = patternStrings.stream() //
-            .map(patternString -> isRegex ? //
-                Pattern.compile(patternString) : //
-                Pattern.compile(Pattern.quote(patternString))) //
+    private final List<NodesFilter> m_filters;
+
+    NodesCustomization(@JsonProperty("filter") final List<NodesFilter> filters) {
+        m_filters = Collections.unmodifiableList(Objects.requireNonNullElse(filters, List.of()));
+    }
+
+    /** Class names of nodes in the core that are always allowed (component input/output nodes). */
+    private static final List<String> ALWAYS_ALLOWED_LIST = List.of( //
+        new VirtualSubNodeInputNodeFactory(), new VirtualSubNodeOutputNodeFactory()) //
+            .stream() //
+            .map(fac -> {fac.init(); return fac; }) //
+            .map(NodeFactory::getFactoryId) //
             .toList();
+
+    /**
+     * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
+     *
+     * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
+     * @return if the node can be instantiated.
+     */
+    public boolean isUsageAllowed(final String factoryId) {
+        return m_filters.stream().filter(t -> t.getScope() == ScopeEnum.USE)
+            .allMatch(t -> t.isAllowed(factoryId)) || ALWAYS_ALLOWED_LIST.contains(factoryId);
     }
 
-    List<Pattern> getPatterns() {
-        return m_patterns;
-    }
-
-    @Override
-    public boolean matches(final String nodeAndId) {
-        return m_patterns.stream().anyMatch(pattern -> pattern.matcher(nodeAndId).matches());
+    /**
+     * Determines if a given node is allowed to be listed ("viewed") in the node repository.
+     *
+     * @param factoryId as per {@link org.knime.core.node.NodeFactoryId}
+     * @return this property.
+     */
+    public boolean isViewAllowed(final String factoryId) {
+        // ignore scope property - not to be used nodes are also not visible.
+        return m_filters.stream().allMatch(t -> t.isAllowed(factoryId));
     }
 
     @Override
     public String toString() {
-        String patternStrings = m_patterns.stream().map(Pattern::pattern).collect(Collectors.joining(", "));
-        return String.format("PatternFilter{patterns=[%s]}", patternStrings);
+        return String.format("NodesCustomization{#filters=%d}", m_filters.size());
     }
-
 }
+

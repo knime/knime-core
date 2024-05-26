@@ -45,7 +45,7 @@
  * History
  *   Mar 24, 2024 (wiswedel): created
  */
-package org.knime.core.customization.nodesfilter;
+package org.knime.core.customization.nodes.filter;
 
 import java.util.Arrays;
 

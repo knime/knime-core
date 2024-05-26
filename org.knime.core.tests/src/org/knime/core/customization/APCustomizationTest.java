@@ -70,93 +70,23 @@ public class APCustomizationTest {
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @Test
-    void testViewAllow() throws Exception {
+    void testNodesCustomization() throws Exception {
         String ymlInput = """
-                nodesFilter:
-                  - scope: view
-                    rule: allow
-                    predicate:
-                      type: pattern
-                      patterns:
-                        - org\\.knime\\..+
-                        - com\\.knime\\..+
-                      isRegex: true
-                """;
-
-        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
-        assertTrue(
-            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isViewAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-
-        assertTrue(
-            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
-    }
-
-    @Test
-    void testViewDeny() throws Exception {
-        String ymlInput = """
-                nodesFilter:
-                  - scope: view
-                    rule: deny
-                    predicate:
-                      type: pattern
-                      patterns:
-                        - org\\.community\\.somepackage\\..+
-                      isRegex: true
-                """;
-
-        APCustomization.Nodes nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
-        assertTrue(
-            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-
-        assertTrue(
-            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
-    }
-
-    @Test
-    void testUseDeny() throws Exception {
-        String ymlInput = """
-                nodesFilter:
-                  - scope: use
-                    rule: deny
-                    predicate:
-                      type: pattern
-                      patterns:
-                        - org\\.community\\.somepackage\\..+
-                      isRegex: true
+                nodes:
+                  filter:
+                      - scope: use
+                        rule: allow
+                        predicate:
+                          type: pattern
+                          patterns:
+                            - org\\.knime\\..+
+                            - com\\.knime\\..+
+                          isRegex: true
                 """;
 
         APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.nodes()
-            .isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.nodes().isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-
-        assertTrue(customization.nodes()
-            .isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.nodes().isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
-    }
-
-    @Test
-    void testUseAllow() throws Exception {
-        String ymlInput = """
-                nodesFilter:
-                  - scope: use
-                    rule: allow
-                    predicate:
-                      type: pattern
-                      patterns:
-                        - org\\.knime\\..+
-                        - com\\.knime\\..+
-                      isRegex: true
-                """;
-
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        APCustomization.Nodes nodesCustomization = customization.nodes();
+        assertNotNull(customization.toString());
+        var nodesCustomization = customization.nodes();
         assertTrue(
             nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
         assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
@@ -166,22 +96,23 @@ public class APCustomizationTest {
         assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
 
         // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION
-        assertEquals(UICustomization.NO_UI_CUSTOMIZATION, customization.getUICustomization());
+        assertEquals(UICustomization.NO_UI_CUSTOMIZATION, customization.ui());
     }
 
 
     @Test
     void testUICustomization() throws Exception {
         String ymlInput = """
-                nodesFilter:
-                  - scope: view
-                    rule: allow
-                    predicate:
-                      type: pattern
-                      patterns:
-                        - org\\.knime\\..+
-                        - com\\.knime\\..+
-                      isRegex: true
+                nodes:
+                  filter:
+                      - scope: view
+                        rule: allow
+                        predicate:
+                          type: pattern
+                          patterns:
+                            - org\\.knime\\..+
+                            - com\\.knime\\..+
+                          isRegex: true
                 ui:
                   menuEntries:
                     - name: "Company Help Portal"
@@ -191,8 +122,8 @@ public class APCustomizationTest {
         APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
 
         assertNotNull(customization);
-        assertNotNull(customization.getUICustomization());
-        final List<MenuEntry> menuEntries = customization.getUICustomization().getMenuEntries();
+        assertNotNull(customization.ui());
+        final List<MenuEntry> menuEntries = customization.ui().getMenuEntries();
 
         assertSame(menuEntries, customization.ui().getMenuEntries());
 
