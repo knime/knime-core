@@ -52,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.junit.jupiter.api.Test;
+import org.knime.core.node.KNIMEConstants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -87,5 +88,32 @@ final class WorkflowCustomizationTest {
 
         assertNotNull(workflowCustomization);
         assertEquals(false, workflowCustomization.isDisablePasswordSaving());
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    void testOverridenBySystemProperty() throws Exception {
+        String ymlInput = """
+                disablePasswordSaving: false
+                """;
+
+        WorkflowCustomization workflowCustomization = mapper.readValue(ymlInput, WorkflowCustomization.class);
+
+        assertNotNull(workflowCustomization);
+        assertEquals(false, workflowCustomization.isDisablePasswordSaving());
+
+        // test backward compatibility - the system property overrules the customization
+        final var old = System.getProperty(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN);
+        System.setProperty(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN, "true");
+        try {
+            assertEquals(true, workflowCustomization.isDisablePasswordSaving());
+        } finally {
+            // corner case? Helpful if tests are run manually & repeatedly
+            if (old == null) {
+                System.clearProperty(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN);
+            } else {
+                System.setProperty(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN, old);
+            }
+        }
     }
 }

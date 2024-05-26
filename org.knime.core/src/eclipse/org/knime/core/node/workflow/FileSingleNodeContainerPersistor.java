@@ -64,7 +64,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
@@ -258,10 +257,8 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
         if (isDisablePasswordSaving() && modelSettings != null
             && ConfigPasswordEntry.containsPassword((NodeSettings)modelSettings, false)) {
-            result.addWarning(String.format(
-                "Node stores passwords in its configuration. These will be lost when saving "
-                    + "the workflow in this installation (as per \"%s\" system property)",
-                KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN));
+            result.addWarning("Node stores passwords in its configuration. These will be lost when saving "
+                    + "the workflow in this installation (as per customization, i.e. system property or profile)");
         }
         try {
             modelSettings = loadNCAndModelSettings(settingsForNode, modelSettings, tblRep, exec, result);
@@ -689,8 +686,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             NodeContext.pushContext(snc);
             try {
                 NodeLogger.getLogger(FileSingleNodeContainerPersistor.class).debugWithFormat("Settings of node \"%s\" "
-                        + "contains a password, storing it as null/invalid (as per \"%s\" system property)",
-                        snc.getNameWithID(), KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN);
+                        + "contains a password, storing it as null/invalid", snc.getNameWithID());
             } finally {
                 NodeContext.removeLastContext();
             }

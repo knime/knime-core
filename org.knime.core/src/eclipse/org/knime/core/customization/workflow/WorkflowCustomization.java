@@ -48,6 +48,8 @@
  */
 package org.knime.core.customization.workflow;
 
+import org.knime.core.node.KNIMEConstants;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -72,10 +74,12 @@ public final class WorkflowCustomization {
     }
 
     /**
-     * @return the disablePasswordSaving setting.
+     * @return the disablePasswordSaving setting, or corresponding system property, if either one is set.
+     * @see KNIMEConstants#PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN
      */
     public boolean isDisablePasswordSaving() {
-        return m_disablePasswordSaving;
+        return Boolean.getBoolean(KNIMEConstants.PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN)
+            || m_disablePasswordSaving;
     }
 
     @Override
