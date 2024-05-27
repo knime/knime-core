@@ -85,11 +85,12 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
     private boolean m_copyInternDirForWorkflowVersionChange;
 
     /**
-     * @see MissingNodeFactory#MissingNodeFactory(NodeAndBundleInformationPersistor, NodeSettingsRO, PortType[], PortType[], Reason)
+     * @see MissingNodeFactory#MissingNodeFactory(NodeAndBundleInformationPersistor, NodeSettingsRO, PortType[],
+     *      PortType[], Reason)
      */
     public MissingNodeFactory(final NodeAndBundleInformationPersistor nodeInfo,
         final NodeSettingsRO additionalFactorySettings, final PortType[] inPortTypes, final PortType[] outPortTypes) {
-        this(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes, Reason.MISSING);
+        this(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes, Reason.MISSING_EXTENSION);
     }
 
     /**
@@ -120,8 +121,8 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
 
     /**
      * Set to true by persistor if the loaded workflow was saved in an old format so that a new save would convert all
-     * nodes into the new format. The node will then copy the content of the "internal" dir into temp and save it
-     * the next time the flow is saved. Most of times this flag is not set.
+     * nodes into the new format. The node will then copy the content of the "internal" dir into temp and save it the
+     * next time the flow is saved. Most of times this flag is not set.
      *
      * @param value the copyInternDirForWorkflowVersionChange to set
      */
@@ -222,11 +223,12 @@ public class MissingNodeFactory extends DynamicNodeFactory<MissingNodeModel> {
             /**
              * This missing node placeholder represents a node whose usage was forbidden by Governance features.
              */
-            FORBIDDEN,
+            GOVERNANCE_FORBIDDEN,
             /**
-             * This missing node placeholder represents a node that could not be loaded.
+             * This missing node placeholder represents a node that is not available in the currently installed
+             * extensions.
              */
-            MISSING
+            MISSING_EXTENSION
     }
 
 }

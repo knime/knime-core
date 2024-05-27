@@ -599,7 +599,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                     .mapToObj(origNode::getOutputType) //
                     .toArray(PortType[]::new);
             MissingNodeFactory factory = new MissingNodeFactory(info, additionalFactorySettings, inputs, outputs,
-                    MissingNodeFactory.Reason.FORBIDDEN);
+                    MissingNodeFactory.Reason.GOVERNANCE_FORBIDDEN);
             factory.init();
             final ModifiableNodeCreationConfiguration creationConfig = origNode.getCopyOfCreationConfig().orElse(null);
             return new Node((NodeFactory)factory, creationConfig);
