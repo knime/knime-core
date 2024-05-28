@@ -58,6 +58,8 @@ import java.util.UUID;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.contextv2.HubJobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 
 /**
@@ -117,6 +119,12 @@ public final class ContextProperties {
      * Context variable name for job id when run on server.
      */
     private static final String CONTEXT_PROPERTY_JOB_ID = "context.job.id";
+
+    /**
+     * Context variable name for workflow user name (not listed in {@link #getContextProperties()} in AP 5.2.x).
+     * @since 5.2
+     */
+    public static final String CONTEXT_PROPERTY_EXECUTOR_USER_NAME = "context.workflow.username";
 
     /**
      * The list of all context properties.
@@ -183,6 +191,15 @@ public final class ContextProperties {
         }
         if (CONTEXT_PROPERTY_SERVER_USER.equals(property)) {
             return manager.getContext().getUserid();
+        }
+        if (CONTEXT_PROPERTY_EXECUTOR_USER_NAME.equals(property)) {
+            final WorkflowContextV2 contextV2 = manager.getContextV2();
+            if (contextV2 == null) {
+                return "";
+            }
+            final var executorInfo = contextV2.getExecutorInfo();
+            return executorInfo instanceof HubJobExecutorInfo hubInfo ? hubInfo.getJobCreatorName()
+                : executorInfo.getUserId();
         }
         if (CONTEXT_PROPERTY_TEMP_LOCATION.equals(property)) {
             return manager.getContext().getTempLocation().getAbsolutePath();
