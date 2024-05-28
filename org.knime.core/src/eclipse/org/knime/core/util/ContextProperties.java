@@ -107,32 +107,59 @@ public final class ContextProperties {
     /** Context variable name for last modified time of workflow. */
     public static final String CONTEXT_PROPERTY_LAST_MODIFIED = "context.workflow.last.time.modified";
 
-    /** Context variable name for job id when run on server. */
-    private static final String CONTEXT_PROPERTY_JOB_ID = "context.job.id";
+    /**
+     * Context variable name for job id when run on server.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_JOB_ID = "context.job.id";
 
-    /** Context variable name for job id when run on server. */
-    private static final String CONTEXT_PROPERTY_JOB_ACCOUNT_ID = "context.job.account.id";
+    /**
+     * Context variable name for job id when run on server.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_JOB_ACCOUNT_ID = "context.job.account.id";
 
-    /** Context variable name for job id when run on server. */
-    private static final String CONTEXT_PROPERTY_JOB_ACCOUNT_NAME = "context.job.account.name";
+    /**
+     * Context variable name for job id when run on server.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_JOB_ACCOUNT_NAME = "context.job.account.name";
 
-    /** Context variable name for workflow user name. */
-    private static final String CONTEXT_PROPERTY_EXECUTOR_USER_NAME = "context.workflow.username";
+    /**
+     * Context variable name for workflow user name.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_EXECUTOR_USER_NAME = "context.workflow.username";
 
-    /** Context variable name for executor AP version. */
-    private static final String CONTEXT_PROPERTY_EXECUTOR_VERSION = "context.workflow.executor.version";
+    /**
+     * Context variable name for executor AP version.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_EXECUTOR_VERSION = "context.workflow.executor.version";
 
-    /** Context variable name for workflow ID when stored on KNIME Hub. */
-    private static final String CONTEXT_PROPERTY_HUB_ITEM_ID = "context.workflow.hub.item.id";
+    /**
+     * Context variable name for workflow ID when stored on KNIME Hub.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_HUB_ITEM_ID = "context.workflow.hub.item.id";
 
-    /** Context variable name for the enclosing space's ID when stored on KNIME Hub. */
-    private static final String CONTEXT_PROPERTY_HUB_SPACE_ID = "context.workflow.hub.space.id";
+    /**
+     * Context variable name for the enclosing space's ID when stored on KNIME Hub.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_HUB_SPACE_ID = "context.workflow.hub.space.id";
 
-    /** Context variable name for the enclosing space's path when stored on KNIME Hub. */
-    private static final String CONTEXT_PROPERTY_HUB_SPACE_PATH = "context.workflow.hub.space.path";
+    /**
+     * Context variable name for the enclosing space's path when stored on KNIME Hub.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_HUB_SPACE_PATH = "context.workflow.hub.space.path";
 
-    /** Context variable name for the enclosing space's path when stored on KNIME Hub. */
-    private static final String CONTEXT_PROPERTY_HUB_API_BASE_URL = "context.workflow.hub.api.base-url";
+    /**
+     * Context variable name for the enclosing space's path when stored on KNIME Hub.
+     * @since 5.3
+     */
+    public static final String CONTEXT_PROPERTY_HUB_API_BASE_URL = "context.workflow.hub.api.base-url";
 
     /**
      * Extractors for the properties.
