@@ -807,9 +807,9 @@ public class ExecutionContext extends ExecutionMonitor {
     public final RowContainer createRowContainer(final DataTableSpec spec, final boolean initDomains) {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
-        var container =
-            backend.create(this, spec, DataContainerSettings.getDefault().withInitializedDomain(initDomains),
-                getDataRepository(), getFileStoreHandler());
+        var container = backend.create(this, spec,
+            DataContainerSettings.internalBuilder().withInitializedDomain(initDomains).build(), getDataRepository(),
+            getFileStoreHandler());
         return new LocalRepoAwareRowContainer(container, m_localTableRepository);
     }
 

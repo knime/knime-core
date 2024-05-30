@@ -119,10 +119,9 @@ public final class DataContainerSettingsTest extends TestCase {
         final boolean initDomain = !def.getInitializeDomain();
         final int maxThreadsPerDataContainer = def.getMaxThreadsPerContainer() * -1;
         final int maxContainerThreads = def.getMaxThreadsPerContainer() * -1;
-        final BufferSettings bSettings =
-            def.getBufferSettings().withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1);
+        final BufferSettings bSettings = def.getBufferSettings();
 
-        final DataContainerSettings settings = DataContainerSettings.getDefault()//
+        final DataContainerSettings settings = DataContainerSettings.internalBuilder()
             .withRowBatchSize(cacheSize)//
             .withMaxCellsInMemory(maxCellsInMemory)//
             .withMaxDomainValues(maxPossibleValues)//
@@ -130,7 +129,8 @@ public final class DataContainerSettingsTest extends TestCase {
             .withInitializedDomain(initDomain)//
             .withMaxContainerThreads(maxContainerThreads)//
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
-            .withBufferSettings(bSettings);
+            .withBufferSettings(b -> b.withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1))//
+            .build();
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getRowBatchSize());
         assertEquals("Modified settings created wrong maximum number of cells in memory", maxCellsInMemory,
@@ -170,7 +170,8 @@ public final class DataContainerSettingsTest extends TestCase {
     public void testMaxThreadsPerContainerRestriction() {
         final DataContainerSettings def = DataContainerSettings.getDefault();
         // try setting the number of threads per container value higher than allowed
-        final DataContainerSettings modified = def.withMaxThreadsPerContainer(2 * def.getMaxContainerThreads());
+        final DataContainerSettings modified = DataContainerSettings.internalBuilder()
+            .withMaxThreadsPerContainer(2 * def.getMaxContainerThreads()).build();
         assertTrue(modified.getMaxThreadsPerContainer() == def.getMaxContainerThreads());
     }
 

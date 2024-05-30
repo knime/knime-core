@@ -1,5 +1,87 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="src/eclipse/org/knime/core/data/container/BufferSettings.java" type="org.knime.core.data.container.BufferSettings">
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferSettings"/>
+                <message_argument value="withLRU(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferSettings"/>
+                <message_argument value="withLRUCacheSize(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferSettings"/>
+                <message_argument value="withOutputFormat(TableStoreFormat)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DataContainerSettings.java" type="org.knime.core.data.container.DataContainerSettings">
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withBufferSettings(BufferSettings)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withForceCopyOfBlobs(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withForceSequentialRowHandling(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withInitializedDomain(boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withMaxCellsInMemory(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withMaxContainerThreads(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withMaxDomainValues(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withMaxThreadsPerContainer(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withRowBatchSize(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="withRowKeysEnabled(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/sort/AlphanumericComparator.java" type="org.knime.core.data.sort.AlphanumericComparator">
         <filter comment="`AlphanumericComparator` is not supposed to be subclassed." id="336658481">
             <message_arguments>

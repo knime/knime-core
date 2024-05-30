@@ -55,6 +55,7 @@ import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * The buffer settings. Solely used for benchmarking.
@@ -89,24 +90,10 @@ public final class BufferSettings {
     /**
      * Default constructor.
      */
-    BufferSettings() {
-        m_enableLRU = initLRU();
-        m_lruCacheSize = DEF_LRU_CACHE_SIZE;
-        m_outputFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param enableLRU the enable LRU flag
-     * @param lruCacheSize the LRU cache size
-     * @param outputFormat the output format
-     * @noreference This constructor is not intended to be referenced by clients.
-     */
-    private BufferSettings(final boolean enableLRU, final int lruCacheSize, final TableStoreFormat outputFormat) {
-        m_enableLRU = enableLRU;
-        m_lruCacheSize = lruCacheSize;
-        m_outputFormat = outputFormat;
+    BufferSettings(final BufferSettingsBuilder bufferSettingsBuilder) {
+        m_enableLRU = bufferSettingsBuilder.m_enableLRU;
+        m_lruCacheSize = bufferSettingsBuilder.m_lruCacheSize;
+        m_outputFormat = bufferSettingsBuilder.m_outputFormat;
     }
 
     /**
@@ -172,40 +159,71 @@ public final class BufferSettings {
      * @return the default {@code BufferSettings}.
      */
     public static BufferSettings getDefault() {
-        return DataContainerSettings.getDefault().getBufferSettings();
+        return builder().build();
+    }
+
+    static BufferSettingsBuilder builder() {
+        return new BufferSettingsBuilder();
     }
 
     /**
-     * Creates a new <code>BufferSettings</code> object by replicating the current <code>BufferSettings</code> instance
-     * and solely changes the enable LRU caching flag.
-     *
-     * @param enableLRU the new enable LRU caching flag
-     * @return a new instance of {@code BufferSettings}
+     * @since 5.3
+     * @noreference This class is not intended to be referenced by clients.
      */
-    public BufferSettings withLRU(final boolean enableLRU) {
-        return new BufferSettings(enableLRU, m_lruCacheSize, m_outputFormat);
-    }
+    public static final class BufferSettingsBuilder {
 
-    /**
-     * Creates a new <code>BufferSettings</code> object by replicating the current <code>BufferSettings</code> instance
-     * and solely changes the LRU cache size.
-     *
-     * @param lruCacheSize the new LRU cache size
-     * @return a new instance of {@code BufferSettings}
-     */
-    public BufferSettings withLRUCacheSize(final int lruCacheSize) {
-        return new BufferSettings(m_enableLRU, lruCacheSize, m_outputFormat);
-    }
+        /** The enable LRU caching flag. */
+        private boolean m_enableLRU;
 
-    /**
-     * Creates a new <code>BufferSettings</code> object by replicating the current <code>BufferSettings</code> instance
-     * and solely changes the table store format.
-     *
-     * @param outputFormat the new table store format
-     * @return a new instance of {@code BufferSettings}
-     */
-    public BufferSettings withOutputFormat(final TableStoreFormat outputFormat) {
-        return new BufferSettings(m_enableLRU, m_lruCacheSize, outputFormat);
+        /** The LRU cache size. */
+        private int m_lruCacheSize;
+
+        /** The output table store format. */
+        private TableStoreFormat m_outputFormat;
+
+        private BufferSettingsBuilder() {
+            m_enableLRU = initLRU();
+            m_lruCacheSize = DEF_LRU_CACHE_SIZE;
+            m_outputFormat = TableStoreFormatRegistry.getInstance().getInstanceTableStoreFormat();
+        }
+
+        /**
+         * Changes the enable LRU caching flag.
+         *
+         * @param enableLRU the new enable LRU caching flag
+         * @return this
+         */
+        public BufferSettingsBuilder withLRU(final boolean enableLRU) {
+            m_enableLRU = enableLRU;
+            return this;
+        }
+
+        /**
+         * Changes the LRU cache size.
+         *
+         * @param lruCacheSize the new LRU cache size
+         * @return this
+         */
+        public BufferSettingsBuilder withLRUCacheSize(final int lruCacheSize) {
+            m_lruCacheSize = lruCacheSize;
+            return this;
+        }
+
+        /**
+         * Changes the table store format.
+         *
+         * @param outputFormat the new table store format
+         * @return this
+         */
+        public BufferSettingsBuilder withOutputFormat(final TableStoreFormat outputFormat) {
+            m_outputFormat = CheckUtils.checkArgumentNotNull(outputFormat);
+            return this;
+        }
+
+        BufferSettings build() {
+            return new BufferSettings(this);
+        }
+
     }
 
 }

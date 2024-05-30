@@ -50,11 +50,13 @@ package org.knime.core.data.container;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.BufferSettings.BufferSettingsBuilder;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
@@ -62,11 +64,11 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.DuplicateChecker;
 
 /**
- * The data container settings. Solely used for benchmarking.
+ * Represents settings when creating {@link DataContainer}, usually as part of anode's execution. Node developers
+ * will only set settings exposed via {@link #builder()}. Another builder method, {@link #internalBuilder()}, is
+ * solely used by the framework/benchmarks/test.
  *
  * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
- * @noreference This class is not intended to be referenced by clients.
- * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class DataContainerSettings {
 
@@ -97,11 +99,59 @@ public final class DataContainerSettings {
     private static final boolean DEF_INIT_DOMAIN = false;
 
     /**
+     * Internal Builder that allows KNIME framework and testing code to customize containers, no public API.
+     * Method descriptions can be derived from the corresponding getters.
+     *
+     * @since 5.3
+     * @noreference This interface is not intended to be referenced by clients.
+     */
+    @SuppressWarnings("javadoc")
+    public sealed interface InternalBuilder permits BuilderImpl {
+
+        InternalBuilder withBufferSettings(Consumer<BufferSettingsBuilder> builderConsumer);
+
+        InternalBuilder withRowKeysEnabled(final boolean enableRowKeys);
+
+        InternalBuilder withForceCopyOfBlobs(final boolean forceCopyOfBlobs);
+
+        InternalBuilder withMaxDomainValues(final int maxDomainValues);
+
+        InternalBuilder withInitializedDomain(final boolean initDomain);
+
+        InternalBuilder withRowBatchSize(final int rowBatchSize);
+
+        InternalBuilder withMaxThreadsPerContainer(final int maxThreadsPerDataContainer);
+
+        InternalBuilder withMaxContainerThreads(final int maxDataContainerThreads);
+
+        InternalBuilder withForceSequentialRowHandling(final boolean useSequentialIO);
+
+        InternalBuilder withMaxCellsInMemory(final int maxCellsInMemory);
+
+        Builder toExternalBuilder();
+
+        DataContainerSettings build(); // shortcut to avoid detour via toExternalBuilder()
+
+    }
+
+    /**
+     * @since 5.3
+     */
+    public sealed interface Builder permits BuilderImpl {
+
+        Builder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking);
+
+        Builder setDomainUpdate(final boolean enableDomainUpdate);
+
+        DataContainerSettings build();
+    }
+
+    /**
      * Builder pattern.
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private static class Builder {
+    private final static class BuilderImpl implements InternalBuilder, Builder {
 
         /** The maximum number of cells in memory. */
         private int m_maxCellsInMemory;
@@ -131,15 +181,18 @@ public final class DataContainerSettings {
         private boolean m_enableRowKeys;
 
         /** The {@link BufferSettings}. */
-        private BufferSettings m_bufferSettings;
+        private BufferSettings m_bufferSettings = BufferSettings.getDefault();
 
+        private boolean m_enableDuplicateChecking;
+
+        private boolean m_enableDomainUpdate;
 
         /**
          * Constructor.
          *
          * @param settings the {@code DataContainerSettings} to be copied
          */
-        Builder(final DataContainerSettings settings) {
+        BuilderImpl(final DataContainerSettings settings) {
             m_maxCellsInMemory = settings.m_maxCellsInMemory;
             m_sequentialIO = settings.m_sequentialIO;
             m_maxDataContainerThreads = settings.m_maxDataContainerThreads;
@@ -152,62 +205,90 @@ public final class DataContainerSettings {
             m_forceCopyOfBlobs = settings.m_forceCopyOfBlobs;
         }
 
-        Builder setMaxCellsInMemory(final int maxCellsInMemory) {
+        @Override
+        public InternalBuilder withMaxCellsInMemory(final int maxCellsInMemory) {
             m_maxCellsInMemory = maxCellsInMemory;
             return this;
         }
 
-        Builder useSequentialIO(final boolean useSequentialIO) {
+        @Override
+        public InternalBuilder withForceSequentialRowHandling(final boolean useSequentialIO) {
             m_sequentialIO = useSequentialIO;
             return this;
         }
 
-        Builder setMaxContainerThreads(final int maxDataContainerThreads) {
+        @Override
+        public InternalBuilder withMaxContainerThreads(final int maxDataContainerThreads) {
             m_maxDataContainerThreads = maxDataContainerThreads;
             return this;
         }
 
-        Builder setMaxThreadsPerDataContainer(final int maxThreadsPerDataContainer) {
+        @Override
+        public InternalBuilder withMaxThreadsPerContainer(final int maxThreadsPerDataContainer) {
             m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
             return this;
         }
 
-        Builder setRowBatchSize(final int rowBatchSize) {
+        @Override
+        public InternalBuilder withRowBatchSize(final int rowBatchSize) {
             m_rowBatchSize = rowBatchSize;
             return this;
         }
 
-        Builder setInitDomain(final boolean initDomain) {
+        @Override
+        public InternalBuilder withInitializedDomain(final boolean initDomain) {
             m_initDomain = initDomain;
             return this;
         }
 
-        Builder setMaxDomainValues(final int maxDomainValues) {
+        @Override
+        public InternalBuilder withMaxDomainValues(final int maxDomainValues) {
             m_maxDomainValues = maxDomainValues;
             return this;
         }
 
-        Builder setForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
+        @Override
+        public InternalBuilder withForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
             m_forceCopyOfBlobs = forceCopyOfBlobs;
             return this;
         }
 
-        Builder setRowKeysEnabled(final boolean enableRowKeys) {
+        @Override
+        public InternalBuilder withRowKeysEnabled(final boolean enableRowKeys) {
             m_enableRowKeys = enableRowKeys;
             return this;
         }
 
-        Builder setBufferSettings(final BufferSettings bufferSettings) {
-            m_bufferSettings = bufferSettings;
+        @Override
+        public InternalBuilder withBufferSettings(final Consumer<BufferSettingsBuilder> builderConsumer) {
+            BufferSettingsBuilder builder = BufferSettings.builder();
+            builderConsumer.accept(builder);
+            m_bufferSettings = builder.build();
+            return this;
+        }
+
+        @Override
+        public Builder toExternalBuilder() {
+            return this;
+        }
+
+        @Override
+        public Builder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking) {
+            m_enableDuplicateChecking = enableDuplicateChecking;
+            return this;
+        }
+
+        @Override
+        public Builder setDomainUpdate(final boolean enableDomainUpdate) {
+            m_enableDomainUpdate = enableDomainUpdate;
             return this;
         }
 
         /**
-         * Creates the {@link DataContainerSettings}.
-         *
-         * @return the {@code DataContainerSettings}
+         * @return the new {@link DataContainerSettings} representing the current values.
          */
-        DataContainerSettings build() {
+        @Override
+        public DataContainerSettings build() {
             return new DataContainerSettings(this);
         }
 
@@ -249,9 +330,6 @@ public final class DataContainerSettings {
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
 
-    /**
-     * Default constructor.
-     */
     private DataContainerSettings() {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = DataTableDomainCreator::new;
@@ -259,7 +337,7 @@ public final class DataContainerSettings {
         m_sequentialIO = initSequentialIO();
         m_maxDataContainerThreads = initMaxDataContainerThreads();
         int maxThreadsPerDataContainer = initThreadsPerDataContainerInstance();
-        if (maxThreadsPerDataContainer > maxThreadsPerDataContainer) {
+        if (maxThreadsPerDataContainer > m_maxDataContainerThreads) {
             maxThreadsPerDataContainer = m_maxDataContainerThreads;
             LOGGER.debug(
                 "The number of threads per data container cannot be larger than the total number of data container "
@@ -271,22 +349,16 @@ public final class DataContainerSettings {
         m_maxDomainValues = initMaxDomainValues();
         m_forceCopyOfBlobs = initForceCopyOfBlobs();
         m_enableRowKeys = initEnableRowKeys();
-        m_bufferSettings = new BufferSettings();
+        m_bufferSettings = BufferSettings.getDefault();
     }
 
-
-    /**
-     * Constructor.
-     *
-     * @param builder the builder holding the settings
-     */
-    private DataContainerSettings(final Builder builder) {
+    private DataContainerSettings(final BuilderImpl builder) {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
-        m_tableDomainCreatorFunction = (spec, initDomain) -> new DataTableDomainCreator(spec, initDomain);
+        m_tableDomainCreatorFunction = DataTableDomainCreator::new;
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
         m_sequentialIO = builder.m_sequentialIO;
         m_maxDataContainerThreads = builder.m_maxDataContainerThreads;
-        m_maxThreadsPerDataContainer = builder.m_maxThreadsPerDataContainer;
+        m_maxThreadsPerDataContainer = Math.min(m_maxDataContainerThreads, builder.m_maxThreadsPerDataContainer);
         m_rowBatchSize = builder.m_rowBatchSize;
         m_initDomain = builder.m_initDomain;
         m_maxDomainValues = builder.m_maxDomainValues;
@@ -296,9 +368,7 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the default {@link DataContainerSettings}.
-     *
-     * @return the default {@code DataContainerSettings}
+     * @return the default {@code DataContainerSettings}, inherits properties from installation, workflow, etc.
      */
     public static DataContainerSettings getDefault() {
         // While it would be tempting to always return the same instance here, it does not make sense, since the
@@ -311,9 +381,32 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the maximum number of cells kept in memory.
+     * Creates a {@link InternalBuilder} instance, used by the framework, testing and benchmarks. No public API.
+     * @return A new instance.
+     * @since 5.3
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static InternalBuilder internalBuilder() {
+        return newInternalBuilderImpl();
+    }
+
+    /**
+     * New builder with defaults (inherited from code, system properties, installation).
+     * @return a new builder instance.
+     * @since 5.3
+     */
+    public static Builder builder() {
+        return newInternalBuilderImpl();
+    }
+
+    private static BuilderImpl newInternalBuilderImpl() {
+        return new BuilderImpl(getDefault());
+    }
+
+    /**
+     * Returns the maximum number of cells kept in memory, only concerns row-backend.
      *
-     * @return max cells in memory
+     * @return max cells in memory, per table.
      */
     public int getMaxCellsInMemory() {
         return m_maxCellsInMemory;
@@ -359,7 +452,8 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Returns the initialize domain flag.
+     * Returns the initialize domain flag, used to initialize a container's domain with the spec passed in
+     * the constructor.
      *
      * @since 4.2.2
      * @return the initialize domain flag
@@ -420,142 +514,6 @@ public final class DataContainerSettings {
      */
     public BufferSettings getBufferSettings() {
         return m_bufferSettings;
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of cells in memory.
-     *
-     * @param maxCellsInMemory the new maximum number of cells in memory
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withMaxCellsInMemory(final int maxCellsInMemory) {
-        final Builder b = new Builder(this);
-        b.setMaxCellsInMemory(maxCellsInMemory);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the use flag that determines whether rows are to be
-     * handed sequentially.
-     *
-     * @param useSequentialIO the new sequential IO flag
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withForceSequentialRowHandling(final boolean useSequentialIO) {
-        final Builder b = new Builder(this);
-        b.useSequentialIO(useSequentialIO);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of threads per
-     * {@link DataContainer} instance. Note the if the new value is larger than the maximum total number of container
-     * threads the value will be automatically adapted.
-     *
-     * @param maxThreadsPerDataContainer the new maximum number of threads per {@code DataContainer}
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withMaxThreadsPerContainer(final int maxThreadsPerDataContainer) {
-        final Builder b = new Builder(this);
-        b.setMaxThreadsPerDataContainer(Math.min(getMaxContainerThreads(), maxThreadsPerDataContainer));
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of threads that can be used by
-     * {@link DataContainer} instances
-     *
-     * @param maxDataContainerThreads the new maximum number of threads that can be used by {@code DataContainer}
-     *            instances
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withMaxContainerThreads(final int maxDataContainerThreads) {
-        final Builder b = new Builder(this);
-        b.setMaxContainerThreads(maxDataContainerThreads);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the row batch size, i.e., the amount of rows to be
-     * processed by a single thread when not forced to handle rows sequentially
-     *
-     * @param rowBatchSize the new row batch size
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withRowBatchSize(final int rowBatchSize) {
-        final Builder b = new Builder(this);
-        b.setRowBatchSize(rowBatchSize);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the initialize domain flag used by the
-     * {@link DuplicateChecker}.
-     *
-     * @param initDomain the new init domain flag
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withInitializedDomain(final boolean initDomain) {
-        final Builder b = new Builder(this);
-        b.setInitDomain(initDomain);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the maximum number of domain values stored by the
-     * {@link DataTableDomainCreator}.
-     *
-     * @param maxDomainValues the new maximum number of domain values
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withMaxDomainValues(final int maxDomainValues) {
-        final Builder b = new Builder(this);
-        b.setMaxDomainValues(maxDomainValues);
-        return b.build();
-    }
-
-    /**
-     * Creates a new <code>DataContainerSetting</code> object by replicating the current
-     * <code>DataContainerSetting</code> instance and solely changes the {@link BufferSettings}.
-     *
-     * @param bufferSettings the {@code BufferSettings}
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withBufferSettings(final BufferSettings bufferSettings) {
-        final Builder b = new Builder(this);
-        b.setBufferSettings(bufferSettings);
-        return b.build();
-    }
-
-    /**
-     * Defaults to <source>false</source>.
-     *
-     * @param forceCopyOfBlobs flag to indicate whether or not blobs are copied
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
-        final Builder b = new Builder(this);
-        b.setForceCopyOfBlobs(forceCopyOfBlobs);
-        return b.build();
-    }
-
-    /**
-     * Defaults to <source>true</source>.
-     *
-     * @param enableRowKeys flag to indicate whether {@link RowKey}s are part of the {@link DataContainer}.
-     * @return a new instance of {@code DataContainerSettings}
-     */
-    public DataContainerSettings withRowKeysEnabled(final boolean enableRowKeys) {
-        final Builder b = new Builder(this);
-        b.setRowKeysEnabled(enableRowKeys);
-        return b.build();
     }
 
     /**

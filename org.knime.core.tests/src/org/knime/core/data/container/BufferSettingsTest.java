@@ -90,10 +90,11 @@ public final class BufferSettingsTest extends TestCase {
         final boolean useLRU = !def.useLRU();
         final TableStoreFormat outputFormat = new DefaultTableStoreFormat();
 
-        final BufferSettings settings = BufferSettings.getDefault()//
+        final BufferSettings settings = BufferSettings.builder() //
             .withOutputFormat(outputFormat)//
             .withLRU(useLRU)//
-            .withLRUCacheSize(lruCacheSize);
+            .withLRUCacheSize(lruCacheSize)//
+            .build();
 
         assertEquals("Modified settings created wrong LRU cache size", lruCacheSize, settings.getLRUCacheSize());
         assertEquals("Modified settings created wrong enable LRU flag", useLRU, settings.useLRU());

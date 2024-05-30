@@ -175,7 +175,7 @@ public class DataContainer implements RowAppender, RowFlushable {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain) {
-        this(spec, DataContainerSettings.getDefault().withInitializedDomain(initDomain));
+        this(spec, DataContainerSettings.internalBuilder().withInitializedDomain(initDomain).build());
     }
 
     /**
@@ -191,8 +191,8 @@ public class DataContainer implements RowAppender, RowFlushable {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory) {
-        this(spec, DataContainerSettings.getDefault().withInitializedDomain(initDomain)
-            .withMaxCellsInMemory(maxCellsInMemory));
+        this(spec, DataContainerSettings.internalBuilder().withInitializedDomain(initDomain)
+            .withMaxCellsInMemory(maxCellsInMemory).build());
     }
 
     /**
@@ -228,11 +228,13 @@ public class DataContainer implements RowAppender, RowFlushable {
         final boolean forceSynchronousIO, final IDataRepository repository,
         final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
         final boolean forceCopyOfBlobs, final boolean rowKeys, final TableBackend backend) {
-        this(spec,
-            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
-                .withForceSequentialRowHandling(
-                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling())
-                .withForceCopyOfBlobs(forceCopyOfBlobs).withRowKeysEnabled(rowKeys),
+        this(spec, DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory) //
+            .withForceSequentialRowHandling(
+                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
+            .withForceCopyOfBlobs(forceCopyOfBlobs) //
+            .withRowKeysEnabled(rowKeys).build(),
             repository, localTableRepository, fileStoreHandler, backend);
     }
 
@@ -247,10 +249,12 @@ public class DataContainer implements RowAppender, RowFlushable {
      */
     protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
         final boolean forceSynchronousIO) {
-        this(spec,
-            DataContainerSettings.getDefault().withInitializedDomain(initDomain).withMaxCellsInMemory(maxCellsInMemory)
-                .withForceSequentialRowHandling(
-                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()));
+        this(spec, DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory)
+            .withForceSequentialRowHandling(
+                forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
+            .build());
     }
 
     private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
