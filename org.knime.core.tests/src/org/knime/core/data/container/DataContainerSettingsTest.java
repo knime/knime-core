@@ -126,10 +126,11 @@ public final class DataContainerSettingsTest extends TestCase {
             .withMaxCellsInMemory(maxCellsInMemory)//
             .withMaxDomainValues(maxPossibleValues)//
             .withForceSequentialRowHandling(syncIO)//
-            .withInitializedDomain(initDomain)//
             .withMaxContainerThreads(maxContainerThreads)//
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
             .withBufferSettings(b -> b.withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1))//
+            .toExternalBuilder() //
+            .withInitializedDomain(initDomain)//
             .build();
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getRowBatchSize());

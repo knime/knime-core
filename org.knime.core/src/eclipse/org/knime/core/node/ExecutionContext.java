@@ -440,7 +440,6 @@ public class ExecutionContext extends ExecutionMonitor {
             || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
 
         final DataContainerSettings containerSettings = DataContainerSettings.internalBuilder() //
-            .withInitializedDomain(initDomain) //
             .withMaxCellsInMemory(maxCellsInMemory < 0 ? getMaxCellsInMemory(m_memoryPolicy) : maxCellsInMemory) //
             /*
              * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need
@@ -450,7 +449,10 @@ public class ExecutionContext extends ExecutionMonitor {
             .withForceSequentialRowHandling(
                 m_node.isForceSychronousIO() || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
             .withForceCopyOfBlobs(forceCopyOfBlobs) //
-            .withRowKeysEnabled(rowKeys).build();
+            .withRowKeysEnabled(rowKeys) //
+            .toExternalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .build();
 
         /*
          * "in theory" the data repository should never be null for non-cleared file store handlers. However...
@@ -847,7 +849,7 @@ public class ExecutionContext extends ExecutionMonitor {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
         var container = backend.create(this, spec,
-            DataContainerSettings.internalBuilder().withInitializedDomain(initDomains).build(), getDataRepository(),
+            DataContainerSettings.builder().withInitializedDomain(initDomains).build(), getDataRepository(),
             getFileStoreHandler());
         return new LocalRepoAwareRowContainer(container, m_localTableRepository);
     }

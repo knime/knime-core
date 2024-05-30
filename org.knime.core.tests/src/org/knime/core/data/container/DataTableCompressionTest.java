@@ -52,12 +52,12 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.stream.IntStream;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -104,7 +104,8 @@ public final class DataTableCompressionTest extends TestCase {
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
         // initial settings
         final DataContainerSettings.InternalBuilder settingsBuilder =
-            DataContainerSettings.internalBuilder().withMaxCellsInMemory(0).withInitializedDomain(false);
+            DataContainerSettings.internalBuilder().withMaxCellsInMemory(0);
+        settingsBuilder.toExternalBuilder().withInitializedDomain(false);
         // create the data
         final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
 
@@ -129,7 +130,7 @@ public final class DataTableCompressionTest extends TestCase {
             testRead(b, cFormat);
 
             // check that file extension is adequate
-            Assert.assertThat("Compressed file has wrong file extension:",
+            assertThat("Compressed file has wrong file extension:",
                 b.getBinFile().getName().substring(b.getBinFile().getName().indexOf(".")),
                 equalTo(cFormat.getFileExtension()));
 
@@ -201,7 +202,7 @@ public final class DataTableCompressionTest extends TestCase {
         // read the data
         try (final CloseableRowIterator rowIt = b.iterator()) {
             for (int i = 0; i < rows.length; i++) {
-                Assert.assertThat("Iterator has rows", rowIt.hasNext(), is(true));
+                assertThat("Iterator has rows", rowIt.hasNext(), is(true));
                 DataRow refRow = rows[i];
                 DataRow dataRow = rowIt.next();
                 RowKey refKey = refRow.getKey();
@@ -210,19 +211,19 @@ public final class DataTableCompressionTest extends TestCase {
                     DataCell refCell = refRow.getCell(j);
                     DataCell dataCell = dataRow.getCell(j);
                     if (refCell.isMissing()) {
-                        Assert.assertThat("Cell " + j + " in Row " + i + " is missing", dataCell.isMissing(), is(true));
-                        Assert.assertThat("Error message of missing cell " + j + " in Row " + i,
+                        assertThat("Cell " + j + " in Row " + i + " is missing", dataCell.isMissing(), is(true));
+                        assertThat("Error message of missing cell " + j + " in Row " + i,
                             ((MissingValue)refCell).getError(), equalTo(((MissingValue)dataCell).getError()));
                     } else {
                         if (!(refCell instanceof BooleanCell)) {
-                            Assert.assertThat("Cell " + j + " in Row " + i, dataCell, not(sameInstance(refCell)));
+                            assertThat("Cell " + j + " in Row " + i, dataCell, not(sameInstance(refCell)));
                         }
-                        Assert.assertThat("Cell " + j + " in Row " + i, dataCell, equalTo(refCell));
+                        assertThat("Cell " + j + " in Row " + i, dataCell, equalTo(refCell));
                     }
                 }
-                Assert.assertThat("Row key in row " + i, dataKey, equalTo(refKey));
+                assertThat("Row key in row " + i, dataKey, equalTo(refKey));
             }
-            Assert.assertThat("Iterator with more than " + rows.length + " rows", rowIt.hasNext(), is(false));
+            assertThat("Iterator with more than " + rows.length + " rows", rowIt.hasNext(), is(false));
         }
     }
 

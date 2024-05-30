@@ -174,7 +174,7 @@ public class DataContainer implements RowAppender, RowFlushable {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain) {
-        this(spec, DataContainerSettings.internalBuilder().withInitializedDomain(initDomain).build());
+        this(spec, DataContainerSettings.builder().withInitializedDomain(initDomain).build());
     }
 
     /**
@@ -190,8 +190,8 @@ public class DataContainer implements RowAppender, RowFlushable {
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
     public DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory) {
-        this(spec, DataContainerSettings.internalBuilder().withInitializedDomain(initDomain)
-            .withMaxCellsInMemory(maxCellsInMemory).build());
+        this(spec, DataContainerSettings.internalBuilder().withMaxCellsInMemory(maxCellsInMemory).toExternalBuilder()
+            .withInitializedDomain(initDomain).build());
     }
 
     /**

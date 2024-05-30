@@ -116,8 +116,6 @@ public final class DataContainerSettings {
 
         InternalBuilder withMaxDomainValues(final int maxDomainValues);
 
-        InternalBuilder withInitializedDomain(final boolean initDomain);
-
         InternalBuilder withRowBatchSize(final int rowBatchSize);
 
         InternalBuilder withMaxThreadsPerContainer(final int maxThreadsPerDataContainer);
@@ -138,6 +136,8 @@ public final class DataContainerSettings {
      * @since 5.3
      */
     public sealed interface Builder permits BuilderImpl {
+
+        Builder withInitializedDomain(final boolean initDomain);
 
         Builder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking);
 
@@ -236,12 +236,6 @@ public final class DataContainerSettings {
         }
 
         @Override
-        public InternalBuilder withInitializedDomain(final boolean initDomain) {
-            m_initDomain = initDomain;
-            return this;
-        }
-
-        @Override
         public InternalBuilder withMaxDomainValues(final int maxDomainValues) {
             m_maxDomainValues = maxDomainValues;
             return this;
@@ -269,6 +263,12 @@ public final class DataContainerSettings {
 
         @Override
         public Builder toExternalBuilder() {
+            return this;
+        }
+
+        @Override
+        public Builder withInitializedDomain(final boolean initDomain) {
+            m_initDomain = initDomain;
             return this;
         }
 

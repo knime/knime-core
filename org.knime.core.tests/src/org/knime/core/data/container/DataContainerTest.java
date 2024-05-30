@@ -843,10 +843,11 @@ public class DataContainerTest extends TestCase {
     private static DataContainer newContainer(final DataTableSpec spec, final boolean initDomain,
         final int maxCellsInMemory, final boolean forceSynchronousIO) {
         return new DataContainer(spec, DataContainerSettings.internalBuilder() //
-            .withInitializedDomain(initDomain) //
             .withMaxCellsInMemory(maxCellsInMemory)
             .withForceSequentialRowHandling(
                 forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
+            .toExternalBuilder() //
+            .withInitializedDomain(initDomain) //
             .build());
     }
 
