@@ -55,9 +55,7 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.WorkflowDataRepository;
 
 /**
@@ -116,61 +114,11 @@ public class BufferedDataContainer extends DataContainer {
     private final Node m_node;
     private BufferedDataTable m_resultTable;
 
-    /**
-     * Creates new container.
-     * @param spec The table spec.
-     * @param initDomain Whether or not the spec's domain shall be used for
-     * initialization.
-     * @param node The owner of the outcome table.
-     * @param forceCopyOfBlobs The property whether to copy any blob cell
-     * @param maxCellsInMemory Number of cells to be kept in memory, if negative
-     * use user settings (according to node)
-     * being added, see {@link DataContainer#setForceCopyOfBlobs(boolean)}.
-     * @param dataRepository A data repository for deserializing blobs and file stores
-     *        and for handling table ids
-     * @param localTableRepository
-     *        The local (Node) table repository for blob (de)serialization.
-     * @see DataContainer#DataContainer(DataTableSpec, boolean)
-     */
-    BufferedDataContainer(final DataTableSpec spec, final boolean initDomain,
-            final Node node, final MemoryPolicy policy,
-            final boolean forceCopyOfBlobs, final int maxCellsInMemory,
-            final IDataRepository dataRepository,
-            final ILocalDataRepository localTableRepository,
-            final IWriteFileStoreHandler fileStoreHandler,
-            final boolean rowKeys, final TableBackend backend) {
-        /**
-         * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need to
-         * be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To be
-         * written instantly, they have to be handled sequentially.
-         */
-        super(spec, initDomain, maxCellsInMemory < 0 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
-            node.isForceSychronousIO(),
-            (dataRepository == null) ? NotInWorkflowDataRepository.newInstance() : dataRepository, localTableRepository,
-            /**
-             * "in theory" the data repository should never be null for non-cleared file store handlers. However...
-             * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop
-             * body+end, see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit
-             * test Bug4409_inactiveInnerLoop
-             */
-            fileStoreHandler, forceCopyOfBlobs, rowKeys, backend);
+    BufferedDataContainer(final DataTableSpec spec, final Node node, final DataContainerSettings build,
+        final IDataRepository dataRepository, final ILocalDataRepository localTableRepository,
+        final IWriteFileStoreHandler fileStoreHandler, final TableBackend backend) {
+        super(spec, build, dataRepository, localTableRepository, fileStoreHandler, backend);
         m_node = node;
-    }
-
-    /**
-     * Returns the number of cells to be kept in memory according to the
-     * passed policy.
-     * @param memPolicy the policy to apply
-     * @return number of cells to be kept in memory
-     */
-    private static int getMaxCellsInMemory(final MemoryPolicy memPolicy) {
-        if (memPolicy.equals(MemoryPolicy.CacheInMemory)) {
-            return Integer.MAX_VALUE;
-        } else if (memPolicy.equals(MemoryPolicy.CacheSmallInMemory)) {
-            return DataContainerSettings.getDefault().getMaxCellsInMemory();
-        } else {
-            return 0;
-        }
     }
 
     /**

@@ -62,7 +62,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
@@ -211,53 +210,14 @@ public class DataContainer implements RowAppender, RowFlushable {
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
-     * @param initDomain if set to true, the column domains in the container are initialized with the domains from spec.
-     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
-     * @param forceSynchronousIO Whether to force synchronous IO. If this property is false, it's using the default
-     *            (which is false unless specified otherwise through {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO})
+     * @param settings All sorts of settings
      * @param repository the data repository
-     * @param localTableRepository the local table repository
+     * @param localRepository the local table repository
      * @param fileStoreHandler a filestore handler
-     * @param forceCopyOfBlobs true, if blobs should be copied
-     * @param rowKeys if <code>true</code>, {@link RowKey}s are expected to be part of a {@link DataRow}.
      * @param backend the {@link TableBackend} to be used to create a {@link DataContainerDelegate}.
-     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
-     * @since 4.3
+     * @since 5.3
      */
-    protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
-        final boolean forceSynchronousIO, final IDataRepository repository,
-        final ILocalDataRepository localTableRepository, final IWriteFileStoreHandler fileStoreHandler,
-        final boolean forceCopyOfBlobs, final boolean rowKeys, final TableBackend backend) {
-        this(spec, DataContainerSettings.internalBuilder() //
-            .withInitializedDomain(initDomain) //
-            .withMaxCellsInMemory(maxCellsInMemory) //
-            .withForceSequentialRowHandling(
-                    forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
-            .withForceCopyOfBlobs(forceCopyOfBlobs) //
-            .withRowKeysEnabled(rowKeys).build(),
-            repository, localTableRepository, fileStoreHandler, backend);
-    }
-
-    /**
-     * Used for testing purposes
-     *
-     * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
-     * @param initDomain if set to true, the column domains in the container are initialized with the domains from spec.
-     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
-     * @param forceSynchronousIO Whether to force synchronous IO. If this property is false, it's using the default
-     *            (which is false unless specified otherwise through {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO})
-     */
-    protected DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory,
-        final boolean forceSynchronousIO) {
-        this(spec, DataContainerSettings.internalBuilder() //
-            .withInitializedDomain(initDomain) //
-            .withMaxCellsInMemory(maxCellsInMemory)
-            .withForceSequentialRowHandling(
-                forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
-            .build());
-    }
-
-    private DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
+    protected DataContainer(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler, final TableBackend backend) {
         m_spec = spec;

@@ -20,6 +20,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
+        <filter comment="removed (non-API) protected constructors" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DataContainer(DataTableSpec, boolean, int, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="removed (non-API) protected constructors" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainer"/>
+                <message_argument value="DataContainer(DataTableSpec, boolean, int, boolean, IDataRepository, ILocalDataRepository, IWriteFileStoreHandler, boolean, boolean, TableBackend)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainerSettings.java" type="org.knime.core.data.container.DataContainerSettings">
         <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
             <message_arguments>

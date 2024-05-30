@@ -49,6 +49,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -433,15 +434,53 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     private BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
         final int maxCellsInMemory, final boolean rowKeys, final IWriteFileStoreHandler writeFileStoreHandler) {
-        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
+
+
+        final boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
             || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
-        return new BufferedDataContainer(spec, initDomain, m_node, m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
-            m_dataRepository, m_localTableRepository, writeFileStoreHandler, rowKeys, getTableBackend());
+
+        final DataContainerSettings containerSettings = DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory < 0 ? getMaxCellsInMemory(m_memoryPolicy) : maxCellsInMemory) //
+            /*
+             * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need
+             * to be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To
+             * be written instantly, they have to be handled sequentially.
+             */
+            .withForceSequentialRowHandling(
+                m_node.isForceSychronousIO() || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
+            .withForceCopyOfBlobs(forceCopyOfBlobs) //
+            .withRowKeysEnabled(rowKeys).build();
+
+        /*
+         * "in theory" the data repository should never be null for non-cleared file store handlers. However...
+         * resetting nodes in fully executed loops causes the loop start to be reset first and then the loop
+         * body+end, see also WorkflowManager.resetAndConfigureAffectedLoopContext() (can be reproduced using unit
+         * test Bug4409_inactiveInnerLoop
+         */
+        final IDataRepository dataRepository =
+            Objects.requireNonNullElseGet(m_dataRepository, NotInWorkflowDataRepository::newInstance);
+        return new BufferedDataContainer(spec, m_node, containerSettings,
+            dataRepository, m_localTableRepository, writeFileStoreHandler, getTableBackend());
+    }
+
+    /**
+     * Returns the number of cells to be kept in memory according to the
+     * passed policy.
+     * @param memPolicy the policy to apply
+     * @return number of cells to be kept in memory
+     */
+    private static int getMaxCellsInMemory(final MemoryPolicy memPolicy) {
+        return switch (memPolicy) {
+            case CacheInMemory -> Integer.MAX_VALUE;
+            case CacheSmallInMemory -> DataContainerSettings.getDefault().getMaxCellsInMemory();
+            default -> 0;
+        };
     }
 
     private static TableBackend getTableBackend() {
-        // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend!
-        TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
+        // THIS IF CODE PATH NEEDS TO BE REMOVED AS SOON AS WE HAVE FEATURE PARITY for new backend
+        final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
         return backend;
     }

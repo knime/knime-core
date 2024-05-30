@@ -145,7 +145,7 @@ public class DataContainerTest extends TestCase {
      * @throws Exception
      */
     public static final void testMemoryAlertAfterClose() throws Exception {
-        DataContainer container = new DataContainer(SPEC_STR_INT_DBL,
+        DataContainer container = newContainer(SPEC_STR_INT_DBL,
                 true, Integer.MAX_VALUE, false);
         for (RowIterator it = generateRows(100000); it.hasNext();) {
             container.addRowToTable(it.next());
@@ -163,7 +163,7 @@ public class DataContainerTest extends TestCase {
      * @throws Exception
      */
     public static final void testMemoryAlertAfterCloseWhileReading() throws Exception {
-        DataContainer container = new DataContainer(SPEC_STR_INT_DBL,
+        DataContainer container = newContainer(SPEC_STR_INT_DBL,
                 true, Integer.MAX_VALUE, false);
         int count = 100000;
         for (RowIterator it = generateRows(count); it.hasNext();) {
@@ -215,7 +215,7 @@ public class DataContainerTest extends TestCase {
      */
     public static final void testMemoryAlertWhileRestore() throws Exception {
         System.gc();
-        DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
+        DataContainer container = newContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
         int count = 10;
         for (RowIterator it = generateRows(count); it.hasNext();) {
             container.addRowToTable(it.next());
@@ -782,7 +782,7 @@ public class DataContainerTest extends TestCase {
      */
     static ContainerTable generateSmallSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
-        final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 20, false);
+        final DataContainer container = newContainer(SPEC_STR_INT_DBL, true, 20, false);
         final int count = 5;
         for (RowIterator it = generateRows(count); it.hasNext();) {
             container.addRowToTable(it.next());
@@ -799,7 +799,7 @@ public class DataContainerTest extends TestCase {
      */
     static ContainerTable generateMediumSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
-        final DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, 10, false);
+        final DataContainer container = newContainer(SPEC_STR_INT_DBL, true, 10, false);
         final int count = 20;
         for (RowIterator it = generateRows(count); it.hasNext();) {
             container.addRowToTable(it.next());
@@ -838,6 +838,16 @@ public class DataContainerTest extends TestCase {
             cells[c] = cell;
         }
         return new DefaultRow(key, cells);
+    }
+
+    private static DataContainer newContainer(final DataTableSpec spec, final boolean initDomain,
+        final int maxCellsInMemory, final boolean forceSynchronousIO) {
+        return new DataContainer(spec, DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory)
+            .withForceSequentialRowHandling(
+                forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
+            .build());
     }
 
 }
