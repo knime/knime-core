@@ -2,6 +2,7 @@
 **/target/
 */build/
 *.jar
+*.iml
 **/.polyglot.build.properties
 **/.polyglot.feature.xml
 **/.polyglot.META-INF
