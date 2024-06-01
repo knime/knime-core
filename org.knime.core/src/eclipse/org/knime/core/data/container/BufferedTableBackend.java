@@ -99,8 +99,7 @@ public final class BufferedTableBackend implements TableBackend {
     @Override
     public RowContainer create(final ExecutionContext context, final DataTableSpec spec,
         final DataContainerSettings settings, final IDataRepository repository, final IWriteFileStoreHandler handler) {
-        final BufferedDataContainer container =
-            context.createDataContainer(spec, settings.getInitializeDomain(), settings.getMaxCellsInMemory());
+        final BufferedDataContainer container = context.createDataContainer(spec, settings);
         final ValueSchema schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, handler);
         return new BufferedRowContainer(container, schema);
     }

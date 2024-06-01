@@ -50,6 +50,7 @@ package org.knime.core.node;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.table.row.Selection;
 
@@ -125,6 +126,6 @@ public final class InternalTableAPI {
      */
     public static BufferedDataContainer createDataContainer(final ExecutionContext exec, final DataTableSpec spec,
         final IWriteFileStoreHandler writeFileStoreHandler) {
-        return exec.createDataContainer(spec, writeFileStoreHandler);
+        return exec.createDataContainer(spec, DataContainerSettings.getDefault(), writeFileStoreHandler);
     }
 }

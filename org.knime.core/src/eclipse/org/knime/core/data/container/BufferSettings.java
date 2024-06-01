@@ -97,27 +97,6 @@ public final class BufferSettings {
     }
 
     /**
-     * Initializes the LRU caching flag w.r.t. the defined properties.
-     *
-     * @return the LRU caching flag
-     */
-    private static boolean initLRU() {
-        final String valTableCache = System.getProperty(KNIMEConstants.PROPERTY_TABLE_CACHE);
-        if (valTableCache != null) {
-            switch (valTableCache.trim().toUpperCase()) {
-                case "LRU":
-                    return true;
-                case "SMALL":
-                    return false;
-                default:
-                    LOGGER.warn("Unknown setting for table caching: " + valTableCache + ". Using default: "
-                        + DEF_TABLE_CACHE + ".");
-            }
-        }
-        return DEF_TABLE_CACHE.equals("LRU");
-    }
-
-    /**
      * Returns whether to use LRU caching or not.
      *
      * @return flag indicating whether to use LRU caching or not
@@ -222,6 +201,27 @@ public final class BufferSettings {
 
         BufferSettings build() {
             return new BufferSettings(this);
+        }
+
+        /**
+         * Initializes the LRU caching flag w.r.t. the defined properties.
+         *
+         * @return the LRU caching flag
+         */
+        private static boolean initLRU() {
+            final String valTableCache = System.getProperty(KNIMEConstants.PROPERTY_TABLE_CACHE);
+            if (valTableCache != null) {
+                switch (valTableCache.trim().toUpperCase()) {
+                    case "LRU":
+                        return true;
+                    case "SMALL":
+                        return false;
+                    default:
+                        LOGGER.warn("Unknown setting for table caching: " + valTableCache + ". Using default: "
+                            + DEF_TABLE_CACHE + ".");
+                }
+            }
+            return DEF_TABLE_CACHE.equals("LRU");
         }
 
     }

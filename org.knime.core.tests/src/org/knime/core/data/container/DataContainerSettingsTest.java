@@ -49,8 +49,8 @@
 package org.knime.core.data.container;
 
 import static org.junit.Assert.assertNotEquals;
-import static org.knime.core.data.container.DataContainer.MAX_CELLS_IN_MEMORY;
-import static org.knime.core.data.container.DataContainer.MAX_POSSIBLE_VALUES;
+
+import java.util.OptionalInt;
 
 import org.junit.Test;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -75,11 +75,11 @@ public final class DataContainerSettingsTest extends TestCase {
     public void testDefault() {
         final DataContainerSettings settings = DataContainerSettings.getDefault();
 //        assertEquals("Wrong default (cache size)", ASYNC_CACHE_SIZE, settings.getRowBatchSize());
-        assertEquals("Wrong default (number of cells in memory)", MAX_CELLS_IN_MEMORY, settings.getMaxCellsInMemory());
-        assertEquals("Wrong default (number of possible domain values)", MAX_POSSIBLE_VALUES,
+        assertEquals("Wrong default (number of cells in memory)", OptionalInt.empty(), settings.getMaxCellsInMemory());
+        assertEquals("Wrong default (number of possible domain values)", DataContainerSettings.MAX_POSSIBLE_VALUES,
             settings.getMaxDomainValues());
 //        assertEquals("Wrong default (asynchronous IO flag)", SYNCHRONOUS_IO, settings.isForceSequentialRowHandling());
-//        assertEquals("Wrong default (intialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
+//        assertEquals("Wrong default (initialize domain flag)", INIT_DOMAIN, settings.getInitializeDomain());
         assertEquals("Wrong default (asynchrnous write threads)", Runtime.getRuntime().availableProcessors(),
             settings.getMaxContainerThreads());
         assertEquals("Wrong default (container threads)", Runtime.getRuntime().availableProcessors(),
@@ -113,7 +113,7 @@ public final class DataContainerSettingsTest extends TestCase {
         final DataContainerSettings def = DataContainerSettings.getDefault();
 
         final int cacheSize = def.getRowBatchSize() * -1;
-        final int maxCellsInMemory = def.getMaxCellsInMemory() * -1;
+        final int maxCellsInMemory = 35;
         final int maxPossibleValues = def.getMaxDomainValues() * -1;
         final boolean syncIO = !def.isForceSequentialRowHandling();
         final boolean initDomain = !def.getInitializeDomain();
@@ -129,13 +129,12 @@ public final class DataContainerSettingsTest extends TestCase {
             .withMaxContainerThreads(maxContainerThreads)//
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
             .withBufferSettings(b -> b.withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1))//
-            .toExternalBuilder() //
             .withInitializedDomain(initDomain)//
             .build();
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getRowBatchSize());
         assertEquals("Modified settings created wrong maximum number of cells in memory", maxCellsInMemory,
-            settings.getMaxCellsInMemory());
+            settings.getMaxCellsInMemory().orElseThrow());
         assertEquals("Modified settings created wrong maximum number of possible domain values", maxPossibleValues,
             settings.getMaxDomainValues());
         assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.isForceSequentialRowHandling());
@@ -159,7 +158,7 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.isForceSequentialRowHandling());
         assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),
             settings.getInitializeDomain());
-        assertNotEquals("Default BufferSettings have not been modified", def.getBufferSettings().equals(bSettings));
+        assertEquals("Modified BufferSettings created wrong value", def.getBufferSettings(), bSettings);
     }
 
     /**
@@ -174,6 +173,22 @@ public final class DataContainerSettingsTest extends TestCase {
         final DataContainerSettings modified = DataContainerSettings.internalBuilder()
             .withMaxThreadsPerContainer(2 * def.getMaxContainerThreads()).build();
         assertTrue(modified.getMaxThreadsPerContainer() == def.getMaxContainerThreads());
+    }
+
+    /**
+     * Max cells property must never be negative.
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    public void testMaxCellsRestriction() {
+        final DataContainerSettings def = DataContainerSettings.getDefault();
+        assertEquals("Max cells property expected to be not set", OptionalInt.empty(), def.getMaxCellsInMemory());
+
+        DataContainerSettings s1 = DataContainerSettings.internalBuilder().withMaxCellsInMemory(50).build();
+        assertEquals("Max cells property after setting valid value", 50, s1.getMaxCellsInMemory().orElseThrow());
+
+        DataContainerSettings s2 = DataContainerSettings.internalBuilder().withMaxCellsInMemory(-1).build();
+        assertEquals("Max cells property after setting valid value", OptionalInt.empty(), s2.getMaxCellsInMemory());
     }
 
 }

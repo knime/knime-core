@@ -54,11 +54,9 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
-import org.knime.core.data.RowKey;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
@@ -305,8 +303,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * Creates a container to which rows can be added. Use this method if
      * you sequentially generate new rows. Add those by using the
      * <code>addRow(DataRow)</code> method and finally close the container and
-     * get the result by invoking <code>getTable()</code>. All rows will be
-     * cached.
+     * get the result by invoking <code>getTable()</code>.
      * <p>This method refers to the first way of storing data,
      * see <a href="#new_data">here</a>.
      * @param spec The spec to open the container.
@@ -322,8 +319,7 @@ public class ExecutionContext extends ExecutionMonitor {
      * Creates a container to which rows can be added. Use this method if
      * you sequentially generate new rows. Add those by using the
      * <code>addRow(DataRow)</code> method and finally close the container and
-     * get the result by invoking <code>getTable()</code>. All rows will be
-     * cached.
+     * get the result by invoking <code>getTable()</code>.
      * <p>This method refers to the first way of storing data,
      * see <a href="#new_data">here</a>.
      * @param spec The spec to open the container.
@@ -334,28 +330,22 @@ public class ExecutionContext extends ExecutionMonitor {
      * the <code>BufferedDataTable</code>.
      * @throws NullPointerException If the spec argument is <code>null</code>.
      */
-    public BufferedDataContainer createDataContainer(final DataTableSpec spec,
-            final boolean initDomain) {
-        return createDataContainer(spec, initDomain, -1);
+    public BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain) {
+        return createDataContainer(spec, DataContainerSettings.builder().withInitializedDomain(initDomain).build());
     }
 
     /**
-     * Creates a container to which rows can be added, overwriting the nodes {@link IWriteFileStoreHandler}.
-     * This method has the same behavior as {@link #createDataContainer(DataTableSpec)} except that the provided
-     * {@link IWriteFileStoreHandler} is used. This is useful e.g. if the container is created to serve as a preview
-     * even while this nodes' fileStoreHandler is closed.
+     * Creates a container using details argument settings, usually created by its (public)
+     * {@link DataContainerSettings#builder()}.
      *
      * @param spec The spec to open the container.
-     * @param writeFileStoreHandler The {@link IWriteFileStoreHandler} to use instead of the one associated with this
-     *            {@link ExecutionContext}, useful e.g. if the container is only used as a preview.
+     * @param settings Preconfigured settings, see class description for details.
      * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
-     * @throws NullPointerException If the spec argument is <code>null</code>.
-     * @since 5.2
-     * @noreference This method is not intended to be referenced by clients.
+     * @throws NullPointerException When either argument is null.
+     * @since 5.3
      */
-    BufferedDataContainer createDataContainer(final DataTableSpec spec,
-        final IWriteFileStoreHandler writeFileStoreHandler) {
-        return createDataContainer(spec, true, -1, true, writeFileStoreHandler);
+    public BufferedDataContainer createDataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
+        return createDataContainer(spec, settings, m_fileStoreHandler);
     }
 
     /**
@@ -378,80 +368,48 @@ public class ExecutionContext extends ExecutionMonitor {
      *            node).
      * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
      * @throws NullPointerException If the spec argument is <code>null</code>.
+     * @deprecated Setting a cell count to be held in memory should no longer be done by client code as it only applies
+     *             to the (old) row backend.
      */
+    @Deprecated(since = "5.3", forRemoval = true)
     public BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
         final int maxCellsInMemory) {
-        return createDataContainer(spec, initDomain, maxCellsInMemory, true);
+        return createDataContainer(spec, DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory) //
+            .build());
     }
 
     /**
-     * Creates a container to which rows can be added, overwriting the
-     * node's memory policy. This method has the same behavior as
-     * {@link #createDataContainer(DataTableSpec, boolean)} except for the
-     * last argument <code>maxCellsInMemory</code>. It controls the memory
-     * policy of the data container (which is otherwise controlled by a user
-     * setting in the dialog).
-     *
-     * <p>
-     * <b>Note:</b> It's strongly advised to use
-     * {@link #createDataContainer(DataTableSpec, boolean)} instead of this
-     * method as the above method realizes the memory policy specified by the
-     * user. Use this method only if you have good reasons to do so
-     * (for instance if you create many containers, whose default memory
-     * options would yield a high accumulated memory consumption).
-     * @param spec The spec to open the container.
-     * @param initDomain If the domain information from the argument shall
-     * be used to initialize the domain (min, max, possible values). If false,
-     * the domain will be determined on the fly.
-     * @param maxCellsInMemory Number of cells to be kept in memory, especially
-     * 0 forces the table to write to disk immediately. A value smaller than 0
-     * will respect the user setting (as defined by the accompanying node).
-     * @param rowKeys if true, {@link RowKey}s are expected to be part of a {@link DataRow}.
-     * @return A container to which rows can be added and which provides
-     * the <code>BufferedDataTable</code>.
-     * @throws NullPointerException If the spec argument is <code>null</code>.
-     */
-    BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
-        final int maxCellsInMemory, final boolean rowKeys) {
-        return createDataContainer(spec, initDomain, maxCellsInMemory, rowKeys, m_fileStoreHandler);
-    }
-
-    /**
-     * Create a {@link BufferedDataContainer} using the provide {@link IWriteFileStoreHandler}. For all other
-     * parameters, see the method above.
+     * Final implementation of createDataContainer. The file store handler argument is 'usually' the node's file store
+     * handler (see class member) but can also be customized, e.g. if the container is created to serve as a preview
+     * even while this nodes' fileStoreHandler is closed.
      *
      * @param spec The spec to open the container.
-     * @param initDomain If the domain information from the argument shall be used to initialize the domain (min, max,
-     *            possible values). If false, the domain will be determined on the fly.
-     * @param maxCellsInMemory Number of cells to be kept in memory, especially 0 forces the table to write to disk
-     *            immediately. A value smaller than 0 will respect the user setting (as defined by the accompanying
-     *            node).
-     * @param rowKeys if true, {@link RowKey}s are expected to be part of a {@link DataRow}.
-     * @param writeFileStoreHandler The {@link IWriteFileStoreHandler} to use instead of the one associated with this
-     *            {@link ExecutionContext}, useful e.g. if the container is only used as a preview.
+     * @param settings Further container settings.
+     * @param writeFileStoreHandler (see method description)
      * @return A container to which rows can be added and which provides the <code>BufferedDataTable</code>.
-     * @throws NullPointerException If the spec argument is <code>null</code>.
+     * @since 5.3
+     * @noreference This method is not intended to be referenced by clients.
      */
-    private BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean initDomain,
-        final int maxCellsInMemory, final boolean rowKeys, final IWriteFileStoreHandler writeFileStoreHandler) {
+    BufferedDataContainer createDataContainer(final DataTableSpec spec, final DataContainerSettings settings,
+        final IWriteFileStoreHandler writeFileStoreHandler) {
 
+        final boolean forceCopyOfBlobs = settings.isForceCopyOfBlobs() || m_node.isModelCompatibleTo(LoopEndNode.class)
+                || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
+        final int maxCellsInMemory =
+            settings.getMaxCellsInMemory().orElseGet(() -> getMaxCellsInMemory(m_memoryPolicy));
 
-        final boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class)
-            || m_node.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
-
-        final DataContainerSettings containerSettings = DataContainerSettings.internalBuilder() //
-            .withMaxCellsInMemory(maxCellsInMemory < 0 ? getMaxCellsInMemory(m_memoryPolicy) : maxCellsInMemory) //
+        final DataContainerSettings containerSettings = DataContainerSettings.internalBuilder(settings) //
+            .withMaxCellsInMemory(maxCellsInMemory) //
+            .withForceCopyOfBlobs(forceCopyOfBlobs) //
             /*
              * Force sequential handling of rows when the node is a loop end: At a loop end, rows containing blobs need
              * to be written instantly as their owning buffer is discarded in the next loop iteration, see bug 2935. To
              * be written instantly, they have to be handled sequentially.
+             * (False could still mean it's sequential/synchronous (sys prop is set))
              */
-            .withForceSequentialRowHandling(
-                m_node.isForceSychronousIO() || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
-            .withForceCopyOfBlobs(forceCopyOfBlobs) //
-            .withRowKeysEnabled(rowKeys) //
-            .toExternalBuilder() //
-            .withInitializedDomain(initDomain) //
+            .withForceSequentialRowHandling(m_node.isForceSychronousIO()) //
             .build();
 
         /*
@@ -461,8 +419,8 @@ public class ExecutionContext extends ExecutionMonitor {
          * test Bug4409_inactiveInnerLoop
          */
         final IDataRepository dataRepository =
-            Objects.requireNonNullElseGet(m_dataRepository, NotInWorkflowDataRepository::newInstance);
-        return new BufferedDataContainer(spec, m_node, containerSettings,
+                Objects.requireNonNullElseGet(m_dataRepository, NotInWorkflowDataRepository::newInstance);
+        return new BufferedDataContainer(CheckUtils.checkArgumentNotNull(spec), m_node, containerSettings,
             dataRepository, m_localTableRepository, writeFileStoreHandler, getTableBackend());
     }
 
@@ -475,7 +433,7 @@ public class ExecutionContext extends ExecutionMonitor {
     private static int getMaxCellsInMemory(final MemoryPolicy memPolicy) {
         return switch (memPolicy) {
             case CacheInMemory -> Integer.MAX_VALUE;
-            case CacheSmallInMemory -> DataContainerSettings.getDefault().getMaxCellsInMemory();
+            case CacheSmallInMemory -> DataContainerSettings.MAX_CELLS_IN_MEMORY;
             default -> 0;
         };
     }

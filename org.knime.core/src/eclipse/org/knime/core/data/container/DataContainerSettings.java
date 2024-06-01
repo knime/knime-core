@@ -49,6 +49,7 @@
 package org.knime.core.data.container;
 
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -75,7 +76,7 @@ public final class DataContainerSettings {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataContainerSettings.class);
 
-    /** The default number of cells to be held in memory. */
+    /** The default number of cells to be held in memory, ignoring system properties.  */
     private static final int DEF_MAX_CELLS_IN_MEMORY = 5000;
 
     /**
@@ -95,8 +96,30 @@ public final class DataContainerSettings {
      */
     private static final int DEF_MAX_POSSIBLE_VALUES = 60;
 
+    private static final boolean DEF_SEQUENTIAL_ROW_HANDLING = initSequentialIO();
+
     /** The default initialize domain flag. */
     private static final boolean DEF_INIT_DOMAIN = false;
+
+    /**
+     * Number of cells that are cached without being written to the temp file (see Buffer implementation); Its default
+     * value can be changed using the java property {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}.
+     *
+     * <p>
+     * This property should not be of interested to node implementations. It only concerns the (legacy) row table
+     * backend.
+     *
+     * @since 5.3
+     */
+    public static final int MAX_CELLS_IN_MEMORY = initMaxCellsInMemory();
+
+    /**
+     * The default number of possible values in a column domain to be kept at most. This default value can be changed
+     * using the java property {@link KNIMEConstants#PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES}.
+     *
+     * @since 5.3
+     */
+    public static final int MAX_POSSIBLE_VALUES = initMaxDomainValues();
 
     /**
      * Internal Builder that allows KNIME framework and testing code to customize containers, no public API.
@@ -106,7 +129,7 @@ public final class DataContainerSettings {
      * @noreference This interface is not intended to be referenced by clients.
      */
     @SuppressWarnings("javadoc")
-    public sealed interface InternalBuilder permits BuilderImpl {
+    public sealed interface InternalBuilder extends Builder permits BuilderImpl {
 
         InternalBuilder withBufferSettings(Consumer<BufferSettingsBuilder> builderConsumer);
 
@@ -124,18 +147,36 @@ public final class DataContainerSettings {
 
         InternalBuilder withForceSequentialRowHandling(final boolean useSequentialIO);
 
+        /**
+         * For the (old) row backend, the size of the table (in #cells) until which the table is kept in memory. This
+         * setting is no longer used in the columnar backend. When the row backend is active, the default is derived
+         * from the node's memory policy. For non-{@link org.knime.core.node.BufferedDataTable} the default is
+         * {@value DataContainerSettings#DEF_MAX_CELLS_IN_MEMORY}, whereby it can also be set via the
+         * {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY} property.
+         *
+         * <p>
+         * This setting can be considered deprecated once the columnar backend is default.
+         *
+         * @param maxCellsInMemory The value, whereby a negative values assumes the default value (see above)
+         * @return this
+         */
         InternalBuilder withMaxCellsInMemory(final int maxCellsInMemory);
 
-        Builder toExternalBuilder();
+        @Override
+        InternalBuilder withInitializedDomain(final boolean initDomain);
 
-        DataContainerSettings build(); // shortcut to avoid detour via toExternalBuilder()
+        @Override
+        InternalBuilder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking);
+
+        @Override
+        InternalBuilder setDomainUpdate(final boolean enableDomainUpdate);
 
     }
 
     /**
      * @since 5.3
      */
-    public sealed interface Builder permits BuilderImpl {
+    public sealed interface Builder permits InternalBuilder {
 
         Builder withInitializedDomain(final boolean initDomain);
 
@@ -151,10 +192,10 @@ public final class DataContainerSettings {
      *
      * @author Mark Ortmann, KNIME GmbH, Berlin, Germany
      */
-    private final static class BuilderImpl implements InternalBuilder, Builder {
+    private static final class BuilderImpl implements InternalBuilder {
 
         /** The maximum number of cells in memory. */
-        private int m_maxCellsInMemory;
+        private OptionalInt m_maxCellsInMemory;
 
         /** The sequential write flag. */
         private boolean m_sequentialIO;
@@ -206,55 +247,55 @@ public final class DataContainerSettings {
         }
 
         @Override
-        public InternalBuilder withMaxCellsInMemory(final int maxCellsInMemory) {
-            m_maxCellsInMemory = maxCellsInMemory;
+        public BuilderImpl withMaxCellsInMemory(final int maxCellsInMemory) {
+            m_maxCellsInMemory = maxCellsInMemory < 0 ? OptionalInt.empty() : OptionalInt.of(maxCellsInMemory);
             return this;
         }
 
         @Override
-        public InternalBuilder withForceSequentialRowHandling(final boolean useSequentialIO) {
+        public BuilderImpl withForceSequentialRowHandling(final boolean useSequentialIO) {
             m_sequentialIO = useSequentialIO;
             return this;
         }
 
         @Override
-        public InternalBuilder withMaxContainerThreads(final int maxDataContainerThreads) {
+        public BuilderImpl withMaxContainerThreads(final int maxDataContainerThreads) {
             m_maxDataContainerThreads = maxDataContainerThreads;
             return this;
         }
 
         @Override
-        public InternalBuilder withMaxThreadsPerContainer(final int maxThreadsPerDataContainer) {
+        public BuilderImpl withMaxThreadsPerContainer(final int maxThreadsPerDataContainer) {
             m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
             return this;
         }
 
         @Override
-        public InternalBuilder withRowBatchSize(final int rowBatchSize) {
+        public BuilderImpl withRowBatchSize(final int rowBatchSize) {
             m_rowBatchSize = rowBatchSize;
             return this;
         }
 
         @Override
-        public InternalBuilder withMaxDomainValues(final int maxDomainValues) {
+        public BuilderImpl withMaxDomainValues(final int maxDomainValues) {
             m_maxDomainValues = maxDomainValues;
             return this;
         }
 
         @Override
-        public InternalBuilder withForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
+        public BuilderImpl withForceCopyOfBlobs(final boolean forceCopyOfBlobs) {
             m_forceCopyOfBlobs = forceCopyOfBlobs;
             return this;
         }
 
         @Override
-        public InternalBuilder withRowKeysEnabled(final boolean enableRowKeys) {
+        public BuilderImpl withRowKeysEnabled(final boolean enableRowKeys) {
             m_enableRowKeys = enableRowKeys;
             return this;
         }
 
         @Override
-        public InternalBuilder withBufferSettings(final Consumer<BufferSettingsBuilder> builderConsumer) {
+        public BuilderImpl withBufferSettings(final Consumer<BufferSettingsBuilder> builderConsumer) {
             BufferSettingsBuilder builder = BufferSettings.builder();
             builderConsumer.accept(builder);
             m_bufferSettings = builder.build();
@@ -262,24 +303,19 @@ public final class DataContainerSettings {
         }
 
         @Override
-        public Builder toExternalBuilder() {
-            return this;
-        }
-
-        @Override
-        public Builder withInitializedDomain(final boolean initDomain) {
+        public BuilderImpl withInitializedDomain(final boolean initDomain) {
             m_initDomain = initDomain;
             return this;
         }
 
         @Override
-        public Builder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking) {
+        public BuilderImpl setRowKeyDuplicateCheck(final boolean enableDuplicateChecking) {
             m_enableDuplicateChecking = enableDuplicateChecking;
             return this;
         }
 
         @Override
-        public Builder setDomainUpdate(final boolean enableDomainUpdate) {
+        public BuilderImpl setDomainUpdate(final boolean enableDomainUpdate) {
             m_enableDomainUpdate = enableDomainUpdate;
             return this;
         }
@@ -300,8 +336,8 @@ public final class DataContainerSettings {
     /** The function creating new instances of {@link DataTableDomainCreator}. */
     private final BiFunction<DataTableSpec, Boolean, DataTableDomainCreator> m_tableDomainCreatorFunction;
 
-    /** The maximum number of cells in memory. */
-    private final int m_maxCellsInMemory;
+    /** The maximum number of cells in memory, empty object to use defaults (special handling for BDT in nodes) */
+    private final OptionalInt m_maxCellsInMemory;
 
     /** The sequential write flag. */
     private final boolean m_sequentialIO;
@@ -333,8 +369,8 @@ public final class DataContainerSettings {
     private DataContainerSettings() {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = DataTableDomainCreator::new;
-        m_maxCellsInMemory = initMaxCellsInMemory();
-        m_sequentialIO = initSequentialIO();
+        m_maxCellsInMemory = OptionalInt.empty();
+        m_sequentialIO = DEF_SEQUENTIAL_ROW_HANDLING;
         m_maxDataContainerThreads = initMaxDataContainerThreads();
         int maxThreadsPerDataContainer = initThreadsPerDataContainerInstance();
         if (maxThreadsPerDataContainer > m_maxDataContainerThreads) {
@@ -346,7 +382,7 @@ public final class DataContainerSettings {
         m_maxThreadsPerDataContainer = maxThreadsPerDataContainer;
         m_rowBatchSize = initRowBatchSize();
         m_initDomain = initDomain();
-        m_maxDomainValues = initMaxDomainValues();
+        m_maxDomainValues = MAX_POSSIBLE_VALUES;
         m_forceCopyOfBlobs = initForceCopyOfBlobs();
         m_enableRowKeys = initEnableRowKeys();
         m_bufferSettings = BufferSettings.getDefault();
@@ -356,7 +392,8 @@ public final class DataContainerSettings {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = DataTableDomainCreator::new;
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
-        m_sequentialIO = builder.m_sequentialIO;
+        // system property overwrites everything
+        m_sequentialIO = DEF_SEQUENTIAL_ROW_HANDLING || builder.m_sequentialIO;
         m_maxDataContainerThreads = builder.m_maxDataContainerThreads;
         m_maxThreadsPerDataContainer = Math.min(m_maxDataContainerThreads, builder.m_maxThreadsPerDataContainer);
         m_rowBatchSize = builder.m_rowBatchSize;
@@ -387,7 +424,18 @@ public final class DataContainerSettings {
      * @noreference This method is not intended to be referenced by clients.
      */
     public static InternalBuilder internalBuilder() {
-        return newInternalBuilderImpl();
+        return internalBuilder(getDefault());
+    }
+
+    /**
+     * Creates a {@link InternalBuilder} instance, used by the framework, testing and benchmarks. No public API.
+     * @param settings draft settings
+     * @return A new instance.
+     * @since 5.3
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public static InternalBuilder internalBuilder(final DataContainerSettings settings) {
+        return new BuilderImpl(settings);
     }
 
     /**
@@ -396,19 +444,17 @@ public final class DataContainerSettings {
      * @since 5.3
      */
     public static Builder builder() {
-        return newInternalBuilderImpl();
-    }
-
-    private static BuilderImpl newInternalBuilderImpl() {
-        return new BuilderImpl(getDefault());
+        return internalBuilder(getDefault());
     }
 
     /**
-     * Returns the maximum number of cells kept in memory, only concerns row-backend.
+     * Returns the maximum number of cells kept in memory, only concerns row-backend. Empty optional to use default
+     * ({@link DataContainerSettings#MAX_CELLS_IN_MEMORY}).
      *
      * @return max cells in memory, per table.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public int getMaxCellsInMemory() {
+    public OptionalInt getMaxCellsInMemory() {
         return m_maxCellsInMemory;
     }
 
@@ -419,6 +465,7 @@ public final class DataContainerSettings {
      * class always writes rows to disk sequentially, yet potentially asynchronously.
      *
      * @return flag indicating whether to force rows to be handled sequentially
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean isForceSequentialRowHandling() {
         return m_sequentialIO;
@@ -428,6 +475,7 @@ public final class DataContainerSettings {
      * Returns the maximum total number threads that can be used by {@link DataContainer} instances.
      *
      * @return maximum number of asynchronous write threads
+     * @noreference This method is not intended to be referenced by clients.
      */
     public int getMaxContainerThreads() {
         return m_maxDataContainerThreads;
@@ -446,6 +494,7 @@ public final class DataContainerSettings {
      * Returns the amount of rows to be processed by a single thread when not forced to handle rows sequentially.
      *
      * @return the row batch size
+     * @noreference This method is not intended to be referenced by clients.
      */
     public int getRowBatchSize() {
         return m_rowBatchSize;
@@ -457,6 +506,7 @@ public final class DataContainerSettings {
      *
      * @since 4.2.2
      * @return the initialize domain flag
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean getInitializeDomain() {
         return m_initDomain;
@@ -466,6 +516,7 @@ public final class DataContainerSettings {
      * Returns the maximum number of domain values.
      *
      * @return returns the maximum number of domain values
+     * @noreference This method is not intended to be referenced by clients.
      */
     public int getMaxDomainValues() {
         return m_maxDomainValues;
@@ -494,6 +545,7 @@ public final class DataContainerSettings {
 
     /**
      * @return <source>true</source> if blobs should be copied by this {@link DataContainer}.
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean isForceCopyOfBlobs() {
         return m_forceCopyOfBlobs;
@@ -501,6 +553,7 @@ public final class DataContainerSettings {
 
     /**
      * @return <source>true</source> if {@link RowKey}s are part of this {@link DataContainer}.
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean isEnableRowKeys() {
         return m_enableRowKeys;
@@ -564,7 +617,8 @@ public final class DataContainerSettings {
      */
     private static boolean initSequentialIO() {
         if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO)) {
-            LOGGER.debug("Handling rows sequentially; " + KNIMEConstants.PROPERTY_SYNCHRONOUS_IO + " is set");
+            LOGGER.debugWithFormat("(Row Backend:) Handling rows sequentially; %s is set",
+                KNIMEConstants.PROPERTY_SYNCHRONOUS_IO);
             return true;
         } else {
             return false;

@@ -846,7 +846,6 @@ public class DataContainerTest extends TestCase {
             .withMaxCellsInMemory(maxCellsInMemory)
             .withForceSequentialRowHandling(
                 forceSynchronousIO || DataContainerSettings.getDefault().isForceSequentialRowHandling()) //
-            .toExternalBuilder() //
             .withInitializedDomain(initDomain) //
             .build());
     }

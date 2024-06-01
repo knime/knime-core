@@ -35,6 +35,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainerSettings.java" type="org.knime.core.data.container.DataContainerSettings">
+        <filter comment="refactored non-public api (@noreference on class before)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="getMaxCellsInMemory()"/>
+            </message_arguments>
+        </filter>
         <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainerSettings"/>

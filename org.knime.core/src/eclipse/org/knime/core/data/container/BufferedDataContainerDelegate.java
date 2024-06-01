@@ -263,8 +263,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler) {
         CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
-        CheckUtils.checkArgument(settings.getMaxCellsInMemory() >= 0, "Cell count must be positive: %s",
-            settings.getMaxCellsInMemory());
+        final int maxCellsInMemory = settings.getMaxCellsInMemory().orElse(DataContainerSettings.MAX_CELLS_IN_MEMORY);
         m_spec = spec;
         m_duplicateChecker = settings.createDuplicateChecker();
         m_forceSequentialRowHandling = settings.isForceSequentialRowHandling();
@@ -293,7 +292,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         m_size = 0;
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
-        m_maxRowsInMemory = settings.getMaxCellsInMemory() / ((colCount > 0) ? colCount : 1);
+        m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
         m_bufferCreator = settings.isEnableRowKeys() ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
         m_forceCopyOfBlobs = settings.isForceCopyOfBlobs();
         m_repository = repository;

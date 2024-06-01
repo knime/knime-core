@@ -57,6 +57,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.CloseableTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -77,7 +78,11 @@ public class DataTableSorter extends AbstractTableSorter {
     static final TableIOHandler TABLE_IO_HANDLER = new TableIOHandler() {
         @Override
         public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
-            return forceOnDisk ? new DataContainer(spec, true, 0) : new DataContainer(spec, true);
+            DataContainerSettings settings = DataContainerSettings.internalBuilder() //
+                    .withInitializedDomain(true) //
+                    .withMaxCellsInMemory(forceOnDisk ? 0 : -1) // row backend; -1 = default
+                    .build();
+            return new DataContainer(spec, settings);
         }
 
         @Override

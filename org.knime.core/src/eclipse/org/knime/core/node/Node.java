@@ -77,6 +77,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.RowFlushable;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
@@ -2675,7 +2676,10 @@ public final class Node {
      */
     public static BufferedDataContainer invokeCreateDataContainer(final ExecutionContext context,
         final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory, final boolean rowKeys) {
-        return context.createDataContainer(spec, initDomain, maxCellsInMemory, rowKeys);
+        return context.createDataContainer(spec, DataContainerSettings.internalBuilder() //
+            .withInitializedDomain(initDomain) //
+            .withMaxCellsInMemory(maxCellsInMemory) //
+            .withRowKeysEnabled(rowKeys).build());
     }
 
     /** Widens scope of {@link AbstractNodeView#openView(String, Rectangle)} method so it

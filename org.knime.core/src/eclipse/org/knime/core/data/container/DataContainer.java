@@ -110,29 +110,24 @@ public class DataContainer implements RowAppender, RowFlushable {
     public static final int NOT_IN_WORKFLOW_BUFFER = -1;
 
     /**
-     * Number of cells that are cached without being written to the temp file (see Buffer implementation); It defaults
+     * Number of cells that are cached without being written to the temp file (see Buffer implementation); Its default
      * value can be changed using the java property {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}.
      *
-     * @deprecated access via {@link DataContainerSettings#getDefault()}
+     * @deprecated If needed, use {@link DataContainerSettings#MAX_CELLS_IN_MEMORY}.
      */
-    @Deprecated
-    public static final int MAX_CELLS_IN_MEMORY;
+    @Deprecated(since = "4.3.0")
+    public static final int MAX_CELLS_IN_MEMORY = DataContainerSettings.MAX_CELLS_IN_MEMORY;
 
     /**
-     * The actual number of possible values being kept at most. Its default value can be changed using the java property
-     * {@link KNIMEConstants#PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES}.
+     * The default number of possible values in a column domain to be kept at most. This default value can be changed
+     * using the java property {@link KNIMEConstants#PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES}.
      *
+     * @deprecated This property should not be of interested to node implementations. If needed, use
+     *             {@link DataContainerSettings#MAX_CELLS_IN_MEMORY}.
      * @since 2.10
-     * @deprecated access via {@link DataContainerSettings#getDefault()}
      */
-    @Deprecated
-    public static final int MAX_POSSIBLE_VALUES;
-
-    static {
-        final DataContainerSettings defaults = DataContainerSettings.getDefault();
-        MAX_CELLS_IN_MEMORY = defaults.getMaxCellsInMemory();
-        MAX_POSSIBLE_VALUES = defaults.getMaxDomainValues();
-    }
+    @Deprecated(since = "4.0.0")
+    public static final int MAX_POSSIBLE_VALUES = DataContainerSettings.MAX_POSSIBLE_VALUES;
 
     private DataContainerDelegate m_delegate;
 
@@ -185,12 +180,15 @@ public class DataContainer implements RowAppender, RowFlushable {
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
      * @param initDomain if set to true, the column domains in the container are initialized with the domains from spec.
-     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
+     * @param maxCellsInMemory Maximum count of cells in memory before swapping (negative value to use the defaults)
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
+     * @deprecated Setting a cell count to be held in memory should no longer be done by client code as it only applies
+     *             to the (old) row backend.
      */
+    @Deprecated(since = "5.3", forRemoval = true)
     public DataContainer(final DataTableSpec spec, final boolean initDomain, final int maxCellsInMemory) {
-        this(spec, DataContainerSettings.internalBuilder().withMaxCellsInMemory(maxCellsInMemory).toExternalBuilder()
+        this(spec, DataContainerSettings.internalBuilder().withMaxCellsInMemory(maxCellsInMemory)
             .withInitializedDomain(initDomain).build());
     }
 
@@ -198,7 +196,7 @@ public class DataContainer implements RowAppender, RowFlushable {
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
-     * @param settings the container settings
+     * @param settings container settings, to be created via its {@linkpalin DataContainerSettings#builder() builder}.
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {
@@ -390,14 +388,18 @@ public class DataContainer implements RowAppender, RowFlushable {
      *
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check for the cancel status.
-     * @param maxCellsInMemory The number of cells to be kept in memory before swapping to disk.
+     * @param maxCellsInMemory The number of cells to be kept in memory before swapping to disk (negative to not set it)
      * @return A cache table containing the data from the argument.
      * @throws NullPointerException If the argument is <code>null</code>.
      * @throws CanceledExecutionException If the process has been canceled.
      */
     public static DataTable cache(final DataTable table, final ExecutionMonitor exec, final int maxCellsInMemory)
         throws CanceledExecutionException {
-        DataContainer container = new DataContainer(table.getDataTableSpec(), true, maxCellsInMemory);
+        DataContainerSettings containerSettings = DataContainerSettings.internalBuilder() //
+                .withMaxCellsInMemory(maxCellsInMemory) // (negative for default)
+                .withInitializedDomain(true) //
+                .build();
+        final DataContainer container = new DataContainer(table.getDataTableSpec(), containerSettings);
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
@@ -424,7 +426,7 @@ public class DataContainer implements RowAppender, RowFlushable {
      */
     public static DataTable cache(final DataTable table, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        return cache(table, exec, DataContainerSettings.getDefault().getMaxCellsInMemory());
+        return cache(table, exec, -1);
     }
 
     /**

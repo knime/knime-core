@@ -104,8 +104,7 @@ public final class DataTableCompressionTest extends TestCase {
         throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
         // initial settings
         final DataContainerSettings.InternalBuilder settingsBuilder =
-            DataContainerSettings.internalBuilder().withMaxCellsInMemory(0);
-        settingsBuilder.toExternalBuilder().withInitializedDomain(false);
+            DataContainerSettings.internalBuilder().withInitializedDomain(false).withMaxCellsInMemory(0);
         // create the data
         final Pair<DataTableSpec, DataRow[]> data = createData(ROW_COUNT);
 

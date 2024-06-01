@@ -114,10 +114,10 @@ public class BufferedDataContainer extends DataContainer {
     private final Node m_node;
     private BufferedDataTable m_resultTable;
 
-    BufferedDataContainer(final DataTableSpec spec, final Node node, final DataContainerSettings build,
+    BufferedDataContainer(final DataTableSpec spec, final Node node, final DataContainerSettings settings,
         final IDataRepository dataRepository, final ILocalDataRepository localTableRepository,
         final IWriteFileStoreHandler fileStoreHandler, final TableBackend backend) {
-        super(spec, build, dataRepository, localTableRepository, fileStoreHandler, backend);
+        super(spec, settings, dataRepository, localTableRepository, fileStoreHandler, backend);
         m_node = node;
     }
 
