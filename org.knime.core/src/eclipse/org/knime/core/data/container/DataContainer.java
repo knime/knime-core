@@ -397,7 +397,6 @@ public class DataContainer implements RowAppender, RowFlushable {
         throws CanceledExecutionException {
         DataContainerSettings containerSettings = DataContainerSettings.internalBuilder() //
                 .withMaxCellsInMemory(maxCellsInMemory) // (negative for default)
-                .withInitializedDomain(true) //
                 .build();
         final DataContainer container = new DataContainer(table.getDataTableSpec(), containerSettings);
         int row = 0;

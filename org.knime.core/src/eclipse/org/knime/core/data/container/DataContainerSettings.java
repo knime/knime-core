@@ -99,7 +99,7 @@ public final class DataContainerSettings {
     private static final boolean DEF_SEQUENTIAL_ROW_HANDLING = initSequentialIO();
 
     /** The default initialize domain flag. */
-    private static final boolean DEF_INIT_DOMAIN = false;
+    private static final boolean DEF_INIT_DOMAIN = true;
 
     /**
      * Number of cells that are cached without being written to the temp file (see Buffer implementation); Its default
@@ -166,10 +166,10 @@ public final class DataContainerSettings {
         InternalBuilder withInitializedDomain(final boolean initDomain);
 
         @Override
-        InternalBuilder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking);
+        InternalBuilder withCheckDuplicateRowKeys(final boolean enableCheckDuplicateRowKeys);
 
         @Override
-        InternalBuilder setDomainUpdate(final boolean enableDomainUpdate);
+        InternalBuilder withDomainUpdate(final boolean enableDomainUpdate);
 
     }
 
@@ -178,11 +178,34 @@ public final class DataContainerSettings {
      */
     public sealed interface Builder permits InternalBuilder {
 
+        /**
+         * Whether the container should inherit the column domains from the {@link DataTableSpec} that is used to
+         * initialize the container/table. Default value is <code>true</code>.
+         *
+         * @param initDomain <code>false</code> when not using the domain for the argument spec, instead calculating the
+         *            domain while rows are added.
+         * @return this
+         */
         Builder withInitializedDomain(final boolean initDomain);
 
-        Builder setRowKeyDuplicateCheck(final boolean enableDuplicateChecking);
+        /**
+         * Whether row key duplicate checking is turned on or off. Default is <code>true</code>, unless set by
+         * {@link KNIMEConstants#PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK system property}. This property is usually
+         * set when copyng (parts of) an input table or when uniqueness can be guaranteed otherwise.
+         *
+         * @param enableCheckDuplicateRowKeys Whether to enable this property.
+         * @return this
+         */
+        Builder withCheckDuplicateRowKeys(final boolean enableCheckDuplicateRowKeys);
 
-        Builder setDomainUpdate(final boolean enableDomainUpdate);
+        /**
+         * Whether the columns' domain should be updated while rows are added. Default is <code>true</code> but
+         * can be disabled by this method, e.g. when (parts of) an input table are copied to the output.
+         *
+         * @param enableDomainUpdate This property.
+         * @return this
+         */
+        Builder withDomainUpdate(final boolean enableDomainUpdate);
 
         DataContainerSettings build();
     }
@@ -224,7 +247,7 @@ public final class DataContainerSettings {
         /** The {@link BufferSettings}. */
         private BufferSettings m_bufferSettings = BufferSettings.getDefault();
 
-        private boolean m_enableDuplicateChecking;
+        private boolean m_enableCheckDuplicateRowKeys;
 
         private boolean m_enableDomainUpdate;
 
@@ -244,6 +267,8 @@ public final class DataContainerSettings {
             m_bufferSettings = settings.m_bufferSettings;
             m_enableRowKeys = settings.m_enableRowKeys;
             m_forceCopyOfBlobs = settings.m_forceCopyOfBlobs;
+            m_enableCheckDuplicateRowKeys = settings.m_enableCheckDuplicateRowKeys;
+            m_enableDomainUpdate = settings.m_enableDomainUpdate;
         }
 
         @Override
@@ -309,13 +334,13 @@ public final class DataContainerSettings {
         }
 
         @Override
-        public BuilderImpl setRowKeyDuplicateCheck(final boolean enableDuplicateChecking) {
-            m_enableDuplicateChecking = enableDuplicateChecking;
+        public BuilderImpl withCheckDuplicateRowKeys(final boolean enableCheckDuplicateRowKeys) {
+            m_enableCheckDuplicateRowKeys = enableCheckDuplicateRowKeys;
             return this;
         }
 
         @Override
-        public BuilderImpl setDomainUpdate(final boolean enableDomainUpdate) {
+        public BuilderImpl withDomainUpdate(final boolean enableDomainUpdate) {
             m_enableDomainUpdate = enableDomainUpdate;
             return this;
         }
@@ -366,6 +391,12 @@ public final class DataContainerSettings {
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
 
+    /** If to perform row key duplicate checking while creating tables. */
+    private boolean m_enableCheckDuplicateRowKeys;
+
+    /** If to update domain while rows are added. */
+    private boolean m_enableDomainUpdate;
+
     private DataContainerSettings() {
         m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
         m_tableDomainCreatorFunction = DataTableDomainCreator::new;
@@ -386,6 +417,8 @@ public final class DataContainerSettings {
         m_forceCopyOfBlobs = initForceCopyOfBlobs();
         m_enableRowKeys = initEnableRowKeys();
         m_bufferSettings = BufferSettings.getDefault();
+        m_enableCheckDuplicateRowKeys = initRowKeyDuplicateCheck();
+        m_enableDomainUpdate = true;
     }
 
     private DataContainerSettings(final BuilderImpl builder) {
@@ -402,6 +435,8 @@ public final class DataContainerSettings {
         m_bufferSettings = builder.m_bufferSettings;
         m_forceCopyOfBlobs = builder.m_forceCopyOfBlobs;
         m_enableRowKeys = builder.m_enableRowKeys;
+        m_enableCheckDuplicateRowKeys = builder.m_enableCheckDuplicateRowKeys;
+        m_enableDomainUpdate = builder.m_enableDomainUpdate;
     }
 
     /**
@@ -439,7 +474,9 @@ public final class DataContainerSettings {
     }
 
     /**
-     * New builder with defaults (inherited from code, system properties, installation).
+     * New builder with defaults (inherited from code, system properties, installation). See the various methods in the
+     * the returned class for further configuration.
+     *
      * @return a new builder instance.
      * @since 5.3
      */
@@ -508,7 +545,7 @@ public final class DataContainerSettings {
      * @return the initialize domain flag
      * @noreference This method is not intended to be referenced by clients.
      */
-    public boolean getInitializeDomain() {
+    public boolean isInitializeDomain() {
         return m_initDomain;
     }
 
@@ -520,6 +557,28 @@ public final class DataContainerSettings {
      */
     public int getMaxDomainValues() {
         return m_maxDomainValues;
+    }
+
+    /**
+     * Row key duplicate checking property, see {@link Builder#withCheckDuplicateRowKeys(boolean)}.
+     *
+     * @return the enableDuplicateChecking property
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    public boolean isCheckDuplicateRowKeys() {
+        return m_enableCheckDuplicateRowKeys;
+    }
+
+    /**
+     * Enable domain updates while table is created, see {@link Builder#withCheckDuplicateRowKeys(boolean)}.
+     *
+     * @return the enableDomainUpdate property.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    public boolean isEnableDomainUpdate() {
+        return m_enableDomainUpdate;
     }
 
     /**
@@ -623,6 +682,20 @@ public final class DataContainerSettings {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Whether row id duplicate checking is turned on/off by default wrt to sys props.
+     *
+     * @return row id checking property (default is true)
+     */
+    private static boolean initRowKeyDuplicateCheck() {
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK)) {
+            LOGGER.debugWithFormat("RowID duplicate checking is off; %s is set",
+                KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
+            return false;
+        }
+        return true;
     }
 
     /**

@@ -35,6 +35,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainerSettings.java" type="org.knime.core.data.container.DataContainerSettings">
+        <filter comment="renamed non-api method (as per previous @noreference)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
+                <message_argument value="getInitializeDomain()"/>
+            </message_arguments>
+        </filter>
         <filter comment="refactored non-public api (@noreference on class before)" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainerSettings"/>

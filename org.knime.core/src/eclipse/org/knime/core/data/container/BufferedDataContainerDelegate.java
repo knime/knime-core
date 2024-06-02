@@ -143,7 +143,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         final DataContainerSettings defaults = DataContainerSettings.getDefault();
         ASYNC_CACHE_SIZE = defaults.getRowBatchSize();
         SYNCHRONOUS_IO = defaults.isForceSequentialRowHandling();
-        INIT_DOMAIN = defaults.getInitializeDomain();
+        INIT_DOMAIN = defaults.isInitializeDomain();
         // see also {@link Executors#fixedThradPool(ThreadFactory)}
         ASYNC_EXECUTORS = new ThreadPoolExecutor(defaults.getMaxContainerThreads(), defaults.getMaxContainerThreads(),
             10L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {

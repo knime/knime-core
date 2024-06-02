@@ -84,6 +84,8 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxContainerThreads());
         assertEquals("Wrong default (container threads)", Runtime.getRuntime().availableProcessors(),
             settings.getMaxThreadsPerContainer());
+        assertEquals("Default duplicate checking", true, settings.isCheckDuplicateRowKeys());
+        assertEquals("Default domain checking", true, settings.isEnableDomainUpdate());
         assertNotNull("Wrong default (duplicate checker)", settings.createDuplicateChecker());
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
 
@@ -116,10 +118,13 @@ public final class DataContainerSettingsTest extends TestCase {
         final int maxCellsInMemory = 35;
         final int maxPossibleValues = def.getMaxDomainValues() * -1;
         final boolean syncIO = !def.isForceSequentialRowHandling();
-        final boolean initDomain = !def.getInitializeDomain();
+        final boolean initDomain = !def.isInitializeDomain();
         final int maxThreadsPerDataContainer = def.getMaxThreadsPerContainer() * -1;
         final int maxContainerThreads = def.getMaxThreadsPerContainer() * -1;
         final BufferSettings bSettings = def.getBufferSettings();
+        final boolean enableDuplicateChecking = !def.isCheckDuplicateRowKeys();
+        final boolean enableDomainUpdate = !def.isEnableDomainUpdate();
+
 
         final DataContainerSettings settings = DataContainerSettings.internalBuilder()
             .withRowBatchSize(cacheSize)//
@@ -130,6 +135,8 @@ public final class DataContainerSettingsTest extends TestCase {
             .withMaxThreadsPerContainer(maxThreadsPerDataContainer)//
             .withBufferSettings(b -> b.withLRUCacheSize(def.getBufferSettings().getLRUCacheSize() * -1))//
             .withInitializedDomain(initDomain)//
+            .withCheckDuplicateRowKeys(enableDuplicateChecking)//
+            .withDomainUpdate(enableDomainUpdate)//
             .build();
 
         assertEquals("Modified settings created wrong cache size", cacheSize, settings.getRowBatchSize());
@@ -139,11 +146,14 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxDomainValues());
         assertEquals("Modified settings created wrong synchronous IO flag", syncIO, settings.isForceSequentialRowHandling());
         assertEquals("Modified settings created wrong initialize domain flag", initDomain,
-            settings.getInitializeDomain());
+            settings.isInitializeDomain());
         assertEquals("Modified settings created wrong maximum number of container threads", maxContainerThreads,
             settings.getMaxContainerThreads());
         assertEquals("Modified settings created wrong maximum number of threads per data container",
             maxThreadsPerDataContainer, settings.getMaxThreadsPerContainer());
+        assertEquals("domain update property is updated", enableDomainUpdate, settings.isEnableDomainUpdate());
+        assertEquals("row key duplicate check property is updated", enableDuplicateChecking,
+            settings.isCheckDuplicateRowKeys());
         assertNotEquals("Default settings has been modified (chache size)", def.getRowBatchSize(),
             settings.getRowBatchSize());
         assertNotEquals("Default settings has been modified (number of cells in memory)", def.getMaxCellsInMemory(),
@@ -156,8 +166,12 @@ public final class DataContainerSettingsTest extends TestCase {
             def.getMaxThreadsPerContainer(), settings.getMaxThreadsPerContainer());
         assertNotEquals("Default settings has been modified (synchronous IO flag)", def.isForceSequentialRowHandling(),
             settings.isForceSequentialRowHandling());
-        assertNotEquals("Default settings has been modified (initialize domain flag)", def.getInitializeDomain(),
-            settings.getInitializeDomain());
+        assertNotEquals("Default settings has been modified (initialize domain flag)", def.isInitializeDomain(),
+            settings.isInitializeDomain());
+        assertNotEquals("Default settings have been modified (domain update property)", def.isEnableDomainUpdate(),
+            settings.isEnableDomainUpdate());
+        assertNotEquals("Default settings have been modified (row key duplicate check property)",
+            def.isCheckDuplicateRowKeys(), settings.isCheckDuplicateRowKeys());
         assertEquals("Modified BufferSettings created wrong value", def.getBufferSettings(), bSettings);
     }
 

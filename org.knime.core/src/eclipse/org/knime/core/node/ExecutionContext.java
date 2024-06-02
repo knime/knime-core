@@ -802,13 +802,27 @@ public class ExecutionContext extends ExecutionMonitor {
      * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
      * @since 4.3
      */
-    @SuppressWarnings("resource")// the RowContainer is closed by the LocalRepoAwareRowContainer
     public final RowContainer createRowContainer(final DataTableSpec spec, final boolean initDomains) {
+        return createRowContainer(spec, DataContainerSettings.builder().withInitializedDomain(initDomains).build());
+    }
+
+    /**
+     * Create a new RowContainer for direct write access to storage. This method is analogous to
+     * {@link #createRowContainer(DataTableSpec)} but with additional options to customize/optimize the backend.
+     *
+     * @param spec the spec to create the RowContainer
+     * @param settings Non-null argument for further configuration, see {@link DataContainerSettings#builder()}.
+     * @return a new RowContainer with CustomKeys.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @implNote Highly experimental API added with KNIME AP 4.3 - Can change with future released of KNIME AP.
+     * @since 5.3
+     */
+    @SuppressWarnings("resource")// the RowContainer is closed by the LocalRepoAwareRowContainer
+    public final RowContainer createRowContainer(final DataTableSpec spec, final DataContainerSettings settings) {
         final TableBackend backend = WorkflowTableBackendSettings.getTableBackendForCurrentContext();
         LOGGER.debugWithFormat("Using Table Backend \"%s\".", backend.getClass().getSimpleName());
-        var container = backend.create(this, spec,
-            DataContainerSettings.builder().withInitializedDomain(initDomains).build(), getDataRepository(),
-            getFileStoreHandler());
+        var container = backend.create(this, spec, settings, getDataRepository(), getFileStoreHandler());
         return new LocalRepoAwareRowContainer(container, m_localTableRepository);
     }
 
