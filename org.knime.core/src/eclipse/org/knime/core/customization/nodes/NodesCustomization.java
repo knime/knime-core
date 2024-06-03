@@ -87,6 +87,11 @@ public final class NodesCustomization {
             .map(NodeFactory::getFactoryId) //
             .toList();
 
+    @JsonProperty("filter")
+    List<NodesFilter> getFilter() {
+        return m_filters;
+    }
+
     /**
      * Determines if a given node is allowed to be used (instantiated) based on the filter rules.
      *

@@ -64,6 +64,8 @@ final class PatternNodePredicate implements NodePredicate {
 
     private final List<Pattern> m_patterns;
 
+    private final boolean m_isRegex;
+
     /** Jackson deserializer. */
     @JsonCreator
     PatternNodePredicate(@JsonProperty("patterns") final List<String> patternStrings,
@@ -73,10 +75,17 @@ final class PatternNodePredicate implements NodePredicate {
                 Pattern.compile(patternString) : //
                 Pattern.compile(Pattern.quote(patternString))) //
             .toList();
+        m_isRegex = isRegex;
     }
 
+    @JsonProperty
     List<Pattern> getPatterns() {
         return m_patterns;
+    }
+
+    @JsonProperty
+    boolean isRegex() {
+        return m_isRegex;
     }
 
     @Override

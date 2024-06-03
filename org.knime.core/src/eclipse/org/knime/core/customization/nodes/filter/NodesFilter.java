@@ -153,14 +153,17 @@ public final class NodesFilter {
     /**
      * @return What this filter applies to, viewing or using.
      */
+    @JsonProperty
     public ScopeEnum getScope() {
         return m_scope;
     }
 
+    @JsonProperty
     RuleEnum getRule() {
         return m_rule;
     }
 
+    @JsonProperty
     NodePredicate getPredicate() {
         return m_predicate;
     }
