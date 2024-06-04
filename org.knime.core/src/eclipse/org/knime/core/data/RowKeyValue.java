@@ -59,4 +59,13 @@ public interface RowKeyValue {
      */
     String getString();
 
+    /**
+     * Returns an immutable {@link RowKey} containing string representation of this {@link RowKeyValue}.
+     *
+     * @return the immutable row key
+     * @since 5.3
+     */
+    default RowKey materializeRowKey() {
+        return new RowKey(getString());
+    }
 }

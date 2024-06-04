@@ -82,6 +82,11 @@ public final class RowKey implements RowKeyValue {
         return m_id;
     }
 
+    @Override
+    public RowKey materializeRowKey() {
+        return this;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
