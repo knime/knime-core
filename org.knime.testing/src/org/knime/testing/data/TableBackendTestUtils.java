@@ -62,10 +62,12 @@ import java.util.function.LongFunction;
 import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -73,6 +75,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -165,18 +170,22 @@ final class TableBackendTestUtils {
     }
 
     static BufferedDataTable createTable(final ExecutionContext exec, final Column... columns) throws Exception {
-        return createTable(exec, r -> "Row" + r, columns);
+        return createTableRowContainerAPI(exec, createSpec(columns), DataContainerSettings.getDefault(), r -> "Row" + r,
+            columns);
     }
 
-    static BufferedDataTable createTable(final ExecutionContext exec, final LongFunction<String> rowIDFactory,
-        final Column... columns) throws Exception {//NOSONAR
-        var tableSpec = createSpec(columns);
+    /** Creates a table using the RowContainer API (WriteValue). */
+    static BufferedDataTable createTableRowContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
+        final DataContainerSettings containerSettings,
+        final LongFunction<String> rowIDFactory, final Column... columns)
+        throws IOException {//NOSONAR
         var sizeSummary =
             Stream.of(columns).map(Column::dataFactory).mapToInt(ColumnDataFactory::size).summaryStatistics();
         assertEquals(sizeSummary.getMin(), sizeSummary.getMax(), "The sizes of all columns must match.");
         var size = sizeSummary.getMin();
         var columnDataFactories = Stream.of(columns).map(Column::dataFactory).toArray(ColumnDataFactory[]::new);
-        try (var rowContainer = exec.createRowContainer(tableSpec); var writeCursor = rowContainer.createCursor()) {
+        try (var rowContainer = exec.createRowContainer(tableSpec, containerSettings);
+                var writeCursor = rowContainer.createCursor()) {
             writeData(rowIDFactory, size, columnDataFactories, writeCursor, columns);
             return rowContainer.finish();
         }
@@ -205,6 +214,37 @@ final class TableBackendTestUtils {
         }
     }
 
+    /** Creates a table using the DataContainer API (DataRow). */
+    static BufferedDataTable createTableDataContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
+        final DataContainerSettings containerSettings, final LongFunction<String> rowIDFactory,
+        final Column... columns) {
+        var sizeSummary =
+                Stream.of(columns).map(Column::dataFactory).mapToInt(ColumnDataFactory::size).summaryStatistics();
+        assertEquals(sizeSummary.getMin(), sizeSummary.getMax(), "The sizes of all columns must match.");
+        var size = sizeSummary.getMin();
+        var columnDataFactories = Stream.of(columns).map(Column::dataFactory).toArray(ColumnDataFactory[]::new);
+        var container = exec.createDataContainer(tableSpec, containerSettings);
+        writeDataRow(rowIDFactory, size, columnDataFactories, container);
+        container.close();
+        return container.getTable();
+    }
+
+    private static void writeDataRow(final LongFunction<String> rowIDFactory, final int size,
+        final ColumnDataFactory[] columnDataFactories, final DataContainer container) {
+        for (long r = 0; r < size; r++) {
+            final long rowIndex = r;
+            final var cells = new DataCell[columnDataFactories.length];
+            for (var c = 0; c < cells.length; c++) {
+                if (columnDataFactories[c].isMissing(rowIndex)) {
+                    cells[c] = DataType.getMissingCell();
+                } else {
+                    cells[c] = columnDataFactories[c].getDataCellFunction().apply(r);
+                }
+            }
+            container.addRowToTable(new DefaultRow(rowIDFactory.apply(r), cells));
+        }
+    }
+
     static DataTableSpec createSpec(final Column... columns) {
         return new DataTableSpec(createColumnSpecs(columns));
     }
@@ -218,12 +258,36 @@ final class TableBackendTestUtils {
     record Column(String name, ColumnDataFactory dataFactory) {
 
         DataColumnSpec getSpec() {
-            return new DataColumnSpecCreator(name, dataFactory.type()).createSpec();
+            final DataColumnSpecCreator specCreator = new DataColumnSpecCreator(name, dataFactory.type());
+            final LongPredicate missingPredicate = dataFactory::isMissing;
+            DataCell[] possibleValues = null;
+            DataCell minValue = null;
+            DataCell maxValue = null;
+            if (dataFactory.type().equals(StringCell.TYPE)) {
+                possibleValues = LongStream.range(0, dataFactory.size()) //
+                        .filter(missingPredicate.negate()) //
+                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .toArray(DataCell[]::new);
+            }
+            if (dataFactory.type().equals(IntCell.TYPE) || dataFactory.type().equals(DoubleCell.TYPE)) {
+                minValue = LongStream.range(0, dataFactory.size()) //
+                        .filter(missingPredicate.negate()) //
+                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .min(dataFactory.type().getComparator()).orElse(null);
+                maxValue = LongStream.range(0, dataFactory.size()) //
+                        .filter(missingPredicate.negate()) //
+                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .max(dataFactory.type().getComparator()).orElse(null);
+            }
+            specCreator.setDomain(new DataColumnDomainCreator(possibleValues, minValue, maxValue).createDomain());
+            return specCreator.createSpec();
         }
     }
 
     interface DataFactory {
         LongConsumer createMapper(final WriteValue<?> writeValue);
+
+        LongFunction<DataCell> getDataCellFunction();
 
         int size();
     }
@@ -236,25 +300,24 @@ final class TableBackendTestUtils {
 
     }
 
-    interface RowIDDataFactory {
-
-    }
-
     private static final class ColumnDataFactoryImpl<W extends WriteValue<?>> implements ColumnDataFactory {
 
         private final DataType m_type;
 
         private final Function<W, LongConsumer> m_mapperFactory;
 
+        private final LongFunction<DataCell> m_cellFunction;
+
         private final int m_size;
 
         private final LongPredicate m_isMissingIndex;
 
         ColumnDataFactoryImpl(final LongPredicate isMissingIndex, final Function<W, LongConsumer> mapperFactory,
-            final int size, final DataType type) {
+            final LongFunction<DataCell> cellFunction, final int size, final DataType type) {
             m_type = type;
             m_size = size;
             m_mapperFactory = mapperFactory;
+            m_cellFunction = cellFunction;
             m_isMissingIndex = isMissingIndex;
         }
 
@@ -268,6 +331,11 @@ final class TableBackendTestUtils {
             @SuppressWarnings("unchecked")
             var casted = (W)writeValue;
             return m_mapperFactory.apply(casted);
+        }
+
+        @Override
+        public LongFunction<DataCell> getDataCellFunction() {
+            return m_cellFunction;
         }
 
         @Override
@@ -292,17 +360,19 @@ final class TableBackendTestUtils {
 
     static ColumnDataFactory intFactory(final Integer... values) {
         return new ColumnDataFactoryImpl<IntWriteValue>(nullIndicatesMissing(values),
-            w -> r -> w.setIntValue(values[(int)r]), values.length, IntCell.TYPE);
+            w -> r -> w.setIntValue(values[(int)r]), l -> new IntCell(values[(int)l]),  values.length, IntCell.TYPE);
     }
 
     static ColumnDataFactory stringFactory(final String... values) {
         return new ColumnDataFactoryImpl<StringWriteValue>(nullIndicatesMissing(values),
-            w -> r -> w.setStringValue(values[(int)r]), values.length, StringCell.TYPE);
+            w -> r -> w.setStringValue(values[(int)r]), l -> new StringCell(values[(int)l]), values.length,
+            StringCell.TYPE);
     }
 
     static ColumnDataFactory doubleFactory(final Double... values) {
         return new ColumnDataFactoryImpl<DoubleWriteValue>(nullIndicatesMissing(values),
-            w -> r -> w.setDoubleValue(values[(int)r]), values.length, DoubleCell.TYPE);
+            w -> r -> w.setDoubleValue(values[(int)r]), l -> new DoubleCell(values[(int)l]), values.length,
+            DoubleCell.TYPE);
     }
 
     static LongFunction<String> rowIDFactory(final String... values) {

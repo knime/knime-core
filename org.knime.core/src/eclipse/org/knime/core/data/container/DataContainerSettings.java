@@ -50,14 +50,13 @@ package org.knime.core.data.container;
 
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BufferSettings.BufferSettingsBuilder;
+import org.knime.core.data.v2.RowContainer;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
@@ -65,7 +64,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.DuplicateChecker;
 
 /**
- * Represents settings when creating {@link DataContainer}, usually as part of anode's execution. Node developers
+ * Represents settings when creating {@link DataContainer}, usually as part of a node's execution. Node developers
  * will only set settings exposed via {@link #builder()}. Another builder method, {@link #internalBuilder()}, is
  * solely used by the framework/benchmarks/test.
  *
@@ -174,6 +173,7 @@ public final class DataContainerSettings {
     }
 
     /**
+     * A builder allowing to set build and tuning properties for a {@link DataContainer} or {@link RowContainer}.
      * @since 5.3
      */
     public sealed interface Builder permits InternalBuilder {
@@ -207,6 +207,7 @@ public final class DataContainerSettings {
          */
         Builder withDomainUpdate(final boolean enableDomainUpdate);
 
+        /** @return A new settings object representing the currently set properties. */
         DataContainerSettings build();
     }
 
@@ -355,12 +356,6 @@ public final class DataContainerSettings {
 
     }
 
-    /** The function creating new instances of {@link DuplicateChecker}. */
-    private final Supplier<DuplicateChecker> m_duplicateCheckerCreator;
-
-    /** The function creating new instances of {@link DataTableDomainCreator}. */
-    private final BiFunction<DataTableSpec, Boolean, DataTableDomainCreator> m_tableDomainCreatorFunction;
-
     /** The maximum number of cells in memory, empty object to use defaults (special handling for BDT in nodes) */
     private final OptionalInt m_maxCellsInMemory;
 
@@ -398,8 +393,6 @@ public final class DataContainerSettings {
     private boolean m_enableDomainUpdate;
 
     private DataContainerSettings() {
-        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
-        m_tableDomainCreatorFunction = DataTableDomainCreator::new;
         m_maxCellsInMemory = OptionalInt.empty();
         m_sequentialIO = DEF_SEQUENTIAL_ROW_HANDLING;
         m_maxDataContainerThreads = initMaxDataContainerThreads();
@@ -422,8 +415,6 @@ public final class DataContainerSettings {
     }
 
     private DataContainerSettings(final BuilderImpl builder) {
-        m_duplicateCheckerCreator = () -> new DuplicateChecker(Integer.MAX_VALUE);
-        m_tableDomainCreatorFunction = DataTableDomainCreator::new;
         m_maxCellsInMemory = builder.m_maxCellsInMemory;
         // system property overwrites everything
         m_sequentialIO = DEF_SEQUENTIAL_ROW_HANDLING || builder.m_sequentialIO;
@@ -475,7 +466,8 @@ public final class DataContainerSettings {
 
     /**
      * New builder with defaults (inherited from code, system properties, installation). See the various methods in the
-     * the returned class for further configuration.
+     * the returned class for further configuration. The create settings object is then used in the
+     * {@link org.knime.core.node.ExecutionContext} to build a table.
      *
      * @return a new builder instance.
      * @since 5.3
@@ -582,27 +574,6 @@ public final class DataContainerSettings {
     }
 
     /**
-     * Creates a {@link DuplicateChecker} ensuring that the row keys are unique.
-     *
-     * @return a {@code DuplicateChecker}
-     */
-    DuplicateChecker createDuplicateChecker() {
-        return m_duplicateCheckerCreator.get();
-    }
-
-    /**
-     * Initializes a domain creator.
-     *
-     * @param spec the data table sepc
-     * @return an instance of {@link DataTableDomainCreator}
-     */
-    DataTableDomainCreator createDomainCreator(final DataTableSpec spec) {
-        final DataTableDomainCreator creator = m_tableDomainCreatorFunction.apply(spec, m_initDomain);
-        creator.setMaxPossibleValues(m_maxDomainValues);
-        return creator;
-    }
-
-    /**
      * @return <source>true</source> if blobs should be copied by this {@link DataContainer}.
      * @noreference This method is not intended to be referenced by clients.
      */
@@ -617,7 +588,6 @@ public final class DataContainerSettings {
     public boolean isEnableRowKeys() {
         return m_enableRowKeys;
     }
-
 
     /**
      * Returns the {@link BufferSettings}.

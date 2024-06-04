@@ -48,6 +48,8 @@
  */
 package org.knime.testing.data;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.TableBackend;
@@ -80,6 +82,8 @@ public abstract class AbstractTableBackendTest {
 
     private ConcatenationAPITester m_concatenationTester;
 
+    private ContainerAPITester m_containerTester;
+
 
     @BeforeEach
     void before() {
@@ -87,6 +91,7 @@ public abstract class AbstractTableBackendTest {
         m_appendTester = new AppendAPITester(getExecutionContext());
         m_specReplacerTester = new SpecReplacerAPITester(getExecutionContext());
         m_concatenationTester = new ConcatenationAPITester(getExecutionContext());
+        m_containerTester = new ContainerAPITester(getExecutionContext());
     }
 
     //////////////////////////////// ColumnRearranger ////////////////////////////////
@@ -249,5 +254,27 @@ public abstract class AbstractTableBackendTest {
     void testMissingColumnInOneTable() throws Exception {
         m_concatenationTester.testMissingColumnInFirstTable();
         m_concatenationTester.testMissingColumnInSecondTable();
+    }
+
+    ////////////////////// Container Tests  //////////////////////////
+
+    @Test
+    void testDuplicateIDRowContainer() {
+        m_containerTester.testDuplicateCheckingOnRowContainerAdd();
+    }
+
+    @Test
+    void testDuplicateIDDataContainer() {
+        m_containerTester.testDuplicateCheckingOnDataContainerAdd();
+    }
+
+    @Test
+    void testDomainUpdateRowContainerAPI() throws IOException {
+        m_containerTester.testDomainUpdateRowContainerAPI();
+    }
+
+    @Test
+    void testDomainUpdateDataContainerAPI() throws IOException {
+        m_containerTester.testDomainUpdateDataContainerAPI();
     }
 }

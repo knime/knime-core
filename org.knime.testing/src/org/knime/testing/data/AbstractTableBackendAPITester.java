@@ -50,6 +50,7 @@ package org.knime.testing.data;
 
 import java.util.function.LongFunction;
 
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 
@@ -77,6 +78,7 @@ abstract class AbstractTableBackendAPITester {//NOSONAR
 
     protected BufferedDataTable createTable(final LongFunction<String> rowIDFactory,
         final TableBackendTestUtils.Column... columns) throws Exception {
-        return TableBackendTestUtils.createTable(m_exec, rowIDFactory, columns);
+        return TableBackendTestUtils.createTableRowContainerAPI(m_exec, TableBackendTestUtils.createSpec(columns),
+            DataContainerSettings.getDefault(), rowIDFactory, columns);
     }
 }

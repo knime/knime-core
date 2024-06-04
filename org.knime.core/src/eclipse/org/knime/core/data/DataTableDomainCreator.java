@@ -100,6 +100,10 @@ public class DataTableDomainCreator {
 
     private final MetaDataCalculator[] m_metaDataCalculators;
 
+    /** A shortcut to avoid cell iteration in case no updates are needed. Long term we should change it to some
+     * index-based data structure so that only cells/columns that are of interest (as per constructor args). */
+    private final boolean m_isInEffect;
+
     /** The batch id. */
     private long m_batchId;
 
@@ -147,9 +151,11 @@ public class DataTableDomainCreator {
         m_maxPossibleValues = DataContainerSettings.getDefault().getMaxDomainValues();
         m_metaDataCalculators = new MetaDataCalculator[inputSpec.getNumColumns()];
 
+        boolean isInEffect = false;
         int i = 0;
         for (DataColumnSpec colSpec : inputSpec) {
             if (m_domainValuesColumnSelection.createDomain(colSpec)) {
+                isInEffect = true;
                 Set<DataCell> values = colSpec.getDomain().getValues();
 
                 if (!m_domainValuesColumnSelection.dropDomain(colSpec) && (values != null)) {
@@ -170,6 +176,7 @@ public class DataTableDomainCreator {
             }
 
             if (m_domainMinMaxColumnSelection.createDomain(colSpec)) {
+                isInEffect = true;
                 if (m_domainMinMaxColumnSelection.dropDomain(colSpec)) {
                     m_mins[i] = DataType.getMissingCell();
                     m_maxs[i] = DataType.getMissingCell();
@@ -193,10 +200,13 @@ public class DataTableDomainCreator {
                 m_maxsMissing[i] = m_maxs[i].isMissing();
             }
 
+            final boolean isCreateMetaData = metaDataColumnSelection.createDomain(colSpec);
             m_metaDataCalculators[i] = DataColumnMetaDataCalculators.createCalculator(colSpec,
-                metaDataColumnSelection.dropDomain(colSpec), metaDataColumnSelection.createDomain(colSpec));
+                metaDataColumnSelection.dropDomain(colSpec), isCreateMetaData);
+            isInEffect = isInEffect || isCreateMetaData;
             i++;
         }
+        m_isInEffect = isInEffect;
     }
 
     /**
@@ -240,6 +250,7 @@ public class DataTableDomainCreator {
         m_batchId = toCopy.m_batchId;
         m_metaDataCalculators = Arrays.stream(toCopy.m_metaDataCalculators).map(DataColumnMetaDataCalculators::copy)
             .toArray(MetaDataCalculator[]::new);
+        m_isInEffect = toCopy.m_isInEffect;
     }
 
     /**
@@ -392,11 +403,12 @@ public class DataTableDomainCreator {
         assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "
             + m_inputSpec.getNumColumns() + " vs. " + row.getNumCells();
 
-        int i = 0;
-        for (DataCell c : row) {
-            updateMinMax(i, c, m_mins, m_maxs, m_comparators);
-            m_metaDataCalculators[i].update(c);
-            i++;
+        if (m_isInEffect) {
+            for (int i = 0, length = row.getNumCells(); i < length; i++) {
+                DataCell c = row.getCell(i);
+                updateMinMax(i, c, m_mins, m_maxs, m_comparators);
+                m_metaDataCalculators[i].update(c);
+            }
         }
     }
 

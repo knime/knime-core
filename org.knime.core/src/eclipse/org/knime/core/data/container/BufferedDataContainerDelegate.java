@@ -71,13 +71,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DomainCreatorColumnSelection;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -174,7 +177,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
      * The current number of objects added to this container. In a synchronous case this number is equal to
      * m_buffer.size() but it may be larger if the data is written asynchronously.
      */
-    private int m_size;
+    private long m_size;
 
     /** The write throwable indicating that asynchronous writing failed. */
     private AtomicReference<Throwable> m_writeThrowable;
@@ -233,7 +236,7 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
     private int m_maxRowsInMemory;
 
     /** Holds the keys of the added rows to check for duplicates. */
-    private DuplicateChecker m_duplicateChecker;
+    private InternalDuplicateChecker m_duplicateChecker;
 
     /** The tablespec of the return table. */
     private DataTableSpec m_spec;
@@ -262,10 +265,11 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
     BufferedDataContainerDelegate(final DataTableSpec spec, final DataContainerSettings settings,
         final IDataRepository repository, final ILocalDataRepository localRepository,
         final IWriteFileStoreHandler fileStoreHandler) {
-        CheckUtils.checkArgumentNotNull(spec, "Spec must not be null!");
+        CheckUtils.checkArgumentNotNull(spec, "Spec must not be null");
         final int maxCellsInMemory = settings.getMaxCellsInMemory().orElse(DataContainerSettings.MAX_CELLS_IN_MEMORY);
         m_spec = spec;
-        m_duplicateChecker = settings.createDuplicateChecker();
+        m_duplicateChecker =
+            settings.isCheckDuplicateRowKeys() ? new WrappedDuplicateChecker() : NoopDuplicateChecker.INSTANCE;
         m_forceSequentialRowHandling = settings.isForceSequentialRowHandling();
         m_batchSize = settings.getRowBatchSize();
         m_memoryLowState = false;
@@ -285,15 +289,25 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
             m_numPendingBatches = new Semaphore(m_maxNumThreads);
             m_curBatch = new ArrayList<>(m_batchSize);
             m_pendingBatchIdx = new MutableLong();
-            m_writeThrowable = new AtomicReference<Throwable>();
+            m_writeThrowable = new AtomicReference<>();
             m_curBatchIdx = 0;
         }
-        m_domainCreator = settings.createDomainCreator(m_spec);
+        final boolean isInitDomain = settings.isInitializeDomain();
+        final boolean isUpdateDomain = settings.isEnableDomainUpdate();
+        m_domainCreator = new DataTableDomainCreator(spec,
+            DomainCreatorColumnSelection.create(c -> !isInitDomain,
+                c -> isUpdateDomain && c.getType().isCompatible(NominalValue.class)),
+            DomainCreatorColumnSelection.create(c -> !isInitDomain,
+                c -> isUpdateDomain && c.getType().isCompatible(BoundedValue.class)),
+            DomainCreatorColumnSelection.create(c -> !isInitDomain, c -> isUpdateDomain));
+
+        m_domainCreator.setMaxPossibleValues(settings.getMaxDomainValues());
         m_size = 0;
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        m_bufferCreator = settings.isEnableRowKeys() ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
+        m_bufferCreator =
+            settings.isEnableRowKeys() ? new BufferCreator(settings.getBufferSettings()) : new NoKeyBufferCreator();
         m_forceCopyOfBlobs = settings.isForceCopyOfBlobs();
         m_repository = repository;
         m_localRepository = localRepository;
@@ -1049,4 +1063,51 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
             os.flush();
         }
     }
+
+    /** A duplicate checker whose implementation can be disabled. */
+    private sealed interface InternalDuplicateChecker {
+
+        void checkForDuplicates() throws DuplicateKeyException, IOException;
+
+        void flushIfNecessary() throws IOException;
+
+        void addKey(String string) throws DuplicateKeyException, IOException;
+
+        void clear();
+
+    }
+
+    /** A "real" duplicate checker whose implementation is all in the super class. */
+    private static final class WrappedDuplicateChecker extends DuplicateChecker implements InternalDuplicateChecker {
+
+        WrappedDuplicateChecker() {
+            super(Integer.MAX_VALUE);
+        }
+
+    }
+
+    /** A "noop" duplicate checker ignoring all invocations. */
+    @SuppressWarnings("java:S1186")
+    private static final class NoopDuplicateChecker implements InternalDuplicateChecker {
+
+        static final NoopDuplicateChecker INSTANCE = new NoopDuplicateChecker();
+
+        @Override
+        public void checkForDuplicates() {
+        }
+
+        @Override
+        public void addKey(final String string) {
+        }
+
+        @Override
+        public void clear() {
+        }
+
+        @Override
+        public void flushIfNecessary() {
+        }
+
+    }
+
 }

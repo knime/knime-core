@@ -86,7 +86,6 @@ public final class DataContainerSettingsTest extends TestCase {
             settings.getMaxThreadsPerContainer());
         assertEquals("Default duplicate checking", true, settings.isCheckDuplicateRowKeys());
         assertEquals("Default domain checking", true, settings.isEnableDomainUpdate());
-        assertNotNull("Wrong default (duplicate checker)", settings.createDuplicateChecker());
         assertNotNull("Wrong default (BufferSettings are null)", settings.getBufferSettings());
 
         assertTrue(
