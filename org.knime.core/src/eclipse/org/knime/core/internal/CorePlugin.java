@@ -67,6 +67,7 @@ import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.auth.DelegatingAuthenticator;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.knime.core.util.proxy.ProxySelectorAdapter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -180,6 +181,7 @@ public class CorePlugin implements BundleActivator {
         context.addServiceListener(event -> {
             if (event.getType() == ServiceEvent.REGISTERED) {
                 DelegatingAuthenticator.installAuthenticators();
+                ProxySelectorAdapter.installProxySelector();
             }
         }, String.format("(%s=org.eclipse.core.net.proxy.IProxyService)", Constants.OBJECTCLASS));
 
