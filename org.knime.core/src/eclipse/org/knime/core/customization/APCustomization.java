@@ -58,8 +58,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Represents the customization settings for the KNIME AP, currently only determining which nodes are allowed for
- * use and listing in the node repository.
+ * Represents the customization settings for the KNIME AP, currently only determining which nodes are allowed for use
+ * and listing in the node repository.
  *
  * Instances of this class are not created directly, only restored from yaml that looks similar to this:
  *
@@ -90,12 +90,15 @@ public final class APCustomization {
     /**
      * Default (no) customization.
      */
-    public static final APCustomization DEFAULT =
-        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
+    public static final APCustomization DEFAULT = new APCustomization(NodesCustomization.DEFAULT,
+        UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
 
     private final NodesCustomization m_nodesCustomization;
+
     private final UICustomization m_uiCustomization;
+
     private final WorkflowCustomization m_workflowCustomization;
+
     private final KAICustomization m_kaiCustomization;
 
     /**
@@ -103,9 +106,9 @@ public final class APCustomization {
      */
     @JsonCreator
     APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
-                    @JsonProperty("ui") final UICustomization uiCustomization,
-                    @JsonProperty("workflow") final WorkflowCustomization workflowCustomization,
-                    @JsonProperty("kai") final KAICustomization kaiCustomization) {
+        @JsonProperty("ui") final UICustomization uiCustomization,
+        @JsonProperty("workflow") final WorkflowCustomization workflowCustomization,
+        @JsonProperty("kai") final KAICustomization kaiCustomization) {
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
         m_workflowCustomization = Objects.requireNonNullElse(workflowCustomization, WorkflowCustomization.DEFAULT);
