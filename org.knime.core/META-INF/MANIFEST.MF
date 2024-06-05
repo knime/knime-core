@@ -10,6 +10,7 @@ Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: log4j,
  org.knime.core,
  org.knime.core.customization,
+ org.knime.core.customization.kai,
  org.knime.core.customization.nodes,
  org.knime.core.customization.ui,
  org.knime.core.customization.ui.actions,

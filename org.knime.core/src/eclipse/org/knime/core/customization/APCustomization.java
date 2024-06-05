@@ -49,6 +49,7 @@ package org.knime.core.customization;
 
 import java.util.Objects;
 
+import org.knime.core.customization.kai.KAICustomization;
 import org.knime.core.customization.nodes.NodesCustomization;
 import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.workflow.WorkflowCustomization;
@@ -90,11 +91,12 @@ public final class APCustomization {
      * Default (no) customization.
      */
     public static final APCustomization DEFAULT =
-        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT);
+        new APCustomization(NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
 
     private final NodesCustomization m_nodesCustomization;
     private final UICustomization m_uiCustomization;
     private final WorkflowCustomization m_workflowCustomization;
+    private final KAICustomization m_kaiCustomization;
 
     /**
      * Only used for deserialization.
@@ -102,10 +104,12 @@ public final class APCustomization {
     @JsonCreator
     APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
                     @JsonProperty("ui") final UICustomization uiCustomization,
-                    @JsonProperty("workflow") final WorkflowCustomization workflowCustomization) {
+                    @JsonProperty("workflow") final WorkflowCustomization workflowCustomization,
+                    @JsonProperty("kai") final KAICustomization kaiCustomization) {
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
         m_workflowCustomization = Objects.requireNonNullElse(workflowCustomization, WorkflowCustomization.DEFAULT);
+        m_kaiCustomization = Objects.requireNonNullElse(kaiCustomization, KAICustomization.DEFAULT);
     }
 
     /**
@@ -127,6 +131,13 @@ public final class APCustomization {
      */
     public WorkflowCustomization workflow() {
         return m_workflowCustomization;
+    }
+
+    /**
+     * @return customization of K-AI
+     */
+    public KAICustomization kai() {
+        return m_kaiCustomization;
     }
 
     @Override
