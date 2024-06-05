@@ -337,13 +337,9 @@ public final class KNIMEConstants {
      * @since 2.8 */
     public static final String PROPERTY_DATABASE_CONCURRENCY = "knime.database.enable.concurrency";
 
-    /**
-     * If <code>true</code>, nodes using passwords as part of their configuration (e.g. DB connection or SendEmail) will
+    /** If <code>true</code>, nodes using passwords as part of their configuration (e.g. DB connection or SendEmail) will
      * not store the password as part of the workflow on disc. Instead a null value is stored, which will cause the
-     * node's configuration to be incorrect (but valid) after the workflow is restored from disc. Note, as of version
-     * 5.3, this setting can also be set via AP customization (and delivered via profile configuration). Passwords are
-     * then not saved if either setting is set, this property or the corresponding value in the customization.
-     *
+     * node's configuration to be incorrect (but valid) after the workflow is restored from disc.
      * @since 4.3
      */
     // added with AP-15442
