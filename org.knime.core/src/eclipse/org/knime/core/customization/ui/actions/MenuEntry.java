@@ -57,6 +57,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Represents a menu entry with a name and a link.
  *
  * @author Bernd Wiswedel
+ * @since 5.3
  */
 public final class MenuEntry {
 
