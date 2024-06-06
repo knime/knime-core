@@ -78,7 +78,7 @@ abstract class AbstractTableBackendAPITester {//NOSONAR
 
     protected BufferedDataTable createTable(final LongFunction<String> rowIDFactory,
         final TableBackendTestUtils.Column... columns) throws Exception {
-        return TableBackendTestUtils.createTableRowContainerAPI(m_exec, TableBackendTestUtils.createSpec(columns),
+        return TableBackendTestUtils.createTableViaRowContainerAPI(m_exec, TableBackendTestUtils.createSpec(columns),
             DataContainerSettings.getDefault(), rowIDFactory, columns);
     }
 }

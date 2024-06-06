@@ -170,12 +170,12 @@ final class TableBackendTestUtils {
     }
 
     static BufferedDataTable createTable(final ExecutionContext exec, final Column... columns) throws Exception {
-        return createTableRowContainerAPI(exec, createSpec(columns), DataContainerSettings.getDefault(), r -> "Row" + r,
+        return createTableViaRowContainerAPI(exec, createSpec(columns), DataContainerSettings.getDefault(), r -> "Row" + r,
             columns);
     }
 
     /** Creates a table using the RowContainer API (WriteValue). */
-    static BufferedDataTable createTableRowContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
+    static BufferedDataTable createTableViaRowContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
         final DataContainerSettings containerSettings,
         final LongFunction<String> rowIDFactory, final Column... columns)
         throws IOException {//NOSONAR
@@ -215,7 +215,7 @@ final class TableBackendTestUtils {
     }
 
     /** Creates a table using the DataContainer API (DataRow). */
-    static BufferedDataTable createTableDataContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
+    static BufferedDataTable createTableViaDataContainerAPI(final ExecutionContext exec, final DataTableSpec tableSpec,
         final DataContainerSettings containerSettings, final LongFunction<String> rowIDFactory,
         final Column... columns) {
         var sizeSummary =
@@ -238,7 +238,7 @@ final class TableBackendTestUtils {
                 if (columnDataFactories[c].isMissing(rowIndex)) {
                     cells[c] = DataType.getMissingCell();
                 } else {
-                    cells[c] = columnDataFactories[c].getDataCellFunction().apply(r);
+                    cells[c] = columnDataFactories[c].getDataCellFactory().apply(r);
                 }
             }
             container.addRowToTable(new DefaultRow(rowIDFactory.apply(r), cells));
@@ -266,17 +266,17 @@ final class TableBackendTestUtils {
             if (dataFactory.type().equals(StringCell.TYPE)) {
                 possibleValues = LongStream.range(0, dataFactory.size()) //
                         .filter(missingPredicate.negate()) //
-                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .mapToObj(l -> dataFactory.getDataCellFactory().apply(l)) //
                         .toArray(DataCell[]::new);
             }
             if (dataFactory.type().equals(IntCell.TYPE) || dataFactory.type().equals(DoubleCell.TYPE)) {
                 minValue = LongStream.range(0, dataFactory.size()) //
                         .filter(missingPredicate.negate()) //
-                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .mapToObj(l -> dataFactory.getDataCellFactory().apply(l)) //
                         .min(dataFactory.type().getComparator()).orElse(null);
                 maxValue = LongStream.range(0, dataFactory.size()) //
                         .filter(missingPredicate.negate()) //
-                        .mapToObj(l -> dataFactory.getDataCellFunction().apply(l)) //
+                        .mapToObj(l -> dataFactory.getDataCellFactory().apply(l)) //
                         .max(dataFactory.type().getComparator()).orElse(null);
             }
             specCreator.setDomain(new DataColumnDomainCreator(possibleValues, minValue, maxValue).createDomain());
@@ -287,7 +287,7 @@ final class TableBackendTestUtils {
     interface DataFactory {
         LongConsumer createMapper(final WriteValue<?> writeValue);
 
-        LongFunction<DataCell> getDataCellFunction();
+        LongFunction<DataCell> getDataCellFactory();
 
         int size();
     }
@@ -334,7 +334,7 @@ final class TableBackendTestUtils {
         }
 
         @Override
-        public LongFunction<DataCell> getDataCellFunction() {
+        public LongFunction<DataCell> getDataCellFactory() {
             return m_cellFunction;
         }
 

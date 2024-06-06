@@ -191,7 +191,7 @@ public final class DataContainerSettings {
         /**
          * Whether row key duplicate checking is turned on or off. Default is <code>true</code>, unless set by
          * {@link KNIMEConstants#PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK system property}. This property is usually
-         * set when copyng (parts of) an input table or when uniqueness can be guaranteed otherwise.
+         * set when copying (parts of) an input table or when uniqueness can be guaranteed otherwise.
          *
          * @param enableCheckDuplicateRowKeys Whether to enable this property.
          * @return this
@@ -386,7 +386,7 @@ public final class DataContainerSettings {
     /** The {@link BufferSettings}. */
     private final BufferSettings m_bufferSettings;
 
-    /** If to perform row key duplicate checking while creating tables. */
+    /** Whether perform row key duplicate checking while creating tables. */
     private boolean m_enableCheckDuplicateRowKeys;
 
     /** If to update domain while rows are added. */

@@ -196,7 +196,7 @@ public class DataContainer implements RowAppender, RowFlushable {
      * Opens the container so that rows can be added by <code>addRowToTable(DataRow)</code>.
      *
      * @param spec Table spec of the final table. Rows that are added to the container must comply with this spec.
-     * @param settings container settings, to be created via its {@linkpalin DataContainerSettings#builder() builder}.
+     * @param settings container settings, to be created via its {@linkplain DataContainerSettings#builder() builder}.
      * @noreference This constructor is not intended to be referenced by clients.
      */
     public DataContainer(final DataTableSpec spec, final DataContainerSettings settings) {

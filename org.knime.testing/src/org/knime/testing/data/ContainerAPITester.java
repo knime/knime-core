@@ -44,7 +44,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Mar 15, 2023 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   June 02, 2024 (Bernd Wiswedel, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.testing.data;
 
@@ -84,11 +84,11 @@ final class ContainerAPITester extends AbstractTableBackendAPITester {
     }
 
     void testDuplicateCheckingOnRowContainerAdd() {
-        testDuplicateChecking(TableBackendTestUtils::createTableRowContainerAPI);
+        testDuplicateChecking(TableBackendTestUtils::createTableViaRowContainerAPI);
     }
 
     void testDuplicateCheckingOnDataContainerAdd() {
-        testDuplicateChecking(TableBackendTestUtils::createTableDataContainerAPI);
+        testDuplicateChecking(TableBackendTestUtils::createTableViaDataContainerAPI);
     }
 
     private void testDuplicateChecking(final TableCreateMethod createMethod) {
@@ -107,11 +107,11 @@ final class ContainerAPITester extends AbstractTableBackendAPITester {
     }
 
     void testDomainUpdateRowContainerAPI() throws IOException {
-        testDomainUpdate(TableBackendTestUtils::createTableRowContainerAPI);
+        testDomainUpdate(TableBackendTestUtils::createTableViaRowContainerAPI);
     }
 
     void testDomainUpdateDataContainerAPI() throws IOException {
-        testDomainUpdate(TableBackendTestUtils::createTableDataContainerAPI);
+        testDomainUpdate(TableBackendTestUtils::createTableViaDataContainerAPI);
     }
 
     private void testDomainUpdate(final TableCreateMethod createMethod) throws IOException {
