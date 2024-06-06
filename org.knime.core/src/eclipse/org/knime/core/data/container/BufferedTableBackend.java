@@ -283,17 +283,16 @@ public final class BufferedTableBackend implements TableBackend {
 
         private void writeSlices(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
             final AutoCloseables<TableSliceWriter> writers) throws CanceledExecutionException {
-            var unionSliceFromFirstRow = Selection.all()
-                    .retainColumns(m_unionSlice.columns());
+            var unionSliceFromFirstRow = Selection.all().retainColumns(m_unionSlice.columns());
             if (!m_unionSlice.rows().allSelected()) {
                 unionSliceFromFirstRow = unionSliceFromFirstRow.retainRows(0, m_unionSlice.rows().toIndex());
             }
-            try (var readCursor = table.cursor(TableFilter.fromSelection(m_unionSlice))) {
+            try (var readCursor = table.cursor(TableFilter.fromSelection(unionSliceFromFirstRow, table))) {
                 long r = moveToSlice(readCursor, exec, numRows);
                 for (; readCursor.canForward(); r++) {
                     exec.checkCanceled();
                     var row = readCursor.forward();
-                    long rowIndex = r - 1;
+                    long rowIndex = r;
                     writers.stream().forEach(w -> w.writeRow(rowIndex, row));
                     exec.setProgress(r / numRows);
                 }
@@ -303,12 +302,12 @@ public final class BufferedTableBackend implements TableBackend {
         private long moveToSlice(final RowCursor cursor, final ExecutionMonitor progress, final double numRows)
                 throws CanceledExecutionException {
             var rows = m_unionSlice.rows();
-            if (rows.allSelected() || rows.fromIndex() == 0) {
+            if (rows.allSelected()) {
                 return 0;
             }
             var firstRow = rows.fromIndex();
-            long r = 1;
-            for (; r <= firstRow && cursor.canForward(); r++) {
+            long r = 0;
+            for (; r < firstRow && cursor.canForward(); r++) {
                 progress.checkCanceled();
                 cursor.forward();
                 progress.setProgress(r / numRows);
@@ -453,21 +452,9 @@ public final class BufferedTableBackend implements TableBackend {
         }
 
         boolean includeRow(final long rowIndex) {
-            return rowIndex >= startRow() && rowIndex < endRow();
-        }
-
-        /**
-         * inclusive
-         */
-        long startRow() {
-            return m_slice.rows().fromIndex();
-        }
-
-        /**
-         * exclusive
-         */
-        long endRow() {
-            return m_slice.rows().toIndex();
+            final RowRangeSelection rowSel = m_slice.rows();
+            // see javadoc of RowRangeSelection#retainRows(long, long): from < 0 ==> allSelected == true
+            return rowSel.allSelected() || (rowIndex >= rowSel.fromIndex() && rowIndex < rowSel.toIndex());
         }
 
     }

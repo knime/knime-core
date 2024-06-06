@@ -14,14 +14,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
-        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
-                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/container/BufferSettings.java" type="org.knime.core.data.container.BufferSettings">
         <filter comment="internal api (also tagged as such in 5.2 and before)" id="338792546">
             <message_arguments>
@@ -39,6 +31,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.BufferSettings"/>
                 <message_argument value="withOutputFormat(TableStoreFormat)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
+        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
+                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -127,6 +127,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.DataContainerSettings"/>
                 <message_argument value="withRowKeysEnabled(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/container/filter/TableFilter.java" type="org.knime.core.data.container.filter.TableFilter">
+        <filter comment="changed non-public api method signature" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.container.filter.TableFilter"/>
+                <message_argument value="fromSelection(Selection)"/>
             </message_arguments>
         </filter>
     </resource>

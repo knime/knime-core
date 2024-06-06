@@ -76,6 +76,8 @@ public abstract class AbstractTableBackendTest {
 
     private ColumnRearrangerAPITester m_rearrangerTester;
 
+    private SlicerAPITester m_slicerTester;
+
     private AppendAPITester m_appendTester;
 
     private SpecReplacerAPITester m_specReplacerTester;
@@ -88,6 +90,7 @@ public abstract class AbstractTableBackendTest {
     @BeforeEach
     void before() {
         m_rearrangerTester = new ColumnRearrangerAPITester(getExecutionContext());
+        m_slicerTester = new SlicerAPITester(getExecutionContext());
         m_appendTester = new AppendAPITester(getExecutionContext());
         m_specReplacerTester = new SpecReplacerAPITester(getExecutionContext());
         m_concatenationTester = new ConcatenationAPITester(getExecutionContext());
@@ -212,7 +215,7 @@ public abstract class AbstractTableBackendTest {
     }
 
     @Test
-    void testAppendMatchingIDsWithNonMatchingIDs() throws Exception {
+    void testAppendMatchingIDsWithNonMatchingIDs() {
         m_appendTester.testAppendMatchingIDsWithNonMatchingIDs();
     }
 
@@ -231,6 +234,18 @@ public abstract class AbstractTableBackendTest {
     @Test
     void testDowncastAfterUpcastToDataValue() throws Exception {
         m_specReplacerTester.testDowncastAfterUpcastToDataValue();
+    }
+
+    //////////////////////// Slicing //////////////////////////
+
+    @Test
+    void testSingleSlicing() throws Exception {
+        m_slicerTester.testSingleSlice();
+    }
+
+    @Test
+    void testMultiSlicing() throws Exception {
+        m_slicerTester.testMultiSlice();
     }
 
     //////////////////////// Concatenation //////////////////////////

@@ -59,6 +59,7 @@ import org.knime.core.data.container.storage.AbstractTableStoreReader;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.row.Selection;
+import org.knime.core.table.row.Selection.RowRangeSelection;
 
 /**
  * A class for specifying filters over {@link BufferedDataTable BufferedDataTables}. The filter may restrict which rows
@@ -197,9 +198,13 @@ public final class TableFilter {
      * Create a new {@link TableFilter} corresponding to the given {@link Selection}.
      *
      * @param selection the selected columns and row range
+     * @param table The table in order to extract/bound table dimensions. Unlike this {@code TableFilter} a
+     *            {@link Selection} allows row limits larger than the number of rows in the table and this argument is
+     *            used to constraint.
      * @return a new {@link TableFilter}
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public static TableFilter fromSelection(final Selection selection) {
+    public static TableFilter fromSelection(final Selection selection, final BufferedDataTable table) {
         final Builder builder = new TableFilter.Builder();
         if (!selection.columns().allSelected()) {
             builder.withMaterializeColumnIndices(IntStream.of(selection.columns().getSelected())//
@@ -207,8 +212,10 @@ public final class TableFilter {
                 .map(i -> i - 1)// adjust for the row key column
                 .toArray());
         }
-        if (!selection.rows().allSelected()) {
-            builder.withFromRowIndex(selection.rows().fromIndex()).withToRowIndex(selection.rows().toIndex() - 1);
+        final RowRangeSelection rowSel = selection.rows();
+        if (!rowSel.allSelected()) { // implies fromIndex >= 0
+            final var toIndexExcl = Math.min(rowSel.toIndex(), table.size());
+            builder.withFromRowIndex(rowSel.fromIndex()).withToRowIndex(toIndexExcl - 1);
         }
         return builder.build();
     }
