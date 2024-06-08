@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.knime.core.customization.kai.KAICustomization;
 import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.ui.actions.MenuEntry;
 import org.knime.core.customization.workflow.WorkflowCustomization;
@@ -151,5 +152,18 @@ public class APCustomizationTest {
 
         assertDoesNotThrow(() -> customization.workflow().toString());
         assertEquals(true, customization.workflow().isDisablePasswordSaving());
+    }
+
+    @Test
+    void testKaiCustomization() throws Exception {
+        String ymlInput = """
+                kai:
+                  suggestExtensions: true
+                """;
+
+        var customization = mapper.readValue(ymlInput, APCustomization.class);
+
+        assertEquals(KAICustomization.DEFAULT, customization.kai());
+        assertEquals(true, customization.kai().suggestExtensions());
     }
 }

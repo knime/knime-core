@@ -79,6 +79,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *       link: "https://help.company.com/knime"
  * workflow:
  *   disablePasswordSaving: true
+ * kai:
+ *   suggestExtensions: true
  * </pre>
  *
  * @since 5.3
