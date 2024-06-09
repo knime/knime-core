@@ -230,7 +230,7 @@ public final class DataTypeRegistry {
                     .filter(Objects::nonNull) //
                     .toList();
                 m_cellClassNameToImplementationOfCellClassName.put(cellClass, implementationCellClassList);
-            } catch (CoreException e) {
+            } catch (Throwable e) { // NOSONAR - 3rd party extension, see AP-21672
                 NodeLogger.getLogger(getClass())
                     .error("Could not create data cell factory '" + configElement.getAttribute(FACTORY_CLASS)
                         + "' for '" + cellClass + "' from plug-in '"
