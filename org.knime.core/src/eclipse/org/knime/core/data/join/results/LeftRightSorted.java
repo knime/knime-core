@@ -53,6 +53,7 @@ import java.util.EnumMap;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -121,10 +122,14 @@ public final class LeftRightSorted {
 
             // create working specs and output containers
             for (ResultType rt : ResultType.MATCHES_AND_OUTER) {
+                final var containerSettings = DataContainerSettings.builder().withCheckDuplicateRowKeys(
+                    !joinImplementation.getJoinSpecification().isRowKeyFactoryCreatesUniqueKeys()).build();
+
                 // add a long column to each output spec for storing the combined left and right row offset
                 DataTableSpec workingSpec = OrderedRow.withOffset(m_outputSpecs.get(rt));
                 m_workingSpecs.put(rt, workingSpec);
-                m_containers.put(rt, joinImplementation.getExecutionContext().createDataContainer(workingSpec));
+                m_containers.put(rt,
+                    joinImplementation.getExecutionContext().createDataContainer(workingSpec, containerSettings));
             }
 
         }
@@ -259,10 +264,13 @@ public final class LeftRightSorted {
 
         Combined(final JoinImplementation joinImplementation) {
             super(joinImplementation);
+            final var containerSettings = DataContainerSettings.builder().withCheckDuplicateRowKeys(
+                !joinImplementation.getJoinSpecification().isRowKeyFactoryCreatesUniqueKeys()).build();
 
             // add a long column to each output spec for storing the combined left and right row offset
             m_workingSpec = OrderedRow.withOffset(m_outputSpecs.get(ResultType.MATCHES));
-            m_singleTableContainer = joinImplementation.getExecutionContext().createDataContainer(m_workingSpec);
+            m_singleTableContainer =
+                joinImplementation.getExecutionContext().createDataContainer(m_workingSpec, containerSettings);
         }
 
         @Override

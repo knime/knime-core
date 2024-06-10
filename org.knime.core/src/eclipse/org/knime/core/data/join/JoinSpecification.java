@@ -211,6 +211,11 @@ public final class JoinSpecification {
     private final BiFunction<DataRow, DataRow, RowKey> m_rowKeyFactory;
 
     /**
+     * See {@link Builder#rowKeyFactory(BiFunction, boolean)}
+     */
+    private final boolean m_rowKeyFactoryCreatesUniqueKeys;
+
+    /**
      * See {@link Builder#columnNameDisambiguator(BiFunction)}
      */
     private final UnaryOperator<String> m_columnNameDisambiguator;
@@ -240,6 +245,7 @@ public final class JoinSpecification {
         this.m_settings[InputTable.RIGHT.ordinal()] = builder.m_rightSettings;
         this.m_retainMatched = builder.m_retainMatched;
         this.m_rowKeyFactory = builder.m_rowKeyFactory;
+        this.m_rowKeyFactoryCreatesUniqueKeys = builder.m_rowKeyFactoryCreatesUniqueKeys;
         this.m_outputRowOrder = builder.m_outputRowOrder;
         this.m_columnNameDisambiguator = builder.m_columnNameDisambiguator;
         this.m_mergeJoinColumns = builder.m_mergeJoinColumns;
@@ -762,6 +768,8 @@ public final class JoinSpecification {
 
         private BiFunction<DataRow, DataRow, RowKey> m_rowKeyFactory = createSequenceRowKeysFactory();
 
+        private boolean m_rowKeyFactoryCreatesUniqueKeys = false;
+
         private UnaryOperator<String> m_columnNameDisambiguator = s -> s.concat(" (#1)");
 
         /**
@@ -814,18 +822,45 @@ public final class JoinSpecification {
         /**
          *
          * @param rowKeyFactory the function used to create new row keys for rows in the join results. It has to have
-         *            the following properties.
+         *            the following properties:
          *            <ul>
-         *            <li>Given the row key of a row in the left table and a row in the right table, create a unique row
-         *            key for a row in the output table that joins both input rows.</li>
          *            <li>Either the left or right input row can be null in case of outer joins.</li>
+         *            <li>Ideally, the factory creates unique keys given a left and a right row. If duplicate keys are
+         *            encountered, table creation will fail.</li>
          *            </ul>
          * @return this for fluent API
+         * @see Builder#rowKeyFactory(BiFunction, boolean)
          * @see JoinSpecification#createConcatRowKeysFactory(String)
          * @see JoinSpecification#createSequenceRowKeysFactory()
+         * @see JoinSpecification#createRetainRowKeysFactory()
          */
         public Builder rowKeyFactory(final BiFunction<DataRow, DataRow, RowKey> rowKeyFactory) {
             this.m_rowKeyFactory = rowKeyFactory;
+            return this;
+        }
+
+        /**
+         *
+         * @param rowKeyFactory the function used to create new row keys for rows in the join results. It has to have
+         *            the following properties.
+         *            <ul>
+         *            <li>Either the left or right input row can be null in case of outer joins.</li>
+         *            <li>If the second parameter is {@code true}, the factory MUST create unique keys for all joined
+         *            rows in the output (i.e. for all row pairs from the input that will be joined together).</li>
+         *            </ul>
+         * @param createsUniqueKeys Flag whether this row key factory is guaranteed to create unique keys with the
+         *            current specifications. If {@code true}, duplicate checking for the output table may be skipped.
+         * @return this for fluent API
+         * @see Builder#rowKeyFactory(BiFunction)
+         * @see JoinSpecification#createConcatRowKeysFactory(String)
+         * @see JoinSpecification#createSequenceRowKeysFactory()
+         * @see JoinSpecification#createRetainRowKeysFactory()
+         * @since 5.3
+         */
+        public Builder rowKeyFactory(final BiFunction<DataRow, DataRow, RowKey> rowKeyFactory,
+            final boolean createsUniqueKeys) {
+            this.m_rowKeyFactory = rowKeyFactory;
+            this.m_rowKeyFactoryCreatesUniqueKeys = createsUniqueKeys;
             return this;
         }
 
@@ -991,6 +1026,14 @@ public final class JoinSpecification {
     }
 
     /**
+     * @return the second argument of {@link Builder#rowKeyFactory(BiFunction, boolean)}
+     * @since 5.3
+     */
+    public boolean isRowKeyFactoryCreatesUniqueKeys() {
+        return m_rowKeyFactoryCreatesUniqueKeys;
+    }
+
+    /**
      * @return {@link Builder#columnNameDisambiguator(UnaryOperator)}
      */
     public UnaryOperator<String> getColumnNameDisambiguator() {
@@ -1139,5 +1182,15 @@ public final class JoinSpecification {
                 return new RowKey(leftKey.concat(separator).concat(rightKey));
             }
         };
+    }
+
+    /**
+     * This must only be used of equality of keys is ensured for joined rows.
+     *
+     * @return a row key factory that outputs the key of one of the rows.
+     * @since 5.3
+     */
+    public static BiFunction<DataRow, DataRow, RowKey> createRetainRowKeysFactory() {
+        return (left, right) -> (left == null) ? right.getKey() : left.getKey();
     }
 }

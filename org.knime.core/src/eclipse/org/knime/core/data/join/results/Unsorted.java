@@ -51,6 +51,7 @@ package org.knime.core.data.join.results;
 import java.util.EnumMap;
 
 import org.knime.core.data.DataRow;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.join.JoinSpecification;
 import org.knime.core.data.join.JoinSpecification.InputTable;
 import org.knime.core.data.join.JoinSpecification.OutputRowOrder;
@@ -133,8 +134,11 @@ public final class Unsorted {
             super(joinImplementation);
             // create working specs and output containers
             for (ResultType rt : ResultType.MATCHES_AND_OUTER) {
-                m_splitOutputContainers.put(rt,
-                    joinImplementation.getExecutionContext().createDataContainer(m_outputSpecs.get(rt)));
+                final var containerSettings = DataContainerSettings.builder().withCheckDuplicateRowKeys(
+                    !joinImplementation.getJoinSpecification().isRowKeyFactoryCreatesUniqueKeys()).build();
+
+                m_splitOutputContainers.put(rt, joinImplementation.getExecutionContext()
+                    .createDataContainer(m_outputSpecs.get(rt), containerSettings));
             }
         }
 
@@ -208,8 +212,11 @@ public final class Unsorted {
          */
         Combined(final JoinImplementation joinImplementation) {
             super(joinImplementation);
-            m_singleTableContainer =
-                joinImplementation.getExecutionContext().createDataContainer(m_outputSpecs.get(ResultType.MATCHES));
+            final var containerSettings = DataContainerSettings.builder().withCheckDuplicateRowKeys(
+                !joinImplementation.getJoinSpecification().isRowKeyFactoryCreatesUniqueKeys()).build();
+
+            m_singleTableContainer = joinImplementation.getExecutionContext()
+                .createDataContainer(m_outputSpecs.get(ResultType.MATCHES), containerSettings);
         }
 
         @Override
