@@ -78,12 +78,12 @@ final class PatternNodePredicate implements NodePredicate {
         m_isRegex = isRegex;
     }
 
-    @JsonProperty
+    @JsonProperty("patterns")
     List<Pattern> getPatterns() {
         return m_patterns;
     }
 
-    @JsonProperty
+    @JsonProperty("isRegex")
     boolean isRegex() {
         return m_isRegex;
     }

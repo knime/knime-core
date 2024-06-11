@@ -48,6 +48,8 @@
  */
 package org.knime.core.customization.kai;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Represents customization settings for K-AI.
  *
@@ -56,7 +58,7 @@ package org.knime.core.customization.kai;
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
  */
-public record KAICustomization(boolean suggestExtensions) {
+public record KAICustomization(@JsonProperty("suggestExtensions") boolean suggestExtensions) {
 
     /**
      * Default customization.
