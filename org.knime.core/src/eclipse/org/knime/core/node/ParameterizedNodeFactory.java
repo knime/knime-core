@@ -49,8 +49,15 @@
 package org.knime.core.node;
 
 /**
- * NodeFactories that can create multiple nodes have to implement this interface because the factory-class-name is not
- * sufficient to identify a single node since it's being used for multiple nodes.
+ * NodeFactories that can create multiple nodes must implement this interface because the factory-classname alone
+ * is not sufficient to uniquely identify a single node since it's being used for multiple nodes.
+ * Implementing this interface has two important effects:
+ * <ul>
+ *   <li>It ensures that the node factories will be initialized with the appropriate parameters via
+ *   {@link NodeFactory#loadAdditionalFactorySettings}.</li>
+ *   <li>It requires specifying a ‘factory id uniquifier’ to guarantee that the derived factory id is globally unique
+ *   and stable, even if the node name changes.</li>
+ * </ul>
  *
  * @author Jonas Klotz
  * @since 5.3

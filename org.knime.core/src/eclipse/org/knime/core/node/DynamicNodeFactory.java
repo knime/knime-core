@@ -73,7 +73,7 @@ import org.knime.node2012.KnimeNodeDocument;
  */
 @Deprecated(since = "5.3")
 public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactory<T>
-    implements BundleNameProvider, ParameterizedNodeFactory {
+    implements ParameterizedNodeFactory {
 
     /**
      * Creates a new dynamic node factory.
@@ -182,11 +182,6 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
     @Override
     public String getFactoryIdUniquifier() {
         return null;
-    }
-
-    @Override
-    public Optional<String> getBundleName2() {
-        return getBundleName();
     }
 
     /**

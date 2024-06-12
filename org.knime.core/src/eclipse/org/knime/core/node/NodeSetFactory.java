@@ -68,11 +68,14 @@ public interface NodeSetFactory {
     public Collection<String> getNodeFactoryIds();
 
     /**
-     * NodeFactories that are able to create multiple nodes have to implement the interface
-     * {@link ParameterizedNodeFactory} because the factory-classname is not sufficient to uniquely identify the
-     * nodes otherwise.
+     * NodeFactories that are capable of creating multiple nodes must implement the interface
+     * {@link ParameterizedNodeFactory}. This requirement exists because the factory classname alone is not sufficient
+     * to uniquely identify the nodes. Implementing this interface ensures that these node factories will be initialized
+     * with the respective parameters via {@link NodeFactory#loadAdditionalFactorySettings}. Furthermore, it is
+     * necessary to specify a ‘factory ID uniquifier’ to guarantee that the derived factory id is globally unique and
+     * stable, even if the node name changes.
      *
-     * @param id the id of the node factory
+     * @param id the unique identifier of the node factory
      * @return the node factory
      */
     public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(String id);

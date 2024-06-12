@@ -48,8 +48,6 @@
  */
 package org.knime.core.node;
 
-import java.util.Optional;
-
 /**
  * See {@link #getBundleName2()}.
  *
@@ -69,6 +67,6 @@ public interface BundleNameProvider {
      *
      * @return the bundle name or an empty optional if bundle name can not be provided
      */
-    Optional<String> getBundleName2();
+    String getBundleName();
 
 }

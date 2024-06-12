@@ -345,18 +345,26 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
         @SuppressWarnings("rawtypes")
         final Class<? extends NodeFactory> facClass = factory.getClass();
         Bundle bundle = null;
-        if (factory instanceof BundleNameProvider) {
-            @SuppressWarnings({"unchecked", "rawtypes"})
-            Optional<String> bundleName = ((BundleNameProvider)factory).getBundleName2();
-            if (bundleName.isPresent()) {
-                bundle = Platform.getBundle(bundleName.get());
-            }
+        Optional<String> bundleName = getBundleName(factory);
+
+        if (bundleName.isPresent()) {
+            bundle = Platform.getBundle(bundleName.get());
         }
         if (bundle == null) {
             bundle = OSGIHelper.getBundle(facClass);
         }
 
         return create(factory, nodeName, bundle);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Optional<String> getBundleName(final NodeFactory<? extends NodeModel> factory) {
+        if (factory instanceof BundleNameProvider bundleNameProvider) {
+            return Optional.of(bundleNameProvider.getBundleName());
+        } else if (factory instanceof DynamicNodeFactory<?> dynamicNodeFactory) {
+            return dynamicNodeFactory.getBundleName();
+        }
+        return Optional.empty();
     }
 
     /**
