@@ -64,7 +64,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.DynamicNodeFactory;
-import org.knime.core.node.FactoryIDUniquifierProvider;
+import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
@@ -211,7 +211,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
             var className = factory.getClass().getName();
             NodeSettings factorySettings = null;
             // We only save additional factory settings if the factory can create multiple nodes
-            if (factory instanceof FactoryIDUniquifierProvider) {
+            if (factory instanceof ParameterizedNodeFactory) {
                 factorySettings = new NodeSettings("settings");
                 try {
                     factory.saveAdditionalFactorySettings(factorySettings);

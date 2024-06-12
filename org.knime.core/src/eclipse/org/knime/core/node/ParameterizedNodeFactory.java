@@ -49,11 +49,24 @@
 package org.knime.core.node;
 
 /**
+ * NodeFactories that can create multiple nodes have to implement this interface because the factory-class-name is not
+ * sufficient to identify a single node since it's being used for multiple nodes.
  *
  * @author Jonas Klotz
  * @since 5.3
  */
-public interface FactoryIDUniquifierProvider {
+public interface ParameterizedNodeFactory {
+    /**
+     * Returns a string that globally uniquifies the factory id because the factory-class-name is not sufficient to
+     * identify a single node since it's being used for multiple nodes.
+     *
+     * The returned id-uniquifier must only be unique within the {@link NodeSetFactory} this node is part of. But it
+     * must always remain the same for a particular node as soon as the node has been released to users.
+     *
+     * @return the factory-id-uniquifier or {@code null} in which case the node-name is being used (which is not optimal
+     *         because it's not guaranteed to be stable)
+     * @since 5.3
+     */
     String getFactoryIdUniquifier();
 
 }

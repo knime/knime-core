@@ -68,11 +68,14 @@ public interface NodeSetFactory {
     public Collection<String> getNodeFactoryIds();
 
     /**
+     * NodeFactories that are able to create multiple nodes have to implement the interface
+     * {@link ParameterizedNodeFactory} because the factory-classname is not sufficient to uniquely identify the
+     * nodes otherwise.
+     *
      * @param id the id of the node factory
      * @return the node factory
      */
-    public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(
-            String id);
+    public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(String id);
 
     /**
      * @param id the id of the node factory

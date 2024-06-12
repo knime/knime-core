@@ -51,13 +51,13 @@ package org.knime.core.node;
 import java.util.Optional;
 
 /**
+ * See {@link #getBundleName2()}.
  *
  * @author Jonas Klotz
  * @since 5.3
  */
 public interface BundleNameProvider {
     /**
-     * Overriding this method is usually not necessary!
      *
      * The only use case is if a deriving class (e.g. part of plugin A) uses information provided by yet another plugin
      * B (i.e. plugin A has an extension point that is extended by plugin B). In consequence, in order for this node to
@@ -66,7 +66,6 @@ public interface BundleNameProvider {
      * provides the necessary bundle information of plugin B that is finally stored with the node (since plugin B
      * depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed, too).
      *
-     * If this method is not overridden, it will return the encapsulating bundle from this {@link NodeFactory}.
      *
      * @return the bundle name or an empty optional if bundle name can not be provided
      */

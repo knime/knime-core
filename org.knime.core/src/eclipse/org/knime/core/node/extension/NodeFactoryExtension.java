@@ -54,7 +54,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.FactoryIDUniquifierProvider;
+import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -200,7 +200,7 @@ public final class NodeFactoryExtension implements INodeFactoryExtension {
             @SuppressWarnings("unchecked")
             NodeFactory<? extends NodeModel> factory =
                 (NodeFactory<? extends NodeModel>)el.createExecutableExtension(FACTORY_CLASS_ATTRIBUTE);
-            if (factory instanceof FactoryIDUniquifierProvider) {
+            if (factory instanceof ParameterizedNodeFactory) {
                 throw new InvalidNodeFactoryExtensionException(
                     "Factory '" + m_factoryClassName + "'" + " can create multiple nodes, "
                     + "but is registered as normal node factory.");

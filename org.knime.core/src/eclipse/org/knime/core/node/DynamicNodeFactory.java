@@ -68,14 +68,12 @@ import org.knime.node2012.KnimeNodeDocument;
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
  * @param <T> the node model of the factory
  * @since 2.6
- * @deprecated implement {@link NodeFactory} directly instead and use the constructor
- *             {@link NodeFactory#NodeFactory(java.util.function.Supplier)} and implement
- *             {@link #saveAdditionalFactorySettings(org.knime.core.node.config.ConfigWO)} and
- *             {@link #loadAdditionalFactorySettings(ConfigRO)}
+ * @deprecated implement {@link BundleNameProvider} for the bundling functionality or
+ *             {@link ParameterizedNodeFactory} if the factory can create multiple nodes
  */
 @Deprecated(since = "5.3")
 public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactory<T>
-    implements BundleNameProvider, FactoryIDUniquifierProvider {
+    implements BundleNameProvider, ParameterizedNodeFactory {
 
     /**
      * Creates a new dynamic node factory.
@@ -126,10 +124,9 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
     }
 
     /**
-     * Calls {@link NodeFactory#createNodeDescription()}, which parses the corresponding xml file named after this
-     * factory class (same package). If that fails it logs it to the NodeLogger and returns an empty
+     * Calls {@link NodeFactory#createNodeDescription()}, which parses the corresponding xml file named after
+     * this factory class (same package). If that fails it logs it to the NodeLogger and returns an empty
      * {@link NoDescriptionProxy}.
-     *
      * @return The result of that call.
      * @since 2.10
      */
@@ -144,7 +141,6 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
 
     /**
      * {@inheritDoc}
-     *
      * @since 3.4
      */
     @Override
@@ -155,12 +151,13 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
     /**
      * Overriding this method is usually not necessary!
      *
-     * The only use case is if a deriving class (e.g. part of plugin A) uses information provided by yet another plugin
-     * B (i.e. plugin A has an extension point that is extended by plugin B). In consequence, in order for this node to
-     * work, plugin B needs to be available. However, if plugin B is not installed yet, the framework should be able to
-     * install it automatically based on the bundle information stored with the particular node. Thus, this method
-     * provides the necessary bundle information of plugin B that is finally stored with the node (since plugin B
-     * depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed, too).
+     * The only use case is if a deriving class (e.g. part of plugin A) uses information provided by yet another
+     * plugin B (i.e. plugin A has an extension point that is extended by plugin B). In consequence, in order for
+     * this node to work, plugin B needs to be available. However, if plugin B is not installed yet, the framework
+     * should be able to install it automatically based on the bundle information stored with the particular node. Thus,
+     * this method provides the necessary bundle information of plugin B that is finally stored with the node (since
+     * plugin B depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed,
+     * too).
      *
      * If this method is not overridden, it will return the encapsulating bundle from this {@link NodeFactory}.
      *

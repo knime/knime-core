@@ -67,7 +67,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.FactoryIDUniquifierProvider;
 import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
@@ -80,6 +79,7 @@ import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
@@ -561,8 +561,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         // instantiate the node factory but just by reading the node settings.
         var factory = node.getFactory();
 
-        if (factory instanceof FactoryIDUniquifierProvider factoryWithUniquifier) {
-            settings.addString("factory-id-uniquifier", factoryWithUniquifier.getFactoryIdUniquifier());
+        if (factory instanceof ParameterizedNodeFactory parameterizedNodeFactory) {
+            settings.addString("factory-id-uniquifier", parameterizedNodeFactory.getFactoryIdUniquifier());
 
         }
 
