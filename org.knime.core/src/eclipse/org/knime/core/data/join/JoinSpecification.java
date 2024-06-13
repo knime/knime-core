@@ -760,7 +760,7 @@ public final class JoinSpecification {
 
         private boolean m_retainMatched = true;
 
-        private boolean m_mergeJoinColumns = false;
+        private boolean m_mergeJoinColumns = false; // NOSONAR (assign for clarity)
 
         private DataCellComparisonMode m_dataCellComparisonMode = DataCellComparisonMode.STRICT;
 
@@ -768,7 +768,7 @@ public final class JoinSpecification {
 
         private BiFunction<DataRow, DataRow, RowKey> m_rowKeyFactory = createSequenceRowKeysFactory();
 
-        private boolean m_rowKeyFactoryCreatesUniqueKeys = false;
+        private boolean m_rowKeyFactoryCreatesUniqueKeys = false; // NOSONAR (assign for clarity)
 
         private UnaryOperator<String> m_columnNameDisambiguator = s -> s.concat(" (#1)");
 

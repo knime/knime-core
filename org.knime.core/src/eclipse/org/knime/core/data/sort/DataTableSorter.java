@@ -75,13 +75,17 @@ import org.knime.core.node.NodeLogger;
  */
 public class DataTableSorter extends AbstractTableSorter {
 
-    static final TableIOHandler TABLE_IO_HANDLER = new TableIOHandler() {
+    static final TableIOHandler TABLE_IO_HANDLER = new DataTableSorterTableIOHandler();
+
+    private static final class DataTableSorterTableIOHandler implements TableIOHandler {
         @Override
         public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
             DataContainerSettings settings = DataContainerSettings.internalBuilder() //
-                    .withInitializedDomain(true) //
-                    .withMaxCellsInMemory(forceOnDisk ? 0 : -1) // row backend; -1 = default
-                    .build();
+                .withInitializedDomain(true) // copy domain from input table
+                .withDomainUpdate(false) // no new values are added
+                .withCheckDuplicateRowKeys(false) // no new row keys are added
+                .withMaxCellsInMemory(forceOnDisk ? 0 : -1) // 0 cells in memory -> immediately write to disk
+                .build();
             return new DataContainer(spec, settings);
         }
 
@@ -91,13 +95,12 @@ public class DataTableSorter extends AbstractTableSorter {
             if (table instanceof ContainerTable ct) {
                 ct.clear();
             } else {
-                NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
-                        + "of \"" + table.getClass().getSimpleName()
-                        + "\" - expected \"" + ContainerTable.class.getSimpleName()
-                        + "\"");
+                NodeLogger.getLogger(getClass())
+                    .warn("Can't clear table instance " + "of \"" + table.getClass().getSimpleName()
+                        + "\" - expected \"" + ContainerTable.class.getSimpleName() + "\"");
             }
         }
-    };
+    }
 
     /**
      * Inits sorter on argument table with given row comparator.

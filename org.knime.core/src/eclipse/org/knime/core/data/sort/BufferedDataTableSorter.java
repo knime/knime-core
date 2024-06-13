@@ -56,6 +56,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -210,22 +211,36 @@ public class BufferedDataTableSorter extends AbstractTableSorter {
     }
 
     static TableIOHandler createTableIOHandler(final ExecutionContext ctx) {
-        return new TableIOHandler() {
-            @Override
-            public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
-                return ctx.createDataContainer(spec, true, forceOnDisk ? 0 : -1);
-            }
+        return new BufferedDataTableSorterTableIOHandler(ctx);
+    }
 
-            @Override
-            public void clearTable(final DataTable table) {
-                if (table instanceof BufferedDataTable bdt) {
-                    ctx.clearTable(bdt);
-                } else {
-                    NodeLogger.getLogger(getClass()).warnWithFormat(
-                        "Can't clear table instance of \"%s\" - expected \"%s\"",
-                        table.getClass().getSimpleName(), BufferedDataTable.class.getSimpleName());
-                }
+    private static final class BufferedDataTableSorterTableIOHandler implements TableIOHandler {
+        private final ExecutionContext m_ctx;
+
+        BufferedDataTableSorterTableIOHandler(final ExecutionContext ctx) {
+            m_ctx = ctx;
+        }
+
+        @Override
+        public DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
+            final var containerSettings = DataContainerSettings.internalBuilder()//
+                .withInitializedDomain(true) // copy domain
+                .withDomainUpdate(false) // no new values are added
+                .withCheckDuplicateRowKeys(false) // no new row keys are added
+                .withMaxCellsInMemory(forceOnDisk ? 0 : -1) // no cells in memory -> immediately write to disk
+                .build();
+            return m_ctx.createDataContainer(spec, containerSettings);
+        }
+
+        @Override
+        public void clearTable(final DataTable table) {
+            if (table instanceof BufferedDataTable bdt) {
+                m_ctx.clearTable(bdt);
+            } else {
+                NodeLogger.getLogger(getClass()).warnWithFormat(
+                    "Can't clear table instance of \"%s\" - expected \"%s\"", table.getClass().getSimpleName(),
+                    BufferedDataTable.class.getSimpleName());
             }
-        };
+        }
     }
 }
