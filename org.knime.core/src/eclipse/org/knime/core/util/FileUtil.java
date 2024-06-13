@@ -817,48 +817,71 @@ public final class FileUtil {
      * @throws IOException if it was not able to store the content
      */
     public static void unzip(final ZipInputStream zipStream, final File dir, final int stripLevel) throws IOException {
-        ZipEntry e;
-        byte[] buf = new byte[BUFF_SIZE];
-        String canonicalDestPath = dir.getCanonicalPath();
-        while ((e = zipStream.getNextEntry()) != null) {
+        try {
+            unzip(zipStream, dir, stripLevel, null);
+        } catch (final CanceledExecutionException ex) {
+            // can't happen because no execution monitor is supplied
+            throw new IllegalStateException(ex);
+        }
+    }
 
-            String name = e.getName().replace('\\', '/');
-            name = stripOff(name, stripLevel);
+    /**
+     * Stores the content of the zip stream in the specified directory. If a
+     * strip level larger than zero is specified, it strips off that many path
+     * segments from the zip entries. If the zip stream contains elements with
+     * less path segments, they all end up directly in the specified dir.
+     *
+     * @param zipStream must contain a zip archive. Is unpacked an stored in the specified directory.
+     * @param dir the destination directory the content of the zip stream is stored in
+     * @param stripLevel the number of path segments (directory levels) stripped off the file (and dir) names
+     *        in the zip archive.
+     * @param exec execution monitor to support cancellation
+     * @throws IOException if it was not able to store the content
+     * @throws CanceledExecutionException execution canceled
+     * @since 5.3
+     */
+    public static void unzip(final ZipInputStream zipStream, final File dir, final int stripLevel, // NOSONAR complexity
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        final var buffer = new byte[BUFF_SIZE];
+        final String canonicalDestPath = dir.getCanonicalPath();
+        try (zipStream) {
+            for (ZipEntry e; (e = zipStream.getNextEntry()) != null;) {
+                if (exec != null) {
+                    exec.checkCanceled();
+                }
 
-            if (e.isDirectory()) {
-                if (!name.isEmpty() && !name.equals("/")) {
-                    File d = new File(dir, name);
-                    if (!d.getCanonicalPath().startsWith(canonicalDestPath)) {
-                        throw new IOException("Path traversal attack detected, entry " + name
+                final String name = stripOff(e.getName().replace('\\', '/'), stripLevel);
+
+                if (e.isDirectory()) {
+                    if (!StringUtils.isEmpty(name) && !name.equals("/")) { // NOSONAR
+                        final var subDir = new File(dir, name);
+                        CheckUtils.check(subDir.getCanonicalPath().startsWith(canonicalDestPath), IOException::new,
+                            () -> "Path traversal attack detected, entry " + name
+                                + " will leave the destination directory");
+                        CheckUtils.check(subDir.mkdirs() || subDir.exists(), IOException::new,
+                            () -> "Could not create directory '" + subDir.getAbsolutePath() + "'.");
+                    }
+                } else {
+                    final var file = new File(dir, name);
+                    CheckUtils.check(file.getCanonicalPath().startsWith(canonicalDestPath), IOException::new,
+                        () -> "Path traversal attack detected, entry " + name
                             + " will leave the destination directory");
-                    }
 
-                    if (!d.mkdirs() && !d.exists()) {
-                        throw new IOException("Could not create directory '" + d.getAbsolutePath() + "'.");
-                    }
-                }
-            } else {
-                File f = new File(dir, name);
-                if (!f.getCanonicalPath().startsWith(canonicalDestPath)) {
-                    throw new IOException("Path traversal attack detected, entry " + name
-                        + " will leave the destination directory");
-                }
+                    final var parentDir = file.getParentFile();
+                    CheckUtils.check(parentDir.exists() || parentDir.mkdirs(), IOException::new,
+                        () -> "Could not create directory '" + parentDir.getAbsolutePath() + "'.");
 
-                File parentDir = f.getParentFile();
-                if (!parentDir.exists() && !parentDir.mkdirs()) {
-                    throw new IOException("Could not create directory '" + parentDir.getAbsolutePath() + "'.");
-                }
-
-                try (OutputStream out = new FileOutputStream(f)) {
-                    int read;
-                    while ((read = zipStream.read(buf)) >= 0) {
-                        out.write(buf, 0, read);
+                    try (final OutputStream out = new FileOutputStream(file)) { // NOSONAR
+                        for (int read; (read = zipStream.read(buffer)) >= 0;) {
+                            if (exec != null) {
+                                exec.checkCanceled();
+                            }
+                            out.write(buffer, 0, read);
+                        }
                     }
                 }
             }
         }
-
-        zipStream.close();
     }
 
     /**
