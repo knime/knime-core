@@ -49,7 +49,8 @@
 package org.knime.core.node;
 
 /**
- * See {@link #getBundleName2()}.
+ * Implemented by {@link NodeFactory}-instances to be able to specify an alternative bundle name which is only necessary
+ * in rare circumstances (see {@link #getBundleName()} for more details).
  *
  * @author Jonas Klotz
  * @since 5.3
@@ -63,7 +64,6 @@ public interface BundleNameProvider {
      * install it automatically based on the bundle information stored with the particular node. Thus, this method
      * provides the necessary bundle information of plugin B that is finally stored with the node (since plugin B
      * depends on plugin A - it uses plugin A's extension point - plugin A will be automatically installed, too).
-     *
      *
      * @return the bundle name or an empty optional if bundle name can not be provided
      */

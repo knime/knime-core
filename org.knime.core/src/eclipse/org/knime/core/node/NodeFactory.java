@@ -207,14 +207,14 @@ public abstract class NodeFactory<T extends NodeModel> {
             factoryClassName = this.getClass().getName();
         }
 
-        var canCreateMultipleNodes = false;
+        var isParameterized = false;
         String factoryIdUniquifier = null;
         if (this instanceof ParameterizedNodeFactory parameterizedNodeFactory) {
-            canCreateMultipleNodes = true;
+            isParameterized = true;
             factoryIdUniquifier = parameterizedNodeFactory.getFactoryIdUniquifier();
         }
 
-        return NodeFactoryId.compose(factoryClassName, canCreateMultipleNodes, factoryIdUniquifier, this::getNodeName);
+        return NodeFactoryId.compose(factoryClassName, isParameterized, factoryIdUniquifier, this::getNodeName);
     }
 
     /**

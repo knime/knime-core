@@ -360,7 +360,7 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
     @SuppressWarnings("deprecation")
     private static Optional<String> getBundleName(final NodeFactory<? extends NodeModel> factory) {
         if (factory instanceof BundleNameProvider bundleNameProvider) {
-            return Optional.of(bundleNameProvider.getBundleName());
+            return Optional.ofNullable(bundleNameProvider.getBundleName());
         } else if (factory instanceof DynamicNodeFactory<?> dynamicNodeFactory) {
             return dynamicNodeFactory.getBundleName();
         }

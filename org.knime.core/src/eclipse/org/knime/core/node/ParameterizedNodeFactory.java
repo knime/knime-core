@@ -49,20 +49,22 @@
 package org.knime.core.node;
 
 /**
- * NodeFactories that can create multiple nodes must implement this interface because the factory-classname alone
- * is not sufficient to uniquely identify a single node since it's being used for multiple nodes.
+ * Implemented by {@link NodeFactory}-instances to indicate that they can create multiple types of nodes. It is only
+ * necessary if the node factory is created as part of a node set (see {@link NodeSetFactory#getNodeFactory(String)}).
  * Implementing this interface has two important effects:
  * <ul>
- *   <li>It ensures that the node factories will be initialized with the appropriate parameters via
- *   {@link NodeFactory#loadAdditionalFactorySettings}.</li>
- *   <li>It requires specifying a ‘factory id uniquifier’ to guarantee that the derived factory id is globally unique
- *   and stable, even if the node name changes.</li>
+ * <li>It ensures that the node factories will be initialized with the appropriate parameters, accessible by overwriting
+ * {@link NodeFactory#loadAdditionalFactorySettings}. The parameters are initially defined in
+ * {@link NodeSetFactory#getAdditionalSettings(String)}.</li>
+ * <li>It requires one to specify a ‘factory id uniquifier’ to guarantee that the derived factory id is globally unique
+ * and stable, even if the node name changes.</li>
  * </ul>
  *
  * @author Jonas Klotz
  * @since 5.3
  */
 public interface ParameterizedNodeFactory {
+
     /**
      * Returns a string that globally uniquifies the factory id because the factory-class-name is not sufficient to
      * identify a single node since it's being used for multiple nodes.
@@ -71,7 +73,7 @@ public interface ParameterizedNodeFactory {
      * must always remain the same for a particular node as soon as the node has been released to users.
      *
      * @return the factory-id-uniquifier or {@code null} in which case the node-name is being used (which is not optimal
-     *         because it's not guaranteed to be stable)
+     *         since it is not guaranteed to remain the same)
      * @since 5.3
      */
     String getFactoryIdUniquifier();

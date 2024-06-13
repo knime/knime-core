@@ -65,39 +65,35 @@ public interface NodeSetFactory {
     /**
      * @return the ids of all node factories of this NodeSetFactory
      */
-    public Collection<String> getNodeFactoryIds();
+    Collection<String> getNodeFactoryIds();
 
     /**
-     * NodeFactories that are capable of creating multiple nodes must implement the interface
-     * {@link ParameterizedNodeFactory}. This requirement exists because the factory classname alone is not sufficient
-     * to uniquely identify the nodes. Implementing this interface ensures that these node factories will be initialized
-     * with the respective parameters via {@link NodeFactory#loadAdditionalFactorySettings}. Furthermore, it is
-     * necessary to specify a ‘factory ID uniquifier’ to guarantee that the derived factory id is globally unique and
-     * stable, even if the node name changes.
+     * Node-factories that are capable of creating multiple types of nodes (defined by the 'parameters' specified via
+     * {@link #getAdditionalSettings(String)}) must implement the interface {@link ParameterizedNodeFactory}.
      *
      * @param id the unique identifier of the node factory
      * @return the node factory
      */
-    public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(String id);
+    Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(String id);
 
     /**
      * @param id the id of the node factory
      * @return the category the node associated with this node factory belongs
      *         to
      */
-    public String getCategoryPath(final String id);
+    String getCategoryPath(final String id);
 
     /**
      * @param id the id of the node factory
      * @return the ID after which this factory's node is sorted in
      */
-    public String getAfterID(final String id);
+    String getAfterID(final String id);
 
     /**
      * @param id the id of the node factory
      * @return additional settings for the node factory
      */
-    public ConfigRO getAdditionalSettings(final String id);
+    ConfigRO getAdditionalSettings(final String id);
 
     /**
      * Specifies whether the nodes of this node set are hidden. If a node is hidden it will not appear in the node
@@ -107,7 +103,7 @@ public interface NodeSetFactory {
      * @return if <code>true</code> if the node set is hidden, <code>false</code> otherwise
      * @since 4.2
      */
-    public default boolean isHidden() {
+    default boolean isHidden() {
         return false;
     }
 
