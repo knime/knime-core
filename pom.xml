@@ -53,7 +53,7 @@
 				<module>org.knime.core.workflow.tests</module>
 				<module>org.knime.slf4j.binding</module>
 				<module>org.knime.slf4j.binding.tests</module>
-				<!-- <module>org.knime.log4j2.tests</module> Temporarily disabled until we got a fix for the log4j2-to-slf4j bridge -->
+				<module>org.knime.log4j2.tests</module>
 			</modules>
 
 			<repositories>

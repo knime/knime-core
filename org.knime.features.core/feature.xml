@@ -784,4 +784,8 @@ propagated with or for interoperation with KNIME.
          id="org.apache.logging.log4j.api"
          version="0.0.0"/>
 
+   <plugin
+         id="org.apache.logging.log4j.log4j-to-slf4j"
+         version="0.0.0"/>
+
 </feature>

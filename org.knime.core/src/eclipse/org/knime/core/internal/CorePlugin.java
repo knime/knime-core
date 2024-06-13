@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
+import org.apache.logging.log4j.util.ProviderUtil;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
@@ -127,6 +128,10 @@ public class CorePlugin implements BundleActivator {
     public void start(final BundleContext context)
         throws Exception {
         instance = this; // NOSONAR (static assignment)
+
+        // AP-22675 make sure Log4j 2 (org.apache.logging.log4j.util.Activator) is run to completion before
+        // parallel node loading kicks in.
+        ProviderUtil.getProviders();
 
         // registered as listener (as opposed to being run "inline") to guarantee bundle is fully started
         final var listenerRef = new AtomicReference<SynchronousBundleListener>();
