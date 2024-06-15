@@ -52,10 +52,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlOptions;
 import org.dmg.pmml.PMMLDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -63,7 +64,8 @@ import org.dmg.pmml.PMMLDocument;
  *
  */
 public final class PMMLValidator {
-    private static final Logger LOGGER = Logger.getLogger(PMMLValidator.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PMMLValidator.class);
 
     private static final String PMML_NAMESPACE_URI = "@"
         + PMMLDocument.type.getDocumentElementName().getNamespaceURI();
@@ -92,7 +94,7 @@ public final class PMMLValidator {
                 location = location.substring(0, 50) + "[...]";
             }
             String errorMessage = error.getMessage().replace(PMML_NAMESPACE_URI, "");
-            LOGGER.error(location + ": " + errorMessage);
+            LOGGER.error("{}: {}", location, errorMessage);
             errorMessages.put(location, errorMessage);
         }
         return errorMessages;

@@ -53,12 +53,13 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptionCharEscapeMap;
 import org.apache.xmlbeans.XmlOptions;
 import org.apache.xmlbeans.XmlTokenSource;
 import org.dmg.pmml.PMMLDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -67,7 +68,7 @@ import org.dmg.pmml.PMMLDocument;
  */
 public final class PMMLFormatter {
 
-    private static final Logger LOGGER = Logger.getLogger(PMMLFormatter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PMMLFormatter.class);
 
     private static final XmlOptions TEXT_SAVE_XML_OPTIONS;
 
@@ -99,7 +100,7 @@ public final class PMMLFormatter {
         @Override
         public String getEscapedString(final char ch) {
             if (isBadChar(ch)) {
-                LOGGER.warn("Illegal control character: " + "#x" + Integer.toHexString(ch) + " was escaped with '?'");
+                LOGGER.warn("Illegal control character: #x{} was escaped with '?'", Integer.toHexString(ch));
                 return "?";
             }
             return super.getEscapedString(ch);
