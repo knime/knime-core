@@ -1,0 +1,5 @@
+# net.sf.saxon is strictly required by PMML handling nodes but only 
+# an optional dependency in org.apache.xmlbeans
+requires.0.name=net.sf.saxon
+requires.0.range=[12.4.0, 13.0.0)
+requires.0.namespace=osgi.bundle
