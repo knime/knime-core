@@ -100,7 +100,6 @@ final class ChunksWriter implements AutoCloseable {
 
         ChunkHandle(final boolean forceOnDisk) {
             final var container = m_dataHandler.createDataContainer(m_dataTableSpec, forceOnDisk);
-            container.setMaxPossibleValues(0);
             m_currentContainer = container;
         }
 

@@ -363,7 +363,10 @@ public class DataContainer implements RowAppender, RowFlushable {
      *
      * @param maxPossibleValues The new number.
      * @throws IllegalArgumentException If the value &lt; 0
+     * @deprecated This property should be set at construction time, see
+     *             {@link #DataContainer(DataTableSpec, DataContainerSettings)}.
      */
+    @Deprecated(since = "5.3.0", forRemoval = true) // as of today, June '24, no caller in knime-core or knime-base
     public void setMaxPossibleValues(final int maxPossibleValues) {
         m_delegate.setMaxPossibleValues(maxPossibleValues);
     }
