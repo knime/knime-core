@@ -56,7 +56,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.knime.core.customization.nodes.filter.NodesFilter.RuleEnum;
+import org.knime.core.customization.filter.PatternPredicate;
+import org.knime.core.customization.filter.RuleEnum;
 import org.knime.core.customization.nodes.filter.NodesFilter.ScopeEnum;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,8 +88,8 @@ public class NodesFilterTest {
 
         assertEquals(ScopeEnum.VIEW, customization.getScope());
         assertEquals(RuleEnum.ALLOW, customization.getRule());
-        assertTrue(customization.getPredicate() instanceof PatternNodePredicate);
-        final PatternNodePredicate filter = (PatternNodePredicate)customization.getPredicate();
+        assertTrue(customization.getPredicate() instanceof PatternPredicate);
+        final PatternPredicate filter = (PatternPredicate)customization.getPredicate();
         assertNotNull(filter.getPatterns());
         assertEquals(2, filter.getPatterns().size());
         assertEquals("org\\.knime.+", filter.getPatterns().get(0).pattern());
@@ -115,8 +116,8 @@ public class NodesFilterTest {
 
         assertEquals(ScopeEnum.USE, customization.getScope());
         assertEquals(RuleEnum.DENY, customization.getRule());
-        assertTrue(customization.getPredicate() instanceof PatternNodePredicate);
-        final PatternNodePredicate filter = (PatternNodePredicate)customization.getPredicate();
+        assertTrue(customization.getPredicate() instanceof PatternPredicate);
+        final PatternPredicate filter = (PatternPredicate)customization.getPredicate();
         assertNotNull(filter.getPatterns());
         assertEquals(2, filter.getPatterns().size());
         assertEquals("\\Q(this can be invalid\\E", filter.getPatterns().get(0).pattern());

@@ -49,6 +49,9 @@ package org.knime.core.customization.nodes.filter;
 
 import java.util.Arrays;
 
+import org.knime.core.customization.filter.CustomizationPredicate;
+import org.knime.core.customization.filter.RuleEnum;
+import org.knime.core.customization.filter.TruePredicate;
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -65,12 +68,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public final class NodesFilter {
 
     /** Used in default customization, allows all installed nodes to be viewed. */
-    public static final NodesFilter VIEW_ALL =
-        new NodesFilter(ScopeEnum.VIEW, RuleEnum.ALLOW, TruePredicate.INSTANCE);
+    public static final NodesFilter VIEW_ALL = new NodesFilter(ScopeEnum.VIEW, RuleEnum.ALLOW, TruePredicate.INSTANCE);
 
     /** Used in default customization, allows all installed nodes to be used. */
-    public static final NodesFilter USE_ALL =
-        new NodesFilter(ScopeEnum.USE, RuleEnum.ALLOW, TruePredicate.INSTANCE);
+    public static final NodesFilter USE_ALL = new NodesFilter(ScopeEnum.USE, RuleEnum.ALLOW, TruePredicate.INSTANCE);
 
     /**
      * Defines scope of this filter: node visibility (VIEW) or usability (USE) in the node repository.
@@ -106,36 +107,11 @@ public final class NodesFilter {
         }
     }
 
-    /**
-     * Defines inclusion (ALLOW) or exclusion (DENY) rules for nodes.
-     */
-    enum RuleEnum {
-        DENY("deny"), //
-        ALLOW("allow");
-
-        private final String m_value;
-
-        RuleEnum(final String value) {
-            m_value = value;
-        }
-
-        @JsonValue
-        String getValue() {
-            return m_value;
-        }
-
-        @JsonCreator
-        static RuleEnum fromValue(final String value) {
-            return Arrays.stream(RuleEnum.values()) //
-                .filter(rule -> rule.getValue().equals(value)) //
-                .findFirst() //
-                .orElseThrow(() -> new IllegalArgumentException("Unexpected value '" + value + "'"));
-        }
-    }
-
     private final ScopeEnum m_scope;
+
     private final RuleEnum m_rule;
-    private final NodePredicate m_predicate;
+
+    private final CustomizationPredicate m_predicate;
 
     /**
      * Jackson deserializer.
@@ -144,7 +120,7 @@ public final class NodesFilter {
     NodesFilter( //
         @JsonProperty("scope") final ScopeEnum scope, //
         @JsonProperty("rule") final RuleEnum rule, //
-        @JsonProperty("predicate") final NodePredicate filter) {
+        @JsonProperty("predicate") final CustomizationPredicate filter) {
         m_scope = CheckUtils.checkArgumentNotNull(scope, "ScopeEnum cannot be null");
         m_rule = CheckUtils.checkArgumentNotNull(rule, "RuleEnum cannot be null");
         m_predicate = CheckUtils.checkArgumentNotNull(filter, "Predicate cannot be null");
@@ -164,7 +140,7 @@ public final class NodesFilter {
     }
 
     @JsonProperty("predicate")
-    NodePredicate getPredicate() {
+    public CustomizationPredicate getPredicate() {
         return m_predicate;
     }
 

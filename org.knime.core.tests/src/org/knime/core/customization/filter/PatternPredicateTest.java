@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,34 +41,74 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   Mar 24, 2024 (wiswedel): created
+ *   Jun 15, 2024 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.customization.nodes.filter;
+package org.knime.core.customization.filter;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
- * Interface defining a predicate for node identifiers, used to determine if a node should be visible or usable
- * according to the filter settings.
+ * Unit tests for {@link PatternPredicate}.
  *
- * @author Bernd Wiswedel
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = PatternNodePredicate.class, name = "pattern")
-})
-sealed interface NodePredicate permits PatternNodePredicate, TruePredicate {
+final class PatternPredicateTest {
 
-    /**
-     * Determines whether a given node identifier matches this predicate.
-     *
-     * @param nodeAndId The node identifier (as per {@link org.knime.core.node.NodeFactoryId}) to check against this
-     *            predicate
-     * @return {@code true} if the node identifier matches the predicate, otherwise {@code false}.
-     */
-    boolean matches(final String nodeAndId);
+    private PatternPredicate regexPredicate;
+    private PatternPredicate nonRegexPredicate;
+
+    @BeforeEach
+    public void setUp() {
+        regexPredicate = new PatternPredicate(List.of(".*test.*", ".*sample.*"), true);
+        nonRegexPredicate = new PatternPredicate(List.of("test", "sample"), false);
+    }
+
+    @Test
+    void testConstructorAndGetPatterns() {
+        List<Pattern> regexPatterns = regexPredicate.getPatterns();
+        List<Pattern> nonRegexPatterns = nonRegexPredicate.getPatterns();
+
+        assertEquals(2, regexPatterns.size());
+        assertEquals(2, nonRegexPatterns.size());
+
+        assertTrue(regexPatterns.get(0).pattern().equals(".*test.*"));
+        assertTrue(nonRegexPatterns.get(0).pattern().equals("\\Qtest\\E"));
+    }
+
+    @Test
+    void testIsRegex() {
+        assertTrue(regexPredicate.isRegex());
+        assertFalse(nonRegexPredicate.isRegex());
+    }
+
+    @Test
+    void testMatches() {
+        assertTrue(regexPredicate.matches("this is a test"));
+        assertTrue(regexPredicate.matches("sample text here"));
+        assertFalse(regexPredicate.matches("no match"));
+
+        assertTrue(nonRegexPredicate.matches("test"));
+        assertTrue(nonRegexPredicate.matches("sample"));
+        assertFalse(nonRegexPredicate.matches("this is a test"));
+    }
+
+    @Test
+    void testToString() {
+        String regexToString = regexPredicate.toString();
+        String nonRegexToString = nonRegexPredicate.toString();
+
+        assertEquals("PatternFilter{patterns=[.*test.*, .*sample.*]}", regexToString);
+        assertEquals("PatternFilter{patterns=[\\Qtest\\E, \\Qsample\\E]}", nonRegexToString);
+    }
 }
+
