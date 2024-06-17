@@ -48,6 +48,8 @@
  */
 package org.knime.core.customization.kai;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -55,13 +57,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param suggestExtensions whether K-AI should suggest extensions in its Q&A mode
+ * @param hub allows to customize which hubs K-AI is allowed to connect to
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
  */
-public record KAICustomization(@JsonProperty("suggestExtensions") boolean suggestExtensions) {
+public record KAICustomization(@JsonProperty("suggestExtensions") boolean suggestExtensions, KAIHubCustomization hub) {
 
     /**
      * Default customization.
      */
-    public static final KAICustomization DEFAULT = new KAICustomization(true);
+    public static final KAICustomization DEFAULT = new KAICustomization(true, KAIHubCustomization.DEFAULT);
+
+    /**
+     * @param suggestExtensions whether K-AI should suggest extensions or not
+     * @param hub customization of the hubs K-AI is allowed to use as backend
+     */
+    public KAICustomization(final boolean suggestExtensions, final KAIHubCustomization hub) {
+        this.suggestExtensions = suggestExtensions;
+        this.hub = Objects.requireNonNullElse(hub, KAIHubCustomization.DEFAULT);
+    }
 }
