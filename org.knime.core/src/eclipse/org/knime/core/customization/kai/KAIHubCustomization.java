@@ -62,10 +62,20 @@ public record KAIHubCustomization(List<KAIHubFilter> filter) {
 
     static final KAIHubCustomization DEFAULT = new KAIHubCustomization(List.of());
 
-    // TODO defensive constructor making filter unmodifiable
+    /**
+     * Constructs a KAIHubCustomization object
+     * @param filter for restricting which hubs K-AI can connect to
+     */
+    public KAIHubCustomization(final List<KAIHubFilter> filter) {
+        this.filter = List.copyOf(filter);
+    }
 
-    public boolean allow(final String hubAddress) {
-        return filter.stream().allMatch(f -> f.test(hubAddress));
+    /**
+     * @param hubHost the hub host (e.g. hub.knime.com) to check for allowance
+     * @return true if K-AI is allowed to use the hub as backend
+     */
+    public boolean allow(final String hubHost) {
+        return filter.stream().allMatch(f -> f.test(hubHost));
     }
 
 
