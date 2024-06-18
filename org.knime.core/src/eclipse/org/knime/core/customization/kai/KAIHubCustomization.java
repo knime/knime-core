@@ -54,7 +54,7 @@ import java.util.List;
  * Allows to customize which hubs K-AI can connect to.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @param filter filtering which hubs K-AI can connect to
+ * @param filter for filtering which hubs K-AI can connect to (no filter means all hubs are allowed)
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
  */
