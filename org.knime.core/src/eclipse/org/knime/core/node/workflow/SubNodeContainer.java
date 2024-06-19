@@ -2078,7 +2078,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         CheckUtils.checkArgumentNotNull(cl, "Must not be null");
         // from IntInputQuickFormNodeModel -> IntInput
         final String[] hiddenSuffixes = new String[]{"configurationnodemodel", "quickformnodemodel", "nodemodel",
-            "quickformconfig", "config", "dialognode", "widget"};
+            "quickformconfig", "config", "dialognode", "node", "widget"};
         String truncated = cl.getSimpleName();
         for (String suffix : hiddenSuffixes) {
             truncated = StringUtils.removeEndIgnoreCase(truncated, suffix);
