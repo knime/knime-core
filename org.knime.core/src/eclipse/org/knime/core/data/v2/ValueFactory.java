@@ -48,6 +48,9 @@
  */
 package org.knime.core.data.v2;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.DataSpec;
@@ -75,6 +78,10 @@ public interface ValueFactory<R extends ReadAccess, W extends WriteAccess> {
 
     /**
      * Creates a new {@link ReadValue}.
+     * <P>
+     * The returned value should implement all {@link DataValue} interfaces that are associated with the
+     * {@link DataType}. Note that these are the interfaces implemented by the corresponding {@link DataCell} if the
+     * data type was created via {@link DataType#getType(Class)}.
      *
      * @param access the read access wrapped by the {@link ReadValue}
      * @return the {@link ReadValue}.
