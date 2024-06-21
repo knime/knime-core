@@ -50,6 +50,7 @@ import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.v2.ValueFactory;
@@ -112,7 +113,8 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         return new XMLWriteValue(access);
     }
 
-    private class XMLReadValue extends TableOrFileStoreReadValue implements XMLValue<Document>, XMLCellContentProvider {
+    private class XMLReadValue extends TableOrFileStoreReadValue
+        implements XMLValue<Document>, StringValue, XMLCellContentProvider {
         protected XMLReadValue(final StructReadAccess access) {
             super(access);
         }
@@ -155,6 +157,11 @@ public class XMLValueFactory extends TableOrFileStoreValueFactory<XMLValue<Docum
         @Override
         public XMLCellContent getXMLCellContent() {
             return ((XMLCellContentProvider)getDataCell()).getXMLCellContent();
+        }
+
+        @Override
+        public String getStringValue() {
+            return getXMLCellContent().getStringValue();
         }
     }
 
