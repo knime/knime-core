@@ -74,6 +74,7 @@ public class APCustomizationProviderServiceImplTest {
     void setUp() throws Exception {
         Path testYaml = tempDir.resolve("test.yml");
         String yamlContent = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                     - scope: view

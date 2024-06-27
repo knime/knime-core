@@ -70,6 +70,7 @@ public class NodesCustomizationTest {
     @Test
     void testViewAllow() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                     - scope: view
@@ -98,6 +99,7 @@ public class NodesCustomizationTest {
     @Test
     void testViewDeny() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                     - scope: view
@@ -122,6 +124,7 @@ public class NodesCustomizationTest {
     @Test
     void testUseDeny() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                     - scope: use
@@ -146,6 +149,7 @@ public class NodesCustomizationTest {
     @Test
     void testUseAllow() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                     - scope: use

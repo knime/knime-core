@@ -52,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -62,6 +63,7 @@ import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.ui.actions.MenuEntry;
 import org.knime.core.customization.workflow.WorkflowCustomization;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -72,9 +74,36 @@ public class APCustomizationTest {
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
+    /** Test the version string. */
+    @Test
+    void testVersionString() throws Exception {
+        final String ymlInputValid1 = """
+                version: 'customization-v1.0'
+                """;
+        // for now, just check if the version string is parseable
+        assertDoesNotThrow(() -> mapper.readValue(ymlInputValid1, APCustomization.class));
+
+        final String ymlInputFutureValid = """
+                version: 'customization-v1.1'
+                """; // future version, should also be parseable
+        assertDoesNotThrow(() -> mapper.readValue(ymlInputFutureValid, APCustomization.class));
+
+        final String ymlInputInvalid = """
+                version: 'foo-1.0'
+                """;
+
+        assertThrows(JsonMappingException.class, () -> mapper.readValue(ymlInputInvalid, APCustomization.class));
+
+        final String ymlInputInvalid2 = """
+                version: 'customization'
+                """;
+        assertThrows(JsonMappingException.class, () -> mapper.readValue(ymlInputInvalid2, APCustomization.class));
+    }
+
     @Test
     void testNodesCustomization() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                       - scope: use
@@ -86,7 +115,6 @@ public class APCustomizationTest {
                             - com\\.knime\\..+
                           isRegex: true
                 """;
-
         APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
         assertNotNull(customization.toString());
         var nodesCustomization = customization.nodes();
@@ -108,6 +136,7 @@ public class APCustomizationTest {
     @Test
     void testUICustomization() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 nodes:
                   filter:
                       - scope: view
@@ -142,6 +171,7 @@ public class APCustomizationTest {
     @Test
     void testWorkflowCustomization() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 workflow:
                   disablePasswordSaving: true
                 """;
@@ -157,6 +187,7 @@ public class APCustomizationTest {
     @Test
     void testKaiCustomization() throws Exception {
         String ymlInput = """
+                version: 'customization-v1.0'
                 kai:
                   suggestExtensions: true
                 """;

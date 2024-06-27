@@ -85,6 +85,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase {
 
 	private static final String DISALLOWED_PASSWORD_SAVING_YML = """
+		    version: 'customization-v1.0'
 		    workflow:
 		      disablePasswordSaving: true
 		  """;

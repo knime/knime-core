@@ -48,11 +48,15 @@
 package org.knime.core.customization;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.customization.kai.KAICustomization;
 import org.knime.core.customization.nodes.NodesCustomization;
 import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.workflow.WorkflowCustomization;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -64,6 +68,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Instances of this class are not created directly, only restored from yaml that looks similar to this:
  *
  * <pre>
+ * version: 'customization-v1.0'
  * nodes:
  *   filter:
  *     - scope: view
@@ -75,8 +80,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *         isRegex: true
  * ui:
  *   menuEntries:
- *     - name: "Company Help Portal"
- *       link: "https://help.company.com/knime"
+ *     - name: 'Company Help Portal'
+ *       link: 'https://help.company.com/knime'
  * workflow:
  *   disablePasswordSaving: true
  * kai:
@@ -89,11 +94,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public final class APCustomization {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(APCustomization.class);
+
+    static final String VERSION_PREFIX = "customization-";
+
+    /**
+     * Known customization versions, e.g. {@code customization-v1.0}.
+     */
+    enum CustomizationVersion {
+
+        V1("v1.0"),
+
+        FUTURE(null);
+
+        private final String m_versionSuffix;
+
+        CustomizationVersion(final String versionSuffix) {
+            m_versionSuffix = versionSuffix;
+        }
+
+        static CustomizationVersion of(final String str) {
+            CheckUtils.checkArgument(StringUtils.isNotBlank(str), "Version field must not be missing/blank");
+            CheckUtils.checkArgument(StringUtils.startsWith(str, VERSION_PREFIX),
+                "Version string does not start with \"%s\", e.g. \"%s\": \"%s\")", //
+                VERSION_PREFIX, VERSION_PREFIX + V1.m_versionSuffix, str);
+            final String versionSuffix = StringUtils.removeStart(str, VERSION_PREFIX);
+            CheckUtils.checkArgument(StringUtils.isNotBlank(versionSuffix),
+                "Version string must not be empty after removing prefix \"%s\": \"%s\"", VERSION_PREFIX, str);
+            final CustomizationVersion version = Stream.of(values())
+                .filter(v -> StringUtils.equals(v.m_versionSuffix, versionSuffix)).findFirst().orElse(FUTURE);
+            if (version == FUTURE) {
+                LOGGER.infoWithFormat("Unknown customization version \"%s\", assuming future version", str);
+            }
+            return version;
+        }
+
+        /** @return the full version string that can be parsed by {@link #of(String)}. */
+        String fullVersion() {
+            return VERSION_PREFIX + m_versionSuffix;
+        }
+
+    }
+
     /**
      * Default (no) customization.
      */
-    public static final APCustomization DEFAULT = new APCustomization(NodesCustomization.DEFAULT,
-        UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
+    public static final APCustomization DEFAULT = new APCustomization(CustomizationVersion.V1.fullVersion(),
+        NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
 
     private final NodesCustomization m_nodesCustomization;
 
@@ -107,10 +154,13 @@ public final class APCustomization {
      * Only used for deserialization.
      */
     @JsonCreator
-    APCustomization(@JsonProperty("nodes") final NodesCustomization nodesCustomization,
+    APCustomization( //
+        @JsonProperty("version") final String version,
+        @JsonProperty("nodes") final NodesCustomization nodesCustomization,
         @JsonProperty("ui") final UICustomization uiCustomization,
         @JsonProperty("workflow") final WorkflowCustomization workflowCustomization,
         @JsonProperty("kai") final KAICustomization kaiCustomization) {
+        CustomizationVersion.of(version); // just to check if version is known
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
         m_workflowCustomization = Objects.requireNonNullElse(workflowCustomization, WorkflowCustomization.DEFAULT);

@@ -86,6 +86,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 
 	private static final String DISALLOWED_NODES_CUSTOMIZATION_YML = """
+	    version: 'customization-v1.0'
 	    nodes:
 	      filter:
 	      - scope: use
