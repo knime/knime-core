@@ -48,12 +48,9 @@
  */
 package org.knime.core.util;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
@@ -70,8 +67,6 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.application.ApplicationHandle;
 
 /**
  * This interface is used by the extension point <tt>org.knime.core.EarlyStartup</tt>. The {@link #run()} method is
@@ -86,7 +81,6 @@ import org.osgi.service.application.ApplicationHandle;
  */
 @FunctionalInterface
 public interface IEarlyStartup {
-
 
     /**
      * Stages of the startup at which the {@link #run()} method is supposed to be called.
@@ -159,18 +153,6 @@ public interface IEarlyStartup {
 
         private static final NodeLogger LOGGER = NodeLogger.getLogger(IEarlyStartup.class); // NOSONAR
 
-        /**
-         * Applications which will delay the run of the 'earliest' phase since they will first download and apply
-         * profiles and then run this phase (calling EarlyStartupState#initialize(BundleContext) manually).
-         *
-         * @since 5.3
-         * @noreference This field is not intended to be referenced by clients.
-         */
-        static final String[] NO_AUTOSTART_APPLICATIONS = { //
-            "org.knime.product.KNIME_APPLICATION", //
-            "com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION" //
-        };
-
         private static final IExtensionPoint EXTENSION_POINT;
         static {
             final var extPointID = "org.knime.core.EarlyStartup";
@@ -194,28 +176,13 @@ public interface IEarlyStartup {
         }
 
         /**
-         * Called by KNIME framework code to run the "earliest startup" phase. That is ...:
-         * <ul>
-         * <li>... when profiles are loaded from the product plug-in (separately triggered from all KNIME applications)
-         * <li>... or when the core plugins loads and the current application is not a KNIME application (e.g. unit test
-         * runs)
-         * </ul>
+         * Called once in {@link CorePlugin#start(BundleContext)} to initiate the early-startup process.
          *
-         * @param context bundle context of the calling plug-in. Also used to determine if this is called from the core
-         *            plugin
+         * @param context bundle context of the core plugin
          */
         public static synchronized void initialize(final BundleContext context) {
-            final var isRunByCorePlugin = CorePlugin.PLUGIN_SYMBOLIC_NAME.equals(context.getBundle().getSymbolicName());
-            if (isRunByCorePlugin) {
-                final Optional<String> applicationId = getApplicationId(context);
-                LOGGER.debugWithFormat("Running application \"%s\"", applicationId.orElse("<unknown>"));
-                if (applicationId.filter(id -> StringUtils.containsAny(id, NO_AUTOSTART_APPLICATIONS)).isPresent()) {
-                    // skip the earliest stage for applications that will run that stage later/manually, see AP-22750
-                    return;
-                }
-            }
             if (previousStage != null) {
-                LOGGER.debug("EarlyStartup state already initialized", new IllegalStateException());
+                LOGGER.coding(() -> "EarlyStartup state already initialized", new IllegalStateException());
                 return;
             }
 
@@ -255,28 +222,6 @@ public interface IEarlyStartup {
             }
         }
 
-        /**
-         * Determine the IApplication id that is currently running, e.g. {@code org.knime.product.KNIME_APPLICATION} or
-         * {@code org.knime.product.KNIME_BATCH_APPLICATION}.
-         * @return The application id or an empty optional if it's not possible to determine it (no such service)
-         */
-        private static Optional<String> getApplicationId(final BundleContext context) {
-            final ServiceReference<ApplicationHandle> appRef = context.getServiceReference(ApplicationHandle.class);
-            final ApplicationHandle appHandle;
-            if (appRef != null) {
-                appHandle = context.getService(appRef);
-                if (appHandle != null) {
-                    try {
-                        final String appId = appHandle.getApplicationDescriptor().getApplicationId();
-                        return Optional.of(appId);
-                    } finally {
-                        context.ungetService(appRef);
-                    }
-                }
-            }
-            return Optional.empty();
-        }
-
         private static synchronized void runBeforeWFMClassLoaded() {
             if (initializing) {
                 wfmStaticInitializerStageRequested = true;
@@ -302,13 +247,10 @@ public interface IEarlyStartup {
                 }
                 start = previousStage.ordinal() + 1;
             }
-            LOGGER.debugWithFormat("Moving from stage %s to stage %s",
-                Objects.requireNonNullElse(previousStage, "<none>"), targetStage);
 
             final var stages = StartupStage.values();
             if (start < targetStage.ordinal()) {
-                // could happen in unit tests where the earliest phase is not triggered by the core and product plugin
-                LOGGER.debug(() -> "Stages have been requested out of order: Expected %s, found %s" //
+                LOGGER.coding(() -> "Stages have been requested out of order: Expected %s, found %s" //
                     .formatted(stages[start], targetStage), new IllegalStateException());
             }
 
