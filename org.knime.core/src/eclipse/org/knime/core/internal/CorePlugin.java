@@ -84,6 +84,11 @@ import org.osgi.util.tracker.ServiceTracker;
  * @author wiswedel, University of Konstanz
  */
 public class CorePlugin implements BundleActivator {
+
+    /** The symbolic name of the core plugin, i.e. {@value #PLUGIN_SYMBOLIC_NAME}.
+     * @since 5.3 */
+    public static final String PLUGIN_SYMBOLIC_NAME = "org.knime.core";
+
     private static CorePlugin instance;
 
     /** see {@link #setWrapColumnHeaderInTableViews(boolean)}. */
@@ -139,7 +144,7 @@ public class CorePlugin implements BundleActivator {
         listenerRef.set(event -> {
             if (event.getType() == BundleEvent.STARTED) {
                 final Bundle bundle = event.getBundle();
-                if (bundle.getSymbolicName().equals("org.knime.core")) {
+                if (PLUGIN_SYMBOLIC_NAME.equals(bundle.getSymbolicName())) {
                     final BundleContext bundleContext = bundle.getBundleContext();
                     IEarlyStartup.EarlyStartupState.initialize(bundleContext);
                     bundleContext.removeBundleListener(listenerRef.get());
