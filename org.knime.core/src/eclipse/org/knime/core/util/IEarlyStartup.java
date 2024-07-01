@@ -48,19 +48,18 @@
  */
 package org.knime.core.util;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.EnumUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.osgi.service.datalocation.Location;
-import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -87,10 +86,22 @@ import org.osgi.service.application.ApplicationHandle;
 @FunctionalInterface
 public interface IEarlyStartup {
 
+    /* In general, we assume this order of events:
+    * - Application starts
+    * - EARLIEST stage is executed as part of org.knime.core bundle activation (loads native libraries etc)
+    * - If applicable, Display object is created
+    * - Instance location / Workspace is queried and set
+    * - Profiles are download (if the application is profile aware, KNIME AP or executor)
+    * - AFTER_PROFILES_SET stage is executed
+    * - ...
+    * - WorkflowManager is about to be instantiated
+    * - BEFORE_WFM_CLASS_LOADED stage is executed
+    * - WorkflowManager is instantiated
+    * - ...
+    */
 
     /**
      * Stages of the startup at which the {@link #run()} method is supposed to be called.
-     *
      * @since 5.3
      */
     enum StartupStage {
@@ -101,10 +112,11 @@ public interface IEarlyStartup {
          */
         EARLIEST,
         /**
-         * Shortly after {@link #EARLIEST}, but after the user has chosen a workspace for the session (if
-         * applicable).
+         * After {@link #EARLIEST} and after the user has chosen a workspace for the session (if applicable) and
+         * after the profiles have been set (optional operation in the KNIME application and KNIME executor
+         * application).
          */
-        AFTER_WORKSPACE_SET,
+        AFTER_PROFILES_SET,
         /**
          * Inside a static initializer of the {@link WorkflowManager} class, before the first workflow has been
          * loaded.
@@ -150,9 +162,20 @@ public interface IEarlyStartup {
     }
 
     /**
+     * To be called exactly once the org.knime.product.profiles.ProfileManager located in the KNIME Product.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.3
+     */
+    static void runAfterProfilesLoaded() {
+        EarlyStartupState.runAfterProfilesLoaded();
+    }
+
+    /**
     * State machine managing the stages of the {@link IEarlyStartup} process.
     *
     * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
+    * @noreference This class is not intended to be referenced by clients.
     * @since 5.3
     */
     final class EarlyStartupState {
@@ -160,13 +183,10 @@ public interface IEarlyStartup {
         private static final NodeLogger LOGGER = NodeLogger.getLogger(IEarlyStartup.class); // NOSONAR
 
         /**
-         * Applications which will delay the run of the 'earliest' phase since they will first download and apply
-         * profiles and then run this phase (calling EarlyStartupState#initialize(BundleContext) manually).
-         *
-         * @since 5.3
-         * @noreference This field is not intended to be referenced by clients.
+         * Applications which will delay the run of the AFTER_PROFILES_SET phase since they will first download and
+         * apply profiles and then run this phase (calling EarlyStartupState#initialize(BundleContext) manually).
          */
-        static final String[] NO_AUTOSTART_APPLICATIONS = { //
+        static final String[] PROFILE_AWARE_APPLICATIONS = { //
             "org.knime.product.KNIME_APPLICATION", //
             "com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION" //
         };
@@ -180,7 +200,7 @@ public interface IEarlyStartup {
 
         private static final ServiceListener WORKSPACE_LOC_MODIFIED_LISTENER = event -> {
             if (event.getType() == ServiceEvent.MODIFIED) {
-                moveToStage(StartupStage.AFTER_WORKSPACE_SET);
+                moveToStage(StartupStage.AFTER_PROFILES_SET);
             }
         };
 
@@ -194,27 +214,18 @@ public interface IEarlyStartup {
         }
 
         /**
-         * Called by KNIME framework code to run the "earliest startup" phase. That is ...:
-         * <ul>
-         * <li>... when profiles are loaded from the product plug-in (separately triggered from all KNIME applications)
-         * <li>... or when the core plugins loads and the current application is not a KNIME application (e.g. unit test
-         * runs)
-         * </ul>
+         * Runs the EARLIEST stage of the startup process. This method is called by the CorePlugin#start method. In case
+         * the current application is not a KNIME application, the AFTER_PROFILES_SET stage is run as soon as the
+         * instance location (workspace) is set.
          *
-         * @param context bundle context of the calling plug-in. Also used to determine if this is called from the core
-         *            plugin
+         * @param context bundle context of the core plug-in, used to lookup services and determine the application id
+         * @noreference This method is not intended to be referenced by clients.
          */
         public static synchronized void initialize(final BundleContext context) {
-            final var isRunByCorePlugin = CorePlugin.PLUGIN_SYMBOLIC_NAME.equals(context.getBundle().getSymbolicName());
-            if (isRunByCorePlugin) {
-                final Optional<String> applicationId = getApplicationId(context);
+            final Optional<String> applicationId = getApplicationId(context);
+            if (previousStage == null) {
                 LOGGER.debugWithFormat("Running application \"%s\"", applicationId.orElse("<unknown>"));
-                if (applicationId.filter(id -> StringUtils.containsAny(id, NO_AUTOSTART_APPLICATIONS)).isPresent()) {
-                    // skip the earliest stage for applications that will run that stage later/manually, see AP-22750
-                    return;
-                }
-            }
-            if (previousStage != null) {
+            } else {
                 LOGGER.debug("EarlyStartup state already initialized", new IllegalStateException());
                 return;
             }
@@ -231,19 +242,22 @@ public interface IEarlyStartup {
                     return;
                 }
 
-                final var instanceLocation = Platform.getInstanceLocation();
-                if (instanceLocation == null || !instanceLocation.isSet()) {
-                    try {
-                        // wait for workspace location to be set
-                        context.addServiceListener(WORKSPACE_LOC_MODIFIED_LISTENER, Location.INSTANCE_FILTER);
-                        return;
-                    } catch (final InvalidSyntaxException ex) {
-                        LOGGER.coding("Unable to register service listener for the instance location", ex);
+                // this is not a KNIME application, run the AFTER_PROFILES_SET stage as soon as the workspace is set
+                if (!Arrays.asList(PROFILE_AWARE_APPLICATIONS).contains(applicationId.orElse(null))) {
+                    final var instanceLocation = Platform.getInstanceLocation();
+                    if (instanceLocation == null || !instanceLocation.isSet()) {
+                        try { // NOSONAR (nesting)
+                            // wait for workspace location to be set
+                            context.addServiceListener(WORKSPACE_LOC_MODIFIED_LISTENER, Location.INSTANCE_FILTER);
+                            return;
+                        } catch (final InvalidSyntaxException ex) {
+                            LOGGER.coding("Unable to register service listener for the instance location", ex);
+                        }
+                    } else {
+                        // instance location is already set (via cmd line `-data`), execute now (e.g. in unit tests)
+                        moveToStage(StartupStage.AFTER_PROFILES_SET);
                     }
                 }
-
-                // instance location is already set (via cmd line `-data`), execute right away
-                moveToStage(StartupStage.AFTER_WORKSPACE_SET);
 
                 if (wfmStaticInitializerStageRequested) {
                     // `WorkflowManager` has been instantiated at stage 2, execute stage 3 immediately
@@ -283,6 +297,13 @@ public interface IEarlyStartup {
             } else {
                 moveToStage(StartupStage.BEFORE_WFM_CLASS_LOADED);
             }
+        }
+
+        private static synchronized void runAfterProfilesLoaded() {
+            // this method is only (to be) called from the KNIME(Executor)Application code, so it is safe to assume
+            // that this invocation is not indirectly called from some IEarlyStartup contribution
+            CheckUtils.checkState(!initializing, "Can not run AFTER_PROFILES_SET stage while initializing");
+            moveToStage(StartupStage.AFTER_PROFILES_SET);
         }
 
         /**
@@ -325,7 +346,7 @@ public interface IEarlyStartup {
         }
 
         private static void runHooksAtStage(final StartupStage stage) {
-            if (stage == StartupStage.AFTER_WORKSPACE_SET) {
+            if (stage == StartupStage.AFTER_PROFILES_SET) {
                 // unregister the listener, either the workspace is set or the default has been chosen
                 final var bundleContext = FrameworkUtil.getBundle(IEarlyStartup.class).getBundleContext();
                 bundleContext.removeServiceListener(WORKSPACE_LOC_MODIFIED_LISTENER);
@@ -373,5 +394,6 @@ public interface IEarlyStartup {
             }
             return requestedStage == stage;
         }
+
     }
 }

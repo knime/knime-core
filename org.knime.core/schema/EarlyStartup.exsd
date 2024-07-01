@@ -70,7 +70,7 @@
                <restriction base="string">
                   <enumeration value="EARLIEST">
                   </enumeration>
-                  <enumeration value="AFTER_WORKSPACE_SET">
+                  <enumeration value="AFTER_PROFILES_SET">
                   </enumeration>
                   <enumeration value="BEFORE_WFM_CLASS_LOADED">
                   </enumeration>

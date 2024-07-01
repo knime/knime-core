@@ -129,7 +129,7 @@ public final class KNIMELogger {
 
     /**
      * This initializer is registered via the {@link IEarlyStartup} extension point at stage
-     * {@link org.knime.core.util.IEarlyStartup.StartupStage#AFTER_WORKSPACE_SET AFTER_WORKSPACE_SET}.
+     * {@link org.knime.core.util.IEarlyStartup.StartupStage#AFTER_PROFILES_SET AFTER_PROFILES_SET}.
      */
     public static final class EarlyStartupInitializer implements IEarlyStartup {
         @Override

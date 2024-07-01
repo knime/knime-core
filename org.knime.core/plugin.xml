@@ -789,11 +789,11 @@
    <extension
          point="org.knime.core.EarlyStartup">
       <provider
-            startupStage="AFTER_WORKSPACE_SET"
+            startupStage="AFTER_PROFILES_SET"
             class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
       </provider>
       <provider
-            startupStage="AFTER_WORKSPACE_SET"
+            startupStage="AFTER_PROFILES_SET"
             class="org.knime.core.node.logging.KNIMELogger$EarlyStartupInitializer">
       </provider>
       <provider
