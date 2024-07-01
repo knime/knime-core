@@ -288,22 +288,21 @@ public final class StatisticsExtractors {
 
         private final int m_colIndex;
 
-        private final int m_n;
-
-        private final int m_p;
+        private final double m_quantile;
 
         private int m_counter;
 
-        private Double m_quantile;
+        private int m_integerPosition;
 
-        private int m_rank;
+        private double m_fractionalPartOfPosition;
 
-        private Double m_weight;
+        private double m_result;
 
         /**
          * The extractor computes the {@code n}th quantile of order {@code p} of a given column. The column needs to be
-         * sorted in ascending order and contain only double values for this. If the computed rank of the quantile lies
-         * between two points in the data, linear interpolation is used.
+         * sorted in ascending order and contain only double values for this.
+         *
+         * Algorithm according to the javadoc of org.apache.commons.math3.stat.descriptive.rank.Percentile.
          *
          * @param colIndex the index of the column from which the quantile is extracted.
          * @param n the index of the quantile
@@ -311,36 +310,36 @@ public final class StatisticsExtractors {
          */
         public QuantileExtractor(final int colIndex, final int n, final int p) {
             m_colIndex = colIndex;
-            m_n = n;
-            m_p = p;
+            m_quantile = n / (double)p;
         }
 
         @Override
         public void init(final int size) {
-            m_counter = 1;
-            m_quantile = null;
-            m_rank = ((size + 1) / m_p) * m_n;
-            if (m_rank == 0 || m_rank == size + 1) {
-                if (m_rank == 0) {
-                    m_rank = 1;
-                }
-                if (m_rank == size + 1) {
-                    m_rank = size;
-                }
-            } else {
-                final var rest = (size + 1) % m_p;
-                if (rest != 0) {
-                    m_weight = (((double)rest) * m_n) / m_p;
-                }
+            if (size == 1) {
+                m_integerPosition = 0;
+                return;
             }
+            var quantilePosition = m_quantile * (size + 1);
+            if(quantilePosition < 1) {
+                m_integerPosition = 0;
+                return;
+            }
+            if (quantilePosition >= size) {
+                m_integerPosition = size - 1;
+                return;
+            }
+            m_fractionalPartOfPosition = quantilePosition - Math.floor(quantilePosition);
+            m_integerPosition = (int)Math.floor(quantilePosition);
+            m_counter = 1;
         }
 
         @Override
         public void readRow(final RowRead row, final int rowIndex) {
-            if (m_counter == m_rank) {
-                m_quantile = RowReadUtil.readPrimitiveDoubleValue(row, m_colIndex);
-            } else if (m_counter == m_rank + 1 && m_weight != null) {
-                m_quantile += (RowReadUtil.readPrimitiveDoubleValue(row, m_colIndex) - m_quantile) * m_weight;
+            if (m_counter == m_integerPosition) {
+                m_result = RowReadUtil.readPrimitiveDoubleValue(row, m_colIndex);
+            } else if (m_counter == m_integerPosition + 1 && m_fractionalPartOfPosition > 0) {
+                m_result +=
+                    m_fractionalPartOfPosition * (RowReadUtil.readPrimitiveDoubleValue(row, m_colIndex) - m_result);
             }
             m_counter++;
         }
@@ -354,7 +353,7 @@ public final class StatisticsExtractors {
          * @return the computed sum
          */
         public Double getOutput() {
-            return m_quantile;
+            return m_result;
         }
     }
 
