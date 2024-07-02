@@ -626,6 +626,9 @@ public final class KNIMEConstants {
 
     private static String uID;
 
+    /** Whether uID was assigned in this session */
+    private static boolean uIDFreshAssigned;
+
     /**
      * The directory where knime will put log files and configuration files. If
      * started in eclipse, this is usually ${workspace_path}/.metadata/knime.
@@ -720,8 +723,18 @@ public final class KNIMEConstants {
     public static synchronized String getUID() {
         if (uID == null) {
             assignUniqueUID();
+            uIDFreshAssigned = true;
         }
         return uID;
+    }
+
+    /**
+     * @return whether the value returned by {@link #getUID()} was created in this session
+     * @since 5.3
+     */
+    public static synchronized boolean isUIDNew() {
+        getUID();
+        return uIDFreshAssigned;
     }
 
     /**

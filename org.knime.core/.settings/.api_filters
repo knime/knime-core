@@ -457,6 +457,20 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/HubStatistics.java" type="org.knime.core.util.HubStatistics">
+        <filter comment="AP-21976: Add LAST_SENT_KNIME_HUB_LOGIN and LAST_SENT_KNIME_HUB_UPLOAD" id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.HubStatistics"/>
+                <message_argument value="LAST_SENT_KNIME_HUB_LOGIN"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-21976: Add LAST_SENT_KNIME_HUB_LOGIN and LAST_SENT_KNIME_HUB_UPLOAD" id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.HubStatistics"/>
+                <message_argument value="LAST_SENT_KNIME_HUB_UPLOAD"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/IEarlyStartup.java" type="org.knime.core.util.IEarlyStartup">
         <filter comment="no API" id="403767336">
             <message_arguments>

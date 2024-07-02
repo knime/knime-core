@@ -96,6 +96,21 @@ public class HubStatistics {
      */
     public static String LAST_KNIME_HUB_UPLOAD = "LastHubUpload";
 
+    /**
+     * Key for the last hub login date that was sent to the instrumentation data endpoint.
+     * Currently, the endpoint is the welcome page/tips and tricks page request sent after workspace selection.
+     * @since 5.3
+     */
+    public static final String LAST_SENT_KNIME_HUB_LOGIN = "LastSentHubLogin";
+
+    /**
+     * Key for the last hub upload date that was sent to the instrumentation data endpoint.
+     * Currently, the endpoint is the welcome page/tips and tricks page request sent after workspace selection.
+     * @since 5.3
+     */
+    public static final String LAST_SENT_KNIME_HUB_UPLOAD = "LastSentHubUpload";
+
+
     private HubStatistics() {
     }
 
@@ -103,7 +118,7 @@ public class HubStatistics {
      * Stores the provided value under the given key into a statistics JSON.
      *
      * @param key The key for the value.
-     * @param value The value itself.
+     * @param value The value itself - must not be {@code null}.
      */
     public static synchronized void storeKnimeHubStat(final String key, final String value) {
         try {
@@ -164,6 +179,34 @@ public class HubStatistics {
     public static Optional<ZonedDateTime> getLastLogin() {
         try {
             return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_HUB_LOGIN)));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Returns the last {@link #getLastUpload()} that was reported to instrumentation.
+     *
+     * @return The last upload to KNIME Hub.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastSentUpload() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_UPLOAD)));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Returns the last {@link #getLastLogin()} that was reported to instrumentation.
+     *
+     * @return The last logged in to KNIME Hub.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastSentLogin() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_LOGIN)));
         } catch (Exception e) {
             return Optional.empty();
         }
