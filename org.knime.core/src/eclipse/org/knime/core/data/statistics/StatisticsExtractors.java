@@ -296,7 +296,7 @@ public final class StatisticsExtractors {
 
         private double m_fractionalPartOfPosition;
 
-        private double m_result;
+        private Double m_result;
 
         /**
          * The extractor computes the {@code n}th quantile of order {@code p} of a given column. The column needs to be
@@ -315,6 +315,7 @@ public final class StatisticsExtractors {
 
         @Override
         public void init(final int size) {
+            m_result = null;
             if (size == 1) {
                 m_integerPosition = 0;
                 return;
