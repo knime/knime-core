@@ -150,6 +150,7 @@ import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.message.Message;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
@@ -217,6 +218,7 @@ import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.workflowalizer.AuthorInformation;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
+import org.knime.shared.workflow.def.ConnectionDef;
 import org.knime.shared.workflow.def.MetaNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.RootWorkflowDef;
@@ -8756,8 +8758,9 @@ public final class WorkflowManager extends NodeContainer
     Pair<WorkflowAnnotationID[], Map<Integer, NodeID>> loadContent(final WorkflowDef workflowDef,
         final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
         exec.checkCanceled();
-        CheckUtils.checkState(this != ROOT || workflowDef.getConnections().isEmpty(),
-            "ROOT workflow has no connections: " + workflowDef.getConnections());
+        List<ConnectionDef> connectionDefs = workflowDef.getConnections();
+        CheckUtils.checkState(this != ROOT || connectionDefs.isEmpty(),
+            "ROOT workflow has no connections: " + connectionDefs);
 
         exec.setMessage("Loading annotations");
         WorkflowAnnotationID[] loadedAnnotationIDs = workflowDef.getAnnotations().entrySet().stream() //
@@ -8768,12 +8771,12 @@ public final class WorkflowManager extends NodeContainer
             }).toArray(WorkflowAnnotationID[]::new);
 
         exec.setMessage("Loading node and connection information");
-        var connections = workflowDef.getConnections().stream()
+        var connections = connectionDefs.stream()
             .map(c -> new ConnectionContainerTemplate(c.getSourceID(), c.getSourcePort(), c.getDestID(),
                 c.getDestPort(), c.isDeletable(), DefToCoreUtil.toConnectionUIInformation(c.getUiSettings()))) //
             .collect(Collectors.toSet());
 
-        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes(), exec, loadResult);
+        Map<Integer, NodeID> translationMap = loadNodes(workflowDef.getNodes(), connectionDefs, exec, loadResult);
         addConnectionsFromTemplates(connections, loadResult, translationMap, true);
 
         return Pair.create(loadedAnnotationIDs, translationMap);
@@ -9172,7 +9175,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     private Map<Integer, NodeID> loadNodes(final Map<String, ? extends BaseNodeDef> nodesDef,
-        final ExecutionMonitor exec, final LoadResult loadResult) throws CanceledExecutionException {
+        final List<ConnectionDef> connectionDefs, final ExecutionMonitor exec, final LoadResult loadResult)
+        throws CanceledExecutionException {
         // id suffix are made unique by using the entries in this map
         @SuppressWarnings("serial")
         Map<Integer, NodeID> translationMap = new LinkedHashMap<Integer, NodeID>() {
@@ -9187,6 +9191,8 @@ public final class WorkflowManager extends NodeContainer
             }
         };
 
+        final Map<NodeID, NativeNodeDef> missingNodes = new LinkedHashMap<>();
+
         for (Map.Entry<String, ? extends BaseNodeDef> nodeEntry : nodesDef.entrySet()) {
             var node = nodeEntry.getValue();
             var suffix = node.getId();
@@ -9200,11 +9206,30 @@ public final class WorkflowManager extends NodeContainer
                     subNodeId = m_workflow.createUniqueID();
                 }
                 translationMap.put(suffix, subNodeId);
-                var container = createNodeContainer(subNodeId, node);
+
+                if (node instanceof NativeNodeDef nativeNode
+                        && MissingNodeFactory.class.getName().equals(nativeNode.getFactory())) {
+                    missingNodes.put(subNodeId, nativeNode);
+                } else {
+                    var container = createNodeContainer(subNodeId, node);
+                    addNodeContainer(container, false);
+                    container.loadContent(node, exec, loadResult);
+                }
+            }
+        }
+
+        for (final Entry<NodeID, NativeNodeDef> missingEntry : missingNodes.entrySet()) {
+            final var subNodeId = missingEntry.getKey();
+            final var node = missingEntry.getValue();
+            try (WorkflowLock lock = lock()) {
+                var factory =
+                    DefToCoreUtil.createMissingNodeFactory(this, subNodeId, node, connectionDefs, translationMap);
+                var container = new NativeNodeContainer(this, subNodeId, node, new Node(factory));
                 addNodeContainer(container, false);
                 container.loadContent(node, exec, loadResult);
             }
         }
+
         return translationMap;
     }
 
@@ -9214,7 +9239,8 @@ public final class WorkflowManager extends NodeContainer
             case METANODE:
                 return newMetaNodeInstance(this, nodeId, (MetaNodeDef)def);
             case NATIVENODE:
-                return new NativeNodeContainer(this, nodeId, (NativeNodeDef)def);
+                return new NativeNodeContainer(this, nodeId, (NativeNodeDef)def,
+                    DefToCoreUtil.toNode((NativeNodeDef)def));
             case COMPONENT:
                 return new SubNodeContainer(this, nodeId, (ComponentNodeDef)def);
             default:

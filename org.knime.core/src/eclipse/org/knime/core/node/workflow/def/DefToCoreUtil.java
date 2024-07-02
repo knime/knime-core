@@ -49,13 +49,22 @@
 package org.knime.core.node.workflow.def;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeLogger;
@@ -67,6 +76,7 @@ import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryProvider;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -83,6 +93,8 @@ import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -94,6 +106,7 @@ import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
 import org.knime.shared.workflow.def.ConfigMapDef;
+import org.knime.shared.workflow.def.ConnectionDef;
 import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.FlowVariableDef;
 import org.knime.shared.workflow.def.JobManagerDef;
@@ -534,4 +547,77 @@ public class DefToCoreUtil {
 
     }
 
+    /**
+     * @param parent
+     * @param nodeId
+     * @param def
+     * @param connectionDefs
+     * @param translationMap
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public static NodeFactory<NodeModel> createMissingNodeFactory(final WorkflowManager parent, final NodeID nodeId,
+            final NativeNodeDef def, final Iterable<ConnectionDef> connectionDefs,
+            final Map<Integer, NodeID> translationMap) {
+        final var parentId = nodeId.getPrefix();
+        final SortedMap<Integer, List<ConnectionDef>> outConnections = new TreeMap<>();
+        final SortedMap<Integer, ConnectionDef> inConnections = new TreeMap<>();
+
+        for (final var conn : connectionDefs) {
+            if (conn.getSourceID().equals(def.getId())) {
+                outConnections.computeIfAbsent(conn.getSourcePort(), k -> new ArrayList<>()).add(conn);
+            } else if (conn.getDestID().equals(def.getId())) {
+                inConnections.put(conn.getDestPort(), conn);
+            }
+        }
+
+        final var inPortTypes = new PortType[Math.max(inConnections.lastKey(), 0)];
+        Arrays.fill(inPortTypes, PortObject.TYPE_OPTIONAL);
+        for (final var inConnEntry : inConnections.tailMap(1).entrySet()) {
+            final var portIdxHere = inConnEntry.getKey() - 1;
+            final var connection = inConnEntry.getValue();
+            final var sourceId = connection.getSourceID();
+            final var portIdxUpstream = connection.getSourcePort();
+            final var upstream = translationMap.getOrDefault(sourceId, new NodeID(parentId, sourceId));
+            final var optPortType = Optional.ofNullable(parent.getNodeContainer(upstream)) //
+                .filter(node -> portIdxUpstream >= 0 && portIdxUpstream < node.getNrOutPorts()) //
+                .map(node -> node.getOutPort(portIdxUpstream)) //
+                .map(NodePort::getPortType);
+            if (optPortType.isPresent()) {
+                inPortTypes[portIdxHere] = optPortType.get();
+            }
+        }
+
+        final var outPortTypes = new PortType[Math.max(outConnections.lastKey(), 0)];
+        Arrays.fill(outPortTypes, BufferedDataTable.TYPE); // default to BDT for unconnected ports
+        for (final var outConnEntry : outConnections.tailMap(1).entrySet()) {
+            final var portIdxHere = outConnEntry.getKey() - 1;
+            final var list = outConnEntry.getValue();
+            final Set<PortType> candidates = new HashSet<>();
+            for (ConnectionDef connection : list) {
+                final var destinationId = connection.getDestID();
+                final var portIdxDownstream = connection.getDestPort();
+                final var downstream = translationMap.getOrDefault(destinationId, new NodeID(parentId, destinationId));
+                Optional.ofNullable(parent.getNodeContainer(downstream)) //
+                    .filter(node -> portIdxDownstream >= 0 && portIdxDownstream < node.getNrOutPorts()) //
+                    .map(node -> node.getOutPort(portIdxDownstream)) //
+                    .map(NodePort::getPortType) //
+                    .ifPresent(candidates::add);
+            }
+
+            final var compatibleWithAll = candidates.stream() //
+                .filter(tp -> candidates.stream().allMatch(other -> other.isSuperTypeOf(tp))) //
+                .findAny();
+            if (compatibleWithAll.isPresent()) {
+                outPortTypes[portIdxHere] = compatibleWithAll.get();
+            }
+        }
+
+        final var nodeInfo = NodeAndBundleInformationPersistor.load(def.getNodeName(), def.getFeature(),
+            def.getBundle(), def.getFactory());
+        NodeSettingsRO additionalFactorySettings = DefToCoreUtil.toNodeSettings(def.getFactorySettings());
+        final var nodeFactory = new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
+        nodeFactory.init();
+        return (NodeFactory)nodeFactory;
+    }
 }

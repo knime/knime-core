@@ -102,7 +102,6 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult.Builder;
-import org.knime.core.node.workflow.def.DefToCoreUtil;
 import org.knime.core.node.workflow.execresult.NativeNodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -191,11 +190,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
      *
      * @param parent the workflow manager holding this node
      * @param id the identifier
-     * @param persistor to read from
+     * @param def native node definition
+     * @param node node instance
      */
-    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def) {
+    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def, final Node node) {
         super(parent, id, def);
-        m_node = DefToCoreUtil.toNode(def);
+        m_node = node;
         CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
             def.getNodeName(), getClass().getSimpleName(), id);
         setPortNames();
