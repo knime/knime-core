@@ -47,22 +47,26 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isA;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.SWT;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
+import org.knime.core.node.port.report.ReportPageConfiguration.PageOrientation;
+import org.knime.core.node.port.report.ReportPageConfiguration.PageSize;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /** 
@@ -81,7 +85,6 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     
     @Before
     public void setUp() throws Exception {
-    	assumeTrue("Temporarily disabled as part of NXT-2709 (Equo Chromium Update)", false);
     	assumeThat("Disabled on Mac due to DEVOPS-2105", Platform.getOS(), not(equalTo(Platform.OS_MACOSX)));
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
