@@ -54,6 +54,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -84,31 +85,59 @@ public class HubStatistics {
      * Name for the KNIME Hub json used to store values such as {@link #LAST_KNIME_HUB_LOGIN} and
      * {@link #LAST_KNIME_HUB_UPLOAD}.
      */
-    private static String KNIME_HUB_USAGE_FILE = "knimehub_usage.json";
+    private final static String KNIME_HUB_USAGE_FILE = "knimehub_usage.json";
 
     /**
-     * Key for shared Memento to store last login to KNIME Hub.
+     * Key for shared Memento to store last login to KNIME Community Hub.
      */
-    public static String LAST_KNIME_HUB_LOGIN = "LastHubLogin";
+    public final static String LAST_KNIME_HUB_LOGIN = "LastHubLogin";
 
     /**
-     * Key for shared Memento to store last upload to KNIME Hub.
+     * Key for shared Memento to store last upload to KNIME Community Hub.
      */
-    public static String LAST_KNIME_HUB_UPLOAD = "LastHubUpload";
+    public final static String LAST_KNIME_HUB_UPLOAD = "LastHubUpload";
 
     /**
-     * Key for the last hub login date that was sent to the instrumentation data endpoint.
+     * Key for shared Memento to store last login to any Hub that is not the KNIME Community Hub.
+     * @since 5.3
+     */
+    public static final String LAST_KNIME_NON_COMMUNITY_HUB_LOGIN = "LastNonCommunityHubLogin";
+
+    /**
+     * Key for shared Memento to store last upload to any Hub that is not the KNIME Community Hub.
+     * @since 5.3
+     */
+    public static final String LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD = "LastNonCommunityHubUpload";
+
+    /**
+     * Key for the last KNIME Community Hub login date that was sent to the instrumentation data endpoint.
      * Currently, the endpoint is the welcome page/tips and tricks page request sent after workspace selection.
      * @since 5.3
+     * @see #LAST_KNIME_HUB_LOGIN
      */
     public static final String LAST_SENT_KNIME_HUB_LOGIN = "LastSentHubLogin";
 
     /**
-     * Key for the last hub upload date that was sent to the instrumentation data endpoint.
+     * Key for the last KNIME Community Hub upload date that was sent to the instrumentation data endpoint.
      * Currently, the endpoint is the welcome page/tips and tricks page request sent after workspace selection.
      * @since 5.3
+     * @see #LAST_KNIME_HUB_UPLOAD
      */
     public static final String LAST_SENT_KNIME_HUB_UPLOAD = "LastSentHubUpload";
+
+    /**
+     * Key for the last non-KNIME Community Hub login date that was sent to the instrumentation data endpoint.
+     * @since 5.3
+     * @see #LAST_KNIME_NON_COMMUNITY_HUB_LOGIN
+     */
+    public static final String LAST_SENT_KNIME_NON_COMMUNITY_HUB_LOGIN = "LastSentNonCommunityHubLogin";
+
+    /**
+     * Key for the last non-KNIME Community Hub upload date that was sent to the instrumentation data endpoint.
+     * @since 5.3
+     * @see #LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD
+     */
+    public static final String LAST_SENT_KNIME_NON_COMMUNITY_HUB_UPLOAD = "LastSentNonCommunityHubUpload";
 
 
     private HubStatistics() {
@@ -159,55 +188,95 @@ public class HubStatistics {
     }
 
     /**
-     * Returns the last time the user uploaded to KNIME Hub.
-     *
-     * @return The last upload to KNIME Hub.
+     * @return the last time the user uploaded to the KNIME Community Hub.
      */
     public static Optional<ZonedDateTime> getLastUpload() {
         try {
             return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_HUB_UPLOAD)));
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return Optional.empty();
         }
     }
 
     /**
-     * Returns the last time the user logged in to KNIME Hub.
-     *
-     * @return The last logged in to KNIME Hub.
+     * @return the last time the user logged in to the KNIME Community Hub.
      */
     public static Optional<ZonedDateTime> getLastLogin() {
         try {
             return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_HUB_LOGIN)));
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return Optional.empty();
         }
     }
 
     /**
-     * Returns the last {@link #getLastUpload()} that was reported to instrumentation.
-     *
-     * @return The last upload to KNIME Hub.
+     * @return the last {@link #getLastUpload()} that was reported to instrumentation.
      * @since 5.3
      */
     public static Optional<ZonedDateTime> getLastSentUpload() {
         try {
             return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_UPLOAD)));
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             return Optional.empty();
         }
     }
 
     /**
-     * Returns the last {@link #getLastLogin()} that was reported to instrumentation.
-     *
-     * @return The last logged in to KNIME Hub.
+     * @return the last {@link #getLastLogin()} that was reported to instrumentation.
      * @since 5.3
      */
     public static Optional<ZonedDateTime> getLastSentLogin() {
         try {
             return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_LOGIN)));
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * @return the last time the user logged in to a hub other than the KNIME Community Hub.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastNonCommunityLogin() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_LOGIN)));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * @return the last {@link #getLastNonCommunityUpload()} that was reported to instrumentation.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastSentNonCommunityLogin() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_LOGIN)));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * @return the last {@link #getLastNonCommunityUpload()} that was reported to instrumentation.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastSentNonCommunityUpload() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_UPLOAD)));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * @return the last time the user uploaded to a hub other than the KNIME Community Hub.
+     * @since 5.3
+     */
+    public static Optional<ZonedDateTime> getLastNonCommunityUpload() {
+        try {
+            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD)));
+        } catch (DateTimeParseException e) {
             return Optional.empty();
         }
     }
