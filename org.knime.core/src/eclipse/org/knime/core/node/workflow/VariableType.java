@@ -106,8 +106,6 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.SharedIcons;
 import org.knime.core.node.workflow.CredentialsStore.CredentialsFlowVariableValue;
 
-import com.google.common.collect.Sets;
-
 /**
  * The type of a {@link FlowVariable}, replacing {@link FlowVariable.Type}. By convention, subclasses of this type are
  * singletons. The list of these singleton subclasses is not API and may change between versions of KNIME. To create a
@@ -432,15 +430,10 @@ public abstract class VariableType<T> {
             return Boolean.class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(BooleanType.INSTANCE, BooleanArrayType.INSTANCE,
-                StringType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(BooleanType.INSTANCE, BooleanArrayType.INSTANCE, StringType.INSTANCE,
+                StringArrayType.INSTANCE);
         }
 
         @Override
@@ -584,11 +577,6 @@ public abstract class VariableType<T> {
             return Boolean[].class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(BooleanArrayType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         protected <U> U getAs(final Boolean[] value, final VariableType<U> conversionTarget) {
             final Class<U> simpleType = conversionTarget.getSimpleType();
@@ -603,7 +591,7 @@ public abstract class VariableType<T> {
 
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(BooleanArrayType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -648,12 +636,6 @@ public abstract class VariableType<T> {
          * The singleton instance of the {@link DoubleType} type.
          */
         public static final DoubleType INSTANCE = new DoubleType();
-
-        // The varargs are safe because the created array is neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(
-                Sets.newHashSet(INSTANCE, DoubleArrayType.INSTANCE, StringType.INSTANCE, StringArrayType.INSTANCE));
 
         private DoubleType() {
             super(createOverwritablePredicate(), createCreationCompatiblePredicate());
@@ -703,7 +685,7 @@ public abstract class VariableType<T> {
 
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(INSTANCE, DoubleArrayType.INSTANCE, StringType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -861,14 +843,9 @@ public abstract class VariableType<T> {
             return Double[].class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(DoubleArrayType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(DoubleArrayType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -956,13 +933,6 @@ public abstract class VariableType<T> {
                     .or(VariableTypeUtils::isCharArray);
         }
 
-        // Safe because the array is neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(
-                Sets.newHashSet(INSTANCE, IntArrayType.INSTANCE, DoubleType.INSTANCE, DoubleArrayType.INSTANCE,
-                    LongType.INSTANCE, LongArrayType.INSTANCE, StringType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Icon getIcon() {
             return SharedIcons.FLOWVAR_INTEGER.get();
@@ -991,7 +961,8 @@ public abstract class VariableType<T> {
 
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(INSTANCE, IntArrayType.INSTANCE, DoubleType.INSTANCE, DoubleArrayType.INSTANCE,
+                LongType.INSTANCE, LongArrayType.INSTANCE, StringType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -1195,15 +1166,10 @@ public abstract class VariableType<T> {
             return Integer[].class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(IntArrayType.INSTANCE, LongArrayType.INSTANCE,
-                DoubleArrayType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(IntArrayType.INSTANCE, LongArrayType.INSTANCE, DoubleArrayType.INSTANCE,
+                StringArrayType.INSTANCE);
         }
 
         @Override
@@ -1346,15 +1312,10 @@ public abstract class VariableType<T> {
             return Long.class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(LongType.INSTANCE, LongArrayType.INSTANCE, DoubleType.INSTANCE,
-                DoubleArrayType.INSTANCE, StringType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(LongType.INSTANCE, LongArrayType.INSTANCE, DoubleType.INSTANCE, DoubleArrayType.INSTANCE,
+                StringType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -1507,14 +1468,9 @@ public abstract class VariableType<T> {
             return Long[].class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE = Collections.unmodifiableSet(
-            Sets.newHashSet(LongArrayType.INSTANCE, DoubleArrayType.INSTANCE, StringArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(LongArrayType.INSTANCE, DoubleArrayType.INSTANCE, StringArrayType.INSTANCE);
         }
 
         @Override
@@ -1638,15 +1594,10 @@ public abstract class VariableType<T> {
             return String.class;
         }
 
-        // the varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(StringType.INSTANCE, StringArrayType.INSTANCE,
-                BooleanType.INSTANCE, BooleanArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(StringType.INSTANCE, StringArrayType.INSTANCE, BooleanType.INSTANCE,
+                BooleanArrayType.INSTANCE);
         }
 
         @Override
@@ -1800,14 +1751,9 @@ public abstract class VariableType<T> {
             return String[].class;
         }
 
-        // The varargs are safe because they are neither modified nor exposed
-        @SuppressWarnings("unchecked")
-        private static final Set<VariableType<?>> CONVERTIBLE =
-            Collections.unmodifiableSet(Sets.newHashSet(StringArrayType.INSTANCE, BooleanArrayType.INSTANCE));
-
         @Override
         public Set<VariableType<?>> getConvertibleTypes() {
-            return CONVERTIBLE;
+            return Set.of(StringArrayType.INSTANCE, BooleanArrayType.INSTANCE);
         }
 
         @Override
