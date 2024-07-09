@@ -80,6 +80,7 @@ import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
+import org.knime.core.util.auth.SuppressingAuthenticator;
 import org.osgi.framework.Bundle;
 
 /**
@@ -344,6 +345,18 @@ public final class KNIMEConstants {
      */
     // added with AP-15442
     public static final String PROPERTY_WEAK_PASSWORDS_IN_SETTINGS_FORBIDDEN = "knime.settings.passwords.forbidden";
+
+    /**
+     * Java property for allowing authentication popups by Eclipse when an {@link Authenticator} request cannot be
+     * satisfied, for example when a HTTP proxy requires basic authentication (not provided by {@link ProxySelector}).
+     * <p>
+     * Defined in {@link SuppressingAuthenticator}, copied for visibility.
+     * </p>
+     *
+     * @since 5.4
+     */
+    // added with AP-22118
+    public static final String PROPERTY_AUTH_POPUPS_ALLOWED = SuppressingAuthenticator.PROPERTY_AUTH_POPUPS_ALLOWED;
 
     /** @deprecated Use #PROPERTY_DATABASE_FETCHSIZE instead. */
     @Deprecated
