@@ -97,6 +97,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.eclipse.swt.widgets.Composite;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigEditJTree;
@@ -314,6 +315,19 @@ public abstract class NodeDialogPane {
      */
     public final JPanel getPanel() {
         return m_panel;
+    }
+
+    /**
+     * No API! Don't use.
+     *
+     * @param dialogArea
+     * @nooverride This method is not intended to be re-implemented or extended by clients.
+     * @return whether the dialog area has been populated
+     *
+     * @since 5.3
+     */
+    public boolean populateDialog(final Composite dialogArea) { // NOSONAR unused parameter
+        return false;
     }
 
     /** Returns true if the underlying node is write protected. A node is write
