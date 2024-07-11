@@ -54,6 +54,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.append.AppendedRowsIterator.PairSupplier;
 import org.knime.core.data.append.AppendedRowsIterator.RuntimeCanceledExecutionException;
+import org.knime.core.data.append.AppendedRowsIterator.TableIndexAndRowKey;
 import org.knime.core.data.append.AppendedRowsTable.DuplicatePolicy;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.streamable.RowInput;
@@ -113,7 +114,7 @@ public class AppendedRowsRowInput extends RowInput {
 
     /**
      * @return number rows skipped as per duplicate handling.
-     * @see org.knime.core.data.append.base.data.append.row.AppendedRowsIterator#getNrRowsSkipped()
+     * @see AppendedRowsIterator#getNrRowsSkipped()
      */
     public int getNrRowsSkipped() {
         return m_iterator.getNrRowsSkipped();
@@ -123,10 +124,19 @@ public class AppendedRowsRowInput extends RowInput {
 
     /**
      * @return de-duplicate map, used for hilite translation
-     * @see org.knime.core.data.append.base.data.append.row.AppendedRowsIterator#getDuplicateNameMap()
+     * @see AppendedRowsIterator#getDuplicateNameMap()
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
         return m_iterator.getDuplicateNameMap();
+    }
+
+    /**
+     * @return de-duplicate map, used for hilite translation, including the table index of the input table
+     * @see AppendedRowsIterator#getDuplicateNameMapWithIndices()
+     * @since 5.4
+     */
+    public Map<RowKey, TableIndexAndRowKey> getDuplicateNameMapWithIndices() {
+        return m_iterator.getDuplicateNameMapWithIndices();
     }
 
     /**

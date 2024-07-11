@@ -67,6 +67,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Pair;
 
+import com.google.common.collect.Maps;
+
 /**
  * Iterator over an {@link AppendedRowsTable}.
  * Has {@link BlobSupportDataRow} support.
@@ -109,8 +111,15 @@ public class AppendedRowsIterator extends CloseableRowIterator {
     /** The next row to be returned. null if atEnd() */
     private DataRow m_nextRow;
 
-    /** Map to check for duplicates. */
-    private final Map<RowKey, RowKey> m_duplicateMap;
+    /**
+     * A record type to keep track of the source table and row key of duplicate keys
+     *
+     * @since 5.4
+     */
+    public record TableIndexAndRowKey(int index, RowKey key) {}
+
+    /** Map to check for duplicates, including indices of the source table */
+    private final Map<RowKey, TableIndexAndRowKey> m_duplicateMap;
 
     /** has printed error message for duplicate entries? */
     private boolean m_hasPrintedError = false;
@@ -133,23 +142,23 @@ public class AppendedRowsIterator extends CloseableRowIterator {
     private final boolean m_fillDuplicateMap;
 
     /**
-     * Creates new iterator of <code>tables</code> following <code>spec</code>.
-     * The iterator may throw an exception in next.
+     * Creates new iterator of <code>tables</code> following <code>spec</code>. The iterator may throw an exception in
+     * next.
      *
      * @param exec for progress/cancel, may be <code>null</code>
      * @param totalRowCount the total row count or negative if unknown
      * @param fillDuplicateMap if true, the duplicate map ({@link #getDuplicateNameMap()} is also filled for
-     * {@link DuplicatePolicy#Fail} and {@link DuplicatePolicy#CreateNew} (the other policies fill it anyway)
+     *            {@link DuplicatePolicy#Fail} and {@link DuplicatePolicy#CreateNew} (the other policies fill it anyway)
      */
-    AppendedRowsIterator(final PairSupplier[] tables, final DuplicatePolicy duplPolicy, final String suffix,
-        final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount,
+    AppendedRowsIterator(final PairSupplier[] tables, final DuplicatePolicy duplPolicy,
+        final String suffix, final DataTableSpec spec, final ExecutionMonitor exec, final long totalRowCount,
         final boolean fillDuplicateMap) {
         m_iteratorSuppliers = CheckUtils.checkArgumentNotNull(tables);
         m_suffix = suffix;
         m_spec = CheckUtils.checkArgumentNotNull(spec);
         m_duplPolicy = CheckUtils.checkArgumentNotNull(duplPolicy);
         m_curItIndex = -1;
-        m_duplicateMap = new HashMap<RowKey, RowKey>();
+        m_duplicateMap = new HashMap<>();
         m_curMapping = new int[m_spec.getNumColumns()];
         m_exec = exec;
         m_totalRowCount = totalRowCount;
@@ -281,7 +290,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
             }
         }
         if (fillDuplicateMap()) {
-            m_duplicateMap.put(key, origKey);
+            m_duplicateMap.put(key, new TableIndexAndRowKey(m_curItIndex, origKey));
         }
         if (m_exec != null) {
             try {
@@ -381,12 +390,30 @@ public class AppendedRowsIterator extends CloseableRowIterator {
      * <tr><td>Row1_dup</td><td>Row1</td></tr>
      * </table>
      * @return Such a map (unmodifiable)
+     * @see #getDuplicateNameMapWithIndices() if you are also interested in which table the row key was provided
      */
     public Map<RowKey, RowKey> getDuplicateNameMap() {
+        final var view = Maps.transformValues(m_duplicateMap, pair -> pair.key);
+        return Collections.unmodifiableMap(view);
+    }
+
+
+    /** Get a map of keys in the resulting table to the keys in
+     * the respective input tables, typically elements such as below.
+     * <table>
+     * <tr><th>Key</th><th>Value</th></tr>
+     * <tr><td>Row1</td><td>(0, Row1)</td></tr>
+     * <tr><td>Row2</td><td>(0, Row2)</td></tr>
+     * <tr><td>Row1_dup</td><td>(1, Row1)</td></tr>
+     * </table>
+     * @return Such a map (unmodifiable)
+     * @see #getDuplicateNameMap() if you are not interested in the table indices
+     * @since 5.4
+     */
+    public Map<RowKey, TableIndexAndRowKey> getDuplicateNameMapWithIndices() {
         return Collections.unmodifiableMap(m_duplicateMap);
     }
 
-    /** {@inheritDoc} */
     @Override
     public void close() {
         if (m_curIterator instanceof CloseableRowIterator) {
@@ -413,20 +440,17 @@ public class AppendedRowsIterator extends CloseableRowIterator {
     }
 
     /**
-     * Runtime exception that's thrown when the execution monitor's
-     * {@link ExecutionMonitor#checkCanceled()} method throws a
-     * {@link CanceledExecutionException}.
+     * Runtime exception that's thrown when the execution monitor's {@link ExecutionMonitor#checkCanceled()} method
+     * throws a {@link CanceledExecutionException}.
      */
-    public static final class RuntimeCanceledExecutionException extends
-            RuntimeException {
+    public static final class RuntimeCanceledExecutionException extends RuntimeException {
 
         /**
          * Inits object.
          *
          * @param cee The exception to wrap.
          */
-        private RuntimeCanceledExecutionException(
-                final CanceledExecutionException cee) {
+        private RuntimeCanceledExecutionException(final CanceledExecutionException cee) {
             super(cee.getMessage(), cee);
         }
 
