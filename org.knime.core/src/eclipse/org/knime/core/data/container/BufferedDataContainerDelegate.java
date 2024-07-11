@@ -93,7 +93,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowDataRepository;
@@ -1009,32 +1008,35 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
     }
 
     /**
-     * @param table
-     * @param out
+     * Writes a given DataTable permanently to an output stream. This includes also all table spec information, such as
+     * color, size, and shape properties as well.
+     *
+     * <p>
+     * The content is saved by instantiating a {@link ZipOutputStream} on the argument stream, saving the necessary
+     * information in respective zip entries. <b>The stream is not closed by this method.</b>
+     * </p>
+     *
+     * @param table the data table to write to the output stream
+     * @param out the destination stream (the caller is responsible for closing the stream)
      * @param exec
-     * @return
      * @throws IOException
      * @throws CanceledExecutionException
+     * @see DataContainer#writeToStream(DataTable, OutputStream, ExecutionMonitor)
      */
+    @SuppressWarnings("resource") // output stream must not be closed
     public static void writeToStream(final DataTable table, final OutputStream out, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         Buffer buf;
         ExecutionMonitor e = exec;
-        boolean canUseBuffer = table instanceof ContainerTable;
-        if (canUseBuffer) {
-            Buffer b = ((BufferedContainerTable)table).getBuffer();
-            if (b.containsBlobCells() && b.getBufferID() != -1) {
-                canUseBuffer = false;
-            }
-        }
-        if (canUseBuffer) {
-            buf = ((BufferedContainerTable)table).getBuffer();
+        if (table instanceof BufferedContainerTable bct
+            && (!bct.getBuffer().containsBlobCells() || bct.getBuffer().getBufferID() == -1)) {
+            buf = bct.getBuffer();
         } else {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
             buf = new Buffer(table.getDataTableSpec(), 0, -1, NotInWorkflowDataRepository.newInstance(),
                 new DefaultLocalDataRepository(), NotInWorkflowWriteFileStoreHandler.create());
-            int rowCount = 0;
+            var rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
                 e.setMessage("Writing row #" + rowCount + " (\"" + row.getKey() + "\")");
@@ -1047,14 +1049,14 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         }
         final boolean originalOutputIsBuffered =
             ((out instanceof BufferedOutputStream) || (out instanceof ByteArrayOutputStream));
-        OutputStream os = originalOutputIsBuffered ? out : new BufferedOutputStream(out);
+        final var os = originalOutputIsBuffered ? out : new BufferedOutputStream(out);
 
-        ZipOutputStream zipOut = new ZipOutputStream(os);
+        final var zipOut = new ZipOutputStream(os);
         // (part of) bug fix #1141: spec must be put as first entry in order
         // for the table reader to peek it
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
-        NodeSettings settings = new NodeSettings("Table Spec");
-        NodeSettingsWO specSettings = settings.addNodeSettings(CFG_TABLESPEC);
+        final var settings = new NodeSettings("Table Spec");
+        final var specSettings = settings.addNodeSettings(CFG_TABLESPEC);
         buf.getTableSpec().save(specSettings);
         settings.saveToXML(new NonClosableOutputStream.Zip(zipOut));
         buf.addToZipFile(zipOut, e);
