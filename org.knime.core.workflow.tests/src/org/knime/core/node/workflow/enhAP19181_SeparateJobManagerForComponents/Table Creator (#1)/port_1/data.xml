@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="table_meta_info">
-    <entry key="table_ID" type="xint" value="5"/>
-    <entry key="table_type" type="xstring" value="container_table_compressed"/>
-    <entry key="table_compression_format" type="xstring" value="SNAPPY"/>
-    <entry key="table_file_name" type="xstring" value="data.zip"/>
-</config>

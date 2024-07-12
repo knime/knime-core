@@ -1,7 +1,0 @@
-autoEnabled=false
-bindingSuggestionsDisabled=false
-eclipse.preferences.version=1
-idePrefixKey=src/org/knime/core/node/workflow/node/adapter
-projectKey=KNIME_knime-core
-serverId=SonarCloud
-sqPrefixKey=org.knime.slf4j.binding/src/main/java/org/slf4j/impl

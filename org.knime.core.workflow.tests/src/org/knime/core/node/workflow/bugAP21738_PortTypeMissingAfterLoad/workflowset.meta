@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--This file is auto-generated and is overwritten each time the workflow is saved.
-    The metadata have moved to the `workflow-metadata.xml` file.-->
-<KNIMEMetaInfo nrOfElements="3" xmlns="http://www.knime.org/2.9/metainfo">
-    <element form="date" name="Creation Date" read-only="false">29/0/2024/11:16:52 +01:00</element>
-    <element form="multiline" name="Comments" read-only="false"/>
-    <element form="text" name="Last Edited" read-only="true">2024-01-29 11:16:52 +0100</element>
-</KNIMEMetaInfo>

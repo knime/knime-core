@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<met:KNIMEMetaInfo xmlns:met="http://www.knime.org/2.9/metainfo">
-  <met:element form="text" name="Author">iris.adae</met:element>
-  <met:element form="date" name="Creation Date">22/11/2015</met:element>
-  <met:element form="multiline" name="Comments"/>
-</met:KNIMEMetaInfo>
