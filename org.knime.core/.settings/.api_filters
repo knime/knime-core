@@ -313,6 +313,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$ReportFragment">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObject.ReportFragment"/>
+                <message_argument value="ReportFragment(String, ReportPageConfiguration)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="ReportFragment(String, ReportPageConfiguration, ReportUtil.ViewImageFileFormat)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>

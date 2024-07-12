@@ -121,4 +121,24 @@ public final class ReportUtil {
         }
     }
 
+    /**
+     * The possible file formats of views
+     * @since 5.4
+     */
+    public enum ViewImageFileFormat {
+            SVG("SVG"), PNG("PNG");
+
+        private final String m_viewImageFileFormat;
+
+        ViewImageFileFormat(final String viewImageFileFormat) {
+            m_viewImageFileFormat = viewImageFileFormat;
+        }
+
+        /**
+         * @return the view image file format
+         */
+        public String getViewImageFileFormat() {
+            return m_viewImageFileFormat;
+        }
+    }
 }
