@@ -60,6 +60,7 @@ import org.knime.shared.workflow.def.impl.ReportConfigurationDefBuilder;
  * Describes report configuration, currently only if it's enabled. In future versions it will contain any configuration
  * set on a component, e.g. a custom report layout.
  *
+ *
  * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel, KNIME
  *
@@ -67,11 +68,15 @@ import org.knime.shared.workflow.def.impl.ReportConfigurationDefBuilder;
  */
 public final class ReportConfiguration {
 
+    private static final String DEFAULT_REPORT_GENERATION_TIMEOUT_SYS_PROP =
+        "org.knime.reporting2.report_generation_timeout_seconds";
+
+    private static final int DEFAULT_REPORT_GENERATION_TIMEOUT_IN_SECONDS = 600;
+
     /**
      * @since 5.2
      */
     public static final ReportConfiguration INSTANCE = new ReportConfiguration();
-
     private ReportConfiguration() {
     }
 
@@ -109,6 +114,15 @@ public final class ReportConfiguration {
         return new ReportConfigurationDefBuilder() //
             .setEnabled(Boolean.TRUE) //
             .build();
+    }
+
+    /**
+     * @return the report generation timeout in seconds
+     * @since 5.4
+     */
+    public static int getReportGenerationTimeout() {
+        return Integer.getInteger(DEFAULT_REPORT_GENERATION_TIMEOUT_SYS_PROP,
+            DEFAULT_REPORT_GENERATION_TIMEOUT_IN_SECONDS);
     }
 
     /**
