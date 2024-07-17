@@ -99,13 +99,13 @@ public class HubStatistics {
 
     /**
      * Key for shared Memento to store last login to any Hub that is not the KNIME Community Hub.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static final String LAST_KNIME_NON_COMMUNITY_HUB_LOGIN = "LastNonCommunityHubLogin";
 
     /**
      * Key for shared Memento to store last upload to any Hub that is not the KNIME Community Hub.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static final String LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD = "LastNonCommunityHubUpload";
 
@@ -127,14 +127,14 @@ public class HubStatistics {
 
     /**
      * Key for the last non-KNIME Community Hub login date that was sent to the instrumentation data endpoint.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      * @see #LAST_KNIME_NON_COMMUNITY_HUB_LOGIN
      */
     public static final String LAST_SENT_KNIME_NON_COMMUNITY_HUB_LOGIN = "LastSentNonCommunityHubLogin";
 
     /**
      * Key for the last non-KNIME Community Hub upload date that was sent to the instrumentation data endpoint.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      * @see #LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD
      */
     public static final String LAST_SENT_KNIME_NON_COMMUNITY_HUB_UPLOAD = "LastSentNonCommunityHubUpload";
@@ -235,7 +235,7 @@ public class HubStatistics {
 
     /**
      * @return the last time the user logged in to a hub other than the KNIME Community Hub.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static Optional<ZonedDateTime> getLastNonCommunityLogin() {
         try {
@@ -247,7 +247,7 @@ public class HubStatistics {
 
     /**
      * @return the last {@link #getLastNonCommunityUpload()} that was reported to instrumentation.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static Optional<ZonedDateTime> getLastSentNonCommunityLogin() {
         try {
@@ -259,7 +259,7 @@ public class HubStatistics {
 
     /**
      * @return the last {@link #getLastNonCommunityUpload()} that was reported to instrumentation.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static Optional<ZonedDateTime> getLastSentNonCommunityUpload() {
         try {
@@ -271,7 +271,7 @@ public class HubStatistics {
 
     /**
      * @return the last time the user uploaded to a hub other than the KNIME Community Hub.
-     * @since 5.3
+     * @since 5.4 (also released in 5.3.1)
      */
     public static Optional<ZonedDateTime> getLastNonCommunityUpload() {
         try {

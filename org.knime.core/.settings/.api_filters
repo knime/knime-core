@@ -1,130 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter comment="DEVOPS-2351: Replace re-exported custom xmlbeans5 bundle with standard xmlbeans 5.4.0 in target platform " id="933232702">
+    <resource path="META-INF/MANIFEST.MF" type="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver">
+        <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
-                <message_argument value="5.4.0"/>
-                <message_argument value="org.apache.xmlbeans5"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.HeuristicCommitException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.HeuristicCommitException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.HeuristicMixedException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.HeuristicMixedException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.HeuristicRollbackException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.HeuristicRollbackException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.InvalidTransactionException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.InvalidTransactionException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.NotSupportedException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.NotSupportedException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.RollbackException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.RollbackException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.Status">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.Status"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.Synchronization">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.Synchronization"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.SystemException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.SystemException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.Transaction">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.Transaction"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.TransactionManager">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.TransactionManager"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.TransactionRequiredException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.TransactionRequiredException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.TransactionRolledbackException">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.TransactionRolledbackException"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.TransactionSynchronizationRegistry">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.TransactionSynchronizationRegistry"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="javax.transaction.UserTransaction">
-        <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
-            <message_arguments>
-                <message_argument value="javax.transaction.UserTransaction"/>
-                <message_argument value="org.knime.core_5.4.0"/>
+                <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
+                <message_argument value="org.knime.core_5.3.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -468,18 +348,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.HubStatistics"/>
                 <message_argument value="LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD"/>
-            </message_arguments>
-        </filter>
-        <filter comment="AP-21976: Add LAST_SENT_KNIME_HUB_LOGIN and LAST_SENT_KNIME_HUB_UPLOAD" id="336658481">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.HubStatistics"/>
-                <message_argument value="LAST_SENT_KNIME_HUB_LOGIN"/>
-            </message_arguments>
-        </filter>
-        <filter comment="AP-21976: Add LAST_SENT_KNIME_HUB_LOGIN and LAST_SENT_KNIME_HUB_UPLOAD" id="336658481">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.HubStatistics"/>
-                <message_argument value="LAST_SENT_KNIME_HUB_UPLOAD"/>
             </message_arguments>
         </filter>
         <filter comment="AP-22870 Distinguish between community and non-community hubs" id="336658481">
