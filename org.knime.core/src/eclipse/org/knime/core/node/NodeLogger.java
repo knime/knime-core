@@ -164,6 +164,16 @@ public final class NodeLogger {
     }
 
     /**
+     * Log a {@link Throwable} as a warning.
+     *
+     * @param thrw throwable to log
+     * @since 5.4
+     */
+    public void warn(final Throwable thrw) {
+        log(Level.WARN, thrw.getMessage(), thrw);
+    }
+
+    /**
      * Write warning message into this logger.
      *
      * @param supplier Supplier for the object to print.
@@ -180,6 +190,16 @@ public final class NodeLogger {
      */
     public void debug(final Object o) {
         log(Level.DEBUG, o, null);
+    }
+
+    /**
+     * Log a {@link Throwable} as a debug message.
+     *
+     * @param thrw throwable to log
+     * @since 5.4
+     */
+    public void debug(final Throwable thrw) {
+        log(Level.DEBUG, thrw.getMessage(), thrw);
     }
 
     /**
@@ -275,6 +295,16 @@ public final class NodeLogger {
     }
 
     /**
+     * Log a {@link Throwable} as an information.
+     *
+     * @param thrw throwable to log
+     * @since 5.4
+     */
+    public void info(final Throwable thrw) {
+        log(Level.INFO, thrw.getMessage(), thrw);
+    }
+
+    /**
      * Write info message into this logger.
      *
      * @param supplier Supplier for the object to print.
@@ -294,6 +324,16 @@ public final class NodeLogger {
     }
 
     /**
+     * Log a {@link Throwable} as an error.
+     *
+     * @param thrw throwable to log
+     * @since 5.4
+     */
+    public void error(final Throwable thrw) {
+        log(Level.ERROR, thrw.getMessage(), thrw);
+    }
+
+    /**
      * Write error message into the logger.
      *
      * @param supplier Supplier for the object to print.
@@ -310,6 +350,16 @@ public final class NodeLogger {
      */
     public void fatal(final Object o) {
         log(Level.FATAL, o, null);
+    }
+
+    /**
+     * Log a {@link Throwable} as a fatal error.
+     *
+     * @param thrw throwable to log
+     * @since 5.4
+     */
+    public void fatal(final Throwable thrw) {
+        log(Level.FATAL, thrw.getMessage(), thrw);
     }
 
     /**

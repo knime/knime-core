@@ -305,14 +305,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeLogger.java" type="org.knime.core.node.NodeLogger">
-        <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
-                <message_argument value="org.knime.core_5.4.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec">
         <filter comment="refactoring of internal API as part of NXT-2570" id="338722907">
             <message_arguments>
