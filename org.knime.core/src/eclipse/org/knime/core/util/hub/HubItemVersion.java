@@ -88,6 +88,8 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         CheckUtils.checkArgumentNotNull(linkType);
         if(linkType == LinkType.FIXED_VERSION) {
             CheckUtils.checkNotNull(versionNumber);
+            CheckUtils.checkArgument(versionNumber > 0, "Version number must be larger than zero, but was %d.",
+                versionNumber);
         } else {
             CheckUtils.checkArgument(versionNumber == null,
                 "Version number can only be specified for a fixed version.");
