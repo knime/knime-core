@@ -192,7 +192,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastUpload() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_HUB_UPLOAD)));
+            return Optional.ofNullable(getStatistics(LAST_KNIME_HUB_UPLOAD)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -203,7 +203,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastLogin() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_HUB_LOGIN)));
+            return Optional.ofNullable(getStatistics(LAST_KNIME_HUB_LOGIN)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -215,7 +215,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastSentUpload() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_UPLOAD)));
+            return Optional.ofNullable(getStatistics(LAST_SENT_KNIME_HUB_UPLOAD)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -227,7 +227,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastSentLogin() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_HUB_LOGIN)));
+            return Optional.ofNullable(getStatistics(LAST_SENT_KNIME_HUB_LOGIN)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -239,7 +239,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastNonCommunityLogin() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_LOGIN)));
+            return Optional.ofNullable(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_LOGIN)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -251,7 +251,8 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastSentNonCommunityLogin() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_LOGIN)));
+            return Optional.ofNullable(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_LOGIN))
+                .map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -263,7 +264,8 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastSentNonCommunityUpload() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_UPLOAD)));
+            return Optional.ofNullable(getStatistics(LAST_SENT_KNIME_NON_COMMUNITY_HUB_UPLOAD))
+                .map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
@@ -275,7 +277,7 @@ public class HubStatistics {
      */
     public static Optional<ZonedDateTime> getLastNonCommunityUpload() {
         try {
-            return Optional.ofNullable(ZonedDateTime.parse(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD)));
+            return Optional.ofNullable(getStatistics(LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD)).map(ZonedDateTime::parse);
         } catch (DateTimeParseException e) {
             return Optional.empty();
         }
