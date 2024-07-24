@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
@@ -360,9 +361,8 @@ public class HiLiteHandler {
      * Informs all registered hilite listener to hilite the row keys contained in the key event.
      *
      * @param event Contains all rows keys to hilite.
-     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
-     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
-     *            asynchronously
+     * @param async if {@code false} this method will return until all registered {@link HiLiteListener HiLiteListeners}
+     *            have been called; if {@code true} calling the listeners will be carried out asynchronously
      */
     public synchronized void fireHiLiteEvent(final KeyEvent event, final boolean async) {
         if (event == null) {
@@ -405,27 +405,8 @@ public class HiLiteHandler {
         // if at least on key changed
         if (!changedIDs.isEmpty()) {
             m_hiLitKeys = newHilitKeys;
-            final KeyEvent fireEvent =
-                new KeyEvent(event.getSource(), changedIDs);
-            final Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    for (final HiLiteListener l : m_listenerList) {
-                        try {
-                            l.hiLite(fireEvent);
-                        } catch (final Throwable t) {
-                            LOGGER.coding(
-                                    "Exception while notifying listeners, "
-                                        + "reason: " + t.getMessage(), t);
-                        }
-                    }
-                }
-            };
-            if (async) {
-                ViewUtils.runOrInvokeLaterInEDT(r);
-            } else {
-                r.run();
-            }
+            final KeyEvent fireEvent = new KeyEvent(event.getSource(), changedIDs);
+            runOnListeners(l -> l.hiLite(fireEvent), async);
         }
     }
 
@@ -455,9 +436,8 @@ public class HiLiteHandler {
      * Informs all registered hilite listener to unhilite the row keys contained in the key event.
      *
      * @param event Contains all rows keys to unhilite.
-     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
-     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
-     *            asynchronously
+     * @param async if {@code false} this method will return until all registered {@link HiLiteListener HiLiteListeners}
+     *            have been called; if {@code true} calling the listeners will be carried out asynchronously
      */
     public synchronized void fireUnHiLiteEvent(final KeyEvent event, final boolean async) {
         if (event == null) {
@@ -493,25 +473,7 @@ public class HiLiteHandler {
             // throw unhilite event
             final KeyEvent fireEvent = new KeyEvent(
                     event.getSource(), changedIDs);
-            final Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    for (final HiLiteListener l : m_listenerList) {
-                        try {
-                            l.unHiLite(fireEvent);
-                        } catch (final Throwable t) {
-                            LOGGER.coding(
-                                 "Exception while notifying listeners, reason: "
-                                        + t.getMessage(), t);
-                        }
-                    }
-                }
-            };
-            if (async) {
-                ViewUtils.runOrInvokeLaterInEDT(r);
-            } else {
-                r.run();
-            }
+            runOnListeners(l -> l.unHiLite(fireEvent), async);
         }
     }
 
@@ -527,9 +489,23 @@ public class HiLiteHandler {
 
     /**
      * Informs all registered hilite listener to reset all hilit rows.
+     *
      * @param event the event fired for clear hilite
      */
     public synchronized void fireClearHiLiteEvent(final KeyEvent event) {
+        fireClearHiLiteEvent(event, true);
+    }
+
+    /**
+     * Informs all registered hilite listener to reset all hilit rows.
+     *
+     * @param event the event fired for clear hilite
+     * @param async if {@code false} this method will return until all registered {@link HiLiteListener
+     *            HiLiteListeners} have been called; if {@code true} calling the listeners will be carried out
+     *            asynchronously
+     * @since 5.4
+     */
+    public synchronized void fireClearHiLiteEvent(final KeyEvent event, final boolean async) {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
@@ -539,21 +515,7 @@ public class HiLiteHandler {
          */
         if (!m_hiLitKeys.isEmpty()) {
             m_hiLitKeys = new LinkedHashSet<RowKey>();
-            final Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    for (final HiLiteListener l : m_listenerList) {
-                        try {
-                            l.unHiLiteAll(event);
-                        } catch (final Throwable t) {
-                            LOGGER.coding(
-                                "Exception while notifying listeners, reason: "
-                                    + t.getMessage(), t);
-                        }
-                    }
-                }
-            };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            runOnListeners(l -> l.unHiLiteAll(event), async);
         }
     }
 
@@ -597,9 +559,8 @@ public class HiLiteHandler {
      * Informs all registered hilite listener to replace all hilit rows.
      *
      * @param event the event fired for hilite replacement
-     * @param async if {@code false} this method will only return until all registered {@link HiLiteListener
-     *            HiLiteListeners} have been called; f {@code true} calling the listeners will be carried out
-     *            asynchronously
+     * @param async if {@code false} this method will return until all registered {@link HiLiteListener HiLiteListeners}
+     *            have been called; if {@code true} calling the listeners will be carried out asynchronously
      * @throws NullPointerException if the key event is <code>null</code>
      * @since 4.5
      */
@@ -609,20 +570,7 @@ public class HiLiteHandler {
         final var keys = event.keys();
         if (!m_hiLitKeys.equals(keys)) {
             m_hiLitKeys = new LinkedHashSet<>(keys);
-            Runnable r = () -> {
-                for (final HiLiteListener l : m_listenerList) {
-                    try {
-                        l.replaceHiLite(event);
-                    } catch (final Throwable t) { // NOSONAR code copied from the other fireEvent methods
-                        LOGGER.coding("Exception while notifying listeners, reason: " + t.getMessage(), t);
-                    }
-                }
-            };
-            if (async) {
-                ViewUtils.runOrInvokeLaterInEDT(r);
-            } else {
-                r.run();
-            }
+            runOnListeners(l -> l.replaceHiLite(event), async);
         }
     }
 
@@ -634,4 +582,31 @@ public class HiLiteHandler {
     public Set<RowKey> getHiLitKeys() {
         return new LinkedHashSet<RowKey>(m_hiLitKeys);
     }
+
+    private void runOnListeners(final Consumer<HiLiteListener> callOnListener, final boolean async) {
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                for (final HiLiteListener l : m_listenerList) {
+                    try {
+                        callOnListener.accept(l);
+                    } catch (final Throwable t) {
+                        LOGGER.coding("Exception while notifying listeners, reason: " + t.getMessage(), t);
+                    }
+                }
+            }
+        };
+
+        if (async) {
+            ViewUtils.runOrInvokeLaterInEDT(r);
+        } else {
+            try {
+                HiLiteTranslator.FORCE_SYNC_FIRE.set(Boolean.TRUE);
+                r.run();
+            } finally {
+                HiLiteTranslator.FORCE_SYNC_FIRE.remove();
+            }
+        }
+    }
+
 }
