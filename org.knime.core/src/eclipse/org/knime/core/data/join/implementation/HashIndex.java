@@ -443,4 +443,9 @@ class HashIndex {
         return biggerTable(joinSpecification).other();
     }
 
+    /** @return the number of rows added to this index */
+    long size() {
+        return m_rows.size();
+    }
+
 }

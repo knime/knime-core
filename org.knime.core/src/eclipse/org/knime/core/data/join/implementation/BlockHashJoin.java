@@ -168,6 +168,8 @@ class BlockHashJoin extends JoinImplementation {
 
         getProgress().setMessage("Indexing smaller table.");
 
+        final long numHashRows = hash.size();
+
         // grab and index as many hash input rows as possible (ideally all)
         try (CloseableRowIterator hashRows = hash.iterator()) {
 
@@ -181,7 +183,7 @@ class BlockHashJoin extends JoinImplementation {
                 index.addHashRow(joinAttributeValues, hashRow, rowOffset);
 
                 // if memory is running low, do a pass over the probe input to be able to clear the hash index
-                boolean memoryLow = m_progress.isMemoryLow(100);
+                boolean memoryLow = getProgress().isMemoryLow(100);
                 if (memoryLow) {
                     // since we're doing several passes over the probe side, we might get false positive unmatched rows
                     // on the probe side (because we're searching for match partners in an incomplete index)
@@ -192,11 +194,12 @@ class BlockHashJoin extends JoinImplementation {
                     results.lowMemory();
 
                     // process probe input once to be able to clear out the current hash index
-                    singlePass(probe, index, unmatchedHashRows);
+                    singlePass(probe, index, unmatchedHashRows, numHashRows);
+
                     index = newHashIndex.get();
                 }
 
-                m_progress.setProgressAndCheckCanceled(1.0 * rowOffset / hash.size());
+                m_progress.getCancelChecker().checkCanceled();
 
                 rowOffset++;
 
@@ -205,18 +208,21 @@ class BlockHashJoin extends JoinImplementation {
         } // close hash input row iterator
 
         // process pending hash index contents
-        singlePass(probe, index, unmatchedHashRows);
+        singlePass(probe, index, unmatchedHashRows, numHashRows);
 
         return results;
 
     }
 
-    private void singlePass(final BufferedDataTable probe, final HashIndex partialIndex, final RowHandlerCancelable unmatchedHashRows)
-        throws CanceledExecutionException {
+    private void singlePass(final BufferedDataTable probe, final HashIndex partialIndex,
+            final RowHandlerCancelable unmatchedHashRows, final long numHashRows) throws CanceledExecutionException {
+        final double hashChunkFraction = numHashRows == 0 ? 1d : (1d * partialIndex.size() / numHashRows);
+        getProgress().setMessage("Processing larger table - partial index covers %.1f%% of the smaller table"
+            .formatted(hashChunkFraction * 100d));
 
-        getProgress().setMessage("Single pass over larger table.");
+        final var subProgress = m_exec.createSubExecutionContext(hashChunkFraction);
+        var checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(subProgress, 100, probe.size());
 
-        var checkCanceled = CancelChecker.checkCanceledPeriodicallyWithProgress(m_exec, 100, probe.size());
         JoinResult.enumerateWithResources(probe, partialIndex::joinSingleRow, checkCanceled);
 
         partialIndex.forUnmatchedHashRows(unmatchedHashRows);
