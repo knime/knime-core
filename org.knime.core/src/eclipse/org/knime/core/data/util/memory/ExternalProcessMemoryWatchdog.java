@@ -49,6 +49,10 @@
 package org.knime.core.data.util.memory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +63,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.hash.TLongHashSet;
 
 /**
  * Watchdog that tracks the memory usage of external processes. If the total memory usage of all external processes
@@ -156,7 +161,7 @@ public final class ExternalProcessMemoryWatchdog {
             }
 
             // Collect the current memory usage of the process
-            memoryState.put(process, getMemoryUsage(process));
+            memoryState.put(process, getMemoryUsage(process.pid()));
         }
 
         return memoryState;
@@ -195,13 +200,75 @@ public final class ExternalProcessMemoryWatchdog {
      * @return proportional set size (PSS) of this process and all its subprocesses in kb or 0 if the memory usage could
      *         not be determined
      */
-    private static int getMemoryUsage(final ProcessHandle process) {
-        var childrenMem = process.children().mapToInt(ExternalProcessMemoryWatchdog::getMemoryUsage).sum();
+    private static int getMemoryUsage(final long pid) {
+        var childrenPids = getChildren(pid);
+        var childrenMem = 0;
+        for (var i = 0; i < childrenPids.length; i++) {
+            childrenMem += getMemoryUsage(childrenPids[i]);
+        }
         try {
-            return childrenMem + PSSUtil.getPSS(process.pid());
+            return childrenMem + PSSUtil.getPSS(pid);
         } catch (IOException e) {
-            LOGGER.warn("Failed to get memory usage of external process with pid " + process.pid() + ".", e);
+            LOGGER.info("Failed to get memory usage of external process with pid " + pid + ".", e);
             return 0;
+        }
+    }
+
+    /**
+     * Get the pids of the direct children of the process with the given pid. Uses the /proc[pid]/task/[tid]/children
+     * files to determine the children quickly and without building up a process tree or all processes.
+     * <P>
+     * Note that when this method returns, the list can be out-dated already.
+     *
+     * @param pid the pid of the process
+     * @return a list of the pids of the direct children of the process
+     * @see <a href="https://www.baeldung.com/linux/get-process-child-processes#using-the-proc-file-system">Baeldung -
+     *      Getting a Process&#39; Child Processes</a>
+     */
+    private static long[] getChildren(final long pid) {
+        var children = new TLongHashSet();
+        try (var taskDirStream = Files.newDirectoryStream(Paths.get("/proc", String.valueOf(pid), "task"))) {
+            for (var tidPath : taskDirStream) {
+                addChildrenPids(tidPath, children);
+            }
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to get children of external process with pid " + pid + ".", ex);
+        }
+
+        return children.toArray();
+    }
+
+    /**
+     * Parses the file /proc/[pid]/task/[tid]/children to get the children of a process and adds them to the given
+     * children set.
+     *
+     * @param tidPath the path to the task directory of the process
+     * @param children the set to add the children to
+     * @see <a href=
+     *      "https://docs.kernel.org/filesystems/proc.html#proc-pid-task-tid-children-information-about-task-children"
+     *      >Linux /proc filesystem documentation</a>
+     */
+    private static void addChildrenPids(final Path tidPath, final TLongHashSet children) {
+        var childrenPath = tidPath.resolve("children");
+
+        final String childrenContent;
+        try {
+            // NB: We do not check for file existence but just try to read it and handle the exception
+            childrenContent = Files.readString(childrenPath, StandardCharsets.US_ASCII).trim();
+        } catch (IOException e) {
+            LOGGER.debug("Failed to read children file", e);
+            return;
+        }
+
+        if (!childrenContent.isEmpty()) {
+            for (var childPid : childrenContent.split(" ")) {
+                try {
+                    children.add(Long.parseLong(childPid.trim()));
+                } catch (final NumberFormatException ex) {
+                    LOGGER.warn("Failed to parse subprocess pid from line '" + childPid + "'. Ignoring subprocess.",
+                        ex);
+                }
+            }
         }
     }
 
