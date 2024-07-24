@@ -142,7 +142,7 @@ class Workflow {
      * in this workflow.
      *
      * @param id of the node
-     * @return node with that id
+     * @return node with that id, or {@code null} if the node doesn't exist
      */
     NodeContainer getNode(final NodeID id) {
         return m_nodes.get(id);

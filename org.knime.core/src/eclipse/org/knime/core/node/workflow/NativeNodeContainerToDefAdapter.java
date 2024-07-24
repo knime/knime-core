@@ -96,7 +96,9 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      */
     @Override
     public String getFactory() {
-        return m_nc.getNode().getFactory().getClass().getName();
+        // AP-22086: Return the node factory name from the bundle information
+        //           If the node is missing, this still returns the original factory name instead of MissingNodeFactory
+        return m_nc.getNodeAndBundleInformation().getFactoryClassNotNull();
     }
 
     /**
@@ -123,7 +125,9 @@ public class NativeNodeContainerToDefAdapter extends SingleNodeContainerToDefAda
      */
     @Override
     public String getNodeName() {
-        return m_nc.getName();
+        // AP-22086: Return the node name from the bundle information
+        //           If the node is missing, this still returns the original node name instead of "MISSING ..."
+        return m_nc.getNodeAndBundleInformation().getNodeNameNotNull();
     }
 
     /**

@@ -267,11 +267,23 @@ public final class NodeAndBundleInformationPersistor extends NodeAndBundleInform
             bundleVersion, featureSymbolicName, featureName, featureVendor, featureVersion);
     }
 
+    /**
+     * Create a persistor based on the defs and (factory) name of a node
+     * @param nodeName Name of the node
+     * @param feature vendor information of the feature
+     * @param bundle vendor information of the bundle
+     * @param factoryName {@link NodeFactory} class name
+     * @return a new NodeAndBundleInformationPersistor
+     */
     public static NodeAndBundleInformationPersistor load(final String nodeName, final VendorDef feature,
         final VendorDef bundle, final String factoryName) {
         return new NodeAndBundleInformationPersistor(factoryName, bundle.getSymbolicName(), bundle.getName(),
-            bundle.getVendor(), nodeName, new Version(bundle.getVersion()), feature.getSymbolicName(),
-            feature.getName(), feature.getVendor(), new Version(feature.getVersion()));
+            bundle.getVendor(), nodeName, nullableVersion(bundle.getVersion()), feature.getSymbolicName(),
+            feature.getName(), feature.getVendor(), nullableVersion(feature.getVersion()));
+    }
+
+    private static Version nullableVersion(final String versionStr) {
+        return versionStr == null ? null : new Version(versionStr);
     }
 
     /** {@inheritDoc} */

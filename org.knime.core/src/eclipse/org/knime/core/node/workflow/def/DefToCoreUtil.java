@@ -49,13 +49,22 @@
 package org.knime.core.node.workflow.def;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeLogger;
@@ -67,6 +76,7 @@ import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.extension.InvalidNodeFactoryExtensionException;
 import org.knime.core.node.extension.NodeFactoryProvider;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -83,6 +93,8 @@ import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.workflowalizer.AuthorInformation;
@@ -94,6 +106,7 @@ import org.knime.shared.workflow.def.ComponentMetadataDef;
 import org.knime.shared.workflow.def.ComponentNodeDef;
 import org.knime.shared.workflow.def.ConfigDef;
 import org.knime.shared.workflow.def.ConfigMapDef;
+import org.knime.shared.workflow.def.ConnectionDef;
 import org.knime.shared.workflow.def.ConnectionUISettingsDef;
 import org.knime.shared.workflow.def.FlowVariableDef;
 import org.knime.shared.workflow.def.JobManagerDef;
@@ -143,23 +156,47 @@ public class DefToCoreUtil {
      *
      * @param def a {@link NativeNodeDef}
      * @return a {@link Node}
+     * @throws RuntimeException if the node factory is not found or there was an error during instantiation
      */
     public static Node toNode(final NativeNodeDef def) {
-        NodeFactory<NodeModel> nodeFactory;
+        try {
+            return instantiateNode(def, loadNodeFactory(def.getFactory()));
+        } catch (InstantiationException | IllegalAccessException | InvalidSettingsException
+                | InvalidNodeFactoryExtensionException ex) {
+            // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
+            throw new RuntimeException(ex);
+        }
+    }
+
+    /**
+     * Tries to convert a native node def to a Node
+     * @param def the definition of the node
+     * @return a {@link Node} instance, or {@link Optional#empty()} if the node factory cannot be found (missing node)
+     * @throws RuntimeException if there was an error instantiating the node factory, but the node factory was found
+     */
+    public static Optional<Node> tryToNode(final NativeNodeDef def) {
+        try {
+            final var optFac = tryLoadNodeFactory(def.getFactory());
+            return optFac.map(fac -> instantiateNode(def, fac));
+        } catch (InstantiationException | IllegalAccessException | InvalidNodeFactoryExtensionException ex) {
+            // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static Node instantiateNode(final NativeNodeDef def, final NodeFactory<NodeModel> fac) {
         NodeSettingsRO nodeCreationSettings;
         try {
             NodeSettingsRO additionalFactorySettings = toNodeSettings(def.getFactorySettings());
-            nodeFactory = loadNodeFactory(def.getFactory());
             nodeCreationSettings = toNodeSettings(def.getNodeCreationConfig());
-            nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
-        } catch (InvalidSettingsException | InstantiationException | IllegalAccessException
-                | InvalidNodeFactoryExtensionException e) {
+            fac.loadAdditionalFactorySettings(additionalFactorySettings);
+        } catch (InvalidSettingsException e) {
             // TODO currently not doing any type of error handling (unknown node), done as part of AP-18960
             throw new RuntimeException(e);
         }
         Node node;
         try {
-            node = new Node(nodeFactory, loadCreationConfig(nodeCreationSettings, nodeFactory).orElse(null));
+            node = new Node(fac, loadCreationConfig(nodeCreationSettings, fac).orElse(null));
         } catch (InvalidSettingsException e) {
             throw new RuntimeException(e);
         }
@@ -229,29 +266,36 @@ public class DefToCoreUtil {
      *
      * @since 3.5
      */
-    @SuppressWarnings("unchecked")
     private static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName)
-            throws InvalidSettingsException, InstantiationException, IllegalAccessException,
-            InvalidNodeFactoryExtensionException{
-        Optional<NodeFactory<NodeModel>> facOptional =
-                NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName);
-        if (facOptional.isPresent()) {
-            return facOptional.get();
-        }
-        List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
-        for (NodeFactoryClassMapper mapper : classMapperList) {
-            @SuppressWarnings("rawtypes")
-            NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
-            if (factory != null) {
-                LOGGER.debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
-                    + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
-                    mapper.getClass().getName()));
-                return factory;
-            }
-        }
+        throws InvalidSettingsException, InstantiationException, IllegalAccessException,
+        InvalidNodeFactoryExtensionException {
+        return tryLoadNodeFactory(factoryClassName).orElseThrow(() -> new InvalidSettingsException(
+            String.format("Unknown factory class \"%s\" -- not registered via extension point", factoryClassName)));
+    }
 
-        throw new InvalidSettingsException(String.format(
-            "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
+    /**
+     * Creates the node factory instance for the given fully-qualified factory class name if possible.
+     * Otherwise, an empty {@linkplain Optional} is returned.
+     *
+     * @since 5.4
+     */
+    @SuppressWarnings("unchecked") // Casting the node factory to NodeFactory<NodeModel> to comply with return type
+    private static final Optional<NodeFactory<NodeModel>> tryLoadNodeFactory(final String factoryClassName)
+        throws InstantiationException, IllegalAccessException, InvalidNodeFactoryExtensionException {
+        return NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName) //
+            .or(() -> { // NOSONAR
+                for (final var mapper : NodeFactoryClassMapper.getRegisteredMappers()) {
+                    final var factory = mapper.mapFactoryClassName(factoryClassName);
+                    if (factory != null) {
+                        LOGGER.debug(String.format(
+                            "Replacing stored factory class name \"%s\" by actual factory "
+                                + "class \"%s\" (defined by class mapper \"%s\")",
+                            factoryClassName, factory.getClass().getName(), mapper.getClass().getName()));
+                        return Optional.of((NodeFactory<NodeModel>)factory);
+                    }
+                }
+                return Optional.empty();
+            });
     }
 
     /**
@@ -534,4 +578,87 @@ public class DefToCoreUtil {
 
     }
 
+    /**
+     * Create a missing node factory from a pasted {@link NativeNodeDef}.
+     * The port number and port types are guessed from a list of connections.
+     *
+     * @param parent the {@link WorkflowManager} that provides context to the up- and downstream nodes.
+     * @param nodeId for the node that shall be added
+     * @param def the spec of the node
+     * @param connectionDefs list of connections
+     * @param translationMap translation between former and pasted nodeIDs
+     * @return a {@link MissingNodeFactory} that is a stand-in for the provided node spec
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"}) // cast of return value
+    public static NodeFactory<NodeModel> createMissingNodeFactory(final WorkflowManager parent, // NOSONAR
+        final NodeID nodeId, final NativeNodeDef def, final Iterable<ConnectionDef> connectionDefs,
+        final Map<Integer, NodeID> translationMap) {
+        // Collect in and out connections of the node in question
+        final SortedMap<Integer, List<ConnectionDef>> outConnections = new TreeMap<>();
+        final SortedMap<Integer, ConnectionDef> inConnections = new TreeMap<>();
+        for (final var conn : connectionDefs) {
+            if (conn.getSourceID().equals(def.getId())) {
+                outConnections.computeIfAbsent(conn.getSourcePort(), k -> new ArrayList<>()).add(conn);
+            } else if (conn.getDestID().equals(def.getId())) {
+                inConnections.put(conn.getDestPort(), conn);
+            }
+        }
+
+        final var parentId = nodeId.getPrefix();
+
+        // Guess in port types
+        final var nrInPorts = inConnections.isEmpty() ? 0 : inConnections.lastKey();
+        final var inPortTypes = new PortType[nrInPorts]; // does not include flow var port
+        Arrays.fill(inPortTypes, PortObject.TYPE_OPTIONAL);
+        for (final var inConnEntry : inConnections.tailMap(1).entrySet()) { // all connections after the flow var port
+            final var portIdxHere = inConnEntry.getKey() - 1; // port index (first data port is 0)
+            final var connection = inConnEntry.getValue();
+            final var sourceId = connection.getSourceID();
+            final var portIdxUpstream = connection.getSourcePort();
+            final var upstream = translationMap.getOrDefault(sourceId, new NodeID(parentId, sourceId));
+            final var optPortType = parent.tryGetNodeContainer(upstream) //
+                .filter(node -> portIdxUpstream >= 0 && portIdxUpstream < node.getNrOutPorts()) //
+                .map(node -> node.getOutPort(portIdxUpstream)) //
+                .map(NodePort::getPortType);
+            if (optPortType.isPresent()) {
+                inPortTypes[portIdxHere] = optPortType.get();
+            }
+        }
+
+        // Guess out port types
+        final var nrOutPorts = outConnections.isEmpty() ? 0 : outConnections.lastKey();
+        final var outPortTypes = new PortType[nrOutPorts];
+        Arrays.fill(outPortTypes, BufferedDataTable.TYPE); // default to BDT for unconnected ports
+        for (final var outConnEntry : outConnections.tailMap(1).entrySet()) { // all connections after the flow var port
+            final var portIdxHere = outConnEntry.getKey() - 1; // port index (first data port is 0)
+            final var list = outConnEntry.getValue();
+            final Set<PortType> candidates = new HashSet<>();
+            // iterate over all downstream nodes from the out port
+            for (ConnectionDef connection : list) {
+                final var destinationId = connection.getDestID();
+                final var portIdxDownstream = connection.getDestPort();
+                final var downstream = translationMap.getOrDefault(destinationId, new NodeID(parentId, destinationId));
+                parent.tryGetNodeContainer(downstream) //
+                    .filter(node -> portIdxDownstream >= 0 && portIdxDownstream < node.getNrOutPorts()) //
+                    .map(node -> node.getOutPort(portIdxDownstream)) //
+                    .map(NodePort::getPortType) //
+                    .ifPresent(candidates::add);
+            }
+
+            final var compatibleWithAll = candidates.stream() //
+                .filter(tp -> candidates.stream().allMatch(other -> other.isSuperTypeOf(tp))) //
+                .findAny();
+            if (compatibleWithAll.isPresent()) {
+                outPortTypes[portIdxHere] = compatibleWithAll.get();
+            }
+        }
+
+        // collect node and bundle information stored with the node
+        final var nodeInfo = NodeAndBundleInformationPersistor.load(def.getNodeName(), def.getFeature(),
+            def.getBundle(), def.getFactory());
+        NodeSettingsRO additionalFactorySettings = DefToCoreUtil.toNodeSettings(def.getFactorySettings());
+        final var nodeFactory = new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
+        nodeFactory.init();
+        return (NodeFactory)nodeFactory; // cast of MissingNodeFactory to NodeFactory
+    }
 }
