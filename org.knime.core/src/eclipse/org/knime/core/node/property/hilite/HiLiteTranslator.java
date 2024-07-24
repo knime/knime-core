@@ -85,6 +85,15 @@ public final class HiLiteTranslator {
     /** Event source used to indicate hilite events fired by this translator. */
     private final Object m_eventSource = this;
 
+    static final ThreadLocal<Boolean> FORCE_SYNC_FIRE = new ThreadLocal<>();
+
+    /*
+     * Whether the translated hi-lite events are to be propagated/fired asynchronously or not.
+     */
+    private static boolean fireAsync() {
+        return !Boolean.TRUE.equals(FORCE_SYNC_FIRE.get());
+    }
+
     /**
      * Listener on the source handler used to forward events
      * to all registered target handlers.
@@ -108,7 +117,7 @@ public final class HiLiteTranslator {
                 }
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
-                        h.fireHiLiteEvent(new KeyEvent(m_eventSource, fireSet));
+                        h.fireHiLiteEvent(new KeyEvent(m_eventSource, fireSet), fireAsync());
                     }
                 }
             }
@@ -133,7 +142,7 @@ public final class HiLiteTranslator {
                 if (!fireSet.isEmpty()) {
                     for (HiLiteHandler h : m_targetHandlers) {
                         h.fireUnHiLiteEvent(
-                            new KeyEvent(m_eventSource, fireSet));
+                            new KeyEvent(m_eventSource, fireSet), fireAsync());
                     }
                 }
             }
@@ -148,9 +157,10 @@ public final class HiLiteTranslator {
                 return;
             }
             for (HiLiteHandler h : m_targetHandlers) {
-                h.fireClearHiLiteEvent(new KeyEvent(m_eventSource));
+                h.fireClearHiLiteEvent(new KeyEvent(m_eventSource), fireAsync());
             }
         }
+
     };
 
     /**
@@ -180,7 +190,7 @@ public final class HiLiteTranslator {
                     // if all mapped keys are hilite then fire event
                     if (all.containsAll(keys)) {
                         m_sourceHandler.fireHiLiteEvent(
-                            new KeyEvent(m_eventSource, key));
+                            new KeyEvent(m_eventSource, key), fireAsync());
                     }
                 }
             }
@@ -201,7 +211,7 @@ public final class HiLiteTranslator {
                     for (RowKey hilite : event.keys()) {
                         if (keys.contains(hilite)) {
                             m_sourceHandler.fireUnHiLiteEvent(
-                                new KeyEvent(m_eventSource, key));
+                                new KeyEvent(m_eventSource, key), fireAsync());
                             break;
                         }
                     }
@@ -216,7 +226,7 @@ public final class HiLiteTranslator {
             if (event.getSource() == m_eventSource) {
                 return;
             }
-            m_sourceHandler.fireClearHiLiteEvent(new KeyEvent(m_eventSource));
+            m_sourceHandler.fireClearHiLiteEvent(new KeyEvent(m_eventSource), fireAsync());
         }
     };
 
