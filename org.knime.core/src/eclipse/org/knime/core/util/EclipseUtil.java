@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -67,8 +68,12 @@ import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -82,6 +87,11 @@ import org.osgi.service.application.ApplicationHandle;
  */
 @SuppressWarnings("restriction")
 public final class EclipseUtil {
+
+    private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
+
+    private static final String KNIME_APPLICATION_ID = "org.knime.product.KNIME_APPLICATION";
+
     /**
      * Interface for filtering classes in {@link EclipseUtil#findClasses(ClassFilter, ClassLoader)}.
      *
@@ -322,6 +332,22 @@ public final class EclipseUtil {
         jar.close();
     }
 
+    private static Optional<String> getApplicationID() {
+        final var coreBundle = FrameworkUtil.getBundle(EclipseUtil.class);
+        if (coreBundle != null) {
+            final BundleContext ctx = coreBundle.getBundleContext();
+            final ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
+            if (ser != null) {
+                try {
+                    final ApplicationHandle appHandle = ctx.getService(ser);
+                    return Optional.ofNullable(appHandle == null ? null : appHandle.getInstanceId());
+                } finally {
+                    ctx.ungetService(ser);
+                }
+            }
+        }
+        return Optional.empty();
+    }
 
     /**
      * Checks whether this KNIME instance runs as an RMI application on the server.
@@ -330,22 +356,47 @@ public final class EclipseUtil {
      * @since 2.12
      */
     public static boolean determineServerUsage() {
-        Bundle myself = FrameworkUtil.getBundle(EclipseUtil.class);
-        if (myself != null) {
-            BundleContext ctx = myself.getBundleContext();
-            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
-            if (ser != null) {
-                ApplicationHandle appHandle = ctx.getService(ser);
-                String instanceId = appHandle.getInstanceId();
-                boolean b = (instanceId != null) && instanceId.contains("KNIME_REMOTE_APPLICATION");
-                ctx.ungetService(ser);
-                return b;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return getApplicationID().filter(id -> id.contains("KNIME_REMOTE_APPLICATION")).isPresent();
     }
 
+    /**
+     * Checks whether this KNIME instance runs as a local Analytics Platform.
+     *
+     * @return <code>true</code> if we are running as local AP, <code>false</code> otherwise
+     * @since 5.4
+     */
+    public static boolean determineAPUsage() {
+        return getApplicationID().filter(KNIME_APPLICATION_ID::equals).isPresent();
+    }
+
+    /**
+     * Checks whether this KNIME instance is using the Classic UI perspective.
+     *
+     * @return <code>true</code> if the Classic UI is active, <code>false</code> otherwise
+     * @since 5.4
+     */
+    public static boolean determineClassicUIUsage() {
+        return PlatformUI.isWorkbenchRunning() && Display.getDefault().syncCall(() -> { // NOSONAR
+            IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+            if (window != null) {
+                final IWorkbenchPage page = window.getActivePage();
+                if (page != null) {
+                    final IPerspectiveDescriptor perspective = page.getPerspective();
+                    return perspective != null && CLASSIC_PERSPECTIVE_ID.equals(perspective.getId());
+                }
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Determines which UI perspective is opened (if any).
+     *
+     * @return either {@code "classic"} or {@code "modern"} if called in a local AP, empty {@link Optional} otherwise
+     * @since 5.4
+     */
+    public static Optional<String> currentUIPerspective() {
+        return determineAPUsage() ? Optional.of(determineClassicUIUsage() ? "classic" : "modern") // NOSONAR
+            : Optional.empty();
+    }
 }
