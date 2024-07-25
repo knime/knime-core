@@ -167,8 +167,11 @@ public final class WorkflowSegment {
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm) {
-        CheckUtils.checkState(!wfm.canResetAll() && !wfm.canCancelAll(),
-            "Workflow segment can't be created from an executing or (partially) executed workflow");
+        final var partiallyExecuted = wfm.canResetAll() && !wfm.getNodeContainers().isEmpty();
+        CheckUtils.checkState(!partiallyExecuted,
+                "Workflow segment can't be created from an executed or partially executed workflow");
+        final var executing = wfm.canCancelAll();
+        CheckUtils.checkState(!executing, "Workflow segment can't be created from an executing workflow");
     }
 
     /**
