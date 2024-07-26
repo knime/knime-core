@@ -78,7 +78,8 @@ public final class ExternalProcessMemoryWatchdog {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ExternalProcessMemoryWatchdog.class);
 
-    private static final long POLLING_INTERVAL_MS = Long.getLong("knime.externalprocesswatchdog.pollinginterval", 100);
+    /** The polling interval for the watchdog in milliseconds. */
+    private static final long POLLING_INTERVAL_MS = Long.getLong("knime.externalprocesswatchdog.pollinginterval", 250);
 
     private static final int MAX_MEMORY_KBYTES =
         Integer.getInteger("knime.externalprocesswatchdog.maxmemory", 1024 << 10);
