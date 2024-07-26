@@ -85,7 +85,49 @@ public final class ExternalProcessMemoryWatchdog {
      * The maximum memory that external processes are allowed to allocate. <code>-1</code> means no limit and disables
      * the watchdog.
      */
-    private static final int MAX_MEMORY_KBYTES = Integer.getInteger("knime.externalprocesswatchdog.maxmemory", -1);
+    private static final int MAX_MEMORY_KBYTES = getMaxMemoryKBytes();
+
+    /**
+     * How much memory we reserve for the OS and other processes running on the container
+     */
+    private static final int CONTAINER_RESERVED_MEMORY_KBYTES =
+        Integer.getInteger("knime.externalprocesswatchdog.containerreservedkbytes", 128);
+
+    private static int getMaxMemoryKBytes() {
+        var requestedContainerSizeBytes = System.getenv("CONTAINER_MEMORY_REQUESTS");
+        if (requestedContainerSizeBytes == null) {
+            return getMaxMemoryKBytesFromSysProperty();
+        }
+
+        try {
+            int requestedContainerSizeKBytes = Integer.valueOf(requestedContainerSizeBytes) >> 10;
+            int jvmMemoryKBytes = (int)(Runtime.getRuntime().maxMemory() >> 10);
+
+            // TODO: consider columnar backend memory. But we can't access ColumnarPreferenceUtils from here
+            // ColumnarPreferenceUtils.getOffHeapMemoryLimitMB() ??
+
+            int memoryLimitKBytes = requestedContainerSizeKBytes - jvmMemoryKBytes - CONTAINER_RESERVED_MEMORY_KBYTES;
+
+            LOGGER.debug("KNIME External Process Watchdog memory limit configured based on environment variable "
+                + "CONTAINER_MEMORY_REQUESTS propery to " + memoryLimitKBytes + "kb");
+            return memoryLimitKBytes;
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Could not parse value of environment variable 'CONTAINER_MEMORY_REQUESTS' ("
+                + requestedContainerSizeBytes + ")");
+            return getMaxMemoryKBytesFromSysProperty();
+        }
+    }
+
+    private static int getMaxMemoryKBytesFromSysProperty() {
+        var max = Integer.getInteger("knime.externalprocesswatchdog.maxmemory");
+        if (max != null) {
+            LOGGER.debug("KNIME External Process Watchdog memory limit configured via system propery to " + max);
+            return max;
+        }
+
+        LOGGER.debug("KNIME External Process Watchdog memory limit not configured");
+        return -1;
+    }
 
     private static final ExternalProcessMemoryWatchdog INSTANCE = new ExternalProcessMemoryWatchdog();
 
