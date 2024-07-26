@@ -81,8 +81,11 @@ public final class ExternalProcessMemoryWatchdog {
     /** The polling interval for the watchdog in milliseconds. */
     private static final long POLLING_INTERVAL_MS = Long.getLong("knime.externalprocesswatchdog.pollinginterval", 250);
 
-    private static final int MAX_MEMORY_KBYTES =
-        Integer.getInteger("knime.externalprocesswatchdog.maxmemory", 1024 << 10);
+    /**
+     * The maximum memory that external processes are allowed to allocate. <code>-1</code> means no limit and disables
+     * the watchdog.
+     */
+    private static final int MAX_MEMORY_KBYTES = Integer.getInteger("knime.externalprocesswatchdog.maxmemory", -1);
 
     private static final ExternalProcessMemoryWatchdog INSTANCE = new ExternalProcessMemoryWatchdog();
 
@@ -109,9 +112,11 @@ public final class ExternalProcessMemoryWatchdog {
      *            record the reason why the process was killed.
      */
     public void trackProcess(final ProcessHandle process, final LongConsumer killCallback) {
-        var existingkillCallback = m_processesToKillCallbacks.putIfAbsent(process, killCallback);
-        if (existingkillCallback != null) {
-            throw new IllegalArgumentException("The process " + process + " is already being tracked.");
+        if (m_watchdogRunning) {
+            var existingkillCallback = m_processesToKillCallbacks.putIfAbsent(process, killCallback);
+            if (existingkillCallback != null) {
+                throw new IllegalArgumentException("The process " + process + " is already being tracked.");
+            }
         }
     }
 
@@ -121,9 +126,11 @@ public final class ExternalProcessMemoryWatchdog {
 
     private ConcurrentMap<ProcessHandle, LongConsumer> m_processesToKillCallbacks = new ConcurrentHashMap<>();
 
+    private final boolean m_watchdogRunning;
+
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
-        if (PSSUtil.supportsPSS()) {
+        if (PSSUtil.supportsPSS() && MAX_MEMORY_KBYTES >= 0) {
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -131,9 +138,16 @@ public final class ExternalProcessMemoryWatchdog {
                     updateMemoryUsage();
                 }
             }, 0, POLLING_INTERVAL_MS);
+            m_watchdogRunning = true;
+        } else if (MAX_MEMORY_KBYTES < 0) {
+            LOGGER.info("External process memory watchdog is disabled.");
+            m_watchdogRunning = false;
         } else if (SystemUtils.IS_OS_LINUX) {
             LOGGER.warn(
                 "PSS measurements are not supported on this system. The external process memory watchdog is disabled.");
+            m_watchdogRunning = false;
+        } else {
+            m_watchdogRunning = false;
         }
     }
 
