@@ -63,6 +63,7 @@ import org.knime.core.node.workflow.VariableType.DoubleType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.node.workflow.VariableType.VariableValue;
+import org.knime.core.util.CoreConstants;
 
 /**
  * FlowVariable holding local variables of basic types which can be passed along connections in a workflow.
@@ -259,7 +260,22 @@ public final class FlowVariable extends FlowObject {
      */
     public FlowVariable(final String name, final CredentialsFlowVariableValue valueC) {
         this(name, CredentialsType.INSTANCE, CheckUtils.checkArgumentNotNull(valueC, "Value must not be null"),
-            Scope.Flow);
+            getScopeFromName(name));
+    }
+
+    /**
+     * (Added as part of AP-22551) Determines the scope of a variable, usually <code>Scope.Flow</code> but for one
+     * special case it is <code>Scope.Global</code>: {@value CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID} workflow
+     * credentials are temporarily translated to flow variables in some selected nodes. These magic credentials, and
+     * workflow credentials in general, are discouraged but to guarantee backwards compatibility (for some customers),
+     * they are still supported.
+     *
+     * @param name Name of the variable
+     * @return <code>Scope.Flow</code> if the name is not {@value CoreConstants#CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID},
+     *         <code>Scope.Global</code> otherwise
+     */
+    private static Scope getScopeFromName(final String name) {
+        return CoreConstants.CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID.equals(name) ? Scope.Global : Scope.Flow;
     }
 
     /**
