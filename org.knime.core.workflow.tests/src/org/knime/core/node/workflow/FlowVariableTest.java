@@ -48,9 +48,13 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.VariableType.StringType;
+import org.knime.core.util.CoreConstants;
 
 /**
  * Unit tests related to the {@link FlowVariable} class.
@@ -73,11 +77,25 @@ public class FlowVariableTest {
         Assert.assertNotEquals(var, nullVar1);
         Assert.assertNotEquals(nullVar1, var);
 
-        Assert.assertEquals(nullVar1.getStringValue(), nullString);
-        Assert.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
-        Assert.assertEquals(nullVar1.getIntValue(), 0);
-        Assert.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
-        Assert.assertEquals(nullVar1.getValueAsString(), nullString);
+		Assert.assertEquals(nullVar1.getStringValue(), nullString);
+		Assert.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
+		Assert.assertEquals(nullVar1.getIntValue(), 0);
+		Assert.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
+		Assert.assertEquals(nullVar1.getValueAsString(), nullString);
+	}
+	
+	/**
+	 * Test FlowVariable creation for system default credentials, ignores the
+	 * workflow but specifically checks AP-22551.
+	 */
+    @Test
+    public void testSystemCredentialsToFlowVariableConversion_AP22551() throws Exception {
+		FlowVariable systemCredsVariable = CredentialsStore
+				.newCredentialsFlowVariable(CoreConstants.CREDENTIALS_KNIME_SYSTEM_DEFAULT_ID, "", "", false, false);
+		assertEquals(Scope.Global, systemCredsVariable.getScope());
+		FlowVariable otherCredsVariable = CredentialsStore.newCredentialsFlowVariable("some-name", "", "", false,
+				false);
+		assertEquals(Scope.Flow, otherCredsVariable.getScope());
     }
 
 }
