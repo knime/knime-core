@@ -122,6 +122,13 @@ public interface TableBackend {
     String getDescription();
 
     /**
+     * @return the number of bytes used in off-heap memory
+     */
+    default long getReservedOffHeapBytes() {
+        return 0;
+    }
+
+    /**
      * Concatenates the provided tables.
      * @param exec for creating container tables
      * @param progressMonitor used to report progress
