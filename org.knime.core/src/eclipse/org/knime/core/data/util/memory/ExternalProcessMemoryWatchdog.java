@@ -62,7 +62,7 @@ import java.util.function.LongConsumer;
 import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
 
-import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectLongHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 /**
@@ -85,28 +85,28 @@ public final class ExternalProcessMemoryWatchdog {
      * The maximum memory that external processes are allowed to allocate. <code>-1</code> means no limit and disables
      * the watchdog.
      */
-    private static final int MAX_MEMORY_KBYTES = getMaxMemoryKBytes();
+    private static final long MAX_MEMORY_KBYTES = getMaxMemoryKBytes();
 
     /**
      * How much memory we reserve for the OS and other processes running on the container
      */
-    private static final int CONTAINER_RESERVED_MEMORY_KBYTES =
-        Integer.getInteger("knime.externalprocesswatchdog.containerreservedkbytes", 128);
+    private static final long CONTAINER_RESERVED_MEMORY_KBYTES =
+        Long.getLong("knime.externalprocesswatchdog.containerreservedkbytes", 128);
 
-    private static int getMaxMemoryKBytes() {
+    private static long getMaxMemoryKBytes() {
         var requestedContainerSizeBytes = System.getenv("CONTAINER_MEMORY_REQUESTS");
         if (requestedContainerSizeBytes == null) {
             return getMaxMemoryKBytesFromSysProperty();
         }
 
         try {
-            int requestedContainerSizeKBytes = Integer.valueOf(requestedContainerSizeBytes) >> 10;
-            int jvmMemoryKBytes = (int)(Runtime.getRuntime().maxMemory() >> 10);
+            long requestedContainerSizeKBytes = Long.valueOf(requestedContainerSizeBytes) >> 10;
+            long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
 
             // TODO: consider columnar backend memory. But we can't access ColumnarPreferenceUtils from here
             // ColumnarPreferenceUtils.getOffHeapMemoryLimitMB() ??
 
-            int memoryLimitKBytes = requestedContainerSizeKBytes - jvmMemoryKBytes - CONTAINER_RESERVED_MEMORY_KBYTES;
+            long memoryLimitKBytes = requestedContainerSizeKBytes - jvmMemoryKBytes - CONTAINER_RESERVED_MEMORY_KBYTES;
 
             LOGGER.debug("KNIME External Process Watchdog memory limit configured based on environment variable "
                 + "CONTAINER_MEMORY_REQUESTS propery to " + memoryLimitKBytes + "kb");
@@ -118,8 +118,8 @@ public final class ExternalProcessMemoryWatchdog {
         }
     }
 
-    private static int getMaxMemoryKBytesFromSysProperty() {
-        var max = Integer.getInteger("knime.externalprocesswatchdog.maxmemory");
+    private static long getMaxMemoryKBytesFromSysProperty() {
+        var max = Long.getLong("knime.externalprocesswatchdog.maxmemory");
         if (max != null) {
             LOGGER.debug("KNIME External Process Watchdog memory limit configured via system propery to " + max);
             return max;
@@ -257,7 +257,7 @@ public final class ExternalProcessMemoryWatchdog {
      * @return proportional set size (PSS) of this process and all its subprocesses in kb or 0 if the memory usage could
      *         not be determined
      */
-    private static int getMemoryUsage(final long pid) {
+    private static long getMemoryUsage(final long pid) {
         var childrenPids = getChildren(pid);
         var childrenMem = 0;
         for (var i = 0; i < childrenPids.length; i++) {
@@ -336,16 +336,16 @@ public final class ExternalProcessMemoryWatchdog {
     /** Utility class to store and collect the memory usage of external processes. Not thread-safe! */
     private static final class ExternalProcessMemoryState {
 
-        private final TObjectIntHashMap<ProcessHandle> m_processToMemoryUsage;
+        private final TObjectLongHashMap<ProcessHandle> m_processToMemoryUsage;
 
-        private int m_totalMemoryUsage;
+        private long m_totalMemoryUsage;
 
-        private int m_maxMemoryUsage;
+        private long m_maxMemoryUsage;
 
         private ProcessHandle m_maxMemoryUsageProcess;
 
         public ExternalProcessMemoryState() {
-            m_processToMemoryUsage = new TObjectIntHashMap<>();
+            m_processToMemoryUsage = new TObjectLongHashMap<>();
             m_totalMemoryUsage = 0;
             m_maxMemoryUsage = -1;
         }
@@ -356,7 +356,7 @@ public final class ExternalProcessMemoryWatchdog {
          * @param process the process
          * @param memoryUsage the memory usage
          */
-        public void put(final ProcessHandle process, final int memoryUsage) {
+        public void put(final ProcessHandle process, final long memoryUsage) {
             m_processToMemoryUsage.put(process, memoryUsage);
 
             // Update the total memory usage
@@ -373,12 +373,12 @@ public final class ExternalProcessMemoryWatchdog {
          * @param process the process
          * @return the memory usage of the given process
          */
-        public int getMemoryUsage(final ProcessHandle process) {
+        public long getMemoryUsage(final ProcessHandle process) {
             return m_processToMemoryUsage.get(process);
         }
 
         /** @return the total memory usage of all processes */
-        public int getTotalMemoryUsage() {
+        public long getTotalMemoryUsage() {
             return m_totalMemoryUsage;
         }
 
