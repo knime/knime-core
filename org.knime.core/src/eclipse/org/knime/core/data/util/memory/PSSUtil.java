@@ -116,7 +116,7 @@ final class PSSUtil {
      * @throws UnsupportedOperationException if the PSS is not available on the current platform (call
      *             {@link #supportsPSS()} to check this beforehand)
      */
-    public static int getPSS(final long pid) throws IOException {
+    public static long getPSS(final long pid) throws IOException {
         if (!SystemUtils.IS_OS_LINUX) {
             throw new UnsupportedOperationException("PSS is only available on Linux");
         }
@@ -136,7 +136,7 @@ final class PSSUtil {
             "PSS is not available on this platform. Because the /proc/[pid]/smaps file is not present.");
     }
 
-    private static int readPSSFromSmapsRollup(final long pid) throws IOException {
+    private static long readPSSFromSmapsRollup(final long pid) throws IOException {
         try (var reader = readFile("/proc/" + pid + "/smaps_rollup")) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -149,7 +149,7 @@ final class PSSUtil {
         throw new IOException("PSS not found in smaps_rollup file");
     }
 
-    private static int readPSSFromSmaps(final long pid) throws IOException {
+    private static long readPSSFromSmaps(final long pid) throws IOException {
         var totalPss = 0;
         try (var reader = readFile("/proc/" + pid + "/smaps")) {
             String line;
@@ -168,14 +168,14 @@ final class PSSUtil {
     }
 
     /** Parses the PSS memory from a line of the smaps or smaps_rollup file */
-    private static int parsePSSLine(final String line) {
+    private static long parsePSSLine(final String line) {
         // The line looks like "Pss: 1234 kB"
         var colonIndex = line.indexOf(':');
         var kbIndex = line.indexOf('k', colonIndex);
         if (colonIndex != -1 && kbIndex != -1) {
             var numberStr = line.substring(colonIndex + 1, kbIndex).trim();
             try {
-                return Integer.parseInt(numberStr);
+                return Long.parseLong(numberStr);
             } catch (NumberFormatException e) {
                 // Ignore parse errors
                 // Might happen if the number is just at the border of the buffer and the file was changed between reads
