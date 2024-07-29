@@ -60,6 +60,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.node.NodeLogger;
 
 import gnu.trove.map.hash.TObjectLongHashMap;
@@ -103,10 +105,14 @@ public final class ExternalProcessMemoryWatchdog {
             long requestedContainerSizeKBytes = Long.valueOf(requestedContainerSizeBytes) >> 10;
             long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
 
-            // TODO: consider columnar backend memory. But we can't access ColumnarPreferenceUtils from here
-            // ColumnarPreferenceUtils.getOffHeapMemoryLimitMB() ??
+            long tableBackendOffHeapKBytes = TableBackendRegistry.getInstance().getTableBackends().stream() //
+                .mapToLong(TableBackend::getReservedOffHeapBytes) //
+                .sum();
 
-            long memoryLimitKBytes = requestedContainerSizeKBytes - jvmMemoryKBytes - CONTAINER_RESERVED_MEMORY_KBYTES;
+            long memoryLimitKBytes = requestedContainerSizeKBytes //
+                - jvmMemoryKBytes //
+                - tableBackendOffHeapKBytes //
+                - CONTAINER_RESERVED_MEMORY_KBYTES;
 
             LOGGER.debug("KNIME External Process Watchdog memory limit configured based on environment variable "
                 + "CONTAINER_MEMORY_REQUESTS propery to " + memoryLimitKBytes + "kb");
