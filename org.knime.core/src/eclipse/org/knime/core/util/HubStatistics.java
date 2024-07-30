@@ -82,6 +82,18 @@ import jakarta.json.stream.JsonGenerator;
 public class HubStatistics {
 
     /**
+     * At the moment, we distinguish between the KNIME Community Hub and all other hubs, which are assumed to be
+     * business hubs. We do not track usage for particular hubs, only for these hub types.
+     * @since 5.4
+     */
+    public enum HubType {
+            /** KNIME Community Hub at https://hub.knime.com */
+            COMMUNITY,
+            /** Any other hub */
+            NON_COMMUNITY
+    }
+
+    /**
      * Name for the KNIME Hub json used to store values such as {@link #LAST_KNIME_HUB_LOGIN} and
      * {@link #LAST_KNIME_HUB_UPLOAD}.
      */
@@ -319,4 +331,34 @@ public class HubStatistics {
             return jr.readObject();
         }
     }
+
+    /**
+     * Indicate that a workflow or workflow group was created.
+     *
+     * @param hubType where the workflow was created
+     * @since 5.4
+     */
+    public static void contentCreated(final HubType hubType) {
+        final var uploadField = switch (hubType) {
+            case COMMUNITY -> LAST_KNIME_HUB_UPLOAD;
+            case NON_COMMUNITY -> LAST_KNIME_NON_COMMUNITY_HUB_UPLOAD;
+        };
+        // AP-23022: we use the upload field in a broader sense to indicate a contribution to the hub
+        storeKnimeHubStat(uploadField, ZonedDateTime.now().toString());
+    }
+
+    /**
+     * Indicate that a user connected to a hub.
+     *
+     * @param hubType where the user logged in
+     * @since 5.4
+     */
+    public static void signalLogin(final HubType hubType) {
+        final var loginField = switch (hubType) {
+            case COMMUNITY -> LAST_KNIME_HUB_LOGIN;
+            case NON_COMMUNITY -> LAST_KNIME_NON_COMMUNITY_HUB_LOGIN;
+        };
+        HubStatistics.storeKnimeHubStat(loginField, ZonedDateTime.now().toString());
+    }
+
 }
