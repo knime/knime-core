@@ -57,6 +57,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -103,18 +104,23 @@ public final class ExternalProcessMemoryWatchdog {
 
         try {
             long requestedContainerSizeKBytes = Long.valueOf(requestedContainerSizeBytes) >> 10;
+            LOGGER.info("Watchdog config: CONTAINER_MEMORY_REQUESTS = " + requestedContainerSizeKBytes + " KB");
             long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
+            LOGGER.info("Watchdog config: JVM Memory = " + jvmMemoryKBytes + " KB");
 
             long tableBackendOffHeapKBytes = TableBackendRegistry.getInstance().getTableBackends().stream() //
                 .mapToLong(TableBackend::getReservedOffHeapBytes) //
-                .sum();
+                .sum() //
+                >> 10; // turn Bytes to KBytes
+
+            LOGGER.info("Watchdog config: TableBackend OffHEap = " + tableBackendOffHeapKBytes + " KB");
 
             long memoryLimitKBytes = requestedContainerSizeKBytes //
                 - jvmMemoryKBytes //
                 - tableBackendOffHeapKBytes //
                 - CONTAINER_RESERVED_MEMORY_KBYTES;
 
-            LOGGER.debug("KNIME External Process Watchdog memory limit configured based on environment variable "
+            LOGGER.info("KNIME External Process Watchdog memory limit configured based on environment variable "
                 + "CONTAINER_MEMORY_REQUESTS propery to " + memoryLimitKBytes + "kb");
             return memoryLimitKBytes;
         } catch (NumberFormatException e) {
@@ -127,11 +133,11 @@ public final class ExternalProcessMemoryWatchdog {
     private static long getMaxMemoryKBytesFromSysProperty() {
         var max = Long.getLong("knime.externalprocesswatchdog.maxmemory");
         if (max != null) {
-            LOGGER.debug("KNIME External Process Watchdog memory limit configured via system propery to " + max);
+            LOGGER.info("KNIME External Process Watchdog memory limit configured via system propery to " + max);
             return max;
         }
 
-        LOGGER.debug("KNIME External Process Watchdog memory limit not configured");
+        LOGGER.info("KNIME External Process Watchdog memory limit not configured");
         return -1;
     }
 
@@ -188,7 +194,7 @@ public final class ExternalProcessMemoryWatchdog {
             }, 0, POLLING_INTERVAL_MS);
             m_watchdogRunning = true;
         } else if (MAX_MEMORY_KBYTES < 0) {
-            LOGGER.info("External process memory watchdog is disabled.");
+            LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to " + MAX_MEMORY_KBYTES);
             m_watchdogRunning = false;
         } else if (SystemUtils.IS_OS_LINUX) {
             LOGGER.warn(
@@ -201,6 +207,8 @@ public final class ExternalProcessMemoryWatchdog {
 
     private void updateMemoryUsage() {
         var memoryState = collectMemoryUsageState();
+        memoryState.forEachProcess(
+            (processHandle, memoryKb) -> LOGGER.info("PID: " + processHandle.pid() + " uses " + memoryKb + " KB"));
 
         // Check if the total memory usage surpasses the threshold
         if (memoryState.getTotalMemoryUsage() > MAX_MEMORY_KBYTES) {
@@ -354,6 +362,18 @@ public final class ExternalProcessMemoryWatchdog {
             m_processToMemoryUsage = new TObjectLongHashMap<>();
             m_totalMemoryUsage = 0;
             m_maxMemoryUsage = -1;
+        }
+
+        /**
+         * Use this method to iterate over all processes and get the used memory of them.
+         *
+         * @param pidWithMemoryKb A callback that will be called per process.
+         */
+        public void forEachProcess(final BiConsumer<ProcessHandle, Long> pidWithMemoryKb) {
+            m_processToMemoryUsage.forEachEntry((processHandle, memory) -> {
+                pidWithMemoryKb.accept(processHandle, memory);
+                return true;
+            });
         }
 
         /**
