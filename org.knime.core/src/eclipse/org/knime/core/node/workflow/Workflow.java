@@ -121,7 +121,8 @@ class Workflow {
     }
 
     /**
-     * Create a new, unique node ID. Should be run within a synchronized
+     * Create a new, unique node ID. This ID will not get occupied by this method, i.e. subsequent calls might return
+     * the same "unique" ID if no node with that ID has been added to the workflow. Should be run within a synchronized
      * block to avoid duplicates!
      *
      * @return next available unused index.
@@ -137,6 +138,22 @@ class Workflow {
         return newID;
     }
 
+    /**
+     * Try to create a new ID with the proposed suffix that is not occupied. Otherwise, get a new, generated, node ID.
+     * This ID will not get occupied by this method, so subsequent calls might return the same "unique" ID if no node
+     * with that ID has been added to the workflow. Should be run within a synchronized block to avoid duplicates!
+     *
+     * @param a proposed suffix for the new node ID
+     * @return the workflow id + suffix, if free, otherwise a new unique ID
+     * @since 5.4
+     */
+    NodeID createUniqueID(final int proposedSuffix) {
+        final var proposed = new NodeID(this.getID(), proposedSuffix);
+        if (!containsNodeKey(proposed)) {
+            return proposed;
+        }
+        return createUniqueID();
+    }
 
     /** Return NodeContainer for a given id or null if that node does not exist
      * in this workflow.

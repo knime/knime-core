@@ -609,7 +609,10 @@ public class DefToCoreUtil {
         // Guess in port types
         final var nrInPorts = inConnections.isEmpty() ? 0 : inConnections.lastKey();
         final var inPortTypes = new PortType[nrInPorts]; // does not include flow var port
-        Arrays.fill(inPortTypes, PortObject.TYPE_OPTIONAL);
+        Arrays.fill(inPortTypes, BufferedDataTable.TYPE); // the file node persistor also does it this way.
+                                                                // Furthermore, if there are multiple, chained, missing
+                                                                // nodes, the default out- and in connections should
+                                                                // be the same to preserve connections.
         for (final var inConnEntry : inConnections.tailMap(1).entrySet()) { // all connections after the flow var port
             final var portIdxHere = inConnEntry.getKey() - 1; // port index (first data port is 0)
             final var connection = inConnEntry.getValue();

@@ -9197,40 +9197,38 @@ public final class WorkflowManager extends NodeContainer
         };
 
         // collect missing nodes, but defer loading until all non-missing nodes are added
-        final Map<NodeID, BaseNodeDef> missingNodes = new LinkedHashMap<>();
+        final Map<Integer, BaseNodeDef> missingNodes = new LinkedHashMap<>();
 
         for (Map.Entry<String, ? extends BaseNodeDef> nodeEntry : nodesDef.entrySet()) {
             var node = nodeEntry.getValue();
             var suffix = node.getId();
-            var subNodeId = new NodeID(getID(), suffix);
 
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster environment)
             try (WorkflowLock lock = lock()) {
-                if (m_workflow.containsNodeKey(subNodeId)) {
-                    subNodeId = m_workflow.createUniqueID();
-                }
-                translationMap.put(suffix, subNodeId);
-
+                var subNodeId = m_workflow.createUniqueID(suffix);
                 final var optContainer = createNodeContainer(subNodeId, node);
                 if (optContainer.isPresent()) {
+                    translationMap.put(suffix, subNodeId); // only add translation if node was created successfully
                     final var container = optContainer.get();
                     addNodeContainer(container, false);
                     container.loadContent(node, exec, loadResult);
                 } else {
-                    // missing native node
-                    missingNodes.put(subNodeId, node);
+                    // missing native node, compute node id later
+                    missingNodes.put(suffix, node);
                 }
             }
         }
 
         // loading of the missing nodes is deferred to the end to hopefully guess port types etc. right
         for (final var missingEntry : missingNodes.entrySet()) {
-            final var subNodeId = missingEntry.getKey();
+            final var suffix = missingEntry.getKey();
             final var node = missingEntry.getValue();
             if (node instanceof NativeNodeDef nnode) {
                 try (WorkflowLock lock = lock()) {
+                    var subNodeId = m_workflow.createUniqueID(suffix);
+                    translationMap.put(suffix, subNodeId);
                     var factory =
                         DefToCoreUtil.createMissingNodeFactory(this, subNodeId, nnode, connectionDefs, translationMap);
                     var container = new NativeNodeContainer(this, subNodeId, nnode, new Node(factory));
