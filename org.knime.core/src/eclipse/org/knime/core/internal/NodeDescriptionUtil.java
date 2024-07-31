@@ -20,11 +20,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
-import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeLogger;
 
@@ -117,7 +117,7 @@ public final class NodeDescriptionUtil {
 
         var s = writer.toString();
         // On Windows, the transformer produces CRLF (\r\n) line endings, on Unix only LF (\n)
-        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+        if (SystemUtils.IS_OS_WINDOWS) {
             s = CRLF.matcher(s).replaceAll("\n");
         }
         return NodeDescriptionUtil.stripXmlFragment(s);
