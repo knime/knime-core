@@ -123,7 +123,6 @@ public interface TableBackend {
 
     /**
      * @return the number of bytes used in off-heap memory
-     * @since 5.4
      */
     default long getReservedOffHeapBytes() {
         return 0;
