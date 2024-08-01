@@ -54,7 +54,7 @@ import java.util.Objects;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
-import org.knime.core.node.port.report.ReportUtil.ViewImageFileFormat;
+import org.knime.core.node.port.report.ReportUtil.ImageFormat;
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -91,21 +91,23 @@ public interface IReportPortObject extends PortObject {
 
     /**
      * A single fragment in a report. This is usually a page (or a set of pages) contributed by a single component
-     * (subnode). Combines the fragment content + the page configuration + the image file format of views.
+     * (subnode). Combines the fragment content + the page configuration + the image format of views.
      *
      * @param content The content (html-like)
      * @param config the config.
-     * @param viewImageFileFormat The image file format used for views.
+     * @param imageFormat The image format used for views.
      * @since 5.4
      */
-    public record ReportFragment(String content, ReportPageConfiguration config,
-        ViewImageFileFormat viewImageFileFormat) {
+    public record ReportFragment(String content, ReportPageConfiguration config, ImageFormat imageFormat) {
 
+        /**
+         * @since 5.4
+         */
         @SuppressWarnings("javadoc")
         public ReportFragment {
             CheckUtils.checkArgumentNotNull(content, "Content must not be null");
             CheckUtils.checkArgumentNotNull(config, "Config must not be null");
-            CheckUtils.checkArgumentNotNull(viewImageFileFormat, "ViewImageFileFormat must not be null");
+            CheckUtils.checkArgumentNotNull(imageFormat, "ImageFormat must not be null");
         }
 
         /**
@@ -115,9 +117,8 @@ public interface IReportPortObject extends PortObject {
         @JsonCreator
         public static ReportFragment createReportFragment(@JsonProperty("content") final String content,
             @JsonProperty("config") final ReportPageConfiguration config,
-            @JsonProperty("viewImageFileFormat") final ViewImageFileFormat viewImageFileFormat) {
-            return new ReportFragment(content, config,
-                Objects.requireNonNullElse(viewImageFileFormat, ViewImageFileFormat.PNG));
+            @JsonProperty("imageFormat") final ImageFormat imageFormat) {
+            return new ReportFragment(content, config, Objects.requireNonNullElse(imageFormat, ImageFormat.PNG));
         }
 
     }

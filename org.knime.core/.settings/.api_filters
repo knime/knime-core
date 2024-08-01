@@ -320,9 +320,12 @@
                 <message_argument value="ReportFragment(String, ReportPageConfiguration)"/>
             </message_arguments>
         </filter>
-        <filter id="1143996420">
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObjectSpec.java" type="org.knime.core.node.port.report.IReportPortObjectSpec">
+        <filter id="403804204">
             <message_arguments>
-                <message_argument value="ReportFragment(String, ReportPageConfiguration, ReportUtil.ViewImageFileFormat)"/>
+                <message_argument value="org.knime.core.node.port.report.IReportPortObjectSpec"/>
+                <message_argument value="getImageFormat()"/>
             </message_arguments>
         </filter>
     </resource>

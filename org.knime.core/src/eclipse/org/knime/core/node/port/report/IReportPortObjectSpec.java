@@ -49,7 +49,7 @@
 package org.knime.core.node.port.report;
 
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.report.ReportUtil.ViewImageFileFormat;
+import org.knime.core.node.port.report.ReportUtil.ImageFormat;
 
 /**
  * Spec for {@link IReportPortObject}.
@@ -74,10 +74,11 @@ public interface IReportPortObjectSpec extends PortObjectSpec {
     ReportPageConfiguration getPageConfiguration();
 
     /**
-     * The default view image file format, used for to-be-appended pages.
-     * @return The non-null image file format used for views.
+     * The default image format, used for to-be-appended pages.
+     *
+     * @return The non-null image format used for views.
      * @since 5.4
      */
-    ViewImageFileFormat getViewImageFileFormat();
+    ImageFormat getImageFormat();
 
 }
