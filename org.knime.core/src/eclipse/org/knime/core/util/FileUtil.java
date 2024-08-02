@@ -131,11 +131,6 @@ public final class FileUtil {
 
     private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
-    private static final int DEFAULT_URL_TIMEOUT_MILLIS = 1000;
-
-    // timeout when connecting to or reading from URLs
-    private static int urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
-
     private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
     /**
@@ -195,20 +190,6 @@ public final class FileUtil {
                 }
             }
         });
-
-        String to = System.getProperty(KNIMEConstants.PROPERTY_URL_TIMEOUT);
-        if (to != null) {
-            try {
-                urlTimeout = Integer.parseInt(to);
-            } catch (NumberFormatException ex) {
-                LOGGER.error("Illegal value for property " + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
-            }
-            if (urlTimeout < 0) {
-                LOGGER.errorWithFormat("Illegal (negative) value for property %s: %d",
-                    KNIMEConstants.PROPERTY_URL_TIMEOUT, urlTimeout);
-                urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
-            }
-        }
     }
 
     /** Don't let anybody instantiate this class. */
@@ -1483,7 +1464,7 @@ public final class FileUtil {
      * @since 2.6
      */
     public static InputStream openStreamWithTimeout(final URL url) throws IOException {
-        return openStreamWithTimeout(url, urlTimeout);
+        return openStreamWithTimeout(url, getDefaultURLTimeoutMillis());
     }
 
     /**
@@ -1514,7 +1495,7 @@ public final class FileUtil {
      * @since 2.6
      */
     public static InputStream openInputStream(final String loc) throws IOException, InvalidSettingsException {
-        return openInputStream(loc, urlTimeout);
+        return openInputStream(loc, getDefaultURLTimeoutMillis());
     }
 
     /**
@@ -1555,7 +1536,7 @@ public final class FileUtil {
      * @since 4.1
      */
     public static int getDefaultURLTimeoutMillis() {
-        return urlTimeout;
+        return URLConnectionFactory.getDefaultURLTimeoutMillis();
     }
 
     /**

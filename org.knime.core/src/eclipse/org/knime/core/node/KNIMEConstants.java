@@ -81,6 +81,7 @@ import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.knime.core.util.auth.SuppressingAuthenticator;
+import org.knime.core.util.proxy.URLConnectionFactory;
 import org.osgi.framework.Bundle;
 
 /**
@@ -384,7 +385,7 @@ public final class KNIMEConstants {
     *
     * @since 2.6
     */
-   public static final String PROPERTY_URL_TIMEOUT = "knime.url.timeout";
+   public static final String PROPERTY_URL_TIMEOUT = URLConnectionFactory.PROPERTY_URL_TIMEOUT;
 
     /**
      * Java property which allows to skip automatic Log4J configuration when
