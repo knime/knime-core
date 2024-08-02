@@ -81,6 +81,7 @@ import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.knime.core.util.auth.SuppressingAuthenticator;
+import org.knime.core.util.proxy.URLConnectionFactory;
 import org.osgi.framework.Bundle;
 
 /**
@@ -379,12 +380,29 @@ public final class KNIMEConstants {
    public static final String PROPERTY_LICENSE_DIRECTORY =
        "com.knime.licensedir";
 
-   /** Java property used to set the timeout in millisecond trying to connect
-    * or read data from an URL (e.g. http, ftp, ...)
+   /** Java property used to set the timeout in milliseconds trying to connect
+    * or read data from an URL (e.g. http, ftp, ...). The default value is
+    * {@value URLConnectionFactory#DEFAULT_URL_GENERIC_TIMEOUT_MS} milliseconds.
     *
     * @since 2.6
     */
-   public static final String PROPERTY_URL_TIMEOUT = "knime.url.timeout";
+   public static final String PROPERTY_URL_TIMEOUT = URLConnectionFactory.PROPERTY_URL_GENERIC_TIMEOUT;
+
+   /** Java property used to set the *connect* timeout in milliseconds for {@link URL}s.
+    * The default value is {@value URLConnectionFactory#DEFAULT_URL_CONNECT_TIMEOUT_MS} milliseconds.
+   *
+   * @since 5.4
+   * @see URLConnectionFactory#getDefaultURLConnectTimeoutMillis()
+   */
+   public static final String PROPERTY_URL_CONNECT_TIMEOUT = URLConnectionFactory.PROPERTY_URL_CONNECT_TIMEOUT;
+
+   /** Java property used to set the *read* timeout in milliseconds for {@link URL}s.
+    * The default value is {@value URLConnectionFactory#DEFAULT_URL_READ_TIMEOUT_MS} milliseconds.
+    *
+    * @since 5.4
+    * @see URLConnectionFactory#getDefaultURLReadTimeoutMillis()
+    */
+   public static final String PROPERTY_URL_READ_TIMEOUT = URLConnectionFactory.PROPERTY_URL_READ_TIMEOUT;
 
     /**
      * Java property which allows to skip automatic Log4J configuration when

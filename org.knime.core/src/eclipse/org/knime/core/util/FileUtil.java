@@ -131,11 +131,6 @@ public final class FileUtil {
 
     private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
-    private static final int DEFAULT_URL_TIMEOUT_MILLIS = 1000;
-
-    // timeout when connecting to or reading from URLs
-    private static int urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
-
     private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
     /**
@@ -195,20 +190,6 @@ public final class FileUtil {
                 }
             }
         });
-
-        String to = System.getProperty(KNIMEConstants.PROPERTY_URL_TIMEOUT);
-        if (to != null) {
-            try {
-                urlTimeout = Integer.parseInt(to);
-            } catch (NumberFormatException ex) {
-                LOGGER.error("Illegal value for property " + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
-            }
-            if (urlTimeout < 0) {
-                LOGGER.errorWithFormat("Illegal (negative) value for property %s: %d",
-                    KNIMEConstants.PROPERTY_URL_TIMEOUT, urlTimeout);
-                urlTimeout = DEFAULT_URL_TIMEOUT_MILLIS;
-            }
-        }
     }
 
     /** Don't let anybody instantiate this class. */
@@ -1483,7 +1464,8 @@ public final class FileUtil {
      * @since 2.6
      */
     public static InputStream openStreamWithTimeout(final URL url) throws IOException {
-        return openStreamWithTimeout(url, urlTimeout);
+        return openStreamWithTimeout(url, URLConnectionFactory.getDefaultURLConnectTimeoutMillis(),
+            URLConnectionFactory.getDefaultURLReadTimeoutMillis());
     }
 
     /**
@@ -1498,9 +1480,14 @@ public final class FileUtil {
      */
     public static InputStream openStreamWithTimeout(final URL url, final int timeout)
             throws IOException {
+        return openStreamWithTimeout(url, timeout, timeout);
+    }
+
+    private static InputStream openStreamWithTimeout(final URL url, final int connectTimeout, final int readTimeout)
+            throws IOException {
         final var conn = URLConnectionFactory.getConnection(url);
-        conn.setConnectTimeout(timeout);
-        conn.setReadTimeout(timeout);
+        conn.setConnectTimeout(connectTimeout);
+        conn.setReadTimeout(readTimeout);
         return new WrappedURLInputStream(conn);
     }
 
@@ -1514,7 +1501,8 @@ public final class FileUtil {
      * @since 2.6
      */
     public static InputStream openInputStream(final String loc) throws IOException, InvalidSettingsException {
-        return openInputStream(loc, urlTimeout);
+        return openInputStream(loc, URLConnectionFactory.getDefaultURLConnectTimeoutMillis(),
+            URLConnectionFactory.getDefaultURLReadTimeoutMillis());
     }
 
     /**
@@ -1529,13 +1517,18 @@ public final class FileUtil {
      */
     public static InputStream openInputStream(final String loc, final int timeoutInMilliseconds)
         throws IOException, InvalidSettingsException {
+        return openInputStream(loc, timeoutInMilliseconds, timeoutInMilliseconds);
+    }
+
+    private static InputStream openInputStream(final String loc, final int connectTimeout, final int readTimeout)
+        throws IOException, InvalidSettingsException {
         if (loc == null || loc.length() == 0) {
             throw new InvalidSettingsException("No location provided");
         }
         InputStream stream;
         try {
             URL url = new URL(loc);
-            stream = FileUtil.openStreamWithTimeout(url, timeoutInMilliseconds);
+            stream = FileUtil.openStreamWithTimeout(url, connectTimeout, readTimeout);
         } catch (MalformedURLException mue) {
             File file = new File(loc);
             if (!file.exists()) {
@@ -1547,15 +1540,19 @@ public final class FileUtil {
     }
 
     /**
-     * Get default timeout in milliseconds. Default is {@value #DEFAULT_URL_TIMEOUT_MILLIS} but can be changed via the
-     * {@link KNIMEConstants#PROPERTY_URL_TIMEOUT} property. This value is used when any of the openInput/Output
-     * methods are called without timeout argument.
+     * Get default timeout in milliseconds. Default is {@value URLConnectionFactory#DEFAULT_URL_GENERIC_TIMEOUT_MS} but
+     * can be changed via the {@link KNIMEConstants#PROPERTY_URL_TIMEOUT} property. This value is used when any of the
+     * openInput/Output methods are called without timeout argument.
      *
      * @return The default timeout when connecting (and often also reading) remote resources.
      * @since 4.1
+     * @deprecated Clients should be specifying both
+     *             {@linkplain URLConnectionFactory#getDefaultURLConnectTimeoutMillis() connect} and
+     *             {@linkplain URLConnectionFactory#getDefaultURLConnectTimeoutMillis() read} timeouts.
      */
-    public static int getDefaultURLTimeoutMillis() {
-        return urlTimeout;
+    @Deprecated(since = "4.3", forRemoval = true)
+    public static int getDefaultURLTimeoutMillis() { // NOSONAR - deprecated method
+        return URLConnectionFactory.getDefaultURLGenericTimeoutMillis();
     }
 
     /**
