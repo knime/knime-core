@@ -313,6 +313,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec$Ports">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.extension.NodeSpec.Ports"/>
+                <message_argument value="Ports(List&lt;NodeSpec.Ports.Port&gt;, List&lt;PortTypeDef&gt;, List&lt;NodeSpec.Ports.Port&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$ReportFragment">
         <filter id="338722907">
             <message_arguments>

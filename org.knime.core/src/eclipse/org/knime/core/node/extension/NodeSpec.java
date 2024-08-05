@@ -75,10 +75,7 @@ import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.ports.ConfigurablePortGroup;
 import org.knime.core.node.context.ports.PortGroupConfiguration;
-import org.knime.core.node.extension.NodeSpec.Factory;
-import org.knime.core.node.extension.NodeSpec.Metadata;
 import org.knime.core.node.extension.NodeSpec.Metadata.Vendor;
-import org.knime.core.node.extension.NodeSpec.Ports;
 import org.knime.core.node.extension.NodeSpec.Ports.Port;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.CoreToDefUtil;
@@ -132,8 +129,8 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
         final var fact = NodeSpec.Factory.of(factory);
         // NXT-2233 harden against buggy node descriptions
-        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of(), List.of()), factory,
-            "Node has erroneous port information");
+        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of(), List.of()),
+            factory, "Node has erroneous port information");
         final var nodeType = tryEval(factory::getType, NodeType.Other, factory, "Node has erroneous node type");
         final var fallbackVendor = new VendorDefBuilder().build();
         final var vendor = tryEval(() -> Vendor.of(factory), new Vendor(fallbackVendor, fallbackVendor), factory,
@@ -273,9 +270,9 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
                         .flatMap(cpg -> Arrays.stream(cpg.getSupportedPortTypes()))//
                         .map(CoreToDefUtil::toPortTypeDef));
             var supportedOutputPortTypes =
-                    Stream.concat(optDeclaredOutputPortTypes.orElse(Stream.empty()), outputPorts.stream().map(Port::type))
-                        .distinct()//
-                        .toList();
+                Stream.concat(optDeclaredOutputPortTypes.orElse(Stream.empty()), outputPorts.stream().map(Port::type))
+                    .distinct()//
+                    .toList();
 
             return new Ports(inputPorts, supportedInputPortTypes, outputPorts, supportedOutputPortTypes);
         }
@@ -369,6 +366,7 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
         /**
          * @return if the creating factory is a {@link ConfigurableNodeFactory}, this returns the supported port types.
          *         Otherwise it returns the distinct present output port types.
+         * @since 5.4
          */
         public Stream<PortType> getSupportedOutputPortTypes() { // NOSONAR I want to return port types, not port type defs
             return supportedOutputPortTypes.stream().map(DefToCoreUtil::toPortType);
