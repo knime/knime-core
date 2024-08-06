@@ -441,6 +441,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/func/NodeFuncApi.java" type="org.knime.core.node.func.NodeFuncApi$Builder">
+        <filter comment="Added for 5.3.2" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.3"/>
+                <message_argument value="5.4"/>
+                <message_argument value="withOptionalBooleanArgument(String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>
