@@ -292,6 +292,18 @@ public final class NodeFuncApi implements ApiDefinition {
         }
 
         /**
+         * Adds an optional boolean argument.
+         *
+         * @param name of the argument (must not contain whitespace, - or other special characters)
+         * @param description of what the argument is there for
+         * @return this builder
+         * @since 5.3
+         */
+        public Builder withOptionalBooleanArgument(final String name, final String description) {
+            return withArgument(name, description, PrimitiveArgumentType.BOOLEAN, true);
+        }
+
+        /**
          * @return the final {@link NodeFuncApi}
          */
         public NodeFuncApi build() {

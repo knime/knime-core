@@ -321,6 +321,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/func/NodeFuncApi.java" type="org.knime.core.node.func.NodeFuncApi$Builder">
+        <filter comment="Added for 5.3.2" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.3"/>
+                <message_argument value="5.4"/>
+                <message_argument value="withOptionalBooleanArgument(String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$ReportFragment">
         <filter id="338722907">
             <message_arguments>
