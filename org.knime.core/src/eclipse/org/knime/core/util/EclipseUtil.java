@@ -61,9 +61,6 @@ import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.LazyInitializer;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
@@ -77,6 +74,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.application.ApplicationHandle;
@@ -93,9 +91,6 @@ public final class EclipseUtil {
     private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
 
     private static final String KNIME_APPLICATION_ID = "org.knime.product.KNIME_APPLICATION";
-
-    private static final LazyInitializer<String> APPLICATION_ID_CACHE =
-            LazyInitializer.<String>builder().setInitializer(EclipseUtil::determineApplicationID).get();
 
     /**
      * Interface for filtering classes in {@link EclipseUtil#findClasses(ClassFilter, ClassLoader)}.
@@ -337,38 +332,21 @@ public final class EclipseUtil {
         jar.close();
     }
 
-    /**
-     * Called once by {@link #APPLICATION_ID_CACHE}.
-     * @return the application ID if available, {@code null} otherwise
-     */
-    private static String determineApplicationID() {
+    private static Optional<String> getApplicationID() {
         final var coreBundle = FrameworkUtil.getBundle(EclipseUtil.class);
         if (coreBundle != null) {
-            final var coreContext = coreBundle.getBundleContext();
-            final ServiceReference<ApplicationHandle> ser = coreContext.getServiceReference(ApplicationHandle.class);
+            final BundleContext ctx = coreBundle.getBundleContext();
+            final ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
             if (ser != null) {
                 try {
-                    final ApplicationHandle appHandle = coreContext.getService(ser);
-                    return appHandle == null ? null : appHandle.getInstanceId();
+                    final ApplicationHandle appHandle = ctx.getService(ser);
+                    return Optional.ofNullable(appHandle == null ? null : appHandle.getInstanceId());
                 } finally {
-                    coreContext.ungetService(ser);
+                    ctx.ungetService(ser);
                 }
             }
         }
-        return null;
-    }
-
-    /**
-     * Lazily initialized by {@link #determineApplicationID()}.
-     * @return the application ID if available, {@code null} otherwise
-     */
-    private static Optional<String> getApplicationID() {
-        try {
-            return Optional.ofNullable(APPLICATION_ID_CACHE.get());
-        } catch (ConcurrentException ex) { // NOSONAR
-            // `determineApplicationID()` doesn't throw checked exceptions, so everything here must be unchecked
-            throw ExceptionUtils.asRuntimeException(ex.getCause());
-        }
+        return Optional.empty();
     }
 
     /**
@@ -388,8 +366,7 @@ public final class EclipseUtil {
      * @since 5.3
      */
     public static boolean determineAPUsage() {
-        // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0"
-        return getApplicationID().filter(id -> id.contains(KNIME_APPLICATION_ID)).isPresent();
+        return getApplicationID().filter(KNIME_APPLICATION_ID::equals).isPresent();
     }
 
     /**
