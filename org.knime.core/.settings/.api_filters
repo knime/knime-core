@@ -432,12 +432,6 @@
                 <message_argument value="org.knime.core_5.3.1"/>
             </message_arguments>
         </filter>
-        <filter comment="Only internal usage" id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
-                <message_argument value="org.knime.core_5.3.1"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec">
         <filter comment="refactoring of internal API as part of NXT-2570" id="338722907">
@@ -510,6 +504,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.HubStatistics"/>
                 <message_argument value="LAST_KNIME_HUB_UPLOAD"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/IEarlyStartup.java" type="org.knime.core.util.IEarlyStartup">
+        <filter comment="no API" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.IEarlyStartup"/>
+                <message_argument value="NO_AUTOSTART_APPLICATIONS"/>
             </message_arguments>
         </filter>
     </resource>
