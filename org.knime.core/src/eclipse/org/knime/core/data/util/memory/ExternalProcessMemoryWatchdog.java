@@ -57,7 +57,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.BiConsumer;
 import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -113,7 +112,7 @@ public final class ExternalProcessMemoryWatchdog {
                 .sum() //
                 >> 10; // turn Bytes to KBytes
 
-            LOGGER.info("Watchdog config: TableBackend OffHEap = " + tableBackendOffHeapKBytes + " KB");
+            LOGGER.info("Watchdog config: TableBackend OffHeap = " + tableBackendOffHeapKBytes + " KB");
 
             long memoryLimitKBytes = requestedContainerSizeKBytes //
                 - jvmMemoryKBytes //
@@ -207,8 +206,6 @@ public final class ExternalProcessMemoryWatchdog {
 
     private void updateMemoryUsage() {
         var memoryState = collectMemoryUsageState();
-        memoryState.forEachProcess(
-            (processHandle, memoryKb) -> LOGGER.info("PID: " + processHandle.pid() + " uses " + memoryKb + " KB"));
 
         // Check if the total memory usage surpasses the threshold
         if (memoryState.getTotalMemoryUsage() > MAX_MEMORY_KBYTES) {
@@ -362,18 +359,6 @@ public final class ExternalProcessMemoryWatchdog {
             m_processToMemoryUsage = new TObjectLongHashMap<>();
             m_totalMemoryUsage = 0;
             m_maxMemoryUsage = -1;
-        }
-
-        /**
-         * Use this method to iterate over all processes and get the used memory of them.
-         *
-         * @param pidWithMemoryKb A callback that will be called per process.
-         */
-        public void forEachProcess(final BiConsumer<ProcessHandle, Long> pidWithMemoryKb) {
-            m_processToMemoryUsage.forEachEntry((processHandle, memory) -> {
-                pidWithMemoryKb.accept(processHandle, memory);
-                return true;
-            });
         }
 
         /**
