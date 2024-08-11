@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.DataValue.UtilityFactory;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.meta.DataColumnMetaDataCreator;
 import org.knime.core.data.meta.DataColumnMetaDataRegistry;
@@ -86,6 +87,8 @@ final class DataColumnMetaDataCalculators {
          * Updates the meta data with the contents in {@link DataCell cell} provided it is relevant for this meta data
          * calculator.<br>
          * Note that the calculator should ignore irrelevant cells but not fail!
+         * Blob cells (discouraged nowadays) are handed in via {@link BlobWrapperDataCell}, so needs unwrapping via
+         * instance check.
          *
          * @param cell the {@link DataCell} whose information should be incorporated into the meta data
          */
@@ -215,8 +218,9 @@ final class DataColumnMetaDataCalculators {
 
         @Override
         public void update(final DataCell cell) {
-            if (m_updateMetaData) {
-                m_metaDataCreators.forEach(c -> c.update(cell));
+            if (m_updateMetaData && !m_metaDataCreators.isEmpty()) {
+                DataCell unwrapped = cell instanceof BlobWrapperDataCell bwdc ? bwdc.getCell() : cell;
+                m_metaDataCreators.forEach(c -> c.update(unwrapped));
             }
         }
 

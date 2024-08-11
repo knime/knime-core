@@ -58,6 +58,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.knime.core.data.DataColumnMetaDataCalculators.MetaDataCalculator;
+import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
@@ -405,7 +406,9 @@ public class DataTableDomainCreator {
 
         if (m_isInEffect) {
             for (int i = 0, length = row.getNumCells(); i < length; i++) {
-                DataCell c = row.getCell(i);
+                // unwrapped blob cells at the latest possible moment, in most (all?) cases blob cell columns
+                // do not support domain determination, so no unwrapping needed
+                DataCell c = row instanceof BlobSupportDataRow bsrow ? bsrow.getRawCell(i) : row.getCell(i);
                 updateMinMax(i, c, m_mins, m_maxs, m_comparators);
                 m_metaDataCalculators[i].update(c);
             }
