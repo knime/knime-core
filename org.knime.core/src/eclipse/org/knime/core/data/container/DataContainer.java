@@ -352,8 +352,14 @@ public class DataContainer implements RowAppender, RowFlushable {
         return m_delegate.size();
     }
 
-    /* Used in tests */
-    DataContainerDelegate getDataContainerDelegate() {
+    /**
+     * Reference to underlying storage, not to be used by clients (used in tests).
+     *
+     * @return The delegate (row or columnar backend)
+     * @since 5.4
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected DataContainerDelegate getDataContainerDelegate() {
         return m_delegate;
     }
 
