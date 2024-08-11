@@ -410,7 +410,7 @@ public class ExecutionContext extends ExecutionMonitor {
              * be written instantly, they have to be handled sequentially.
              * (False could still mean it's sequential/synchronous (sys prop is set))
              */
-            .withForceSequentialRowHandling(m_node.isForceSychronousIO()) //
+            .withForceSequentialRowHandling(settings.isForceSequentialRowHandling() || m_node.isForceSychronousIO()) //
             .build();
 
         /*
