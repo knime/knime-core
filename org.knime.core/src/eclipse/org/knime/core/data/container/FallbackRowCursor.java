@@ -110,6 +110,10 @@ final class FallbackRowCursor implements RowCursor, RowRead {
         m_numValues = spec.getNumColumns();
     }
 
+    DataRow getCurrentRow() {
+        return m_currentRow;
+    }
+
     @Override
     public RowRead forward() {
         if (m_delegate.hasNext()) {

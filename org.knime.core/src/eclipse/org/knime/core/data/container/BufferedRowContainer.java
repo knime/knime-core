@@ -51,6 +51,7 @@ package org.knime.core.data.container;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
@@ -132,6 +133,13 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         }
     }
 
+    /**
+     * @return the delegate container, for unit tests.
+     */
+    BufferedDataContainer getDelegate() {
+        return m_delegate;
+    }
+
     private static final class BufferedRowWrite implements RowWrite {
 
         private final BufferedDataContainer m_delegate;
@@ -144,12 +152,22 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
         private final RowKeyReadValue m_rowKeyReadValue;
 
+        /* two fields below were added as part of AP-23029 */
+
+        /** If any field was set to be missing after a row content was set via {@link #setFrom(RowRead)}. */
+        private final boolean[] m_forcedMissings;
+
+        /** A row that was set via {@link #setFrom(RowRead)} - in most of the cases that data will come from
+         * another table whose cursor is backed by a {@link BufferedDataTable}. */
+        private DataRow m_currentRowWhenCallingSetFrom;
+
         private BufferedRowWrite(final BufferedDataContainer delegate, final ValueSchema schema) {
             m_delegate = delegate;
             int numFactories = schema.numFactories();
             m_cells = new DataCell[numFactories - 1];
             m_readValues = new NullableReadValue[numFactories];
             m_writeValues = new WriteValue[numFactories];
+            m_forcedMissings = new boolean[numFactories];
 
             for (int i = 0; i < numFactories; i++) {//NOSONAR
                 var valueFactory = schema.getValueFactory(i);
@@ -177,6 +195,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         public void setMissing(final int index) {
         	// +1 to account for the row key
             m_readValues[index + 1].setMissing();
+            m_forcedMissings[index + 1] = true;
         }
 
         @Override
@@ -191,37 +210,105 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
         @Override
         public void setFrom(final RowRead row) {
-            // TODO performance
-            setRowKey(row.getRowKey());
-            final var numCells = row.getNumColumns();
-            for (var i = 0; i < numCells; i++) {
-                if (row.isMissing(i)) {
-                    setMissing(i);
-                } else {
-                    m_writeValues[i + 1].setValue(row.getValue(i));
+            // reset all read value accesses and m_forceMissing fields in case they were set/called prior
+            // 'setFrom' (corner case)
+            for (int i = 0; i < m_readValues.length; i++) {
+                m_readValues[i].setMissing();
+                m_forcedMissings[i] = false;
+            }
+            if (row instanceof FallbackRowCursor fbrc) {
+            	// special case where the new table api is used but the workflow is using row backend,
+                // eg. new row filter (in 5.3) copying input to output, see AP-23029
+                m_currentRowWhenCallingSetFrom = fbrc.getCurrentRow();
+            } else {
+                setRowKey(row.getRowKey());
+                final var numCells = row.getNumColumns();
+                for (var i = 0; i < numCells; i++) {
+                    if (row.isMissing(i)) {
+                        setMissing(i);
+                    } else {
+                        m_writeValues[i + 1].setValue(row.getValue(i));
+                    }
                 }
             }
         }
 
         void commit() {
-            // TODO handle case where no row key is required?
-            if (m_readValues[0].isMissing()) {
-                throw new IllegalStateException("RowKey not set.");
+            if (!addRowIfSetViaSetFrom()) {
+                // TODO handle case where no row key is required?
+                if (m_readValues[0].isMissing()) {
+                    throw new IllegalStateException("RowKey not set.");
+                }
+
+                // We have to loop once to reset our VolatileAccesses after reading
+                for (int i = 1; i < m_readValues.length; i++) {
+                    if (!m_readValues[i].isMissing()) {
+                        m_cells[i - 1] = m_readValues[i].getDataCell();
+
+                        // invalidate for next iteration
+                        m_readValues[i].setMissing();
+                        m_forcedMissings[i] = false;
+                    } else {
+                        m_cells[i - 1] = MISSING_CELL;
+                    }
+                }
+                // cells are copied in row
+                m_delegate.addRowToTable(new DefaultRow(new RowKey(m_rowKeyReadValue.getString()), m_cells));
             }
+        }
 
-            // We have to loop once to reset our VolatileAccesses after reading
+        /**
+         * Add a row to the table if it was set via {@link #setFrom(RowRead)}.
+         *
+         * @return {@code true} if a row was added, {@code false} otherwise (then the individual fields will be set).
+         */
+        private boolean addRowIfSetViaSetFrom() {
+            if (m_currentRowWhenCallingSetFrom == null) {
+                return false;
+            }
+            DataCell[] cellCopies = null;
+            RowKey rowKey = null;
+            if (!m_readValues[0].isMissing()) {
+                rowKey = new RowKey(m_rowKeyReadValue.getString());
+                cellCopies = copyCells(m_currentRowWhenCallingSetFrom);
+            }
+            // check for each field if a value was set manually after `setFrom` was called.
             for (int i = 1; i < m_readValues.length; i++) {
-                if (!m_readValues[i].isMissing()) {
-                    m_cells[i - 1] = m_readValues[i].getDataCell();
-
-                    // invalidate for next iteration
-                    m_readValues[i].setMissing();
-                } else {
-                    m_cells[i - 1] = MISSING_CELL;
+                if (!m_readValues[i].isMissing() || m_forcedMissings[i]) {
+                    if (cellCopies == null) {
+                        rowKey = m_currentRowWhenCallingSetFrom.getKey();
+                        cellCopies = copyCells(m_currentRowWhenCallingSetFrom);
+                    }
+                    if (m_forcedMissings[i]) {
+                        cellCopies[i - 1] = MISSING_CELL;
+                    } else {
+                        cellCopies[i - 1] = m_readValues[i].getDataCell();
+                    }
                 }
             }
-            // cells are copied in row
-            m_delegate.addRowToTable(new DefaultRow(new RowKey(m_rowKeyReadValue.getString()), m_cells));
+            final DataRow row;
+            if (cellCopies == null) {
+                row = m_currentRowWhenCallingSetFrom;
+            } else {
+                row = new BlobSupportDataRow(rowKey, cellCopies);
+                for (int i = 0; i < m_readValues.length; i++) {
+                    m_readValues[i].setMissing();
+                    m_forcedMissings[i] = false;
+                }
+            }
+            m_delegate.addRowToTable(row);
+            m_currentRowWhenCallingSetFrom = null;
+            return true;
+        }
+
+        private static DataCell[] copyCells(final DataRow currentRowWhenCallingSetFrom) {
+            DataCell[] cellCopies;
+            cellCopies = new DataCell[currentRowWhenCallingSetFrom.getNumCells()];
+            for (int j = 0; j < cellCopies.length; j++) {
+                cellCopies[j] = currentRowWhenCallingSetFrom instanceof BlobSupportDataRow bsr
+                        ? bsr.getRawCell(j) : currentRowWhenCallingSetFrom.getCell(j);
+            }
+            return cellCopies;
         }
 
         private static final class NullableReadValue {
