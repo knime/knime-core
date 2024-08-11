@@ -414,6 +414,11 @@ class BufferedDataContainerDelegate implements DataContainerDelegate {
         m_domainCreator.setMaxPossibleValues(maxPossibleValues);
     }
 
+    /** Used in tests. */
+    IDataRepository getDataRepository() {
+        return m_repository;
+    }
+
     /**
      * Returns <code>true</code> if the container has been initialized with <code>DataTableSpec</code> and is ready to
      * accept rows.
