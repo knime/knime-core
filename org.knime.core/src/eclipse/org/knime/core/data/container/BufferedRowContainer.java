@@ -55,7 +55,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowKeyReadValue;
@@ -144,8 +143,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
         private final BufferedDataContainer m_delegate;
 
-        private final DataCell[] m_cells;
-
         private final NullableReadValue[] m_readValues;
 
         private final WriteValue<?>[] m_writeValues;
@@ -164,7 +161,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         private BufferedRowWrite(final BufferedDataContainer delegate, final ValueSchema schema) {
             m_delegate = delegate;
             int numFactories = schema.numFactories();
-            m_cells = new DataCell[numFactories - 1];
             m_readValues = new NullableReadValue[numFactories];
             m_writeValues = new WriteValue[numFactories];
             m_forcedMissings = new boolean[numFactories];
@@ -240,20 +236,21 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
                     throw new IllegalStateException("RowKey not set.");
                 }
 
+                DataCell[] cells = new DataCell[m_readValues.length - 1];
                 // We have to loop once to reset our VolatileAccesses after reading
                 for (int i = 1; i < m_readValues.length; i++) {
                     if (!m_readValues[i].isMissing()) {
-                        m_cells[i - 1] = m_readValues[i].getDataCell();
+                        cells[i - 1] = m_readValues[i].getDataCell();
 
                         // invalidate for next iteration
                         m_readValues[i].setMissing();
                         m_forcedMissings[i] = false;
                     } else {
-                        m_cells[i - 1] = MISSING_CELL;
+                        cells[i - 1] = MISSING_CELL;
                     }
                 }
-                // cells are copied in row
-                m_delegate.addRowToTable(new DefaultRow(new RowKey(m_rowKeyReadValue.getString()), m_cells));
+                // cells are copied in row, BlobSupportDataRow because it saves one row creation in the Buffer class
+                m_delegate.addRowToTable(new BlobSupportDataRow(new RowKey(m_rowKeyReadValue.getString()), cells));
             }
         }
 
