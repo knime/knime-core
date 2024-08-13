@@ -71,11 +71,6 @@ import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IPerspectiveDescriptor;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -90,7 +85,9 @@ import org.osgi.service.application.ApplicationHandle;
 @SuppressWarnings("restriction")
 public final class EclipseUtil {
 
+    private static final String PERSPECTIVE_SYSTEM_PROPERTY = "perspective";
     private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
+    private static final String WEB_UI_PERSPECTIVE_ID = "org.knime.ui.java.perspective";
 
     private static final String KNIME_APPLICATION_ID = "org.knime.product.KNIME_APPLICATION";
 
@@ -399,17 +396,7 @@ public final class EclipseUtil {
      * @since 5.4
      */
     public static boolean determineClassicUIUsage() {
-        return PlatformUI.isWorkbenchRunning() && Display.getDefault().syncCall(() -> { // NOSONAR
-            IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-            if (window != null) {
-                final IWorkbenchPage page = window.getActivePage();
-                if (page != null) {
-                    final IPerspectiveDescriptor perspective = page.getPerspective();
-                    return perspective != null && CLASSIC_PERSPECTIVE_ID.equals(perspective.getId());
-                }
-            }
-            return false;
-        });
+        return CLASSIC_PERSPECTIVE_ID.equals(System.getProperty(PERSPECTIVE_SYSTEM_PROPERTY));
     }
 
     /**
@@ -419,7 +406,19 @@ public final class EclipseUtil {
      * @since 5.4
      */
     public static Optional<String> currentUIPerspective() {
-        return determineAPUsage() ? Optional.of(determineClassicUIUsage() ? "classic" : "modern") // NOSONAR
-            : Optional.empty();
+        if (determineAPUsage()) {
+            final var perspectiveProperty = System.getProperty(PERSPECTIVE_SYSTEM_PROPERTY);
+            // if the property is missing, we assume we are running Classic, since the property is set from knime-ui
+            if (CLASSIC_PERSPECTIVE_ID.equals(perspectiveProperty) || perspectiveProperty == null) {
+                return Optional.of("classic");
+            }
+            if (WEB_UI_PERSPECTIVE_ID.equals(perspectiveProperty)) {
+                return Optional.of("modern");
+            }
+            // nothing the user should be concerned about
+            NodeLogger.getLogger(EclipseUtil.class) //
+                .debug(() -> "Invalid perspective property: \"%s\"".formatted(perspectiveProperty));
+        }
+        return Optional.empty();
     }
 }
