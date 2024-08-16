@@ -188,7 +188,8 @@ public interface IEarlyStartup {
          */
         static final String[] PROFILE_AWARE_APPLICATIONS = { //
             "org.knime.product.KNIME_APPLICATION", //
-            "com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION" //
+            "com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION", //
+            "org.knime.testing.NGTestflowRunner"
         };
 
         private static final IExtensionPoint EXTENSION_POINT;
