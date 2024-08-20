@@ -70,7 +70,8 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @see <a href="https://docs.kernel.org/filesystems/proc.html">proc filesystem documentation</a>
- * @since 5.4
+ * @since 5.3.2
+ * @noreference This class was backported and is not intended to be referenced in this version
  */
 final class PSSUtil {
 

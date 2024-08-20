@@ -74,7 +74,8 @@ import gnu.trove.set.hash.TLongHashSet;
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.4
+ * @since 5.3.2
+ * @noreference This class was backported and is not intended to be referenced in this version
  */
 public final class ExternalProcessMemoryWatchdog {
 
