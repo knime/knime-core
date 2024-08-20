@@ -77,12 +77,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
@@ -410,6 +412,27 @@ public class Buffer implements KNIMEStreamConstants {
             return new Thread(r, "KNIME-BackgroundTableWriter-" + m_threadCount.incrementAndGet());
         }
     });
+
+    /**
+     * Called by the KNIME testing framework to ensure that concurrent write processes have finished and all data was
+     * flushed to disc.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.4
+     */
+    public static void waitForAsyncWrites() {
+        // create countdown latch with one, wait for it for 5min to be released in ASYNC_EXECUTOR
+        final CountDownLatch latch = new CountDownLatch(1);
+        ASYNC_EXECUTOR.submit(latch::countDown);
+        try {
+            final long timeoutInMin = 5;
+            if (!latch.await(timeoutInMin, TimeUnit.MINUTES)) {
+                LOGGER.warnWithFormat("Timeout (%dmin) reached waiting for async write tasks to finish.", timeoutInMin);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /**
      * Hash used to reduce the overhead of reading a blob cell over and over again. Useful in cases where a blob is
