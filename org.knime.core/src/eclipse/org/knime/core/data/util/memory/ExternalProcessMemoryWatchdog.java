@@ -85,10 +85,22 @@ public final class ExternalProcessMemoryWatchdog {
     private static final long POLLING_INTERVAL_MS = Long.getLong("knime.externalprocesswatchdog.pollinginterval", 250);
 
     /**
+     * How often the KNIME process memory should be checked when the watchdog polls the memory usage, defaults to every
+     * fourth time
+     */
+    private static final int KNIME_PROCESS_CHECKING_INTERVAL = 4;
+
+    /**
+     * How much memory there is available in the container. Null if the environment variable CONTAINER_MEMORY_REQUESTS
+     * is not set.
+     */
+    private static final Long CONTAINER_AVAILABLE_MEMORY_KBYTES;
+
+    /**
      * The maximum memory that external processes are allowed to allocate. <code>-1</code> means no limit and disables
      * the watchdog.
      */
-    private static final long MAX_MEMORY_KBYTES = getMaxMemoryKBytes();
+    private static final long MAX_EXTERNAL_MEMORY_KBYTES;
 
     /**
      * How much memory we reserve for the OS and other processes running on the container
@@ -96,44 +108,57 @@ public final class ExternalProcessMemoryWatchdog {
     private static final long CONTAINER_RESERVED_MEMORY_KBYTES =
         Long.getLong("knime.externalprocesswatchdog.containerreservedkbytes", 128);
 
-    private static long getMaxMemoryKBytes() {
-        var requestedContainerSizeBytes = System.getenv("CONTAINER_MEMORY_REQUESTS");
-        if (requestedContainerSizeBytes == null) {
+    // Static initializer because CONTAINER_AVAILABLE_MEMORY_KBYTES must be initialized before
+    // MAX_EXTERNAL_MEMORY_KBYTES
+    static {
+        CONTAINER_AVAILABLE_MEMORY_KBYTES = getRequestedContainerSizeKBytes();
+        MAX_EXTERNAL_MEMORY_KBYTES = getMaxExternalMemoryKBytes(CONTAINER_AVAILABLE_MEMORY_KBYTES);
+    }
+
+    private static long getMaxExternalMemoryKBytes(final Long requestedContainerSizeKBytes) {
+        if (requestedContainerSizeKBytes == null) {
             return getMaxMemoryKBytesFromSysProperty();
         }
 
-        try {
-            long requestedContainerSizeKBytes = Long.valueOf(requestedContainerSizeBytes) >> 10;
-            LOGGER.info("Watchdog config: CONTAINER_MEMORY_REQUESTS = " + requestedContainerSizeKBytes + " KB");
-            long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
-            LOGGER.info("Watchdog config: JVM Memory = " + jvmMemoryKBytes + " KB");
+        LOGGER.info("Watchdog config: CONTAINER_MEMORY_REQUESTS = " + requestedContainerSizeKBytes + " KB");
+        long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
+        LOGGER.info("Watchdog config: JVM Memory = " + jvmMemoryKBytes + " KB");
 
-            long tableBackendOffHeapKBytes = TableBackendRegistry.getInstance().getTableBackends().stream() //
-                .mapToLong(TableBackend::getReservedOffHeapBytes) //
-                .sum() //
+        long tableBackendOffHeapKBytes = TableBackendRegistry.getInstance().getTableBackends().stream() //
+            .mapToLong(TableBackend::getReservedOffHeapBytes) //
+            .sum() //
                 >> 10; // turn Bytes to KBytes
 
-            LOGGER.info("Watchdog config: TableBackend OffHeap = " + tableBackendOffHeapKBytes + " KB");
+        LOGGER.info("Watchdog config: TableBackend OffHeap = " + tableBackendOffHeapKBytes + " KB");
 
-            long memoryLimitKBytes = requestedContainerSizeKBytes //
-                - jvmMemoryKBytes //
-                - tableBackendOffHeapKBytes //
-                - CONTAINER_RESERVED_MEMORY_KBYTES;
+        long memoryLimitKBytes = requestedContainerSizeKBytes //
+            - jvmMemoryKBytes //
+            - tableBackendOffHeapKBytes //
+            - CONTAINER_RESERVED_MEMORY_KBYTES;
 
-            LOGGER.info("KNIME External Process Watchdog memory limit configured based on environment variable "
-                + "CONTAINER_MEMORY_REQUESTS propery to " + memoryLimitKBytes + "kb");
-            return memoryLimitKBytes;
-        } catch (NumberFormatException e) {
-            LOGGER.warn("Could not parse value of environment variable 'CONTAINER_MEMORY_REQUESTS' ("
-                + requestedContainerSizeBytes + ")");
-            return getMaxMemoryKBytesFromSysProperty();
+        LOGGER.info("KNIME External Process Watchdog memory limit configured based on environment variable "
+            + "CONTAINER_MEMORY_REQUESTS to " + memoryLimitKBytes + "kb");
+        return memoryLimitKBytes;
+    }
+
+    private static Long getRequestedContainerSizeKBytes() {
+        var requestedContainerSizeBytes = System.getenv("CONTAINER_MEMORY_REQUESTS");
+        if (requestedContainerSizeBytes != null) {
+            try {
+                return Long.valueOf(requestedContainerSizeBytes) >> 10;
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Could not parse value of environment variable 'CONTAINER_MEMORY_REQUESTS' ("
+                    + requestedContainerSizeBytes + ")");
+            }
         }
+
+        return null;
     }
 
     private static long getMaxMemoryKBytesFromSysProperty() {
         var max = Long.getLong("knime.externalprocesswatchdog.maxmemory");
         if (max != null) {
-            LOGGER.info("KNIME External Process Watchdog memory limit configured via system propery to " + max);
+            LOGGER.info("KNIME External Process Watchdog memory limit configured via system property to " + max);
             return max;
         }
 
@@ -182,9 +207,11 @@ public final class ExternalProcessMemoryWatchdog {
 
     private final boolean m_watchdogRunning;
 
+    private int m_knimeProcessMemCheckingThrottleCounter = 0;
+
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
-        if (PSSUtil.supportsPSS() && MAX_MEMORY_KBYTES >= 0) {
+        if (PSSUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -193,8 +220,9 @@ public final class ExternalProcessMemoryWatchdog {
                 }
             }, 0, POLLING_INTERVAL_MS);
             m_watchdogRunning = true;
-        } else if (MAX_MEMORY_KBYTES < 0) {
-            LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to " + MAX_MEMORY_KBYTES);
+        } else if (MAX_EXTERNAL_MEMORY_KBYTES < 0) {
+            LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to "
+                + MAX_EXTERNAL_MEMORY_KBYTES);
             m_watchdogRunning = false;
         } else if (SystemUtils.IS_OS_LINUX) {
             LOGGER.warn(
@@ -209,8 +237,33 @@ public final class ExternalProcessMemoryWatchdog {
         var memoryState = collectMemoryUsageState();
 
         // Check if the total memory usage surpasses the threshold
-        if (memoryState.getTotalMemoryUsage() > MAX_MEMORY_KBYTES) {
+        if (memoryState.getTotalMemoryUsage() > MAX_EXTERNAL_MEMORY_KBYTES) {
             killProcessWithHighestMemoryUsage(memoryState);
+        }
+
+        warnIfKnimeMemoryCloseToContainerLimit();
+    }
+
+    private void warnIfKnimeMemoryCloseToContainerLimit() {
+        // Warn if the memory usage of the JVM process itself is close to the limit
+        if (CONTAINER_AVAILABLE_MEMORY_KBYTES != null) {
+            if (m_knimeProcessMemCheckingThrottleCounter < KNIME_PROCESS_CHECKING_INTERVAL) {
+                m_knimeProcessMemCheckingThrottleCounter++;
+                return;
+            }
+
+            m_knimeProcessMemCheckingThrottleCounter = 0;
+            try {
+                // We use PSSUtil.getPSS(pid) here instead of getMemoryUsage(pid) because we don't want to include
+                // child processes
+                var knimeMemory = PSSUtil.getPSS(ProcessHandle.current().pid());
+                if (knimeMemory > CONTAINER_AVAILABLE_MEMORY_KBYTES * 0.80) {
+                    LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available "
+                        + CONTAINER_AVAILABLE_MEMORY_KBYTES + "KB in the container");
+                }
+            } catch (IOException ex) {
+                LOGGER.warn("Could not obtain memory usage of KNIME AP process", ex);
+            }
         }
     }
 
