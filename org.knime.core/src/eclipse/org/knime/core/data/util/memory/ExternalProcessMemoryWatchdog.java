@@ -103,6 +103,12 @@ public final class ExternalProcessMemoryWatchdog {
     private static final long MAX_EXTERNAL_MEMORY_KBYTES;
 
     /**
+     * How much "direct memory" (a kind of off-heap memory) may be used by the JVM. Null if the environment variable
+     * JAVA_DIRECT_MEMORY_SIZE is not set.
+     */
+    private static final Long DIRECT_MEMORY_KBYTES = getDirectMemoryKBytes();
+
+    /**
      * How much memory we reserve for the OS and other processes running on the container
      */
     private static final long CONTAINER_RESERVED_MEMORY_KBYTES =
@@ -131,14 +137,32 @@ public final class ExternalProcessMemoryWatchdog {
 
         LOGGER.info("Watchdog config: TableBackend OffHeap = " + tableBackendOffHeapKBytes + " KB");
 
+        long directMemoryKBytes = DIRECT_MEMORY_KBYTES == null ? 0 : DIRECT_MEMORY_KBYTES;
+        LOGGER.info("Watchdog config: Max Direct Memory = " + directMemoryKBytes + " KB");
+
         long memoryLimitKBytes = requestedContainerSizeKBytes //
             - jvmMemoryKBytes //
             - tableBackendOffHeapKBytes //
+            - directMemoryKBytes //
             - CONTAINER_RESERVED_MEMORY_KBYTES;
 
         LOGGER.info("KNIME External Process Watchdog memory limit configured based on environment variable "
             + "CONTAINER_MEMORY_REQUESTS to " + memoryLimitKBytes + "kb");
         return memoryLimitKBytes;
+    }
+
+    private static Long getDirectMemoryKBytes() {
+        var directMemorySizeBytes = System.getenv("JAVA_DIRECT_MEMORY_SIZE");
+        if (directMemorySizeBytes != null) {
+            try {
+                return Long.valueOf(directMemorySizeBytes) >> 10;
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Could not parse value of environment variable 'JAVA_DIRECT_MEMORY_SIZE' ("
+                    + directMemorySizeBytes + ")");
+            }
+        }
+
+        return null;
     }
 
     private static Long getRequestedContainerSizeKBytes() {
