@@ -61,6 +61,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.knime.core.data.util.LockedSupplier;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.data.xml.XMLVersion;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -184,7 +185,7 @@ class XMLMultiCellWriter implements XMLCellWriter {
 	 */
 	private void writeHeader() throws XMLStreamException {
 		// write header of the xml file
-		m_writer.writeStartDocument("UTF-8", "1.0");
+		m_writer.writeStartDocument("UTF-8", XMLVersion.getCellDefault().toString());
 	}
 
 	/** Initialize the stream writer object.
