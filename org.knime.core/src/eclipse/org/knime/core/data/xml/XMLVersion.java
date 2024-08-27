@@ -57,6 +57,7 @@ import org.knime.core.data.xml.io.XMLCellWriterFactory;
  * Denotes all XML versions and their (in-)valid character ranges.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
+ * @since 5.4
  */
 public enum XMLVersion {
 
