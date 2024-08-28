@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -83,6 +84,10 @@ import org.osgi.service.application.ApplicationHandle;
  */
 @SuppressWarnings("restriction")
 public final class EclipseUtil {
+
+    private static final String PERSPECTIVE_SYSTEM_PROPERTY = "perspective";
+    private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
+    private static final String WEB_UI_PERSPECTIVE_ID = "org.knime.ui.java.perspective";
 
     private static final LazyInitializer<Application> APPLICATION_CACHE =
         LazyInitializer.<Application> builder().setInitializer(EclipseUtil::determineApplication).get();
@@ -435,4 +440,46 @@ public final class EclipseUtil {
         return getApplication() == Application.EXECUTOR;
     }
 
+    /**
+     * Checks whether this KNIME instance runs as a local Analytics Platform.
+     *
+     * @return <code>true</code> if we are running as local AP, <code>false</code> otherwise
+     * @since 5.3.2, also introduced in 5.4
+     */
+    public static boolean determineAPUsage() {
+        return getApplication() == Application.AP;
+    }
+
+    /**
+     * Checks whether this KNIME instance is using the Classic UI perspective.
+     *
+     * @return <code>true</code> if the Classic UI is active, <code>false</code> otherwise
+     * @since 5.3.2, also introduced in 5.4
+     */
+    public static boolean determineClassicUIUsage() {
+        return CLASSIC_PERSPECTIVE_ID.equals(System.getProperty(PERSPECTIVE_SYSTEM_PROPERTY));
+    }
+
+    /**
+     * Determines which UI perspective is opened (if any).
+     *
+     * @return either {@code "classic"} or {@code "modern"} if called in a local AP, empty {@link Optional} otherwise
+     * @since 5.3.2, also introduced in 5.4
+     */
+    public static Optional<String> currentUIPerspective() {
+        if (determineAPUsage()) {
+            final var perspectiveProperty = System.getProperty(PERSPECTIVE_SYSTEM_PROPERTY);
+            // if the property is missing, we assume we are running Classic, since the property is set from knime-ui
+            if (CLASSIC_PERSPECTIVE_ID.equals(perspectiveProperty) || perspectiveProperty == null) {
+                return Optional.of("classic");
+            }
+            if (WEB_UI_PERSPECTIVE_ID.equals(perspectiveProperty)) {
+                return Optional.of("modern");
+            }
+            // nothing the user should be concerned about
+            NodeLogger.getLogger(EclipseUtil.class) //
+                .debug(() -> "Invalid perspective property: \"%s\"".formatted(perspectiveProperty));
+        }
+        return Optional.empty();
+    }
 }

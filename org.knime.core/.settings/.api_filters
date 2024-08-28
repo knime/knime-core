@@ -7,6 +7,12 @@
                 <message_argument value="org.apache.xmlbeans5"/>
             </message_arguments>
         </filter>
+        <filter id="933232702">
+            <message_arguments>
+                <message_argument value="5.3.2"/>
+                <message_argument value="org.apache.xmlbeans5"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="javax.transaction.HeuristicCommitException">
         <filter comment="DEVOPS-2351: Migrating from javax to jakarta, no longer re-exporting javax.transaction types" id="305422471">
@@ -409,6 +415,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/ExternalProcessMemoryWatchdog.java" type="org.knime.core.data.util.memory.ExternalProcessMemoryWatchdog">
+        <filter id="1109393411">
+            <message_arguments>
+                <message_argument value="5.3.2"/>
+                <message_argument value="org.knime.core.data.util.memory.ExternalProcessMemoryWatchdog"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/internal/CorePlugin.java" type="org.knime.core.internal.CorePlugin">
         <filter comment="new field, not sure why @since is not enough (binary incompatible?)" id="336658481">
             <message_arguments>
@@ -430,6 +444,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
                 <message_argument value="org.knime.core_5.3.1"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
+                <message_argument value="org.knime.core_5.3.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -463,6 +483,26 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getNodesInScopeOLD(SingleNodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/EclipseUtil.java" type="org.knime.core.util.EclipseUtil">
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
+                <message_argument value="currentUIPerspective()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
+                <message_argument value="determineAPUsage()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
+                <message_argument value="determineClassicUIUsage()"/>
             </message_arguments>
         </filter>
     </resource>
