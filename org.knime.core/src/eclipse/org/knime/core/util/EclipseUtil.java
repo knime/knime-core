@@ -66,6 +66,7 @@ import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.app.IApplication;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
@@ -89,10 +90,11 @@ public final class EclipseUtil {
     private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
     private static final String WEB_UI_PERSPECTIVE_ID = "org.knime.ui.java.perspective";
 
-    private static final String KNIME_APPLICATION_ID = "org.knime.product.KNIME_APPLICATION";
-
     private static final LazyInitializer<String> APPLICATION_ID_CACHE =
             LazyInitializer.<String>builder().setInitializer(EclipseUtil::determineApplicationID).get();
+
+    private static final LazyInitializer<Application> APPLICATION_CACHE =
+        LazyInitializer.<Application> builder().setInitializer(EclipseUtil::determineApplication).get();
 
     /**
      * Interface for filtering classes in {@link EclipseUtil#findClasses(ClassFilter, ClassLoader)}.
@@ -140,6 +142,61 @@ public final class EclipseUtil {
                 }
             }
             return false;
+        }
+    }
+
+    /**
+     * Represents the currently running {@link IApplication}.
+     *
+     * @since 5.4
+     */
+    public enum Application {
+            /**
+             * The Analytics Platform.
+             */
+            AP("org.knime.product.KNIME_APPLICATION", false),
+
+            /**
+             * Server or Hub executor.
+             */
+            EXECUTOR("com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION", true),
+
+            /**
+             * The headless batch executor.
+             */
+            BATCH_EXECUTOR("org.knime.product.KNIME_BATCH_APPLICATION", true),
+
+            /**
+             * Application that runs testflows.
+             */
+            TESTFLOW_RUNNER("org.knime.testing.NGTestflowRunner", false),
+
+            /**
+             * If the application is not among the knowns ones above.
+             */
+            UNKNOWN("<unknown>", false);
+
+        private final String m_id;
+
+        private final boolean m_headless;
+
+        Application(final String id, final boolean headless) {
+            m_id = id;
+            m_headless = headless;
+        }
+
+        /**
+         * @return the application's unique id
+         */
+        public String id() {
+            return m_id;
+        }
+
+        /**
+         * @return whether the application is headless or has a UI
+         */
+        public boolean isHeadless() {
+            return m_headless;
         }
     }
 
@@ -369,13 +426,37 @@ public final class EclipseUtil {
     }
 
     /**
+     * @return the type of {@link Application} that is currently running
+     * @since 5.4
+     */
+    public static Application getApplication() {
+        try {
+            return APPLICATION_CACHE.get();
+        } catch (ConcurrentException ex) {
+            return Application.UNKNOWN;
+        }
+    }
+
+    private static Application determineApplication() {
+        return getApplicationID().map(appId -> {
+            for (var app : Application.values()) {
+                // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0",
+                if (appId.contains(app.id())) {
+                    return app;
+                }
+            }
+            return Application.UNKNOWN;
+        }).orElse(Application.UNKNOWN);
+    }
+
+    /**
      * Checks whether this KNIME instance runs as an RMI application on the server.
      *
      * @return <code>true</code> if we are running on the server, <code>false</code> otherwise
      * @since 2.12
      */
     public static boolean determineServerUsage() {
-        return getApplicationID().filter(id -> id.contains("KNIME_REMOTE_APPLICATION")).isPresent();
+        return getApplication() == Application.EXECUTOR;
     }
 
     /**
@@ -385,8 +466,7 @@ public final class EclipseUtil {
      * @since 5.4
      */
     public static boolean determineAPUsage() {
-        // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0"
-        return getApplicationID().filter(id -> id.contains(KNIME_APPLICATION_ID)).isPresent();
+        return getApplication() == Application.AP;
     }
 
     /**
