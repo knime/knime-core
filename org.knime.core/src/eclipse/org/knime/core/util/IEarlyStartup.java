@@ -50,7 +50,6 @@ package org.knime.core.util;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.EnumUtils;
@@ -64,13 +63,12 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.EclipseUtil.Application;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.application.ApplicationHandle;
 
 /**
  * This interface is used by the extension point <tt>org.knime.core.EarlyStartup</tt>. The {@link #run()} method is
@@ -186,9 +184,9 @@ public interface IEarlyStartup {
          * Applications which will delay the run of the AFTER_PROFILES_SET phase since they will first download and
          * apply profiles and then run this phase (calling EarlyStartupState#initialize(BundleContext) manually).
          */
-        static final String[] PROFILE_AWARE_APPLICATIONS = { //
-            "org.knime.product.KNIME_APPLICATION", //
-            "com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION" //
+        static final Application[] PROFILE_AWARE_APPLICATIONS = { //
+            Application.AP, //
+            Application.EXECUTOR //
         };
 
         private static final IExtensionPoint EXTENSION_POINT;
@@ -222,9 +220,9 @@ public interface IEarlyStartup {
          * @noreference This method is not intended to be referenced by clients.
          */
         public static synchronized void initialize(final BundleContext context) {
-            final Optional<String> applicationId = getApplicationId(context);
+            final Application application = EclipseUtil.getApplication();
             if (previousStage == null) {
-                LOGGER.debugWithFormat("Running application \"%s\"", applicationId.orElse("<unknown>"));
+                LOGGER.debugWithFormat("Running application \"%s\"", application.id());
             } else {
                 LOGGER.debug("EarlyStartup state already initialized", new IllegalStateException());
                 return;
@@ -243,7 +241,7 @@ public interface IEarlyStartup {
                 }
 
                 // this is not a KNIME application, run the AFTER_PROFILES_SET stage as soon as the workspace is set
-                if (!Arrays.asList(PROFILE_AWARE_APPLICATIONS).contains(applicationId.orElse(null))) {
+                if (!Arrays.asList(PROFILE_AWARE_APPLICATIONS).contains(application)) {
                     final var instanceLocation = Platform.getInstanceLocation();
                     if (instanceLocation == null || !instanceLocation.isSet()) {
                         try { // NOSONAR (nesting)
@@ -267,28 +265,6 @@ public interface IEarlyStartup {
             } finally {
                 initializing = false;
             }
-        }
-
-        /**
-         * Determine the IApplication id that is currently running, e.g. {@code org.knime.product.KNIME_APPLICATION} or
-         * {@code org.knime.product.KNIME_BATCH_APPLICATION}.
-         * @return The application id or an empty optional if it's not possible to determine it (no such service)
-         */
-        private static Optional<String> getApplicationId(final BundleContext context) {
-            final ServiceReference<ApplicationHandle> appRef = context.getServiceReference(ApplicationHandle.class);
-            final ApplicationHandle appHandle;
-            if (appRef != null) {
-                appHandle = context.getService(appRef);
-                if (appHandle != null) {
-                    try {
-                        final String appId = appHandle.getApplicationDescriptor().getApplicationId();
-                        return Optional.of(appId);
-                    } finally {
-                        context.ungetService(appRef);
-                    }
-                }
-            }
-            return Optional.empty();
         }
 
         private static synchronized void runBeforeWFMClassLoaded() {

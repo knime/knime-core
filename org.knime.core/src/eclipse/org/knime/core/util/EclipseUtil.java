@@ -60,16 +60,17 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.app.IApplication;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
 import org.knime.core.node.NodeLogger;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.application.ApplicationHandle;
@@ -82,6 +83,10 @@ import org.osgi.service.application.ApplicationHandle;
  */
 @SuppressWarnings("restriction")
 public final class EclipseUtil {
+
+    private static final LazyInitializer<Application> APPLICATION_CACHE =
+        LazyInitializer.<Application> builder().setInitializer(EclipseUtil::determineApplication).get();
+
     /**
      * Interface for filtering classes in {@link EclipseUtil#findClasses(ClassFilter, ClassLoader)}.
      *
@@ -128,6 +133,61 @@ public final class EclipseUtil {
                 }
             }
             return false;
+        }
+    }
+
+    /**
+     * Represents the currently running {@link IApplication}.
+     *
+     * @since 5.3
+     */
+    public enum Application {
+            /**
+             * The Analytics Platform.
+             */
+            AP("org.knime.product.KNIME_APPLICATION", false),
+
+            /**
+             * Server or Hub executor.
+             */
+            EXECUTOR("com.knime.enterprise.slave.KNIME_REMOTE_APPLICATION", true),
+
+            /**
+             * The headless batch executor.
+             */
+            BATCH_EXECUTOR("org.knime.product.KNIME_BATCH_APPLICATION", true),
+
+            /**
+             * Application that runs testflows.
+             */
+            TESTFLOW_RUNNER("org.knime.testing.NGTestflowRunner", false),
+
+            /**
+             * If the application is not among the knowns ones above.
+             */
+            UNKNOWN("<unknown>", false);
+
+        private final String m_id;
+
+        private final boolean m_headless;
+
+        Application(final String id, final boolean headless) {
+            m_id = id;
+            m_headless = headless;
+        }
+
+        /**
+         * @return the application's unique id
+         */
+        public String id() {
+            return m_id;
+        }
+
+        /**
+         * @return whether the application is headless or has a UI
+         */
+        public boolean isHeadless() {
+            return m_headless;
         }
     }
 
@@ -324,28 +384,59 @@ public final class EclipseUtil {
 
 
     /**
+     * @return the type of {@link Application} that is currently running
+     * @since 5.3
+     */
+    public static Application getApplication() {
+        try {
+            return APPLICATION_CACHE.get();
+        } catch (ConcurrentException ex) {
+            return Application.UNKNOWN;
+        }
+    }
+
+    private static Application determineApplication() {
+        var appId = determineApplicationID();
+        if (appId != null) {
+            for (var app : Application.values()) {
+                // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0",
+                if (appId.contains(app.id())) {
+                    return app;
+                }
+            }
+        }
+        return Application.UNKNOWN;
+    }
+
+    /**
+     * Called once by {@link #APPLICATION_ID_CACHE}.
+     * @return the application ID if available, {@code null} otherwise
+     */
+    private static String determineApplicationID() {
+        final var coreBundle = FrameworkUtil.getBundle(EclipseUtil.class);
+        if (coreBundle != null) {
+            final var coreContext = coreBundle.getBundleContext();
+            final ServiceReference<ApplicationHandle> ser = coreContext.getServiceReference(ApplicationHandle.class);
+            if (ser != null) {
+                try {
+                    final ApplicationHandle appHandle = coreContext.getService(ser);
+                    return appHandle == null ? null : appHandle.getInstanceId();
+                } finally {
+                    coreContext.ungetService(ser);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Checks whether this KNIME instance runs as an RMI application on the server.
      *
      * @return <code>true</code> if we are running on the server, <code>false</code> otherwise
      * @since 2.12
      */
     public static boolean determineServerUsage() {
-        Bundle myself = FrameworkUtil.getBundle(EclipseUtil.class);
-        if (myself != null) {
-            BundleContext ctx = myself.getBundleContext();
-            ServiceReference<ApplicationHandle> ser = ctx.getServiceReference(ApplicationHandle.class);
-            if (ser != null) {
-                ApplicationHandle appHandle = ctx.getService(ser);
-                String instanceId = appHandle.getInstanceId();
-                boolean b = (instanceId != null) && instanceId.contains("KNIME_REMOTE_APPLICATION");
-                ctx.ungetService(ser);
-                return b;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        return getApplication() == Application.EXECUTOR;
     }
 
 }
