@@ -394,7 +394,7 @@ public final class EclipseUtil {
     public static Application getApplication() {
         try {
             return APPLICATION_CACHE.get();
-        } catch (ConcurrentException ex) {
+        } catch (ConcurrentException ex) { // NOSONAR
             return Application.UNKNOWN;
         }
     }
