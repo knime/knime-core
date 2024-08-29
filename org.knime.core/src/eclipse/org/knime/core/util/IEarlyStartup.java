@@ -48,7 +48,7 @@
  */
 package org.knime.core.util;
 
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -184,10 +184,10 @@ public interface IEarlyStartup {
          * Applications which will delay the run of the AFTER_PROFILES_SET phase since they will first download and
          * apply profiles and then run this phase (calling EarlyStartupState#initialize(BundleContext) manually).
          */
-        static final Application[] PROFILE_AWARE_APPLICATIONS = { //
+        static final EnumSet<Application> PROFILE_AWARE_APPLICATIONS = EnumSet.of( //
             Application.AP, //
             Application.EXECUTOR //
-        };
+        );
 
         private static final IExtensionPoint EXTENSION_POINT;
         static {
@@ -241,7 +241,7 @@ public interface IEarlyStartup {
                 }
 
                 // this is not a KNIME application, run the AFTER_PROFILES_SET stage as soon as the workspace is set
-                if (!Arrays.asList(PROFILE_AWARE_APPLICATIONS).contains(application)) {
+                if (!PROFILE_AWARE_APPLICATIONS.contains(application)) {
                     final var instanceLocation = Platform.getInstanceLocation();
                     if (instanceLocation == null || !instanceLocation.isSet()) {
                         try { // NOSONAR (nesting)

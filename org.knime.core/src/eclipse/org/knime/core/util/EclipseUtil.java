@@ -390,7 +390,7 @@ public final class EclipseUtil {
     public static Application getApplication() {
         try {
             return APPLICATION_CACHE.get();
-        } catch (ConcurrentException ex) {
+        } catch (ConcurrentException ex) { // NOSONAR
             return Application.UNKNOWN;
         }
     }
@@ -408,10 +408,6 @@ public final class EclipseUtil {
         return Application.UNKNOWN;
     }
 
-    /**
-     * Called once by {@link #APPLICATION_ID_CACHE}.
-     * @return the application ID if available, {@code null} otherwise
-     */
     private static String determineApplicationID() {
         final var coreBundle = FrameworkUtil.getBundle(EclipseUtil.class);
         if (coreBundle != null) {
