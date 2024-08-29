@@ -63,7 +63,6 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
@@ -89,9 +88,6 @@ public final class EclipseUtil {
     private static final String PERSPECTIVE_SYSTEM_PROPERTY = "perspective";
     private static final String CLASSIC_PERSPECTIVE_ID = "org.knime.workbench.ui.ModellerPerspective";
     private static final String WEB_UI_PERSPECTIVE_ID = "org.knime.ui.java.perspective";
-
-    private static final LazyInitializer<String> APPLICATION_ID_CACHE =
-            LazyInitializer.<String>builder().setInitializer(EclipseUtil::determineApplicationID).get();
 
     private static final LazyInitializer<Application> APPLICATION_CACHE =
         LazyInitializer.<Application> builder().setInitializer(EclipseUtil::determineApplication).get();
@@ -392,9 +388,33 @@ public final class EclipseUtil {
     }
 
     /**
-     * Called once by {@link #APPLICATION_ID_CACHE}.
-     * @return the application ID if available, {@code null} otherwise
+     * @return the type of {@link Application} that is currently running
+     * @since 5.4
      */
+    public static Application getApplication() {
+        try {
+            return APPLICATION_CACHE.get();
+        } catch (ConcurrentException ex) {
+            return Application.UNKNOWN;
+        }
+    }
+
+    /*
+     * Called once by {@link #APPLICATION_CACHE}.
+     */
+    private static Application determineApplication() {
+        var appId = determineApplicationID();
+        if (appId != null) {
+            for (var app : Application.values()) {
+                // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0",
+                if (appId.contains(app.id())) {
+                    return app;
+                }
+            }
+        }
+        return Application.UNKNOWN;
+    }
+
     private static String determineApplicationID() {
         final var coreBundle = FrameworkUtil.getBundle(EclipseUtil.class);
         if (coreBundle != null) {
@@ -410,43 +430,6 @@ public final class EclipseUtil {
             }
         }
         return null;
-    }
-
-    /**
-     * Lazily initialized by {@link #determineApplicationID()}.
-     * @return the application ID if available, {@code null} otherwise
-     */
-    private static Optional<String> getApplicationID() {
-        try {
-            return Optional.ofNullable(APPLICATION_ID_CACHE.get());
-        } catch (ConcurrentException ex) { // NOSONAR
-            // `determineApplicationID()` doesn't throw checked exceptions, so everything here must be unchecked
-            throw ExceptionUtils.asRuntimeException(ex.getCause());
-        }
-    }
-
-    /**
-     * @return the type of {@link Application} that is currently running
-     * @since 5.4
-     */
-    public static Application getApplication() {
-        try {
-            return APPLICATION_CACHE.get();
-        } catch (ConcurrentException ex) {
-            return Application.UNKNOWN;
-        }
-    }
-
-    private static Application determineApplication() {
-        return getApplicationID().map(appId -> {
-            for (var app : Application.values()) {
-                // the application ID might be something like "org.knime.product.KNIME_APPLICATION.0",
-                if (appId.contains(app.id())) {
-                    return app;
-                }
-            }
-            return Application.UNKNOWN;
-        }).orElse(Application.UNKNOWN);
     }
 
     /**
