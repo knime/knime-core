@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<extensions>
+<extensions xmlns="http://maven.apache.org/EXTENSIONS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/EXTENSIONS/1.0.0 http://maven.apache.org/xsd/core-extensions-1.0.0.xsd">
     <extension>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-build</artifactId>
@@ -8,6 +8,6 @@
     <extension>
         <groupId>com.nuance.clu.maven</groupId>
         <artifactId>maven-feature-branch-extension</artifactId>
-        <version>1.0.2.0011-fb0f827</version>
+        <version>1.2.1.0021-407a3b6</version>
      </extension>
 </extensions>
