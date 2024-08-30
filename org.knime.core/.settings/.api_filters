@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF">
-        <filter comment="DEVOPS-2351: Replace re-exported custom xmlbeans5 bundle with standard xmlbeans 5.2.0 in target platform " id="933232702">
-            <message_arguments>
-                <message_argument value="5.3.1"/>
-                <message_argument value="org.apache.xmlbeans5"/>
-            </message_arguments>
-        </filter>
         <filter id="933232702">
             <message_arguments>
                 <message_argument value="5.3.2"/>
