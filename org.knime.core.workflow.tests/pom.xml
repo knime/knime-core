@@ -13,7 +13,10 @@
 		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
 		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
 		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot \
-		-Dchromium.multi_threaded_message_loop=true
+		-Dchromium.multi_threaded_message_loop=true \
+		--add-opens=java.base/java.net=ALL-UNNAMED \
+		--add-opens=java.base/sun.net.www.protocol.http=ALL-UNNAMED \
+		--add-opens=java.base/sun.net.www.protocol.https=ALL-UNNAMED
 		</surefireArgLine>
 		<revision>5.4.0</revision>
 	</properties>
