@@ -52,7 +52,12 @@ import org.eclipse.core.net.proxy.IProxyService;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.IEarlyStartup;
+import org.knime.core.util.auth.DelegatingAuthenticator;
+import org.knime.core.util.proxy.ProxySelectorAdapter;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * Initializes Eclipse's proxy service early in the application startup before other plugins (using CXF) can initialize.
@@ -68,9 +73,78 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(EclipseProxyServiceInitializer.class);
 
+    private static final String PROXY_SERVICE_NAME = "org.eclipse.core.net.proxy.IProxyService";
+
     /**
-     * Ensures that Eclipse's proxy service is initialized. Returns the proxy service object.
-     * To retrieve the actual service object, use a {@link ServiceTracker} on the {@link IProxyService}
+     * Flag indicating whether {@link #runInstallation()} has already been invoked.
+     */
+    private static boolean isInstalledGlobally;
+
+    private static ServiceTracker<IProxyService, IProxyService> tracker;
+
+    private static synchronized void runInstallation() {
+        try {
+            if (!isInstalledGlobally) {
+                // (3) Actually invoke KNIME-custom, proxy-supporting services and adapters.
+                DelegatingAuthenticator.installAuthenticators();
+                ProxySelectorAdapter.installProxySelector();
+                NativeProxyProviderWrapper.installNativeWrapper();
+                isInstalledGlobally = true;
+
+                LOGGER.debug("(3/3) Successfully installed proxy support");
+            }
+        } finally {
+            tracker.close();
+            tracker = null;
+        }
+    }
+
+    /**
+     * Starts listening on the service registration of {@link IProxyService} and executes
+     * the installation of proxy-supporting services, modules, and adapters in the KAP.
+     * <p>
+     * If the service is already present and the installation was *not* called yet, it is
+     * immediately run. If the service is not present, and the installation was not called yet,
+     * a listener is defined to run upon service registration. Both of these actions are
+     * performed via the {@link ServiceTrackerCustomizer#addingService(ServiceReference)} API.
+     * </p>
+     * If the installation was already performed and {@link #startListening(BundleContext)} were
+     * to be called again (independent of the service's presence), the installation is *not* re-run.
+     * @param context the bundle context
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.4
+     */
+    public static synchronized void startListening(final BundleContext context) {
+        // (1) Define a tracker that both acts as listener and getter. If the service is already present,
+        // calling ServiceTracker#open will invoke the #runInstallation method immediately.
+        tracker = new ServiceTracker<>(context, PROXY_SERVICE_NAME, new ServiceTrackerCustomizer<>() {
+
+            @Override
+            public IProxyService addingService(final ServiceReference<IProxyService> reference) {
+                runInstallation();
+                return context.getService(reference);
+            }
+
+            @Override
+            public void modifiedService(final ServiceReference<IProxyService> reference, //
+                final IProxyService service) {
+                // nothing to do
+            }
+
+            @Override
+            public void removedService(final ServiceReference<IProxyService> reference, //
+                final IProxyService service) {
+                context.ungetService(reference);
+            }
+        });
+        tracker.open();
+        LOGGER.debug("(1/3) Opened OSGi service tracker for '%s'".formatted(PROXY_SERVICE_NAME));
+    }
+
+    /**
+     * Ensures that Eclipse's proxy service is initialized. To retrieve the actual service object, use a
+     * {@link ServiceTracker} on the {@link IProxyService} class.
      */
     public static void ensureInitialized() {
         /*
@@ -83,7 +157,8 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
 
     @Override
     public void run() {
+        // (2) Initialize Eclipse proxy service (using the above-set listeners and properties).
         ensureInitialized();
-        LOGGER.debug("Initialized OSGi service '%s'".formatted(IProxyService.class.getName()));
+        LOGGER.debug("(2/3) Initialized OSGi service '%s'".formatted(PROXY_SERVICE_NAME));
     }
 }

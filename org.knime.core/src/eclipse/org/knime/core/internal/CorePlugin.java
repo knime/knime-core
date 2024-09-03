@@ -51,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,18 +61,15 @@ import org.apache.logging.log4j.util.ProviderUtil;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
+import org.knime.core.eclipseUtil.EclipseProxyServiceInitializer;
 import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.IEarlyStartup;
-import org.knime.core.util.auth.DelegatingAuthenticator;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
-import org.knime.core.util.proxy.ProxySelectorAdapter;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.util.tracker.ServiceTracker;
@@ -174,25 +170,17 @@ public class CorePlugin implements BundleActivator {
         m_reportServiceTracker = new ServiceTracker<>(context, IReportService.class, null);
         m_reportServiceTracker.open();
 
-        /*
-         * Listening on the proxy service initialization, we can apply our popup suppressor (SuppressingAuthenticator).
-         * Needs to happen early to avoid interference with org.apache.cxf.transport.http.ReferencingAuthenticator.
-         */
-        context.addServiceListener(event -> {
-            if (event.getType() == ServiceEvent.REGISTERED) {
-                DelegatingAuthenticator.installAuthenticators();
-                ProxySelectorAdapter.installProxySelector();
-            }
-        }, String.format("(%s=org.eclipse.core.net.proxy.IProxyService)", Constants.OBJECTCLASS));
-
+        /* Listening on the proxy service initialization, we can install multiple proxy-supporting services.
+         * Needs to happen early to avoid interference with org.apache.cxf.transport.http.ReferencingAuthenticator. */
+        EclipseProxyServiceInitializer.startListening(context);
     }
 
-    private void readMimeTypes() throws IOException {
-        Bundle utilBundle = Platform.getBundle("org.knime.core.util");
-        URL mimeFile = utilBundle.getResource("META-INF/mime.types");
+    private static void readMimeTypes() throws IOException {
+        final var utilBundle = Platform.getBundle("org.knime.core.util");
+        final var mimeFile = utilBundle.getResource("META-INF/mime.types");
         if (mimeFile != null) {
             try (InputStream is = mimeFile.openStream()) {
-                MimetypesFileTypeMap mimeMap = new MimetypesFileTypeMap(is);
+                final var mimeMap = new MimetypesFileTypeMap(is);
                 FileTypeMap.setDefaultFileTypeMap(mimeMap);
             }
         }
