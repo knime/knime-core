@@ -141,9 +141,13 @@ public class EnhAP16515_FlowVariableFilter extends WorkflowTestCase {
 				.getStringValue();
 		assertThat("Value of string-a", valueA, is("value-a"));
 		
-    	assertThat(msg, flowVarNames, not(hasItems("int-b"))); // outside variable but configured to be hidden
-		assertTrue("No such variable on stack",
-				flowObjectStack.peekFlowVariable("int-b", VariableType.IntType.INSTANCE).isEmpty());
+		// outside variable (int-b = 2)
+		// then overwritten within loop with int-b = 5
+		// then filtered in the loop but still there because it's defined upstream (design decision): int-b = 2 
+    	assertThat(msg, flowVarNames, hasItems("int-b"));
+		final int valueB = flowObjectStack.peekFlowVariable("int-b", VariableType.IntType.INSTANCE).orElseThrow()
+				.getIntValue();
+    	assertThat("Value of int-b", valueB, is(2));
     	
     	// inside loop variables - they can be removed (not asking if that's a smart idea)
 		assertThat(msg, flowVarNames, not(hasItem("maxIterations")));
