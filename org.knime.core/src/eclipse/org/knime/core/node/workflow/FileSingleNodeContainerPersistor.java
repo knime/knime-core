@@ -73,6 +73,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.base.ConfigPasswordEntry;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -700,7 +701,11 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         @SuppressWarnings("unchecked")
         Iterable<FlowObject> myObjs = stack == null //
             ? Collections.emptyList() //
-            : stack.getNonLocalFlowObjectsOwnedBy(nc.getID());
+            // Includes "scope = hide" variables (see AP-16515):
+            // These variables need to be saved as the output stack of a node is composed
+            // again after the workflow is loaded (not saving them means the filtering
+            // of the node is no longer applied).
+            : stack.getFlowObjectsOwnedBy(nc.getID(), Scope.Local);
         int c = 0;
         for (FlowObject s : myObjs) {
             if (s instanceof FlowVariable) {

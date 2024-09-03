@@ -59,10 +59,8 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.internal.KNIMEPath;
@@ -411,21 +409,23 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         CheckUtils.checkArgumentNotNull(name, "Variable name must not be null.");
         final Set<String> hiddenVariableNames = new HashSet<>();
         synchronized (m_stack) {
-            final int size = m_stack.size();
-            return IntStream.rangeClosed(1, size).mapToObj(i -> m_stack.get(size - i)) // reverse order
-                .filter(FlowVariable.class::isInstance)//
-                .map(FlowVariable.class::cast)//
-                .filter(o -> {
-                    if (o.getScope() == Scope.Hide) {
-                        hiddenVariableNames.add(FlowVariable.extractIdentifierFromHidingFlowVariable(o));
-                        return false;
+            boolean hasSeenContext = false;
+            for (int i = m_stack.size(); --i >= 0;) { // from top to bottom
+                final var flowObj = m_stack.get(i);
+                if (flowObj instanceof FlowScopeContext) {
+                    // no variable hiding after this point
+                    hasSeenContext = true;
+                } else if (flowObj instanceof FlowVariable flowVar) {
+                    if (flowVar.getScope() == Scope.Hide) {
+                        hiddenVariableNames.add(FlowVariable.extractIdentifierFromHidingFlowVariable(flowVar));
+                    } else if (flowVar.getName().equals(name)
+                        && (hasSeenContext || !hiddenVariableNames.contains(flowVar.getName()))
+                        && predicate.test(flowVar)) {
+                        return Optional.of(flowVar);
                     }
-                    return true;
-                }) //
-                .filter(v -> v.getName().equals(name)) //
-                .filter(v -> !hiddenVariableNames.contains(v.getName())) //
-                .filter(predicate::test) //
-                .findFirst();
+                }
+            }
+            return Optional.empty();
         }
     }
 
@@ -492,40 +492,41 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
 
     private Map<String, FlowVariable> getAvailableFlowVariables(final Predicate<FlowVariable> filterPredicate) {
         synchronized (m_stack) {
-            final int size = m_stack.size();
+            final Map<String, FlowVariable> result = new LinkedHashMap<>();
             final Set<String> hiddenVariableNames = new HashSet<>();
-            return Collections.unmodifiableMap( // retain sorting
-                IntStream.rangeClosed(1, size).mapToObj(i -> m_stack.get(size - i)) // reverse traversal
-                    .filter(FlowVariable.class::isInstance)//
-                    .map(FlowVariable.class::cast)//
-                    .filter(o -> {
-                        if (o.getScope() == Scope.Hide) {
-                            hiddenVariableNames.add(FlowVariable.extractIdentifierFromHidingFlowVariable(o));
-                            return false;
-                        }
-                        return true;
-                    }) //
-                    .filter(o -> !hiddenVariableNames.contains(o.getName())) //
-                    .filter(filterPredicate::test)//
-                    .collect(Collectors.toMap(FlowVariable::getName, Function.identity(), (v1, v2) -> v1,
-                        LinkedHashMap::new)));
+            boolean hasSeenContext = false;
+            for (int i = m_stack.size(); --i >= 0;) { // from top to bottom
+                final var flowObj = m_stack.get(i);
+                if (flowObj instanceof FlowScopeContext) {
+                    // no variable hiding after this point
+                    hasSeenContext = true;
+                } else if (flowObj instanceof FlowVariable flowVar) {
+                    if (flowVar.getScope() == Scope.Hide) {
+                        hiddenVariableNames.add(FlowVariable.extractIdentifierFromHidingFlowVariable(flowVar));
+                    } else if ((hasSeenContext || !hiddenVariableNames.contains(flowVar.getName()))
+                        && filterPredicate.test(flowVar)) {
+                        result.putIfAbsent(flowVar.getName(), flowVar);
+                    }
+                }
+            }
+            return Collections.unmodifiableMap(result);
         }
     }
 
-    /**
-     * Get all objects on the stack that are owned by the node with the given id. Used to persist the stack and to
-     * create the output stack. Order is defined by the order the variables were pushed, i.e. newest element is last
-     * in the returned list.
-     *
+    /** Get all objects on the stack that are owned by the node with the given
+     * id. This method is used to persist the stack.
      * @param id identifies objects of interest.
-     * @return new modifiable list of all elements that are put onto the stack by the argument node with non-local scope
+     * @param ignoredScopes List of scopes that are skipped
+     *        (e.g. local variables are ignored in successor nodes)
+     * @return list of all elements that are put onto the stack by
+     *         the argument node
      */
-    List<FlowObject> getNonLocalFlowObjectsOwnedBy(final NodeID id) {
-        final List<FlowObject> result = new ArrayList<FlowObject>();
+    List<FlowObject> getFlowObjectsOwnedBy(final NodeID id, final Scope... ignoredScopes) {
+        final List<FlowObject> result = new ArrayList<>();
         synchronized (m_stack) {
-            FilteredScopeIterator it = new FilteredScopeIterator(m_stack.iterator(), Scope.Local);
+            final FilteredScopeIterator it = new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
             while (it.hasNext()) {
-                FlowObject v = it.next();
+                final FlowObject v = it.next();
                 if (v.getOwner().equals(id)) {
                     result.add(v);
                 }
@@ -706,6 +707,56 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         return stack;
     }
+
+    /**
+     * Used by nodes to determine the result stack of a node after the input stack is combined with the 'output' stack.
+     * The latter is the collection of variables pushed by the node itself. Also pops all variables and the top most
+     * scope context in case the owning node is a scope end (e.g. loop end) and eliminates variables from the output
+     * that the node specifies for removal (AP-16515).
+     *
+     * @param ownerID The ID of the node, it's the owner of the resulting stack.
+     * @param st The input stack of the node.
+     * @param outgoingStack The stack collecting variables pushed by the node (naming has always been bad).
+     * @param isPopToTopmostScopeContext True if this node is a scope end (removes top-most scope context)
+     * @return A new stack, owned by the node, with all relevant variables and remaining scopes.
+     * @since 5.3
+     */
+    static FlowObjectStack createOutgoingFlowObjectStack(final NodeID ownerID, final FlowObjectStack st,
+        final FlowObjectStack outgoingStack, final boolean isPopToTopmostScopeContext) {
+        final List<FlowObject> flowObjectsOwnedByThis;
+        final Set<String> variablesForRemovalSet;
+        if (outgoingStack == null) { // not configured -> no stack
+            flowObjectsOwnedByThis = Collections.emptyList();
+            variablesForRemovalSet = Collections.emptySet();
+        } else {
+            flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(ownerID, Scope.Local, Scope.Hide);
+            variablesForRemovalSet = outgoingStack.m_stack.stream() //
+                    .filter(fv -> fv instanceof FlowVariable f && f.getScope() == Scope.Hide) //
+                    .map(FlowVariable.class::cast)
+                    .filter(fv -> fv.getVariableType().equals(VariableType.StringType.INSTANCE)) //
+                    .map(FlowVariable::getValueAsString) //
+                    .collect(Collectors.toSet());
+        }
+        final FlowObjectStack finalStack = new FlowObjectStack(ownerID, st);
+        if (isPopToTopmostScopeContext) {
+            CheckUtils.checkState(variablesForRemovalSet.isEmpty(), "Scope End node cannot remove variables");
+            finalStack.pop(FlowScopeContext.class);
+        } else if (!variablesForRemovalSet.isEmpty()) {
+            for (int i = finalStack.m_stack.size() - 1; i >= 0; i--) {
+                FlowObject o = finalStack.m_stack.get(i);
+                if (o instanceof FlowScopeContext) {
+                    // can only remove variables in the same scope (design decision)
+                    break;
+                }
+                if (o instanceof FlowVariable fv && variablesForRemovalSet.contains(fv.getName())) {
+                    finalStack.m_stack.remove(i);
+                }
+            }
+        }
+        flowObjectsOwnedByThis.stream().forEach(finalStack::push);
+        return finalStack;
+    }
+
 
     private static final Pair<String, Type> getVariableDefinition(
             final String propKey) {

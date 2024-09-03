@@ -1233,20 +1233,11 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @return Such a (new!) stack. */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
+            final NodeID ownerID = getID();
             final FlowObjectStack st = getFlowObjectStack();
-            final FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
-            if (this.isModelCompatibleTo(ScopeEndNode.class)) {
-                finalStack.pop(FlowScopeContext.class);
-            }
             final FlowObjectStack outgoingStack = getOutgoingFlowObjectStack();
-            List<FlowObject> flowObjectsOwnedByThis;
-            if (outgoingStack == null) { // not configured -> no stack
-                flowObjectsOwnedByThis = Collections.emptyList();
-            } else {
-                flowObjectsOwnedByThis = outgoingStack.getNonLocalFlowObjectsOwnedBy(getID());
-            }
-            flowObjectsOwnedByThis.stream().forEach(finalStack::push);
-            return finalStack;
+            final boolean isPopTopmostScopeContext = isModelCompatibleTo(ScopeEndNode.class);
+            return FlowObjectStack.createOutgoingFlowObjectStack(ownerID, st, outgoingStack, isPopTopmostScopeContext);
         }
     }
 

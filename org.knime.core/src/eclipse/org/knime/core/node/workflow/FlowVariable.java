@@ -48,8 +48,6 @@
 package org.knime.core.node.workflow;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -111,7 +109,7 @@ public final class FlowVariable extends FlowObject {
         Flow(""),
         /** Node local flow variable, e.g. node drop location. */
         Local("knime.node"),
-        /** Hides any variable definition defined upstream/underneath.
+        /** Hides any variable definition defined upstream until up to the next opening context (e.g. loop start).
          * @since 5.3*/
         Hide("knime.hide");
 
@@ -482,10 +480,6 @@ public final class FlowVariable extends FlowObject {
         return getType().hashCode() ^ getName().hashCode();
     }
 
-    /** "hiding" flow vars are call like "knime.hide (some name)" and this pattern allows extraction of the var name. */
-    private static final Pattern HIDING_VARIABLE_NAME_PATTERN =
-        Pattern.compile("^" + Pattern.quote(Scope.Hide.getPrefix()) + " \\((.+)\\)$");
-
     /**
      * Framework method to create a {@link Scope#Hide hidden} string variable to denote that a variable with the given
      * name is to be removed/hidden from a node's variable stack.
@@ -507,10 +501,9 @@ public final class FlowVariable extends FlowObject {
     /** Extracts the name of the variable hidden by a hiding variable, e.g. "knime.hide (some name)" -> "some name". */
     static String extractIdentifierFromHidingFlowVariable(final FlowVariable fv) {
         CheckUtils.checkArgument(fv.getScope() == Scope.Hide, "Variable should be 'Hide' scope: %s", fv.getScope());
-        final Matcher matcher = HIDING_VARIABLE_NAME_PATTERN.matcher(fv.getName());
-        CheckUtils.checkState(matcher.matches(), "Variable name %s did not match naming pattern of 'Hide' variables: ",
-            fv.getName());
-        return matcher.group(1);
+        CheckUtils.checkArgument(fv.getVariableType().equals(VariableType.StringType.INSTANCE),
+            "'Hide' variable must be of type string: %s", fv.getVariableType().getSimpleType().getSimpleName());
+        return fv.getStringValue();
     }
 
 }

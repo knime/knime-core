@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 
 /**
@@ -79,7 +80,7 @@ abstract class CopySingleNodeContainerPersistor implements SingleNodeContainerPe
         FlowObjectStack stack = original.getFlowObjectStack();
         List<FlowObject> objs;
         if (stack != null) {
-            objs = stack.getNonLocalFlowObjectsOwnedBy(original.getID());
+            objs = stack.getFlowObjectsOwnedBy(original.getID(), Scope.Local);
         } else {
             objs = Collections.emptyList();
         }
