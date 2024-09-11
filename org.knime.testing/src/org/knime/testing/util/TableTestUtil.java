@@ -204,8 +204,9 @@ public final class TableTestUtil {
          * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
          * @param exec the {@link ExecutionContext} used to create the table
          */
-        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify, final ExecutionContext exec) {
-            m_container = exec.createDataContainer(spec, false, 0);
+        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify,
+            final ExecutionContext exec) {
+            m_container = exec.createDataContainer(spec, false);
             m_cellify = cellify;
         }
 
@@ -499,7 +500,7 @@ public final class TableTestUtil {
         IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
             new IntCell(i), //
             new StringCell(Integer.toString(i)), //
-            new LongCell(i * 11), // multiply by 11 to get 2-digit repdigit
+            new LongCell(i * 11l), // multiply by 11 to get 2-digit repdigit
             new DoubleCell(i), //
             new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
             i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
