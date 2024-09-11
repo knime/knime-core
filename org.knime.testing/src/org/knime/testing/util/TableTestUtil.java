@@ -194,7 +194,18 @@ public final class TableTestUtil {
          * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
          */
         public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify) {
-            m_container = EXEC.createDataContainer(spec, false, 0);
+            this(spec, cellify, EXEC);
+        }
+
+        /**
+         * Creates a new instance of a table builder.
+         *
+         * @param spec the spec of the to-be-assembled table
+         * @param cellify function for converting {@link Object objects} into {@link DataCell data cells}.
+         * @param exec the {@link ExecutionContext} used to create the table
+         */
+        public TableBuilder(final DataTableSpec spec, final Function<Object, DataCell> cellify, final ExecutionContext exec) {
+            m_container = exec.createDataContainer(spec, false, 0);
             m_cellify = cellify;
         }
 
@@ -462,6 +473,29 @@ public final class TableTestUtil {
     public static Supplier<BufferedDataTable> createDefaultTestTable(final int rowCount,
         final LongFunction<Long> rowIndexToRandomImageSeedMap) {
         final var builder = new TableBuilder(DEFAULT_SPEC);
+        IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
+            new IntCell(i), //
+            new StringCell(Integer.toString(i)), //
+            new LongCell(i * 11), // multiply by 11 to get 2-digit repdigit
+            new DoubleCell(i), //
+            new SparseBitVectorCellFactory(Integer.toHexString(i)).createDataCell(), //
+            i % 2 == 1 ? BooleanCell.TRUE : BooleanCell.FALSE, //
+            createPNGImageCell(rowIndexToRandomImageSeedMap.apply(i))}).forEach(builder::addRow);
+        return builder.build();
+    }
+
+    /**
+     * Creates a {@link Supplier}, given a number of rows to create, which can be used for unit testing implementations
+     * of view nodes.
+     *
+     * @param rowCount the number of rows to create which should be contained in the test table
+     * @param rowIndexToRandomImageSeedMap the random number generator seed to be used per row for the image column
+     * @param exec the {@link ExecutionContext} used to create the table
+     * @return a {@link Supplier} object containing the created table
+     */
+    public static Supplier<BufferedDataTable> createDefaultTestTable(final int rowCount,
+        final LongFunction<Long> rowIndexToRandomImageSeedMap, final ExecutionContext exec) {
+        final var builder = new TableBuilder(DEFAULT_SPEC, TableTestUtil::cellify, exec);
         IntStream.range(0, rowCount).mapToObj(i -> new Object[]{//
             new IntCell(i), //
             new StringCell(Integer.toString(i)), //
