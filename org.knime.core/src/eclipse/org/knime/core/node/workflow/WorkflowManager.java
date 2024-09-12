@@ -8365,7 +8365,8 @@ public final class WorkflowManager extends NodeContainer
         }
         Path tempFolder = context.getExecutorInfo().getTempFolder();
         if (Files.isDirectory(tempFolder)) {
-            // set by the external caller, just use it (but don't delete on clean-up)
+            // Set by the external caller, just use it (but don't delete on clean-up).
+            // We don't check for write permissions because of false negatives for SMB shares on Windows, see AP-23267.
         } else {
             try {
                 Files.createDirectories(tempFolder);
@@ -8374,8 +8375,6 @@ public final class WorkflowManager extends NodeContainer
             }
             m_tmpDir = tempFolder.toFile();
         }
-        CheckUtils.checkState(Files.isDirectory(tempFolder), "Temp folder %s is not a folder", tempFolder);
-        CheckUtils.checkState(Files.isWritable(tempFolder), "Temp folder %s exists but is not writable", tempFolder);
     }
 
     /** {@inheritDoc} */
