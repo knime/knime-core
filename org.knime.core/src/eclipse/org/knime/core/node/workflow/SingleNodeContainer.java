@@ -1035,9 +1035,12 @@ public abstract class SingleNodeContainer extends NodeContainer {
         SingleNodeContainerSettings sncSettings = m_settings;
         final var initDefaultModelSettings = initDefaultSettings && m_settings.getModelSettings() == null;
         final var initDefaultViewSettings = initDefaultSettings && m_settings.getViewSettings() == null;
+        final var washModelSettings = wash && sncSettings.getModelSettings() != null;
         if (initDefaultModelSettings || initDefaultViewSettings || wash) {
             sncSettings = m_settings.clone();
-            if (initDefaultModelSettings || wash) {
+            if (washModelSettings) {
+                saveWashedModelSettingsTo(sncSettings);
+            } else if (initDefaultModelSettings) {
                 saveModelSettingsTo(sncSettings);
             }
             if (initDefaultViewSettings) {
@@ -1045,6 +1048,61 @@ public abstract class SingleNodeContainer extends NodeContainer {
             }
         }
         sncSettings.save(settings);
+    }
+
+    /**
+     * previous versions of KNIME (2.7 and before) kept the model settings only in the node; NodeModel#saveSettingsTo
+     * was always called before the dialog was opened (some dialog implementations rely on the exact structure of the
+     * NodeSettings ... which may change between versions). We wash the settings through the node so that the model
+     * settings are updated when opening the dialog (only relevant for the legacy swing-based dialogs)
+     *
+     * We need to temporarily load the current model settings of the container, since we cannot rely on any previously
+     * loaded settings being the same. In fact, they are not the same, if a model setting is overwritten by flow
+     * variable (since we do want to wash only the non-overwritten flow variables here).
+     *
+     * In order to not alter the node models state, we clean up afterwards by remembering the previously present
+     * settings and loading them again.
+     *
+     * @param sncSettings to save the washed model settings to.
+     */
+    private void saveWashedModelSettingsTo(final SingleNodeContainerSettings sncSettings) {
+        SingleNodeContainerSettings previousSncSettings = new SingleNodeContainerSettings();
+        saveModelSettingsTo(previousSncSettings);
+        /**
+         * We check here whether washing is even necessary to not alter the node models state unnecessarily. This can
+         * only not be the case in two (not necessarily exclusive) situations:
+         *
+         * 1. There exist variable settings (so that the previousSncSettings have overwritten model settings)
+         *
+         * 2. The sncSettings model settings are outdated and washing is necessary
+         *
+         * Since both 1. and 2. are non-standard situations, we avoid washing in most cases.
+         */
+        if (previousSncSettings.getModelSettings().equals(sncSettings.getModelSettings())) {
+            return;
+        }
+        try {
+            performValidateSettings(sncSettings.getModelSettings());
+            performLoadModelSettingsFrom(sncSettings.getModelSettings());
+        } catch (InvalidSettingsException ex) {
+            LOGGER.debug("Unable to wash settings.", ex);
+            /**
+             * If loading the settings fails here, we do not want to continue with the washing.
+             */
+            return;
+        }
+        saveModelSettingsTo(sncSettings);
+        try {
+            performValidateSettings(previousSncSettings.getModelSettings());
+            performLoadModelSettingsFrom(previousSncSettings.getModelSettings());
+        } catch (InvalidSettingsException ex) {
+            /**
+             * Under the assumption that settings that were successfully loaded before can be saved and successfully
+             * loaded again, this should not happen. If it does, we continue leaving the node model in a state where the
+             * valid model settings from the sncSettings were loaded.
+             */
+            LOGGER.debug("Unable to reapply settings after washing.", ex);
+        }
     }
 
     private void saveModelSettingsTo(final SingleNodeContainerSettings sncSettings) {
