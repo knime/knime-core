@@ -53,7 +53,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,6 +76,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -248,6 +251,92 @@ public class NativeNodeContainerTest {
 
         private NativeNodeContainer constructNativeNodeContainer(final TestNodeModel nodeModel) {
             return WorkflowManagerUtil.createAndAddNode(m_wfm, new SaveDefaultViewSettingsNodeFactory(nodeModel));
+        }
+
+    }
+
+    @SuppressWarnings("javadoc")
+    public static interface SettingsWasher {
+
+        void loadValidatedSettingsFrom(NodeSettingsRO settings);
+
+        NodeSettingsRO getWashedSettings();
+
+    }
+
+    @Nested
+    class WashSettingsTest {
+
+        private NodeDialogPane m_nodeDialogPane;
+
+        @BeforeEach
+        void createNodeDialogPane() {
+            m_nodeDialogPane = mock(NodeDialogPane.class);
+        }
+
+        class WashSettingsNodeFactory extends TestNodeFactory<NodeModel> {
+
+            final NodeModel m_model;
+
+            WashSettingsNodeFactory(final NodeModel model) {
+                m_model = model;
+            }
+
+            @Override
+            public NodeModel createNodeModel() {
+                return m_model;
+            }
+
+            @Override
+            protected NodeDialogPane createNodeDialogPane() {
+                return m_nodeDialogPane;
+            }
+
+        }
+
+        class WashSettingsNodeModel extends TestNodeModel {
+
+            private final SettingsWasher m_washer;
+
+            WashSettingsNodeModel(final SettingsWasher washer) {
+                m_washer = washer;
+            }
+
+            @Override
+            protected void saveSettingsTo(final NodeSettingsWO settings) {
+                m_washer.getWashedSettings().copyTo(settings);
+            }
+
+            @Override
+            protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                m_washer.loadValidatedSettingsFrom(settings);
+            }
+
+        }
+
+        @Test
+        void testWashesModelSettings()
+            throws InvalidSettingsException, CanceledExecutionException, NotConfigurableException {
+            final var washer = mock(SettingsWasher.class);
+            final var nnc = constructNativeNodeContainer(new WashSettingsNodeModel(washer));
+            final var unwashedModelSettings = new NodeSettings("unwashed");
+            final var washedModelSettings = new NodeSettings("washed");
+            washedModelSettings.addBoolean("isWashed", true);
+            when(washer.getWashedSettings()).thenReturn(washedModelSettings);
+            nnc.getSingleNodeContainerSettings().setModelSettings(unwashedModelSettings);
+            final var targetSettings = new NodeSettings("target");
+            nnc.saveSettings(targetSettings, false, true);
+
+            verify(washer).loadValidatedSettingsFrom(unwashedModelSettings);
+            // second call to clean up the node model after washing
+            verify(washer, times(2)).loadValidatedSettingsFrom(any(NodeSettingsRO.class));
+
+            assertThat(targetSettings.getNodeSettings("model").getBoolean("isWashed")).isTrue();
+
+        }
+
+        private NativeNodeContainer constructNativeNodeContainer(final TestNodeModel nodeModel) {
+            return WorkflowManagerUtil.createAndAddNode(m_wfm, new WashSettingsNodeFactory(nodeModel));
         }
 
     }
