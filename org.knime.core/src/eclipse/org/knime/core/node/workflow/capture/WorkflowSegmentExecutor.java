@@ -50,8 +50,11 @@ package org.knime.core.node.workflow.capture;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,8 +76,11 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.VariableTypeRegistry;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -101,7 +107,7 @@ import org.knime.core.util.ThreadPool;
  */
 public final class WorkflowSegmentExecutor {
 
-    private final WorkflowManager m_wfm;
+    private WorkflowManager m_wfm;
 
     private final NativeNodeContainer m_hostNode;
 
@@ -200,9 +206,11 @@ public final class WorkflowSegmentExecutor {
      * @param exec for cancellation
      * @return the resulting port objects and flow variables
      * @throws Exception if workflow execution fails
+     * @throws IllegalStateException if the underlying workflow has been disposed already
      */
     public Pair<PortObject[], List<FlowVariable>> executeWorkflow(final PortObject[] inputData,
         final ExecutionContext exec) throws Exception { // NOSONAR
+        checkWfmNonNull();
         NativeNodeContainer virtualInNode = ((NativeNodeContainer)m_wfm.getNodeContainer(m_virtualStartID));
         DefaultVirtualPortObjectInNodeModel inNM = (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
 
@@ -226,6 +234,109 @@ public final class WorkflowSegmentExecutor {
         // }
         return Pair.create(portObjectCopies, getFlowVariablesFromNC(nnc));
     }
+
+    /**
+     * Executes the workflow segment and additionally returns a hierarchical list containing the error and warning
+     * messages of all nodes.
+     *
+     * @param inputData the input data to be used for execution
+     * @param exec for cancellation
+     * @return the resulting port objects, flow variables and a hierarchical list of node error and warning messages
+     * @throws Exception if workflow execution fails
+     * @throws IllegalStateException if the underlying workflow has been disposed already
+     *
+     * @since 5.4
+     */
+    public WorkflowSegmentExecutionResult executeWorkflowAndCollectNodeMessages(final PortObject[] inputData,
+        final ExecutionContext exec) throws Exception {
+        var executionResult = executeWorkflow(inputData, exec);
+        return new WorkflowSegmentExecutionResult(executionResult.getFirst(), executionResult.getSecond(), recursivelyExtractNodeMessages(m_wfm));
+    }
+
+    private void checkWfmNonNull() {
+        if (m_wfm == null) {
+            throw new IllegalStateException(
+                "Can't extract error messages from workflow segment. Workflow has been disposed already.");
+        }
+    }
+
+    private static List<WorkflowSegmentNodeMessage> recursivelyExtractNodeMessages(final NodeContainer nc) {
+        if (nc instanceof NativeNodeContainer) {
+            return Collections.emptyList();
+        }
+        WorkflowManager wfm = null;
+        if (nc instanceof WorkflowManager w) {
+            wfm = w;
+        } else if (nc instanceof SubNodeContainer snc) {
+            wfm = snc.getWorkflowManager();
+        }
+        return wfm.getNodeContainers().stream().map(
+            n -> new WorkflowSegmentNodeMessage(n.getName(), n.getID(), n.getNodeMessage(), recursivelyExtractNodeMessages(n)))
+                .filter(msg -> (!msg.recursiveMessages().isEmpty()) ||
+                    (msg.message().getMessageType() == Type.ERROR) ||
+                    (msg.message().getMessageType() == Type.WARNING))
+                .toList();
+    }
+
+    /**
+     * Represents messages of nodes containing name, node ID, error or warning message and WorkflowSegmentNodeMessages
+     * of nested nodes.
+     *
+     * @param nodeName the node name
+     * @param nodeID the node ID
+     * @param message the error message of the node
+     * @param recursiveMessages a list of node messages for nested nodes if the node is a container,
+     *            otherwise an empty list
+     *
+     * @since 5.4
+     */
+    public record WorkflowSegmentNodeMessage(String nodeName, NodeID nodeID, NodeMessage message, List<WorkflowSegmentNodeMessage> recursiveMessages) {}
+
+    /**
+     * Represents the result of the executed workflow including a hierarchical list of the error and warning messages
+     * of all nodes.
+     *
+     * @param portObjectCopies the resulting port objects
+     * @param flowVariables the resulting flow variables
+     * @param nodeMessages a hierarchical list of the error and warning messages of all nodes
+     *
+     * @since 5.4
+     */
+    public record WorkflowSegmentExecutionResult(PortObject[] portObjectCopies, List<FlowVariable> flowVariables, List<WorkflowSegmentNodeMessage> nodeMessages) {
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            WorkflowSegmentExecutionResult result = (WorkflowSegmentExecutionResult) obj;
+            return Arrays.equals(portObjectCopies, result.portObjectCopies) &&
+                   Objects.equals(flowVariables, result.flowVariables) &&
+                   Objects.equals(nodeMessages, result.nodeMessages);
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((portObjectCopies == null) ? 0 : Arrays.hashCode(portObjectCopies));
+            result = prime * result + ((flowVariables == null) ? 0 : flowVariables.hashCode());
+            result = prime * result + ((nodeMessages == null) ? 0 : nodeMessages.hashCode());
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "WorkflowSegmentExecutionResult{" +
+                    "portObjectCopies=" + Arrays.toString(portObjectCopies) +
+                    ", flowVariables=" + flowVariables +
+                    ", nodeMessages=" + nodeMessages +
+                    '}';
+        }
+    }
+
 
     private void executeAndWait(final ExecutionContext exec, final AtomicReference<Exception> exception) {
         // code copied from SubNodeContainer#executeWorkflowAndWait
@@ -273,12 +384,15 @@ public final class WorkflowSegmentExecutor {
     public void dispose() {
         cancel();
         m_wfm.getParent().removeNode(m_wfm.getID());
+        m_wfm = null;
     }
 
     /**
      * Cancels the execution of the workflow segment.
+     * @throws IllegalStateException if the underlying workflow has been disposed already
      */
     public void cancel() {
+        checkWfmNonNull();
         if (m_wfm.getNodeContainerState().isExecutionInProgress()) {
             m_wfm.cancelExecution(m_wfm);
         }
