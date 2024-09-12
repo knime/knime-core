@@ -800,5 +800,9 @@
             startupStage="BEFORE_WFM_CLASS_LOADED"
             class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
       </provider>
+      <provider
+            class="org.knime.core.node.logging.JavaUtilLoggingAdapter"
+            startupStage="EARLIEST">
+      </provider>
    </extension>
 </plugin>
