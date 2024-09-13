@@ -856,7 +856,6 @@ public final class NodeLogger {
             synchronized (WF_APPENDER) {
                 final Appender appender = WF_APPENDER.remove(workflowDirPath);
                 if (appender != null) {
-                    appender.close();
                     //Remove the appender from all open node loggers
                     @SuppressWarnings("unchecked")
                     final Enumeration<Logger> allLoggers =
@@ -864,6 +863,9 @@ public final class NodeLogger {
                     while (allLoggers.hasMoreElements()) {
                         allLoggers.nextElement().removeAppender(appender);
                     }
+                    // AP-10222: must happen after it is removed from all appenders,
+                    // otherwise it will produce "log4j:ERROR Attempted to append to closed appender"
+                    appender.close();
                 }
             }
         }
