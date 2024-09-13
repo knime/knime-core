@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Unit-Tests for org.knime.log4j2.tests
 Bundle-SymbolicName: org.knime.log4j2.tests;singleton:=true
-Bundle-Version: 5.0.0.qualifier
+Bundle-Version: 5.4.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Require-Bundle: org.knime.core;bundle-version="[5.4.0,6.0.0)",
  org.junit;bundle-version="[4.13.2,5.0.0)",
