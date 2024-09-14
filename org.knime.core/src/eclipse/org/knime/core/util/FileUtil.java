@@ -1531,7 +1531,7 @@ public final class FileUtil {
     }
 
     /**
-     * Open an input stream on the given URL using the given timeout for
+     * Open an input stream on the given URL using the given timeout for both,
      * connecting and reading.
      *
      * @param url any URL
@@ -1545,7 +1545,18 @@ public final class FileUtil {
         return openStreamWithTimeout(url, timeout, timeout);
     }
 
-    private static InputStream openStreamWithTimeout(final URL url, final int connectTimeout, final int readTimeout)
+    /**
+     * Open an input stream on the given URL using separate timeouts for
+     * connecting and reading.
+     *
+     * @param url any URL
+     * @param connectTimeout the connect timeout in milliseconds
+     * @param readTimeout the read timeout in milliseconds
+     * @return an input stream
+     * @throws IOException if an I/O error occurs
+     * @since 5.5
+     */
+    public static InputStream openStreamWithTimeout(final URL url, final int connectTimeout, final int readTimeout)
             throws IOException {
         final var conn = URLConnectionFactory.getConnection(url);
         conn.setConnectTimeout(connectTimeout);
