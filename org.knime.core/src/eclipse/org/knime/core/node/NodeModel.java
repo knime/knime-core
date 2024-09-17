@@ -55,10 +55,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStorePortObject;
@@ -79,6 +81,7 @@ import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.streamable.DataTableRowInput;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.MergeOperator;
 import org.knime.core.node.streamable.OutputPortRole;
@@ -112,7 +115,9 @@ import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeModel;
+import org.knime.core.table.row.Selection;
 import org.knime.core.util.Pointer;
+import org.knime.core.util.ThreadUtils;
 
 
 /**
@@ -584,7 +589,51 @@ public abstract class NodeModel implements ViewableModel {
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
         try {
-            if (!exEnv.reExecute()) {
+
+            StreamableOperatorInternals sinternals = createInitialStreamableOperatorInternals();
+            if (checkDataParallelism(sinternals)) {
+                BufferedDataTable table = (BufferedDataTable)data[0];
+                PortObjectSpec[] inSpecs = new PortObjectSpec[] { table.getSpec() };
+                RowInput[] inputs = tableToRowInputs(table, 4, exec);
+
+                PortObjectSpec[] outSpec = computeFinalOutputSpecs(sinternals, inSpecs);
+
+                BufferedDataContainerRowOutput[] outputs = Arrays.stream(inputs)
+                .map((final RowInput input) -> exec.createDataContainer((DataTableSpec)outSpec[0]))
+                .map(BufferedDataContainerRowOutput::new)
+                .toArray(BufferedDataContainerRowOutput[]::new);
+
+                Future[] futures = new Future[inputs.length];
+                for (int i = 0; i < inputs.length; i++) {
+                    final int index = i;
+                    StreamableOperator op = createStreamableOperator(new PartitionInfo(i, inputs.length), inSpecs);
+                    futures[i] = KNIMEConstants.GLOBAL_THREAD_POOL.submit(
+                        ThreadUtils.runnableWithContext(
+                            () -> {
+                                try {
+                                    // TODO: Bernd to check if the runFinal reports progress
+                                    op.runFinal(new PortInput[] {inputs[index]}, new PortOutput[] { outputs[index] }, exec);
+                                } catch (Exception ex) {
+                                    // TODO Bernd to implement node failure
+                                }
+                            }));
+                }
+                for (Future<?> f : futures) {
+                    f.get();
+                }
+
+                BufferedDataTable[] resultTables = Arrays.stream(outputs).map(o -> {
+                    try {
+                        o.close();
+                    } catch (InterruptedException ex) {
+                        // TODO Bernd to handle this exception
+                    }
+                    return o.getDataTable();
+                }).toArray(BufferedDataTable[]::new);
+
+                outData = new PortObject[] {exec.createConcatenateTable(exec, Optional.empty(), false, resultTables)};
+
+            } else if (!exEnv.reExecute()) {
                 outData = execute(data, exec);
             } else {
                 if (this instanceof ReExecutable) {
@@ -2151,4 +2200,107 @@ public abstract class NodeModel implements ViewableModel {
     protected final NodeLogger getLogger() {
         return m_logger;
     }
+
+    private boolean checkDataParallelism(final StreamableOperatorInternals sinternals) {
+        InputPortRole[] ipr = getInputPortRoles();
+        OutputPortRole[] opr = getOutputPortRoles();
+
+        return ipr.length == 1
+                && opr.length == 1
+                && ipr[0].isStreamable()
+                && !iterate(sinternals)
+                && ipr[0].isDistributable()
+                && opr[0].isDistributable();
+    }
+
+    private RowInput[] tableToRowInputs(final BufferedDataTable dt, final int numChunks, final ExecutionContext exec) {
+        Selection[] selections = new Selection[numChunks];
+        long tableSize = dt.size();
+        long chunkSize = tableSize / numChunks;
+        for (int i = 0; i < numChunks; i++) {
+            selections[i] = Selection.all().retainRows(i * chunkSize, (i + 1) * chunkSize); // Bernd fixes the correct table dimension handling
+        }
+        BufferedDataTable[] slices = InternalTableAPI.multiSlice(exec, dt, selections);
+        return Arrays.stream(slices).map(DataTableRowInput::new).toArray(RowInput[]::new);
+    }
+
+    /**
+    * TODO: Bernd to merge this with the same class in org.knime.streaming
+    * @author Martin Horn, University of Konstanz
+    */
+   class BufferedDataContainerRowOutput extends RowOutput {
+
+       private BufferedDataContainer m_dataContainer;
+
+       private BufferedDataTable m_setFullyTable = null;
+
+       private boolean m_closeCalled = false;
+
+       /**
+        * Constructor.
+        *
+        * @param dataContainer the data container to be filled
+        */
+       public BufferedDataContainerRowOutput(final BufferedDataContainer dataContainer) {
+           m_dataContainer = dataContainer;
+       }
+
+       /**
+        * Constructor. In this case the data table can only be set by calling
+        * {@link #setFully(org.knime.core.node.BufferedDataTable)}. If {@link #push(DataRow)} is used an
+        * {@link IllegalStateException} will be thrown.
+        */
+       public BufferedDataContainerRowOutput() {
+           m_dataContainer = null;
+       }
+
+       /**
+        * {@inheritDoc}
+        */
+       @Override
+       public void push(final DataRow row) throws InterruptedException {
+           if (m_dataContainer == null) {
+               throw new IllegalStateException(
+                   "Table can only be set by the 'setFully'-method. Rows can not be added individually. Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
+           }
+           m_dataContainer.addRowToTable(row);
+       }
+
+       /**
+        * {@inheritDoc}
+        */
+       @Override
+       public void close() throws InterruptedException {
+           m_closeCalled = true;
+       }
+
+       /**
+        * @return whether {@link #close()} has been called at least once
+        */
+       public boolean closeCalled() {
+           return m_closeCalled;
+       }
+
+       BufferedDataTable getDataTable() {
+           if (m_dataContainer != null) {
+               m_dataContainer.close();
+               return m_dataContainer.getTable();
+           } else if (m_setFullyTable != null) {
+               return m_setFullyTable;
+           } else {
+               throw new IllegalStateException("No table set. Use 'setFully'-method to set table first.");
+           }
+       }
+
+       /**
+        * {@inheritDoc}
+        */
+       @Override
+       public void setFully(final BufferedDataTable table) throws InterruptedException {
+           m_dataContainer = null;
+           m_setFullyTable = table;
+           m_closeCalled = true;
+       }
+
+   }
 }
