@@ -55,6 +55,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,6 +64,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -119,115 +121,106 @@ import org.knime.core.table.row.Selection;
 import org.knime.core.util.Pointer;
 import org.knime.core.util.ThreadUtils;
 
-
 /**
- * Abstract class defining a node's configuration and execution (among others).
- * More specifically, it defines:
+ * Abstract class defining a node's configuration and execution (among others). More specifically, it defines:
  * <ul>
  * <li>Input and output ports (count and types)</li>
  * <li>Settings handling (validation and storage)</li>
- * <li>Configuration (e.g. after new settings are applied or a node
- * is (re)connected</li>
+ * <li>Configuration (e.g. after new settings are applied or a node is (re)connected</li>
  * <li>Execution</li>
  * <li>Reset</li>
- * <li>Storage of &quot;internals&quot; (e.g. hilite translation and/or
- * information that is shown in node view)
+ * <li>Storage of &quot;internals&quot; (e.g. hilite translation and/or information that is shown in node view)
  * </ul>
- * Derived classes must overwrite one of two execute methods and
- * one of two configure methods (depending on their port types):
+ * Derived classes must overwrite one of two execute methods and one of two configure methods (depending on their port
+ * types):
  * <ol>
- * <li>The {@link #execute(PortObject[], ExecutionContext)} and
- * {@link #configure(PortObjectSpec[])} methods for general
+ * <li>The {@link #execute(PortObject[], ExecutionContext)} and {@link #configure(PortObjectSpec[])} methods for general
  * port definitions (rarely used) or
- * <li>the {@link #execute(BufferedDataTable[], ExecutionContext)} and
- * {@link #configure(DataTableSpec[])} methods for standard data ports
- * (on both in- and outports).
+ * <li>the {@link #execute(BufferedDataTable[], ExecutionContext)} and {@link #configure(DataTableSpec[])} methods for
+ * standard data ports (on both in- and outports).
  * </ol>
- * None of these methods is declared abstract, though one pair of
- * execute/configure must be overridden (if none is overwritten a runtime
- * exception will be thrown upon the node's configuration or execution, resp.).
+ * None of these methods is declared abstract, though one pair of execute/configure must be overridden (if none is
+ * overwritten a runtime exception will be thrown upon the node's configuration or execution, resp.).
  *
  * <p>
- * For a detailed description of this class refer to KNIME's extension guide
- * and the various node implementations.
+ * For a detailed description of this class refer to KNIME's extension guide and the various node implementations.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeModel implements ViewableModel {
 
-
     /* This code will go into the class header once we introduce
      * NodeConfiguration in replacement for NodeSettings */
 
-//    /* @param <NC> The type of {@link NodeConfiguration} associated with this
-//    *         implementation. Most simply models will just use
-//    *         <code>NodeConfiguration</code> may wish to use a derived class.
-//    */
+    //    /* @param <NC> The type of {@link NodeConfiguration} associated with this
+    //    *         implementation. Most simply models will just use
+    //    *         <code>NodeConfiguration</code> may wish to use a derived class.
+    //    */
 
-//    /** The node configuration associated with this model. This field will
-//     * be assigned immediately after construction.
-//     */
-//    private NC m_nodeConfiguration;
-//    /** @param nodeConfiguration the nodeConfiguration to set */
-//    void setNodeConfiguration(final NC nodeConfiguration) {
-//        try {
-//            onNewNodeConfiguration(nodeConfiguration);
-//        } catch (final Throwable e) {
-//            m_logger.coding("Throwable while notifying node about "
-//                    + "new configuration", e);
-//        }
-//        m_nodeConfiguration = nodeConfiguration;
-//    }
-//
-//    /** Subclass hook to react on new configuration objects. This method is
-//     * called before the new configuration object is set in the abstract
-//     * NodeModel class.
-//     * @param nodeConfiguration The node configuration object that is going
-//     * to be set into the model after this method returns (whether normally
-//     * or abnormally.) The argument is never <code>null</code>.
-//     */
-//    protected void onNewNodeConfiguration(final NC nodeConfiguration) {
-//        // subclass hook.
-//    }
-//
-//    /**
-//     * Get the node configuration set on this model. Subclasses may simply use
-//     * this configuration and assume it is properly setup (i.e. there was at
-//     * least an attempt to auto-guess defaults for newly created nodes, the
-//     * configuration was loaded as part of the workflow loading for stored
-//     * workflows or the configuration has been filled in the node's dialog.)
-//     *
-//     * <p>
-//     * Subclasses should verify consistency with the input data in their
-//     * {@link #configure(DataTableSpec[]) configure} method, possibly throwing
-//     * and {@link InvalidSettingsException}.
-//     *
-//     * <p>
-//     * Derived classes should always use this method to get the current node
-//     * configuration rather than keeping the returned value as class field (as
-//     * the underlying configuration object changes when updated through the
-//     * dialog or other controls).
-//     *
-//     * <p>
-//     * The returned object should be considered read-only, i.e. derived classes
-//     * should always only read from the configuration but not modify it.
-//     *
-//     * @return The currently active node configuration. This method does not
-//     *         return null unless it is (indirectly) called from the NodeModel
-//     *         constructor.
-//     */
-//    protected NC getNodeConfiguration() {
-//        return m_nodeConfiguration;
-//    }
+    //    /** The node configuration associated with this model. This field will
+    //     * be assigned immediately after construction.
+    //     */
+    //    private NC m_nodeConfiguration;
+    //    /** @param nodeConfiguration the nodeConfiguration to set */
+    //    void setNodeConfiguration(final NC nodeConfiguration) {
+    //        try {
+    //            onNewNodeConfiguration(nodeConfiguration);
+    //        } catch (final Throwable e) {
+    //            m_logger.coding("Throwable while notifying node about "
+    //                    + "new configuration", e);
+    //        }
+    //        m_nodeConfiguration = nodeConfiguration;
+    //    }
+    //
+    //    /** Subclass hook to react on new configuration objects. This method is
+    //     * called before the new configuration object is set in the abstract
+    //     * NodeModel class.
+    //     * @param nodeConfiguration The node configuration object that is going
+    //     * to be set into the model after this method returns (whether normally
+    //     * or abnormally.) The argument is never <code>null</code>.
+    //     */
+    //    protected void onNewNodeConfiguration(final NC nodeConfiguration) {
+    //        // subclass hook.
+    //    }
+    //
+    //    /**
+    //     * Get the node configuration set on this model. Subclasses may simply use
+    //     * this configuration and assume it is properly setup (i.e. there was at
+    //     * least an attempt to auto-guess defaults for newly created nodes, the
+    //     * configuration was loaded as part of the workflow loading for stored
+    //     * workflows or the configuration has been filled in the node's dialog.)
+    //     *
+    //     * <p>
+    //     * Subclasses should verify consistency with the input data in their
+    //     * {@link #configure(DataTableSpec[]) configure} method, possibly throwing
+    //     * and {@link InvalidSettingsException}.
+    //     *
+    //     * <p>
+    //     * Derived classes should always use this method to get the current node
+    //     * configuration rather than keeping the returned value as class field (as
+    //     * the underlying configuration object changes when updated through the
+    //     * dialog or other controls).
+    //     *
+    //     * <p>
+    //     * The returned object should be considered read-only, i.e. derived classes
+    //     * should always only read from the configuration but not modify it.
+    //     *
+    //     * @return The currently active node configuration. This method does not
+    //     *         return null unless it is (indirectly) called from the NodeModel
+    //     *         constructor.
+    //     */
+    //    protected NC getNodeConfiguration() {
+    //        return m_nodeConfiguration;
+    //    }
 
     /**
-     * The node logger for this class; do not make static to make sure the right
-     * class name is printed in messages.
+     * The node logger for this class; do not make static to make sure the right class name is printed in messages.
      */
     private final NodeLogger m_logger;
 
     /** Hold in and output port types. */
     private final PortType[] m_inPortTypes;
+
     private final PortType[] m_outPortTypes;
 
     /** Holds the input hilite handler for each input. */
@@ -467,13 +460,12 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Adds to the given <code>NodeSettings</code> the model specific
-     * settings. The settings don't need to be complete or consistent. If, right
-     * after startup, no valid settings are available this method can write
-     * either nothing or invalid settings.
+     * Adds to the given <code>NodeSettings</code> the model specific settings. The settings don't need to be complete
+     * or consistent. If, right after startup, no valid settings are available this method can write either nothing or
+     * invalid settings.
      * <p>
-     * Method is called by the <code>Node</code> if the current settings need
-     * to be saved or transfered to the node's dialog.
+     * Method is called by the <code>Node</code> if the current settings need to be saved or transfered to the node's
+     * dialog.
      *
      * @param settings The object to write settings into.
      *
@@ -517,7 +509,6 @@ public abstract class NodeModel implements ViewableModel {
     protected void validateViewSettings(final NodeSettingsRO viewSettings) throws InvalidSettingsException {
     }
 
-
     /**
      * This method is called for freshly added nodes with view settings if the view is accessed for the first time and
      * no view settings have been set yet.
@@ -539,7 +530,6 @@ public abstract class NodeModel implements ViewableModel {
     protected void saveDefaultViewSettingsTo(final NodeSettingsWO viewSettings) {
         // Do nothing per default to not set any view settings.
     }
-
 
     /**
      * Sets new settings from the passed object in the model. You can safely assume that the object passed has been
@@ -590,48 +580,74 @@ public abstract class NodeModel implements ViewableModel {
         PortObject[] outData;
         try {
 
+            boolean parallel = true;
+            // For testing without any IO
+            boolean io = true;
+
             StreamableOperatorInternals sinternals = createInitialStreamableOperatorInternals();
-            if (checkDataParallelism(sinternals)) {
+            if (parallel && checkDataParallelism(sinternals)) {
                 BufferedDataTable table = (BufferedDataTable)data[0];
-                PortObjectSpec[] inSpecs = new PortObjectSpec[] { table.getSpec() };
+                PortObjectSpec[] inSpecs = new PortObjectSpec[]{table.getSpec()};
                 RowInput[] inputs = tableToRowInputs(table, 4, exec);
 
                 PortObjectSpec[] outSpec = computeFinalOutputSpecs(sinternals, inSpecs);
 
-                BufferedDataContainerRowOutput[] outputs = Arrays.stream(inputs)
-                .map((final RowInput input) -> exec.createDataContainer((DataTableSpec)outSpec[0]))
-                .map(BufferedDataContainerRowOutput::new)
-                .toArray(BufferedDataContainerRowOutput[]::new);
+                // This does not work for nodes that actually need duplicate checking!!!
+                // TODO: BERND!
+                final var dcSettings = DataContainerSettings.builder() //
+                    .withInitializedDomain(true).withDomainUpdate(false).withCheckDuplicateRowKeys(false) // only copying data
+                    .build();
 
+                RowOutput[] outputs;
+                if (io) {
+                    outputs = Arrays.stream(inputs)
+                        .map((final RowInput input) -> exec.createDataContainer((DataTableSpec)outSpec[0], dcSettings))
+                        .map(BufferedDataContainerRowOutput::new).toArray(BufferedDataContainerRowOutput[]::new);
+                } else {
+                    outputs =
+                        Arrays.stream(inputs).map(i -> new BlackHoleRowOutput()).toArray(BlackHoleRowOutput[]::new);
+                }
                 Future[] futures = new Future[inputs.length];
                 for (int i = 0; i < inputs.length; i++) {
                     final int index = i;
                     StreamableOperator op = createStreamableOperator(new PartitionInfo(i, inputs.length), inSpecs);
-                    futures[i] = KNIMEConstants.GLOBAL_THREAD_POOL.submit(
-                        ThreadUtils.runnableWithContext(
-                            () -> {
-                                try {
-                                    // TODO: Bernd to check if the runFinal reports progress
-                                    op.runFinal(new PortInput[] {inputs[index]}, new PortOutput[] { outputs[index] }, exec);
-                                } catch (Exception ex) {
-                                    // TODO Bernd to implement node failure
-                                }
-                            }));
-                }
-                for (Future<?> f : futures) {
-                    f.get();
+                    futures[i] = KNIMEConstants.GLOBAL_THREAD_POOL.submit(ThreadUtils.callableWithContext(() -> {
+                        try {
+                            // TODO: Bernd to check if the runFinal reports progress
+                            m_logger.debug(System.currentTimeMillis() + ": Starting streaming chunk " + index);
+                            op.loadInternals(sinternals);
+                            ExecutionContext subexec = exec.createSilentSubExecutionContext(0.0);
+                            op.runFinal(new PortInput[]{inputs[index]}, new PortOutput[]{outputs[index]}, subexec);
+                            outputs[index].close();
+                            m_logger.debug(System.currentTimeMillis() + ": Ending streaming chunk " + index);
+                            if (!io) {
+                                BufferedDataContainer container = exec.createDataContainer((DataTableSpec)outSpec[0]);
+                                container.close();
+                                return container.getTable();
+                            } else {
+                                return ((BufferedDataContainerRowOutput)outputs[index]).getDataTable();
+                            }
+                        } catch (Exception ex) {
+                            // TODO Bernd to implement node failure
+                            m_logger.error(ex);
+                            return null;
+                        }
+                    }));
                 }
 
-                BufferedDataTable[] resultTables = Arrays.stream(outputs).map(o -> {
+                BufferedDataTable[] resultTables = Arrays.stream(futures).map(f -> {
                     try {
-                        o.close();
+                        return (BufferedDataTable)f.get();
                     } catch (InterruptedException ex) {
-                        // TODO Bernd to handle this exception
+                        // Bernd!
+                        return null;
+                    } catch (ExecutionException ex) {
+                        // TODO Bernd!
+                        return null;
                     }
-                    return o.getDataTable();
                 }).toArray(BufferedDataTable[]::new);
 
-                outData = new PortObject[] {exec.createConcatenateTable(exec, Optional.empty(), false, resultTables)};
+                outData = new PortObject[]{exec.createConcatenateTable(exec, Optional.empty(), false, resultTables)};
 
             } else if (!exEnv.reExecute()) {
                 outData = execute(data, exec);
@@ -718,8 +734,9 @@ public abstract class NodeModel implements ViewableModel {
 
         // if number of out tables does not match: fail
         CheckUtils.checkState(outData.length == getNrOutPorts(),
-                "Invalid result. Execution failed. Reason: Incorrect implementation; the execute method in \"%s\" "
-                + "returned null or an incorrect number of output tables.", getClass().getSimpleName());
+            "Invalid result. Execution failed. Reason: Incorrect implementation; the execute method in \"%s\" "
+                + "returned null or an incorrect number of output tables.",
+            getClass().getSimpleName());
 
         for (int i = 0; i < outData.length; i++) {
             if (outData[i] instanceof BufferedDataTable) {
@@ -760,8 +777,9 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} --
-     * check meaningfulness of result and warn - only if the execute didn't issue a warning already.
+     * Called from {@link #executeModel(PortObject[], ExecutionEnvironment, ExecutionContext)} -- check meaningfulness
+     * of result and warn - only if the execute didn't issue a warning already.
+     *
      * @param outData result data of #execute
      */
     private void executeModelCheckTableWarnings(final PortObject[] outData) {
@@ -804,6 +822,7 @@ public abstract class NodeModel implements ViewableModel {
 
     /**
      * Sets the hasContent flag and fires a state change event.
+     *
      * @param hasContent Flag if this node is configured be executed or not.
      */
     final void setHasContent(final boolean hasContent) {
@@ -815,9 +834,8 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * @return <code>true</code> if this model has been executed and therefore
-     * possibly has content that can be displayed in a view,
-     * <code>false</code> otherwise.
+     * @return <code>true</code> if this model has been executed and therefore possibly has content that can be
+     *         displayed in a view, <code>false</code> otherwise.
      */
     final boolean hasContent() {
         return m_hasContent;
@@ -826,10 +844,10 @@ public abstract class NodeModel implements ViewableModel {
     /**
      * Execute method for general port types. The argument <code>inObjects</code> represent the input objects and the
      * returned array represents the output objects. The elements in the argument array are generally guaranteed to be
-     * not null and subclasses of the {@link PortObject PortObject classes} that are defined through the
-     * {@link PortType PortTypes} given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}.
-     * Similarly, the returned output objects need to comply with their port types object class (otherwise an error is
-     * reported by the framework) and must not be null. There are few exceptions to these rules:
+     * not null and subclasses of the {@link PortObject PortObject classes} that are defined through the {@link PortType
+     * PortTypes} given in the {@link NodeModel#NodeModel(PortType[], PortType[]) constructor}. Similarly, the returned
+     * output objects need to comply with their port types object class (otherwise an error is reported by the
+     * framework) and must not be null. There are few exceptions to these rules:
      * <ul>
      * <li>Nodes with optional inputs (as specified in the constructor) may find null elements in the array.</li>
      * <li>Node that implement {@link InactiveBranchConsumer} may find instances of {@link InactiveBranchPortObject} in
@@ -863,7 +881,9 @@ public abstract class NodeModel implements ViewableModel {
         return outData;
     }
 
-    /** Type casts the elements in the argument array to BDT and returns an array of it.
+    /**
+     * Type casts the elements in the argument array to BDT and returns an array of it.
+     *
      * @param inObjects The objects to type cast, all expected to be null or BDT.
      * @param typeOfInputForError error message start, e.g. "Input port" or "Internal held object index"
      * @param endErrorString appended to the error, like "wrong version of NodeModel.execute() overwritten!"
@@ -877,8 +897,8 @@ public abstract class NodeModel implements ViewableModel {
             try {
                 inTables[i] = (BufferedDataTable)inObjects[i];
             } catch (ClassCastException cce) {
-                throw new IOException(String.format("%s %d does not hold data table but %s; %s",
-                    typeOfInputForError, i, inObjects[i].getClass().getSimpleName(), endErrorString));
+                throw new IOException(String.format("%s %d does not hold data table but %s; %s", typeOfInputForError, i,
+                    inObjects[i].getClass().getSimpleName(), endErrorString));
             }
         }
         return inTables;
@@ -917,9 +937,8 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Invokes the abstract <code>#reset()</code> method of the derived model.
-     * In addition, this method resets all hilite handlers, and notifies all
-     * views about the changes.
+     * Invokes the abstract <code>#reset()</code> method of the derived model. In addition, this method resets all
+     * hilite handlers, and notifies all views about the changes.
      */
     final void resetModel() {
         try {
@@ -938,36 +957,32 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Override this function in the derived model and reset your
-     * <code>NodeModel</code>. All components should unregister themselves
-     * from any observables (at least from the hilite handler right now). All
-     * internally stored data structures should be released. User settings
-     * should not be deleted/reset though.
+     * Override this function in the derived model and reset your <code>NodeModel</code>. All components should
+     * unregister themselves from any observables (at least from the hilite handler right now). All internally stored
+     * data structures should be released. User settings should not be deleted/reset though.
      */
     protected abstract void reset();
 
-    /** Called by the framework when the node is disposed, for instance if
-     * the workflow is closed or the node is deleted by the user. Subclasses may
-     * override this method to do further cleanup. This method is called
-     * independent of whether this node is or has ever been executed.
+    /**
+     * Called by the framework when the node is disposed, for instance if the workflow is closed or the node is deleted
+     * by the user. Subclasses may override this method to do further cleanup. This method is called independent of
+     * whether this node is or has ever been executed.
      */
     protected void onDispose() {
         // empty, potentially overridden in sub-classes
     }
 
     /**
-     * Notifies all registered views of a change of the underlying model. It is
-     * called by functions of the abstract class that modify the model (like
-     * <code>#executeModel()</code> and <code>#resetModel()</code> ).
+     * Notifies all registered views of a change of the underlying model. It is called by functions of the abstract
+     * class that modify the model (like <code>#executeModel()</code> and <code>#resetModel()</code> ).
      */
     protected final void stateChanged() {
         for (AbstractNodeView<?> view : m_views) {
             try {
                 view.callModelChanged();
             } catch (Exception e) {
-                String msg =
-                    "View [" + view.getViewName() + "] caused an error while displaying new contents: "
-                        + e.getMessage();
+                String msg = "View [" + view.getViewName() + "] caused an error while displaying new contents: "
+                    + e.getMessage();
                 setWarningMessage(msg);
                 m_logger.debug(msg, e);
             }
@@ -975,18 +990,15 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * This method can be called from the derived model in order to inform the
-     * views about changes of the settings or during execution, if you want the
-     * views to show the progress, and if they can display models half way
-     * through the execution. In the view
-     * <code>NodeView#updateModel(Object)</code> is called and needs to
-     * be overridden.
+     * This method can be called from the derived model in order to inform the views about changes of the settings or
+     * during execution, if you want the views to show the progress, and if they can display models half way through the
+     * execution. In the view <code>NodeView#updateModel(Object)</code> is called and needs to be overridden.
      *
      * @param arg The argument you want to pass.
      */
     protected final void notifyViews(final Object arg) {
         m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
+            "No node context available, please check call hierarchy and fix it");
 
         for (AbstractNodeView<?> view : m_views) {
             view.updateModel(arg);
@@ -994,27 +1006,23 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * This implementation is empty. Subclasses may override this method
-     * in order to be informed when the hilite handler changes at the inport,
-     * e.g. when the node (or an preceding node) is newly connected.
+     * This implementation is empty. Subclasses may override this method in order to be informed when the hilite handler
+     * changes at the inport, e.g. when the node (or an preceding node) is newly connected.
      *
      * @param inIndex The index of the input.
-     * @param hiLiteHdl The <code>HiLiteHandler</code> at input index.
-     *         May be <code>null</code> when not available, i.e. not properly
-     *         connected.
-     * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in
-     *          the range of inputs.
+     * @param hiLiteHdl The <code>HiLiteHandler</code> at input index. May be <code>null</code> when not available, i.e.
+     *            not properly connected.
+     * @throws IndexOutOfBoundsException If the <code>inIndex</code> is not in the range of inputs.
      */
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
+    protected void setInHiLiteHandler(final int inIndex, final HiLiteHandler hiLiteHdl) {
         assert inIndex >= 0;
     }
 
     /**
      * Sets a new <code>HiLiteHandler</code> for the given input.
      *
-     * This method is called by the corresponding <code>Node</code> in order
-     * to set the <code>HiLiteHandler</code> for the given input port.
+     * This method is called by the corresponding <code>Node</code> in order to set the <code>HiLiteHandler</code> for
+     * the given input port.
      *
      * @param in The input index.
      * @param hdl The new <code>HiLiteHandler</code>.
@@ -1036,14 +1044,12 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Returns the <code>HiLiteHandler</code> for the given input index, if the
-     * current in-port hilite handler is <code>null</code> an
-     * <code>HiLiteHandlerAdapter</code> is created and returned.
+     * Returns the <code>HiLiteHandler</code> for the given input index, if the current in-port hilite handler is
+     * <code>null</code> an <code>HiLiteHandlerAdapter</code> is created and returned.
      *
      * @param inIndex in-port index
      * @return <code>HiLiteHandler</code> for the given input index
-     * @throws IndexOutOfBoundsException if the <code>inIndex</code> is not in
-     *             the range of inputs
+     * @throws IndexOutOfBoundsException if the <code>inIndex</code> is not in the range of inputs
      */
     public final HiLiteHandler getInHiLiteHandler(final int inIndex) {
         int correctIndex = getTrueHiliteHandlerPortIndex(inIndex);
@@ -1054,9 +1060,10 @@ public abstract class NodeModel implements ViewableModel {
         return m_inHiLiteHdls[correctIndex];
     }
 
-    /** Returns the argument. This method is overridden in class
-     * {@link NodeModel} to handle incoming model ports appropriately
-     * (no hilite handlers at deprecated model ports).
+    /**
+     * Returns the argument. This method is overridden in class {@link NodeModel} to handle incoming model ports
+     * appropriately (no hilite handlers at deprecated model ports).
+     *
      * @param portIndex The simulated port index
      * @return The true port index
      */
@@ -1064,9 +1071,10 @@ public abstract class NodeModel implements ViewableModel {
         return portIndex;
     }
 
-    /** Returns the argument. This method is overridden in class
-     * {@link NodeModel} to handle incoming model ports appropriately
-     * (no hilite handlers at deprecated model ports).
+    /**
+     * Returns the argument. This method is overridden in class {@link NodeModel} to handle incoming model ports
+     * appropriately (no hilite handlers at deprecated model ports).
+     *
      * @param portIndex The true port index
      * @return The simulated port index
      */
@@ -1075,9 +1083,8 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Returns the <code>HiLiteHandler</code> for the given output index. This
-     * default implementation simply passes on the handler of input port 0 or
-     * generates a new one if this node has no inputs. <br>
+     * Returns the <code>HiLiteHandler</code> for the given output index. This default implementation simply passes on
+     * the handler of input port 0 or generates a new one if this node has no inputs. <br>
      * <br>
      * This method is intended to be overridden
      *
@@ -1107,8 +1114,7 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Resets all internal <code>HiLiteHandler</code> objects if the number of
-     * inputs is zero.
+     * Resets all internal <code>HiLiteHandler</code> objects if the number of inputs is zero.
      */
     private void resetHiLiteHandlers() {
         // if we have no inputs we have created a new instance.
@@ -1123,23 +1129,18 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * This function is called when something changes that could affect the
-     * output <code>DataTableSpec</code> elements. E.g. after a reset,
-     * execute, (dis-)connect, and object creation (model instantiation).
+     * This function is called when something changes that could affect the output <code>DataTableSpec</code> elements.
+     * E.g. after a reset, execute, (dis-)connect, and object creation (model instantiation).
      * <p>
-     * The function calls <code>#configure()</code> to receive the updated
-     * output DataTableSpecs, if the model is not executed yet. After execution
-     * the DataTableSpecs are simply taken from the output DataTables.
+     * The function calls <code>#configure()</code> to receive the updated output DataTableSpecs, if the model is not
+     * executed yet. After execution the DataTableSpecs are simply taken from the output DataTables.
      *
-     * @param inSpecs An array of input <code>DataTableSpec</code> elements,
-     *            either the array or each of its elements can be
-     *            <code>null</code>.
+     * @param inSpecs An array of input <code>DataTableSpec</code> elements, either the array or each of its elements
+     *            can be <code>null</code>.
      * @return An array where each element indicates if the outport has changed.
-     * @throws InvalidSettingsException if the current settings don't go along
-     *             with the table specs
+     * @throws InvalidSettingsException if the current settings don't go along with the table specs
      */
-    final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         assert inSpecs.length == getNrInPorts();
 
         setWarningMessage(null);
@@ -1151,27 +1152,24 @@ public abstract class NodeModel implements ViewableModel {
         // make sure we conveniently have TableSpecs.
         // Rather empty ones than null
         for (int i = 0; i < copyInSpecs.length; i++) {
-            if (copyInSpecs[i] == null
-                    && BufferedDataTable.TYPE.equals(m_inPortTypes[i])
-                    && !m_inPortTypes[i].isOptional()) {
+            if (copyInSpecs[i] == null && BufferedDataTable.TYPE.equals(m_inPortTypes[i])
+                && !m_inPortTypes[i].isOptional()) {
                 // only mimic empty table for real table connections
                 copyInSpecs[i] = new DataTableSpec();
             }
             // only weak port compatibility check during connect
             // (model reader can be connected to any model port)
             // complain if actual types are incompatible.
-            Class<? extends PortObjectSpec> expected =
-                m_inPortTypes[i].getPortObjectSpecClass();
-            if (copyInSpecs[i] != null  // i.e. skip only "optional and not connected"
-                    && !expected.isAssignableFrom(copyInSpecs[i].getClass())
-                    && !(copyInSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
+            Class<? extends PortObjectSpec> expected = m_inPortTypes[i].getPortObjectSpecClass();
+            if (copyInSpecs[i] != null // i.e. skip only "optional and not connected"
+                && !expected.isAssignableFrom(copyInSpecs[i].getClass())
+                && !(copyInSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
                 StringBuilder b = new StringBuilder("Incompatible port spec");
                 if (copyInSpecs.length > 1) {
                     b.append(" at port ").append(i);
                 }
                 b.append(", expected: ").append(expected.getSimpleName());
-                b.append(", actual: ").append(
-                        copyInSpecs[i].getClass().getSimpleName());
+                b.append(", actual: ").append(copyInSpecs[i].getClass().getSimpleName());
                 throw new InvalidSettingsException(b.toString());
             }
         }
@@ -1183,8 +1181,7 @@ public abstract class NodeModel implements ViewableModel {
         }
         // check output object spec length
         if (newOutSpecs.length != getNrOutPorts()) {
-            m_logger.error("Output spec-array length invalid: "
-                    + newOutSpecs.length + " <> " + getNrOutPorts());
+            m_logger.error("Output spec-array length invalid: " + newOutSpecs.length + " <> " + getNrOutPorts());
             newOutSpecs = new PortObjectSpec[getNrOutPorts()];
         }
         return newOutSpecs;
@@ -1274,8 +1271,8 @@ public abstract class NodeModel implements ViewableModel {
     /////////////////////////
 
     /**
-     * Creates a message builder used during a node's execution to collect messages, which are then shown in the UI
-     * to the user. Code examples live in {@link MessageBuilder}.
+     * Creates a message builder used during a node's execution to collect messages, which are then shown in the UI to
+     * the user. Code examples live in {@link MessageBuilder}.
      *
      * @return a new message builder, customized for this node.
      * @since 5.0
@@ -1285,7 +1282,9 @@ public abstract class NodeModel implements ViewableModel {
         return Message.builder();
     }
 
-    /** Method being called when node is restored. It does not notify listeners.
+    /**
+     * Method being called when node is restored. It does not notify listeners.
+     *
      * @param message The message as written to the workflow file
      */
     final void restoreWarningMessage(final Message message) {
@@ -1303,6 +1302,7 @@ public abstract class NodeModel implements ViewableModel {
 
     /**
      * Get the most recently set warning message.
+     *
      * @return the warningMessage that is currently set (or null)
      */
     protected final String getWarningMessage() {
@@ -1310,8 +1310,9 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Sets an warning message by the implementing node model. Argument may be null, in which case this
-     * method will reset any previously set warning.
+     * Sets an warning message by the implementing node model. Argument may be null, in which case this method will
+     * reset any previously set warning.
+     *
      * @since 5.0
      */
     protected final void setWarning(final Message message) {
@@ -1332,6 +1333,7 @@ public abstract class NodeModel implements ViewableModel {
 
     /**
      * Get the most recently set warning message.
+     *
      * @return the warningMessage that is currently set (or null)
      * @since 5.0
      */
@@ -1340,27 +1342,23 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Adds a warning listener to this node. Ignored if the listener is already
-     * registered.
+     * Adds a warning listener to this node. Ignored if the listener is already registered.
      *
      * @param listener The listener to add.
      */
     public void addWarningListener(final NodeModelWarningListener listener) {
         if (listener == null) {
-            throw new NullPointerException(
-                    "NodeModel message listener must not be null!");
+            throw new NullPointerException("NodeModel message listener must not be null!");
         }
         m_warningListeners.add(listener);
     }
 
     /**
-     * Removes a warning listener from this node. Ignored if the listener is
-     * not registered.
+     * Removes a warning listener from this node. Ignored if the listener is not registered.
      *
      * @param listener The listener to remove.
      */
-    public void removeWarningListener(
-            final NodeModelWarningListener listener) {
+    public void removeWarningListener(final NodeModelWarningListener listener) {
         if (!m_warningListeners.remove(listener)) {
             m_logger.debug("listener was not registered: " + listener);
         }
@@ -1368,6 +1366,7 @@ public abstract class NodeModel implements ViewableModel {
 
     /**
      * Notifies all listeners that the warning of this node has changed.
+     *
      * @param warning message
      */
     private void notifyWarningListeners(final Message warning) {
@@ -1380,28 +1379,28 @@ public abstract class NodeModel implements ViewableModel {
         }
     }
 
-    /** Credentials provider, set by the NodeContainer (via) Node before
-     * configure/execute. */
+    /**
+     * Credentials provider, set by the NodeContainer (via) Node before configure/execute.
+     */
     private CredentialsProvider m_credentialsProvider;
 
-    /** Framework method to update credentials provider before
-     * configure/execute.
-     * @param provider The provider for credentials. */
+    /**
+     * Framework method to update credentials provider before configure/execute.
+     *
+     * @param provider The provider for credentials.
+     */
     final void setCredentialsProvider(final CredentialsProvider provider) {
         m_credentialsProvider = provider;
     }
 
-    /** Accessor to credentials defined on a workflow. The method will return
-     * a non-null provider during {@link #configure(DataTableSpec[])} and
-     * {@link #execute(BufferedDataTable[], ExecutionContext)} (or their
-     * respective {@link PortObject}-typed counterparts). Sub-classes can
-     * read out credentials here. Any invocation of the
-     * {@link CredentialsProvider#get(String)} method will register this node
-     * as client to the requested credentials, indicating that theses
-     * credentials need to be available upon load or in a remote execution of
-     * this node (e.g. cluster or server execution). The credentials identifier
-     * (its {@link ICredentials#getName()} should be part of the configuration,
-     * i.e. chosen by the user in the configuration dialog.
+    /**
+     * Accessor to credentials defined on a workflow. The method will return a non-null provider during
+     * {@link #configure(DataTableSpec[])} and {@link #execute(BufferedDataTable[], ExecutionContext)} (or their
+     * respective {@link PortObject}-typed counterparts). Sub-classes can read out credentials here. Any invocation of
+     * the {@link CredentialsProvider#get(String)} method will register this node as client to the requested
+     * credentials, indicating that theses credentials need to be available upon load or in a remote execution of this
+     * node (e.g. cluster or server execution). The credentials identifier (its {@link ICredentials#getName()} should be
+     * part of the configuration, i.e. chosen by the user in the configuration dialog.
      *
      * @return A provider for credentials available in this workflow.
      */
@@ -1412,32 +1411,33 @@ public abstract class NodeModel implements ViewableModel {
     /** Holds the {@link FlowObjectStack} of this node. */
     private FlowObjectStack m_flowObjectStack;
 
-    /** Variables that were added by the node model. This is to fix bug 1771
-     * (flow object stack contains obsolete items). These elements will be
-     * pushed on the real node stack after execute. */
+    /**
+     * Variables that were added by the node model. This is to fix bug 1771 (flow object stack contains obsolete items).
+     * These elements will be pushed on the real node stack after execute.
+     */
     private FlowObjectStack m_outgoingFlowObjectStack;
 
-    /** Get the value of the String variable with the given name leaving the
-     * flow variable stack unmodified.
+    /**
+     * Get the value of the String variable with the given name leaving the flow variable stack unmodified.
+     *
      * @param name Name of the variable
      * @return The value of the string variable
      * @throws NullPointerException If the argument is null
-     * @throws NoSuchElementException If no such variable with the correct
-     * type is available.
+     * @throws NoSuchElementException If no such variable with the correct type is available.
      * @since 2.8
      */
     public final String peekFlowVariableString(final String name) {
         try {
-            return m_outgoingFlowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.STRING).getStringValue();
+            return m_outgoingFlowObjectStack.peekFlowVariable(name, FlowVariable.Type.STRING).getStringValue();
         } catch (NoSuchElementException e) {
-            return m_flowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.STRING).getStringValue();
+            return m_flowObjectStack.peekFlowVariable(name, FlowVariable.Type.STRING).getStringValue();
         }
     }
 
-    /** Put a new variable of type double onto the stack. If such variable
-     * already exists, its value will be (virtually) overwritten.
+    /**
+     * Put a new variable of type double onto the stack. If such variable already exists, its value will be (virtually)
+     * overwritten.
+     *
      * @param name The name of the variable.
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
@@ -1465,22 +1465,20 @@ public abstract class NodeModel implements ViewableModel {
         pushFlowVariable(new FlowVariable(name, type, value));
     }
 
-    /** Get the value of the double variable with the given name leaving the
-     * variable stack unmodified.
+    /**
+     * Get the value of the double variable with the given name leaving the variable stack unmodified.
+     *
      * @param name Name of the variable
      * @return The assignment value of the variable
      * @throws NullPointerException If the argument is null
-     * @throws NoSuchElementException If no such variable with the correct
-     * type is available.
+     * @throws NoSuchElementException If no such variable with the correct type is available.
      * @since 2.8
      */
     public final double peekFlowVariableDouble(final String name) {
         try {
-            return m_outgoingFlowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.DOUBLE).getDoubleValue();
+            return m_outgoingFlowObjectStack.peekFlowVariable(name, FlowVariable.Type.DOUBLE).getDoubleValue();
         } catch (NoSuchElementException e) {
-            return m_flowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.DOUBLE).getDoubleValue();
+            return m_flowObjectStack.peekFlowVariable(name, FlowVariable.Type.DOUBLE).getDoubleValue();
         }
     }
 
@@ -1516,7 +1514,9 @@ public abstract class NodeModel implements ViewableModel {
         throw new NoSuchElementException("No such variable \"" + name + "\" of type " + type);
     }
 
-    /** Get the FlowScopeContext on top leaving the variable stack unmodified.
+    /**
+     * Get the FlowScopeContext on top leaving the variable stack unmodified.
+     *
      * @return The FlowScopeContext
      * @throws NoSuchElementException If no FlowScopeContext exists
      */
@@ -1532,8 +1532,10 @@ public abstract class NodeModel implements ViewableModel {
         return fsc;
     }
 
-    /** Put a new variable of type integer onto the stack. If such variable
-     * already exists, its value will be (virtually) overwritten.
+    /**
+     * Put a new variable of type integer onto the stack. If such variable already exists, its value will be (virtually)
+     * overwritten.
+     *
      * @param name The name of the variable.
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
@@ -1546,33 +1548,32 @@ public abstract class NodeModel implements ViewableModel {
         m_outgoingFlowObjectStack.push(variable);
     }
 
-    /** Get the value of the integer variable with the given name leaving the
-     * variable stack unmodified.
+    /**
+     * Get the value of the integer variable with the given name leaving the variable stack unmodified.
+     *
      * @param name Name of the variable
      * @return The value of the integer variable
      * @throws NullPointerException If the argument is null
-     * @throws NoSuchElementException If no such variable with the correct
-     * type is available.
+     * @throws NoSuchElementException If no such variable with the correct type is available.
      * @since 2.8
      */
     public final int peekFlowVariableInt(final String name) {
         try {
-            return m_outgoingFlowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.INTEGER).getIntValue();
+            return m_outgoingFlowObjectStack.peekFlowVariable(name, FlowVariable.Type.INTEGER).getIntValue();
         } catch (NoSuchElementException e) {
-            return m_flowObjectStack.peekFlowVariable(
-                    name, FlowVariable.Type.INTEGER).getIntValue();
+            return m_flowObjectStack.peekFlowVariable(name, FlowVariable.Type.INTEGER).getIntValue();
         }
     }
 
-    /** Put a new variable of type String onto the stack. If such variable
-     * already exists, its value will be (virtually) overwritten.
+    /**
+     * Put a new variable of type String onto the stack. If such variable already exists, its value will be (virtually)
+     * overwritten.
+     *
      * @param name The name of the variable.
      * @param value The assignment value for the variable
      * @throws NullPointerException If the name argument is null.
      */
-    protected final void pushFlowVariableString(
-            final String name, final String value) {
+    protected final void pushFlowVariableString(final String name, final String value) {
         pushFlowVariable(new FlowVariable(name, value));
     }
 
@@ -1580,8 +1581,7 @@ public abstract class NodeModel implements ViewableModel {
         return m_flowObjectStack;
     }
 
-    void setFlowObjectStack(final FlowObjectStack scsc,
-            final FlowObjectStack outgoingFlowObjectStack) {
+    void setFlowObjectStack(final FlowObjectStack scsc, final FlowObjectStack outgoingFlowObjectStack) {
         m_flowObjectStack = scsc;
         m_outgoingFlowObjectStack = outgoingFlowObjectStack;
     }
@@ -1617,16 +1617,19 @@ public abstract class NodeModel implements ViewableModel {
         return Collections.unmodifiableMap(result);
     }
 
-    /** Get all flow variables if they are one of the given types. Keys are the names, values are the flow variable
+    /**
+     * Get all flow variables if they are one of the given types. Keys are the names, values are the flow variable
      * itself.
      *
-     * <p>The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections
-     * and the variables that were pushed onto the stack by this node itself (which is different from the
+     * <p>
+     * The map contains all flow variables, i.e. the variables that are provided as part of (all) input connections and
+     * the variables that were pushed onto the stack by this node itself (which is different from the
      * {@link NodeDialogPane#getAvailableFlowVariables()} method, which only returns variables provided at the input.
      *
-     * <p>The class {@link FlowVariable} is subject to change and hence the use of this method is discouraged. In most
+     * <p>
+     * The class {@link FlowVariable} is subject to change and hence the use of this method is discouraged. In most
      * cases it's sufficient to retrieve primitive variables using {@link #getAvailableFlowVariables()}.
-
+     *
      * @param types The type list - a variable whose type is in the argument list is filtered (= part of the result)
      * @return A new map of available flow variables in a non-modifiable map (never null).
      * @since 3.1
@@ -1655,9 +1658,9 @@ public abstract class NodeModel implements ViewableModel {
     public final Map<String, FlowVariable> getAvailableFlowVariables(final VariableType<?>[] types) {
         return Collections.unmodifiableMap(Stream.concat(//
             Optional.ofNullable(m_flowObjectStack)//
-            .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty),
+                .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty),
             Optional.ofNullable(m_outgoingFlowObjectStack)//
-            .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty))
+                .map(s -> s.getAvailableFlowVariables(types).entrySet().stream()).orElseGet(Stream::empty))
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, LinkedHashMap::new)));
     }
 
@@ -1691,8 +1694,7 @@ public abstract class NodeModel implements ViewableModel {
      */
     @Deprecated
     public final Map<String, FlowVariable> getAvailableInputFlowVariables() {
-        Map<String, FlowVariable> result =
-            new LinkedHashMap<String, FlowVariable>();
+        Map<String, FlowVariable> result = new LinkedHashMap<String, FlowVariable>();
         if (m_flowObjectStack != null) {
             result.putAll(m_flowObjectStack.getAvailableFlowVariables());
         }
@@ -1737,18 +1739,16 @@ public abstract class NodeModel implements ViewableModel {
     //
     //////////////////////////////////////////
 
-    /** Informs WorkflowManager after execute to continue the loop.
-     * Call by the end of the loop! This will result in both
-     * this Node as well as the creator of the FlowLoopContext to be
-     * queued for execution once again. In this case the node can return
-     * an empty table after execution.
+    /**
+     * Informs WorkflowManager after execute to continue the loop. Call by the end of the loop! This will result in both
+     * this Node as well as the creator of the FlowLoopContext to be queued for execution once again. In this case the
+     * node can return an empty table after execution.
      *
      * Called on LoopTail Node's only.
      */
     protected final void continueLoop() {
         if (!(this instanceof LoopEndNode)) {
-            throw new IllegalStateException(
-                "continueLoop called from non-end node (Coding Error)!");
+            throw new IllegalStateException("continueLoop called from non-end node (Coding Error)!");
         }
         FlowLoopContext slc = m_flowObjectStack.peek(FlowLoopContext.class);
         if (slc != null && slc.isInactiveScope()) {
@@ -1758,19 +1758,19 @@ public abstract class NodeModel implements ViewableModel {
         }
         if (slc == null) {
             // wrong wiring of the pipeline: head seems to be missing!
-            throw new IllegalStateException(
-                    "Missing Loop Start in Pipeline!");
+            throw new IllegalStateException("Missing Loop Start in Pipeline!");
         }
         m_loopContext = slc;
         // note that the WFM will set the tail ID so we can retrieve it
         // in the head node!
     }
 
-    /** Informs WorkflowManager if the nodes inside the loop (= the loop
-     * body) have to be reset &amp; configured inbetween iterations. Default
-     * behavior is to reset/configure everytime.
-     * @deprecated As of 4.4 the ability to re-run a loop without prior reset of the loop body is
-     * discouraged and will be removed in future versions of KNIME.
+    /**
+     * Informs WorkflowManager if the nodes inside the loop (= the loop body) have to be reset &amp; configured
+     * inbetween iterations. Default behavior is to reset/configure everytime.
+     *
+     * @deprecated As of 4.4 the ability to re-run a loop without prior reset of the loop body is discouraged and will
+     *             be removed in future versions of KNIME.
      */
     @Deprecated
     // as of today, 2021-03-20, there is no implementation in KNIME that makes use of this property.
@@ -1790,10 +1790,11 @@ public abstract class NodeModel implements ViewableModel {
         m_loopContext = null;
     }
 
-    /** Context object that is put on the stack by any {@link ScopeStartNode}. Kept here as member to address
-     * AP-18601 -- the same context object should be used during different configurations (until node is executed/reset)
-     * Implementations of {@link FlowScopeContext} are (unfortunately) mutable and pushed through the workflow
-     * via configure storm. This can lead to out-of-sync situations where when a 2nd/3rd configure storm only propagates
+    /**
+     * Context object that is put on the stack by any {@link ScopeStartNode}. Kept here as member to address AP-18601 --
+     * the same context object should be used during different configurations (until node is executed/reset)
+     * Implementations of {@link FlowScopeContext} are (unfortunately) mutable and pushed through the workflow via
+     * configure storm. This can lead to out-of-sync situations where when a 2nd/3rd configure storm only propagates
      * partly (propagation stops when output of a node doesn't change).
      */
     private FlowScopeContext m_initialScopeContext;
@@ -1832,19 +1833,22 @@ public abstract class NodeModel implements ViewableModel {
 
     private LoopEndNode m_loopEndNode = null;
 
-    /** Access method for loop start nodes to access their respective
-     * loop end. This method returns null if this node is not a loop start or
-     * the loop is not correctly closed by the user.
-     * @return The loop end node or null. Clients typically test and cast to
-     * an expected loop end instance.
+    /**
+     * Access method for loop start nodes to access their respective loop end. This method returns null if this node is
+     * not a loop start or the loop is not correctly closed by the user.
+     *
+     * @return The loop end node or null. Clients typically test and cast to an expected loop end instance.
      * @see #getLoopStartNode()
      */
     protected final LoopEndNode getLoopEndNode() {
         return m_loopEndNode;
     }
 
-    /** Setter used by framework to update loop end node.
-     * @param end The end node of the loop (if this is a start node). */
+    /**
+     * Setter used by framework to update loop end node.
+     *
+     * @param end The end node of the loop (if this is a start node).
+     */
     void setLoopEndNode(final LoopEndNode end) {
         m_loopEndNode = end;
     }
@@ -1876,19 +1880,22 @@ public abstract class NodeModel implements ViewableModel {
         m_scopeStartNode = start;
     }
 
-    /** Access method for loop end nodes to access their respective loop start.
-     * This method returns null if this node is not a loop end or the loop is
-     * not correctly closed by the user.
-     * @return The loop start node or null. Clients typically test and cast to
-     * an expected loop start instance.
+    /**
+     * Access method for loop end nodes to access their respective loop start. This method returns null if this node is
+     * not a loop end or the loop is not correctly closed by the user.
+     *
+     * @return The loop start node or null. Clients typically test and cast to an expected loop start instance.
      * @see #getLoopEndNode()
      */
     protected final LoopStartNode getLoopStartNode() {
         return getScopeStartNode(LoopStartNode.class).orElse(null);
     }
 
-    /** Setter used by framework to update loop start node.
-     * @param start The start node of the loop (if this is a end node). */
+    /**
+     * Setter used by framework to update loop start node.
+     *
+     * @param start The start node of the loop (if this is a end node).
+     */
     void setLoopStartNode(final LoopStartNode start) {
         setScopeStartNode(start);
     }
@@ -1898,34 +1905,28 @@ public abstract class NodeModel implements ViewableModel {
     //////////////////////////////////////////
 
     /**
-     * Streaming API (pending):
-     * Defines properties on the input ports when used in a streamed and/or
-     * distributed fashion.
+     * Streaming API (pending): Defines properties on the input ports when used in a streamed and/or distributed
+     * fashion.
      *
      * <p>
-     * A data input is streamed when the node implementation only needs to see
-     * each data record once (no iterative access), otherwise it's non-streamed.
-     * If a port is streamed the
-     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)}
-     * method will provide the input as a {@link RowInput} object, to which the
-     * client implementation can safely type-cast to. For non-streamed ports the
-     * input is represented by an instance of {@link PortObjectInput}. Non-data
-     * ports (not {@link BufferedDataTable}) are always non-streamed.
+     * A data input is streamed when the node implementation only needs to see each data record once (no iterative
+     * access), otherwise it's non-streamed. If a port is streamed the
+     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)} method will provide the input as
+     * a {@link RowInput} object, to which the client implementation can safely type-cast to. For non-streamed ports the
+     * input is represented by an instance of {@link PortObjectInput}. Non-data ports (not {@link BufferedDataTable})
+     * are always non-streamed.
      *
      * <p>
-     * An data input may be distributable (= parallelizable), in which case the
-     * data is processed in paralleled (possibly scattered in the cloud).
-     * Non-data ports are always non-distributable (but the execution may still
-     * take place in a distributed fashion if another port is distributed -- any
-     * non-distributable port is then simply duplicated as required).
+     * An data input may be distributable (= parallelizable), in which case the data is processed in paralleled
+     * (possibly scattered in the cloud). Non-data ports are always non-distributable (but the execution may still take
+     * place in a distributed fashion if another port is distributed -- any non-distributable port is then simply
+     * duplicated as required).
      *
-     * @return An array with the port role for each input port. Null elements
-     *         are not allowed. The default implementation marks each input as
-     *         {@link InputPortRole#NONDISTRIBUTED_NONSTREAMABLE}.
+     * @return An array with the port role for each input port. Null elements are not allowed. The default
+     *         implementation marks each input as {@link InputPortRole#NONDISTRIBUTED_NONSTREAMABLE}.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten
-     *             as it describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
     public InputPortRole[] getInputPortRoles() {
         InputPortRole[] result = new InputPortRole[getNrInPorts()];
@@ -1934,48 +1935,37 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Streaming API (pending):
-     * Similar to {@link #getInputPortRoles()} describes the role of the output.
-     * An output is distributable when the (distributed!) input directly maps to
-     * the output without any further merge or reduction step (which is
-     * otherwise described by the {@link #createMergeOperator()}). Only data
-     * outputs can be distributable, any other (model) output is always
-     * non-distributable.
+     * Streaming API (pending): Similar to {@link #getInputPortRoles()} describes the role of the output. An output is
+     * distributable when the (distributed!) input directly maps to the output without any further merge or reduction
+     * step (which is otherwise described by the {@link #createMergeOperator()}). Only data outputs can be
+     * distributable, any other (model) output is always non-distributable.
      *
-     * The input- and output roles define the place where the output data is
-     * generated:
+     * The input- and output roles define the place where the output data is generated:
      *
      * <ul>
-     * <li>If the input data (and hence also the output data) is
-     * non-distributable, the output will be generated by the
-     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)}
-     * method. Only one instance of the operator is used.
-     * <li>If both the input and output data is distributable the output is
-     * created by the
-     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)}
-     * method, too. Note that in this case there are several instances of a
-     * {@link StreamableOperator} (either representing different threads in the
+     * <li>If the input data (and hence also the output data) is non-distributable, the output will be generated by the
+     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)} method. Only one instance of the
+     * operator is used.
+     * <li>If both the input and output data is distributable the output is created by the
+     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)} method, too. Note that in this
+     * case there are several instances of a {@link StreamableOperator} (either representing different threads in the
      * same JVM or distributed in a compute cluster).
-     * <li>If the input is distributable but the output is non-distributable,
-     * the output is created in the
+     * <li>If the input is distributable but the output is non-distributable, the output is created in the
      * {@link NodeModel#finishStreamableExecution(StreamableOperatorInternals, ExecutionContext, PortOutput[])}
-     * implementation. The client implementation must also overwrite the
-     * {@link NodeModel#createMergeOperator()} method. The implementation of
-     * {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)}
-     * must not return or push any result into the {@link PortOutput} representations.
+     * implementation. The client implementation must also overwrite the {@link NodeModel#createMergeOperator()} method.
+     * The implementation of {@link StreamableOperator#runFinal(PortInput[], PortOutput[], ExecutionContext)} must not
+     * return or push any result into the {@link PortOutput} representations.
      * </ul>
      *
-     * In case a node has "mixed" outputs (e.g. a distributable data output and
-     * a non-distributable model output) the output objects are produced at two
-     * different locations: The data in the {@link StreamableOperator} instances
-     * and the model after the merge in the NodeModel.
+     * In case a node has "mixed" outputs (e.g. a distributable data output and a non-distributable model output) the
+     * output objects are produced at two different locations: The data in the {@link StreamableOperator} instances and
+     * the model after the merge in the NodeModel.
      *
-     * @return The output roles for each of the output ports, never null.
-     * The default implementation returns {@link OutputPortRole#NONDISTRIBUTED}.
+     * @return The output roles for each of the output ports, never null. The default implementation returns
+     *         {@link OutputPortRole#NONDISTRIBUTED}.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten
-     *             as it describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
     public OutputPortRole[] getOutputPortRoles() {
         OutputPortRole[] result = new OutputPortRole[getNrOutPorts()];
@@ -1986,54 +1976,43 @@ public abstract class NodeModel implements ViewableModel {
     // isDistributable or (isStreamable xor isBuffered)
 
     /**
-     * Streaming API (pending):
-     * Factory method for a streamable operator that is used to execute this
-     * node. The default implementation returns a standard operator that wraps
-     * the {@link #execute(PortObject[], ExecutionContext)} method. Subclasses
-     * may override it to return a new operator that follows the data handling
-     * described by the {@link #getInputPortRoles()} and
-     * {@link #getOutputPortRoles()} methods.
+     * Streaming API (pending): Factory method for a streamable operator that is used to execute this node. The default
+     * implementation returns a standard operator that wraps the {@link #execute(PortObject[], ExecutionContext)}
+     * method. Subclasses may override it to return a new operator that follows the data handling described by the
+     * {@link #getInputPortRoles()} and {@link #getOutputPortRoles()} methods.
      *
      * <p>
-     * This method is called by the node executor once or multiple times
-     * depending on the input roles. If any input is distributable, the method
-     * is called multiple times (for each partition once), possibly on different
-     * (remote) clones of this NodeModel.
+     * This method is called by the node executor once or multiple times depending on the input roles. If any input is
+     * distributable, the method is called multiple times (for each partition once), possibly on different (remote)
+     * clones of this NodeModel.
      *
-     * @param partitionInfo The partition info describing the chunk (if
-     *            distributable).
-     * @param inSpecs The port object specs of the input ports. These are
-     *            identical to the specs that
-     *            {@link #configure(PortObjectSpec[])} was last called with
-     *            (also on the remote side).
+     * @param partitionInfo The partition info describing the chunk (if distributable).
+     * @param inSpecs The port object specs of the input ports. These are identical to the specs that
+     *            {@link #configure(PortObjectSpec[])} was last called with (also on the remote side).
      * @return A new operator for the (chunk) execution.
-     * @throws InvalidSettingsException Usually not thrown in the client but
-     *             still part of the method signature as implementations often
-     *             run the same methods as during configure. (This method is not
-     *             being called when configure fails.)
+     * @throws InvalidSettingsException Usually not thrown in the client but still part of the method signature as
+     *             implementations often run the same methods as during configure. (This method is not being called when
+     *             configure fails.)
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten as it
-     *             describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
-    public StreamableOperator createStreamableOperator(
-            final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
-        throws InvalidSettingsException {
+    public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
+        final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         final int partitionIndex = partitionInfo.getPartitionIndex();
         if (partitionIndex != 0) {
-            throw new IllegalStateException("Default implementation of a"
-                    + "streaming execution should not be distributed (this "
+            throw new IllegalStateException(
+                "Default implementation of a" + "streaming execution should not be distributed (this "
                     + "appears to be partition " + partitionIndex + ")");
         }
         return new StreamableOperator() {
 
             @Override
-            public void runFinal(final PortInput[] inputs,
-                    final PortOutput[] outputs,
-                    final ExecutionContext ctx) throws Exception {
+            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext ctx)
+                throws Exception {
                 PortObject[] inObjects = new PortObject[inputs.length];
                 for (int i = 0; i < inputs.length; i++) {
-                    if(inputs[i] != null) {
+                    if (inputs[i] != null) {
                         inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
                     }
                 }
@@ -2058,46 +2037,40 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Streaming API (pending):
-     * Used to initialize an iterative streamable execution. If the result is
-     * non-null and {@link #iterate(StreamableOperatorInternals)} returns true,
-     * the object will be used to initialize {@link StreamableOperator} on the
-     * remote side, which are then run and merged using the
-     * {@link MergeOperator}.
+     * Streaming API (pending): Used to initialize an iterative streamable execution. If the result is non-null and
+     * {@link #iterate(StreamableOperatorInternals)} returns true, the object will be used to initialize
+     * {@link StreamableOperator} on the remote side, which are then run and merged using the {@link MergeOperator}.
      *
      * <p>
-     * This method only needs to be implemented if this node needs iterative
-     * access on the data (e.g. k-means clustering, which iteratively
-     * synchronizes cluster prototypes between remote streamable operators).
+     * This method only needs to be implemented if this node needs iterative access on the data (e.g. k-means
+     * clustering, which iteratively synchronizes cluster prototypes between remote streamable operators).
      *
-     * @return Internals used to bootstrap the streamable operator. The
-     * default implementation returns <code>null</code>.
+     * @return Internals used to bootstrap the streamable operator. The default implementation returns
+     *         <code>null</code>.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten as it
-     *             describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
-    public StreamableOperatorInternals
-        createInitialStreamableOperatorInternals() {
+    public StreamableOperatorInternals createInitialStreamableOperatorInternals() {
         return null;
     }
 
     /**
-     * Streaming API (pending):
-     * Called to determine whether the node requires an(other) iteration on the
-     * data before the final results are computed. If <code>true</code> the
-     * argument internals are transferred to the remote side and loaded into a
-     * {@link StreamableOperator} on which {@link StreamableOperator#runIntermediate(PortInput[], ExecutionContext)} is
-     * called.
+     * Streaming API (pending): Called to determine whether the node requires an(other) iteration on the data before the
+     * final results are computed. If <code>true</code> the argument internals are transferred to the remote side and
+     * loaded into a {@link StreamableOperator} on which
+     * {@link StreamableOperator#runIntermediate(PortInput[], ExecutionContext)} is called.
      *
-     * <p>This implementation returns <code>false</code>.
+     * <p>
+     * This implementation returns <code>false</code>.
+     *
      * @since 2.6
-     * @param internals the internals. Before the first iteration it will
-     * be the result of {@link #createInitialStreamableOperatorInternals()},
-     * any subsequent invocation will be called with a merged internals
-     * (creating using {@link MergeOperator#mergeIntermediate(StreamableOperatorInternals[])}).
+     * @param internals the internals. Before the first iteration it will be the result of
+     *            {@link #createInitialStreamableOperatorInternals()}, any subsequent invocation will be called with a
+     *            merged internals (creating using
+     *            {@link MergeOperator#mergeIntermediate(StreamableOperatorInternals[])}).
      * @return If another iteration on {@link StreamableOperator#runIntermediate(PortInput[], ExecutionContext)} is to
-     * be run.
+     *         be run.
      */
     public boolean iterate(final StreamableOperatorInternals internals) {
         return false;
@@ -2135,60 +2108,44 @@ public abstract class NodeModel implements ViewableModel {
     }
 
     /**
-     * Streaming API (pending):
-     * Factory method to create a merge operator that combines results created
-     * in different {@link StreamableOperator} objects. This method must be
-     * overwritten if the input is distributable but the output is not
-     * (as it needs to prepare the final output that is then published by the
-     * {@link #finishStreamableExecution(StreamableOperatorInternals,
-     * ExecutionContext, PortOutput[])} method). It may be overwritten if
-     * the output is distributable but some work needs to be done after
-     * all operators have finished (e.g. setting some internals or
-     * warning message).
+     * Streaming API (pending): Factory method to create a merge operator that combines results created in different
+     * {@link StreamableOperator} objects. This method must be overwritten if the input is distributable but the output
+     * is not (as it needs to prepare the final output that is then published by the
+     * {@link #finishStreamableExecution(StreamableOperatorInternals, ExecutionContext, PortOutput[])} method). It may
+     * be overwritten if the output is distributable but some work needs to be done after all operators have finished
+     * (e.g. setting some internals or warning message).
      *
      * <p>
-     * The default implementation returns <code>null</code> because input and
-     * output are non distributable.
+     * The default implementation returns <code>null</code> because input and output are non distributable.
      *
      * @return A new merge operator or <code>null</code>.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten as it
-     *             describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
     public MergeOperator createMergeOperator() {
         return null;
     }
 
     /**
-     * Streaming API (pending):
-     * Called by the executor if the data is processed in a distributed fashion
-     * to create the final output result or update node internals (for instance
-     * a warning message or view content). This method is called on the local
-     * side. See also the API description for {@link #getOutputPortRoles()}.
+     * Streaming API (pending): Called by the executor if the data is processed in a distributed fashion to create the
+     * final output result or update node internals (for instance a warning message or view content). This method is
+     * called on the local side. See also the API description for {@link #getOutputPortRoles()}.
      *
-     * @param internals The merged internals of the streamable operators that
-     *            processed the data. The internals object is created by one or
-     *            multiple {@link MergeOperator} (as created by
-     *            {@link #createMergeOperator()}).
+     * @param internals The merged internals of the streamable operators that processed the data. The internals object
+     *            is created by one or multiple {@link MergeOperator} (as created by {@link #createMergeOperator()}).
      *
      * @param exec For progress reporting, cancelation, output creation.
-     * @param output The array of the output representations. This method must
-     *            only write to the slots that it is responsible for
-     *            (non-distributed output).
-     * @throws Exception Any exception to indicate an error, including
-     *             cancelation.
+     * @param output The array of the output representations. This method must only write to the slots that it is
+     *            responsible for (non-distributed output).
+     * @throws Exception Any exception to indicate an error, including cancelation.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.
-     * @nooverride This method is currently not intended to be overwritten as it
-     *             describes pending API.
+     * @nooverride This method is currently not intended to be overwritten as it describes pending API.
      */
-    public void finishStreamableExecution(
-            final StreamableOperatorInternals internals,
-            final ExecutionContext exec,
-            final PortOutput[] output) throws Exception {
-        throw new IllegalStateException("Method must be implemented as a"
-                + " merge operator was created.");
+    public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
+        final PortOutput[] output) throws Exception {
+        throw new IllegalStateException("Method must be implemented as a" + " merge operator was created.");
     }
 
     /**
@@ -2205,12 +2162,8 @@ public abstract class NodeModel implements ViewableModel {
         InputPortRole[] ipr = getInputPortRoles();
         OutputPortRole[] opr = getOutputPortRoles();
 
-        return ipr.length == 1
-                && opr.length == 1
-                && ipr[0].isStreamable()
-                && !iterate(sinternals)
-                && ipr[0].isDistributable()
-                && opr[0].isDistributable();
+        return ipr.length == 1 && opr.length == 1 && ipr[0].isStreamable() && !iterate(sinternals)
+            && ipr[0].isDistributable() && opr[0].isDistributable();
     }
 
     private RowInput[] tableToRowInputs(final BufferedDataTable dt, final int numChunks, final ExecutionContext exec) {
@@ -2218,89 +2171,129 @@ public abstract class NodeModel implements ViewableModel {
         long tableSize = dt.size();
         long chunkSize = tableSize / numChunks;
         for (int i = 0; i < numChunks; i++) {
-            selections[i] = Selection.all().retainRows(i * chunkSize, (i + 1) * chunkSize); // Bernd fixes the correct table dimension handling
+            long endIndex = (i == numChunks - 1) ? tableSize : ((i + 1) * chunkSize);
+            selections[i] = Selection.all().retainRows(i * chunkSize, endIndex);
         }
         BufferedDataTable[] slices = InternalTableAPI.multiSlice(exec, dt, selections);
         return Arrays.stream(slices).map(DataTableRowInput::new).toArray(RowInput[]::new);
     }
 
     /**
-    * TODO: Bernd to merge this with the same class in org.knime.streaming
-    * @author Martin Horn, University of Konstanz
-    */
-   class BufferedDataContainerRowOutput extends RowOutput {
+     * TODO: Bernd to merge this with the same class in org.knime.streaming
+     *
+     * @author Martin Horn, University of Konstanz
+     */
+    class BufferedDataContainerRowOutput extends RowOutput {
 
-       private BufferedDataContainer m_dataContainer;
+        private BufferedDataContainer m_dataContainer;
 
-       private BufferedDataTable m_setFullyTable = null;
+        private BufferedDataTable m_setFullyTable = null;
 
-       private boolean m_closeCalled = false;
+        private boolean m_closeCalled = false;
 
-       /**
-        * Constructor.
-        *
-        * @param dataContainer the data container to be filled
-        */
-       public BufferedDataContainerRowOutput(final BufferedDataContainer dataContainer) {
-           m_dataContainer = dataContainer;
-       }
+        /**
+         * Constructor.
+         *
+         * @param dataContainer the data container to be filled
+         */
+        public BufferedDataContainerRowOutput(final BufferedDataContainer dataContainer) {
+            m_dataContainer = dataContainer;
+        }
 
-       /**
-        * Constructor. In this case the data table can only be set by calling
-        * {@link #setFully(org.knime.core.node.BufferedDataTable)}. If {@link #push(DataRow)} is used an
-        * {@link IllegalStateException} will be thrown.
-        */
-       public BufferedDataContainerRowOutput() {
-           m_dataContainer = null;
-       }
+        /**
+         * Constructor. In this case the data table can only be set by calling
+         * {@link #setFully(org.knime.core.node.BufferedDataTable)}. If {@link #push(DataRow)} is used an
+         * {@link IllegalStateException} will be thrown.
+         */
+        public BufferedDataContainerRowOutput() {
+            m_dataContainer = null;
+        }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public void push(final DataRow row) throws InterruptedException {
-           if (m_dataContainer == null) {
-               throw new IllegalStateException(
-                   "Table can only be set by the 'setFully'-method. Rows can not be added individually. Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
-           }
-           m_dataContainer.addRowToTable(row);
-       }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void push(final DataRow row) throws InterruptedException {
+            if (m_dataContainer == null) {
+                throw new IllegalStateException(
+                    "Table can only be set by the 'setFully'-method. Rows can not be added individually. Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
+            }
+            m_dataContainer.addRowToTable(row);
+        }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public void close() throws InterruptedException {
-           m_closeCalled = true;
-       }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() throws InterruptedException {
+            m_closeCalled = true;
+        }
 
-       /**
-        * @return whether {@link #close()} has been called at least once
-        */
-       public boolean closeCalled() {
-           return m_closeCalled;
-       }
+        /**
+         * @return whether {@link #close()} has been called at least once
+         */
+        public boolean closeCalled() {
+            return m_closeCalled;
+        }
 
-       BufferedDataTable getDataTable() {
-           if (m_dataContainer != null) {
-               m_dataContainer.close();
-               return m_dataContainer.getTable();
-           } else if (m_setFullyTable != null) {
-               return m_setFullyTable;
-           } else {
-               throw new IllegalStateException("No table set. Use 'setFully'-method to set table first.");
-           }
-       }
+        BufferedDataTable getDataTable() {
+            if (m_dataContainer != null) {
+                m_dataContainer.close();
+                return m_dataContainer.getTable();
+            } else if (m_setFullyTable != null) {
+                return m_setFullyTable;
+            } else {
+                throw new IllegalStateException("No table set. Use 'setFully'-method to set table first.");
+            }
+        }
 
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public void setFully(final BufferedDataTable table) throws InterruptedException {
-           m_dataContainer = null;
-           m_setFullyTable = table;
-           m_closeCalled = true;
-       }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setFully(final BufferedDataTable table) throws InterruptedException {
+            m_dataContainer = null;
+            m_setFullyTable = table;
+            m_closeCalled = true;
+        }
 
-   }
+    }
+
+    /**
+     * Helper RowOutput for testing without any output.
+     *
+     * @author alexander
+     */
+    public final class BlackHoleRowOutput extends RowOutput {
+
+        BlackHoleRowOutput() {
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void push(final DataRow row) throws InterruptedException {
+            // Do nothing
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void setFully(final BufferedDataTable table) throws InterruptedException {
+            // Do nothing
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setInactive() {
+            // Do nothing
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            // Do nothing
+        }
+
+    }
 }
