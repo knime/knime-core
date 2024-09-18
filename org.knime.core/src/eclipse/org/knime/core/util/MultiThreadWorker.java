@@ -214,7 +214,7 @@ public abstract class MultiThreadWorker<In, Out> {
             }
         };
         try {
-            if (m_executor == null) {
+            if (m_executor == null && ThreadPool.currentPool() != null) {
                 KNIMEConstants.GLOBAL_THREAD_POOL.runInvisible(c);
             } else {
                 c.call();
