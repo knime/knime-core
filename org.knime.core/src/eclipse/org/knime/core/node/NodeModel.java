@@ -55,7 +55,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -545,6 +544,14 @@ public abstract class NodeModel implements ViewableModel {
      */
     protected abstract void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException;
 
+    protected DataContainerSettings[] initializeDataContainers() {
+        return Arrays.stream(m_outPortTypes).map(t -> {
+            return DataContainerSettings.builder() //
+                    .withInitializedDomain(true).withDomainUpdate(false).withCheckDuplicateRowKeys(false) // only copying data
+                    .build();
+        }).toArray(DataContainerSettings[]::new);
+    }
+
     /**
      * Invokes the abstract <code>#execute()</code> method of this model. In addition, this method notifies all assigned
      * views of the model about the changes.
@@ -579,76 +586,74 @@ public abstract class NodeModel implements ViewableModel {
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
         try {
-
+            // TODO: next two settings controllable by system property
             boolean parallel = true;
-            // For testing without any IO
-            boolean io = true;
+            int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
 
             StreamableOperatorInternals sinternals = createInitialStreamableOperatorInternals();
-            if (parallel && checkDataParallelism(sinternals)) {
+            if (parallel && numThreads > 1 && checkDataParallelism(sinternals)) {
                 BufferedDataTable table = (BufferedDataTable)data[0];
                 PortObjectSpec[] inSpecs = new PortObjectSpec[]{table.getSpec()};
-                RowInput[] inputs = tableToRowInputs(table, 4, exec);
+                RowInput[] inputChunks = tableToRowInputs(table, numThreads, exec);
 
                 PortObjectSpec[] outSpec = computeFinalOutputSpecs(sinternals, inSpecs);
 
                 // This does not work for nodes that actually need duplicate checking!!!
-                // TODO: BERND!
-                final var dcSettings = DataContainerSettings.builder() //
-                    .withInitializedDomain(true).withDomainUpdate(false).withCheckDuplicateRowKeys(false) // only copying data
-                    .build();
+                // TODO: Bernd to introduce a method!
+                final var dcSettings = initializeDataContainers();
 
-                RowOutput[] outputs;
-                if (io) {
-                    outputs = Arrays.stream(inputs)
-                        .map((final RowInput input) -> exec.createDataContainer((DataTableSpec)outSpec[0], dcSettings))
-                        .map(BufferedDataContainerRowOutput::new).toArray(BufferedDataContainerRowOutput[]::new);
-                } else {
-                    outputs =
-                        Arrays.stream(inputs).map(i -> new BlackHoleRowOutput()).toArray(BlackHoleRowOutput[]::new);
-                }
-                Future[] futures = new Future[inputs.length];
-                for (int i = 0; i < inputs.length; i++) {
+                RowOutput[][] outputs;
+                outputs = Arrays.stream(inputChunks)
+                        .map((final RowInput chunk) -> Arrays.stream(dcSettings)
+                                                        .map(dcs -> exec.createDataContainer((DataTableSpec)outSpec[0], dcs))
+                                                        .map(BufferedDataContainerRowOutput::new)
+                                                        .toArray(BufferedDataContainerRowOutput[]::new))
+                        .toArray(RowOutput[][]::new);
+
+                Future[] futures = new Future[numThreads];
+                for (int i = 0; i < numThreads; i++) {
                     final int index = i;
-                    StreamableOperator op = createStreamableOperator(new PartitionInfo(i, inputs.length), inSpecs);
+                    StreamableOperator op = createStreamableOperator(new PartitionInfo(i, inputChunks.length), inSpecs);
                     futures[i] = KNIMEConstants.GLOBAL_THREAD_POOL.submit(ThreadUtils.callableWithContext(() -> {
                         try {
-                            // TODO: Bernd to check if the runFinal reports progress
-                            m_logger.debug(System.currentTimeMillis() + ": Starting streaming chunk " + index);
+                            m_logger.debug("Starting streaming chunk " + index);
                             op.loadInternals(sinternals);
-                            ExecutionContext subexec = exec.createSilentSubExecutionContext(0.0);
-                            op.runFinal(new PortInput[]{inputs[index]}, new PortOutput[]{outputs[index]}, subexec);
-                            outputs[index].close();
-                            m_logger.debug(System.currentTimeMillis() + ": Ending streaming chunk " + index);
-                            if (!io) {
-                                BufferedDataContainer container = exec.createDataContainer((DataTableSpec)outSpec[0]);
-                                container.close();
-                                return container.getTable();
-                            } else {
-                                return ((BufferedDataContainerRowOutput)outputs[index]).getDataTable();
+
+                            // TODO: Proper execution context
+                            ExecutionContext subexec = exec.createSilentSubExecutionContext(1.0 / numThreads);
+                            // Run the streamable operator
+                            op.runFinal(new PortInput[]{inputChunks[index]}, outputs[index], subexec);
+                            // CLose all output tables for this thread
+                            for (RowOutput o : outputs[index]) {
+                                o.close();
                             }
+                            m_logger.debug("Ending streaming chunk " + index);
+
+                            return Arrays.stream(outputs[index])
+                                    .map(o -> ((BufferedDataContainerRowOutput)o).getDataTable())
+                                    .toArray(BufferedDataTable[]::new);
                         } catch (Exception ex) {
-                            // TODO Bernd to implement node failure
                             m_logger.error(ex);
-                            return null;
+                            throw new RuntimeException(ex);
                         }
                     }));
                 }
 
-                BufferedDataTable[] resultTables = Arrays.stream(futures).map(f -> {
-                    try {
-                        return (BufferedDataTable)f.get();
-                    } catch (InterruptedException ex) {
-                        // Bernd!
-                        return null;
-                    } catch (ExecutionException ex) {
-                        // TODO Bernd!
-                        return null;
-                    }
-                }).toArray(BufferedDataTable[]::new);
+                // Collect output tables from all threads/futures
+                BufferedDataTable[][] resultTables = new BufferedDataTable[futures.length][m_outPortTypes.length];
+                for (int i = 0; i < futures.length; i++) {
+                    resultTables[i] = (BufferedDataTable[])futures[i].get();
+                }
 
-                outData = new PortObject[]{exec.createConcatenateTable(exec, Optional.empty(), false, resultTables)};
-
+                // Concatenate table chunks from all threads
+                outData = new PortObject[m_outPortTypes.length];
+                for (int i = 0; i < outData.length; i++) {
+                    final int index = i;
+                    BufferedDataTable[] toMerge = Arrays.stream(resultTables)
+                                                    .map(r -> r[index])
+                                                    .toArray(BufferedDataTable[]::new);
+                    outData[i] = exec.createConcatenateTable(exec, Optional.empty(), false, toMerge);
+                }
             } else if (!exEnv.reExecute()) {
                 outData = execute(data, exec);
             } else {
@@ -2162,8 +2167,12 @@ public abstract class NodeModel implements ViewableModel {
         InputPortRole[] ipr = getInputPortRoles();
         OutputPortRole[] opr = getOutputPortRoles();
 
-        return ipr.length == 1 && opr.length == 1 && ipr[0].isStreamable() && !iterate(sinternals)
-            && ipr[0].isDistributable() && opr[0].isDistributable();
+            // Only distributable output tables
+        return Arrays.stream(m_outPortTypes).allMatch(o -> o.isSuperTypeOf(BufferedDataTable.TYPE))
+            && Arrays.stream(opr).allMatch(o -> o.isDistributable())
+            // Only one input table that is streamable, distributable, and does not iterate
+            && ipr.length == 1 && ipr[0].isStreamable() && !iterate(sinternals)
+            && ipr[0].isDistributable();
     }
 
     private RowInput[] tableToRowInputs(final BufferedDataTable dt, final int numChunks, final ExecutionContext exec) {
