@@ -59,6 +59,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.TableBackend;
+import org.knime.core.data.TableBackend.Capability;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerSettings;
@@ -665,6 +666,10 @@ public class ExecutionContext extends ExecutionMonitor {
         return Stream.of(tableSlices)//
                 .map(this::wrapTableFromBackend)
                 .toArray(BufferedDataTable[]::new);
+    }
+
+    public boolean isTableSlicingEfficient() {
+        return getTableBackend().getCapabilities().contains(Capability.FAST_SLICING);
     }
 
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {

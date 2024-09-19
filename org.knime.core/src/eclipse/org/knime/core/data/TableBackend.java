@@ -81,6 +81,10 @@ import org.knime.core.table.row.Selection;
  */
 public interface TableBackend {
 
+    enum Capability {
+        FAST_SLICING
+    }
+
     /**
      * This method should never be called outside {@link DataContainer}s.
      *
@@ -120,6 +124,10 @@ public interface TableBackend {
      * @return human-readble description of the TableBackend.
      */
     String getDescription();
+
+    default List<Capability> getCapabilities() {
+        return List.of();
+    }
 
     /**
      * @return the number of bytes used in off-heap memory

@@ -122,6 +122,11 @@ public final class BufferedTableBackend implements TableBackend {
         return "Row-based table backend, which supports all possible data types.    \n\n\n\n";
     }
 
+    @Override
+    public List<Capability> getCapabilities() {
+        return List.of();
+    }
+
     private static IWriteFileStoreHandler initFileStoreHandler(final IWriteFileStoreHandler fileStoreHandler,
         final IDataRepository repository) {
         IWriteFileStoreHandler nonNull = fileStoreHandler;

@@ -50,6 +50,9 @@ package org.knime.core.node.streamable.simple;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -57,7 +60,10 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InternalTableAPI;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -66,6 +72,8 @@ import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableFunctionProducer;
+import org.knime.core.table.row.Selection;
+import org.knime.core.util.ThreadUtils;
 
 /**
  * Abstract definition of a node that applies a simple function using a {@link ColumnRearranger}. Each input row is
@@ -78,6 +86,8 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implem
 
     private int m_streamableInPortIdx;
     private int m_streamableOutPortIdx;
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SimpleStreamableFunctionNodeModel.class);
 
     /**
      * Default constructor, defining one data input and one data output port.
@@ -108,14 +118,53 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implem
         m_streamableOutPortIdx = streamableOutPortIdx;
     }
 
-    /** {@inheritDoc} */
+    // TODO this method really should be final, but it is API already :,(
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
-        BufferedDataTable in = inData[0];
-        ColumnRearranger r = createColumnRearranger(in.getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(in, r, exec);
+        final var in = inData[0];
+        final BufferedDataTable out;
+        final var r = createColumnRearranger(in.getDataTableSpec());
+        if (exec.isTableSlicingEfficient() && isDistributable()) { // TODO more criteria?
+            out = applyRearrangerParallel(in, r, exec);
+        } else {
+            out = exec.createColumnRearrangeTable(in, r, exec);
+        }
         return new BufferedDataTable[]{out};
+    }
+
+    private static final BufferedDataTable applyRearrangerParallel(final BufferedDataTable in,
+        final ColumnRearranger rearranger, final ExecutionContext exec)
+        throws CanceledExecutionException, InterruptedException, ExecutionException {
+        final var numChunks = Runtime.getRuntime().availableProcessors(); // TODO sensible default
+        final var inputChunks = createChunks(in, numChunks, exec);
+        final var futures = new Future[inputChunks.length];
+        exec.setMessage("Executing in parallel");
+        for (var i = 0; i < futures.length; ++i) {
+            final var subExec = exec.createSilentSubProgress(0.9 / inputChunks.length);
+            final var inputChunk = inputChunks[i];
+            futures[i] = KNIMEConstants.GLOBAL_THREAD_POOL.submit(// TODO is the global thread pool the right choice?
+                ThreadUtils.callableWithContext(() -> //
+                exec.createColumnRearrangeTable(inputChunk, rearranger, subExec)));
+        }
+        final var outputChunks = new BufferedDataTable[futures.length];
+        for (var i = 0; i < futures.length; ++i) {
+            outputChunks[i] = (BufferedDataTable)futures[i].get();
+        }
+        return exec.createConcatenateTable(exec, Optional.empty(), false, outputChunks);
+    }
+
+    private static BufferedDataTable[] createChunks(final BufferedDataTable dt, final int numChunks,
+        final ExecutionContext exec) {
+        final var selections = new Selection[numChunks];
+        long tableSize = dt.size();
+        long chunkSize = tableSize / numChunks;
+        for (var i = 0; i < numChunks; i++) {
+            long endIndex = (i == numChunks - 1) ? tableSize : ((i + 1) * chunkSize);
+            selections[i] = Selection.all().retainRows(i * chunkSize, endIndex);
+        }
+        final var subExec = exec.createSubExecutionContext(0.1);
+        return InternalTableAPI.multiSlice(subExec, dt, selections);
     }
 
     /** {@inheritDoc} */
