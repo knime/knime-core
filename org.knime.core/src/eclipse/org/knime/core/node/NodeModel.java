@@ -587,28 +587,25 @@ public abstract class NodeModel implements ViewableModel {
         PortObject[] outData;
         try {
             // TODO: next two settings controllable by system property
-            boolean parallel = true;
-            int numThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
 
             StreamableOperatorInternals sinternals = createInitialStreamableOperatorInternals();
-            if (parallel && numThreads > 1 && checkDataParallelism(sinternals)) {
+            if (checkDataParallelism(sinternals)) {
+                final var numThreads = numThreads();
+                m_logger.info("Running in parallel with " + numThreads + " chunks.");
                 BufferedDataTable table = (BufferedDataTable)data[0];
                 PortObjectSpec[] inSpecs = new PortObjectSpec[]{table.getSpec()};
-                RowInput[] inputChunks = tableToRowInputs(table, numThreads, exec);
+                RowInput[] inputChunks = tableToRowInputs(table, numThreads(), exec);
 
                 PortObjectSpec[] outSpec = computeFinalOutputSpecs(sinternals, inSpecs);
 
-                // This does not work for nodes that actually need duplicate checking!!!
-                // TODO: Bernd to introduce a method!
                 final var dcSettings = initializeDataContainers();
 
                 RowOutput[][] outputs;
                 outputs = Arrays.stream(inputChunks)
-                        .map((final RowInput chunk) -> Arrays.stream(dcSettings)
-                                                        .map(dcs -> exec.createDataContainer((DataTableSpec)outSpec[0], dcs))
-                                                        .map(BufferedDataContainerRowOutput::new)
-                                                        .toArray(BufferedDataContainerRowOutput[]::new))
-                        .toArray(RowOutput[][]::new);
+                    .map((final RowInput chunk) -> Arrays.stream(dcSettings)
+                        .map(dcs -> exec.createDataContainer((DataTableSpec)outSpec[0], dcs))
+                        .map(BufferedDataContainerRowOutput::new).toArray(BufferedDataContainerRowOutput[]::new))
+                    .toArray(RowOutput[][]::new);
 
                 Future[] futures = new Future[numThreads];
                 for (int i = 0; i < numThreads; i++) {
@@ -2163,16 +2160,30 @@ public abstract class NodeModel implements ViewableModel {
         return m_logger;
     }
 
-    private boolean checkDataParallelism(final StreamableOperatorInternals sinternals) {
-        InputPortRole[] ipr = getInputPortRoles();
-        OutputPortRole[] opr = getOutputPortRoles();
+    private int numThreads() {
+        try {
+            return peekFlowVariableInt("schloss-parallel-threads");
+        } catch (NoSuchElementException nse) {
+            return Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        }
+    }
 
-            // Only distributable output tables
-        return Arrays.stream(m_outPortTypes).allMatch(o -> o.isSuperTypeOf(BufferedDataTable.TYPE))
-            && Arrays.stream(opr).allMatch(o -> o.isDistributable())
-            // Only one input table that is streamable, distributable, and does not iterate
-            && ipr.length == 1 && ipr[0].isStreamable() && !iterate(sinternals)
-            && ipr[0].isDistributable();
+    private boolean checkDataParallelism(final StreamableOperatorInternals sinternals) {
+        try {
+            if (peekFlowVariableString("schloss-parallel").equals("yes")) {
+                InputPortRole[] ipr = getInputPortRoles();
+                OutputPortRole[] opr = getOutputPortRoles();
+
+                // Only distributable output tables
+                return Arrays.stream(m_outPortTypes).allMatch(o -> o.isSuperTypeOf(BufferedDataTable.TYPE))
+                    && Arrays.stream(opr).allMatch(o -> o.isDistributable())
+                    // Only one input table that is streamable, distributable, and does not iterate
+                    && ipr.length == 1 && ipr[0].isStreamable() && !iterate(sinternals) && ipr[0].isDistributable();
+            }
+        } catch (NoSuchElementException nse) {
+            // no-op
+        }
+        return false;
     }
 
     private RowInput[] tableToRowInputs(final BufferedDataTable dt, final int numChunks, final ExecutionContext exec) {
