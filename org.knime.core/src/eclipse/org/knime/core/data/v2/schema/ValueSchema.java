@@ -79,6 +79,11 @@ public interface ValueSchema extends ColumnarSchema {
      */
     int numFactories();
 
+    @Override
+    default int numColumns() {
+        return numFactories();
+    }
+
     /**
      * @param <R> {@link ReadAccess} the returned {@link ValueFactory} expects
      * @param <W> {@link WriteAccess} the returned {@link ValueFactory} expects

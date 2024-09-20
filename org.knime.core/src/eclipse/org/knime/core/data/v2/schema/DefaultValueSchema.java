@@ -118,11 +118,6 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
     // -------- ColumnarSchema --------
 
     @Override
-    public int numColumns() {
-        return numFactories();
-    }
-
-    @Override
     public DataSpec getSpec(final int index) {
         return m_specs[boundsCheckedColumnIndex(index)];
     }
