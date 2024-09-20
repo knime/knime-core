@@ -108,11 +108,6 @@ final class UpdatedValueSchema implements ValueSchema {
     }
 
     @Override
-    public int numColumns() {
-        return m_delegate.numColumns();
-    }
-
-    @Override
     public Iterator<DataSpec> iterator() {
         return m_delegate.iterator();
     }
