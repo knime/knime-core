@@ -285,6 +285,7 @@ public final class BufferedTableBackend implements TableBackend {
             if (!m_unionSlice.rows().allSelected()) {
                 unionSliceFromFirstRow = unionSliceFromFirstRow.retainRows(0, m_unionSlice.rows().toIndex());
             }
+            // TODO (TP): This is probably a bug: TableFilter.fromSelection assumes Selection has row-index column at index 0.
             try (var readCursor = table.cursor(TableFilter.fromSelection(unionSliceFromFirstRow, table))) {
                 long r = moveToSlice(readCursor, exec, numRows);
                 for (; readCursor.canForward(); r++) {
