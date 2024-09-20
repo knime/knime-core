@@ -59,10 +59,7 @@ import org.knime.core.node.ExecutionMonitor;
  * Default implementation of a {@link CellFactory}, which creates more than
  * a single new column.
  *
- * <p>As of v2.5 the input table can be processed concurrently. This property
- * should only be set if (i) the processing of an individual row is expensive,
- * i.e. takes significantly longer than pure I/O and (ii) there are no
- * interdependency between the row calculations.
+ * The cells can be produced concurrently, see {@link Parallelization} for details.
  *
  * @see SingleCellFactory
  * @author Bernd Wiswedel, University of Konstanz
@@ -70,19 +67,21 @@ import org.knime.core.node.ExecutionMonitor;
 public abstract class AbstractCellFactory implements CellFactory {
 
     /**
-     * A capability defined in the constructor suggesting to the framework how the computation can be
-     * parallelized. This is a hint to the framework and does not necessarily mean that the computation
-     * is actually parallelized.
+     * A capability defined in the constructor suggesting to the framework how the computation can be parallelized. This
+     * is a hint to the framework and does not necessarily mean that the computation is actually parallelized.
+     *
      * @since 5.4
      */
     public enum Parallelization {
-        /** No parallelization is possible (e.g. due to row-dependencies) */
-        NONE,
-        /** Parallelization by row, this will also enable parallel computation when used with table row backend. */
-        BY_ROW,
-        /** Parallelization by table slice (partition of the table), this will enable parallelization
-         * in the columnar backend but not in the row backend. */
-        BY_SLICE
+            /** No parallelization is possible (e.g. due to row-dependencies) */
+            NONE,
+            /** Parallelization by row, this will also enable parallel computation when used with table row backend. */
+            ASSUME_EXPENSIVE,
+            /**
+             * Parallelization by table chunk (partition of the table), this will enable parallelization in the columnar
+             * backend but not in the row backend.
+             */
+            ASSUME_CHEAP
     }
 
     /**
@@ -90,33 +89,49 @@ public abstract class AbstractCellFactory implements CellFactory {
      */
     private static final String PROGRESS_TEMPLATE = "Processed row %s/%s (\"%s\")";
 
-    private final Parallelization m_parallelization;
+    /**
+     * The parallelization mode for this factory. Effectively final unless you use deprecated API.
+     */
+    private Parallelization m_parallelization;
 
     private final DataColumnSpec[] m_colSpecs;
 
     private int m_maxParallelWorkers = -1;
     private int m_maxQueueSize = -1;
 
-    /** True if the deprecatd {@link #setProgress(int, int, RowKey, ExecutionMonitor)} method is overridden. If so,
+    /** True if the deprecated {@link #setProgress(int, int, RowKey, ExecutionMonitor)} method is overridden. If so,
      * it will be called by the default implementation of the (new) setProgress method. */
     private final boolean m_isSetProgressWithIntOverridden;
 
     private FileStoreFactory m_factory;
 
-    /** Creates instance, which will produce content for the columns as
-     * specified by the array argument. The calculation is done sequentially
-     * (no parallel processing of input).
+    /**
+     * Creates instance, which will produce content for the columns as specified by the array argument. The calculation
+     * is done sequentially (no parallel processing of input).
+     *
+     * @param colSpecs The specs of the columns being created.
+     * @see #AbstractCellFactory(Parallelization, DataColumnSpec...)
+     */
+    protected AbstractCellFactory(final DataColumnSpec... colSpecs) {
+        this(Parallelization.NONE, colSpecs);
+    }
+
+    /**
+     * Creates instance, which will produce content for the columns as specified by the array argument.
+     *
+     * @param parallelization how the creation of cells may be parallelized
      * @param colSpecs The specs of the columns being created.
      */
-    public AbstractCellFactory(final DataColumnSpec... colSpecs) {
+    protected AbstractCellFactory(final Parallelization parallelization, final DataColumnSpec... colSpecs) {
         if (colSpecs == null || Arrays.asList(colSpecs).contains(null)) {
-            throw new NullPointerException("Argument must not be null or "
-                    + "contain null elements");
+            throw new NullPointerException("Argument must not be null or contain null elements");
         }
         m_colSpecs = colSpecs;
-        m_parallelization = Parallelization.NONE;
+        m_parallelization = parallelization;
         m_isSetProgressWithIntOverridden = isSetProgressWithIntOverridden();
     }
+
+
 
     /** Called by the framework to set the file store factory prior execution.
      * See {@link #getFileStoreFactory()}.
@@ -135,32 +150,36 @@ public abstract class AbstractCellFactory implements CellFactory {
         return m_factory;
     }
 
-    /** Creates instance, which will produce content for the columns as
-     * specified by the array argument.
-     * @param processConcurrently If to process the rows concurrently (must
-     * only be true if there are no interdependency between the rows).
+    /**
+     * Creates instance, which will produce content for the columns as specified by the array argument.
+     *
+     * @param processConcurrently If to process the rows concurrently (must only be true if there are no interdependency
+     *            between the rows).
      * @param colSpecs The specs of the columns being created.
      * @see #setParallelProcessing(boolean)
+     * @deprecated use {@link #AbstractCellFactory(Parallelization, DataColumnSpec...)}
      */
-    public AbstractCellFactory(final boolean processConcurrently,
-            final DataColumnSpec... colSpecs) {
-        this(colSpecs);
+    @Deprecated(since = "5.4")
+    protected AbstractCellFactory(final boolean processConcurrently, final DataColumnSpec... colSpecs) {
+        this(processConcurrently ? Parallelization.ASSUME_EXPENSIVE : Parallelization.NONE, colSpecs);
         setParallelProcessing(processConcurrently);
     }
 
-    /** Creates instance, which will produce content for the columns as
-     * specified by the array argument.
-     * @param processConcurrently If to process the rows concurrently (must
-     * only be true if there are no interdependency between the rows).
+    /**
+     * Creates instance, which will produce content for the columns as specified by the array argument.
+     *
+     * @param processConcurrently If to process the rows concurrently (must only be true if there are no interdependency
+     *            between the rows).
      * @param workerCount see {@link #setParallelProcessing(boolean, int, int)}
      * @param maxQueueSize see {@link #setParallelProcessing(boolean, int, int)}
      * @param colSpecs The specs of the columns being created.
      * @see #setParallelProcessing(boolean, int, int)
+     * @deprecated use {@link #AbstractCellFactory(Parallelization, DataColumnSpec...)}
      */
-    public AbstractCellFactory(final boolean processConcurrently,
-            final int workerCount, final int maxQueueSize,
-            final DataColumnSpec... colSpecs) {
-        this(colSpecs);
+    @Deprecated(since = "5.4")
+    protected AbstractCellFactory(final boolean processConcurrently, final int workerCount, final int maxQueueSize,
+        final DataColumnSpec... colSpecs) {
+        this(processConcurrently ? Parallelization.ASSUME_EXPENSIVE : Parallelization.NONE, colSpecs);
         setParallelProcessing(processConcurrently, workerCount, maxQueueSize);
     }
 
@@ -168,7 +187,7 @@ public abstract class AbstractCellFactory implements CellFactory {
      * @return the parallelization defined in the constructor.
      * @since 5.4
      */
-    Parallelization getParallelization() {
+    public Parallelization getParallelization() {
         return m_parallelization;
     }
 
@@ -178,7 +197,9 @@ public abstract class AbstractCellFactory implements CellFactory {
      * @param value If to enable parallel processing (assumes independency
      * of individual row calculations).
      * @since 2.5
+     * @deprecated use {@link #AbstractCellFactory(Parallelization, DataColumnSpec...)}
      */
+    @Deprecated(since = "5.4")
     public final void setParallelProcessing(final boolean value) {
         int maxParallelWorkers = (int)Math.ceil(1.5
                 * Runtime.getRuntime().availableProcessors());
@@ -194,9 +215,13 @@ public abstract class AbstractCellFactory implements CellFactory {
      * be at least 1 (whereby 1 is a corner case where the input is processed
      * synchronously with one dedicated worker thread).
      * @since 2.5.2
+     * @deprecated use {@link #getParallelization()} instead
      */
+    @Deprecated(since = "5.4")
     public final boolean isParallelProcessing() {
-        return getMaxParallelWorkers() > 0 && getMaxQueueSize() > 0;
+        return (getMaxParallelWorkers() > 0 && getMaxQueueSize() > 0) //
+                || m_parallelization == Parallelization.ASSUME_EXPENSIVE; // this is the old behaviour
+
     }
 
     /** Enables or disables parallel processing of the rows. The two relevant
@@ -215,7 +240,9 @@ public abstract class AbstractCellFactory implements CellFactory {
      * by this parameter. If this cache is full, no further row computations
      * are queued until the long-running task finishes.)
      * @since 2.5
+     * @deprecated use {@link #AbstractCellFactory(Parallelization, DataColumnSpec...)}
      */
+    @Deprecated(since = "5.4")
     public final void setParallelProcessing(final boolean value,
             final int maxParallelWorkers, final int maxQueueSize) {
         if (value) {
@@ -230,9 +257,11 @@ public abstract class AbstractCellFactory implements CellFactory {
             }
             m_maxParallelWorkers = maxParallelWorkers;
             m_maxQueueSize = maxQueueSize;
+            m_parallelization = Parallelization.ASSUME_EXPENSIVE;
         } else {
             m_maxParallelWorkers = -1;
             m_maxQueueSize = -1;
+            m_parallelization = Parallelization.NONE;
         }
     }
 
@@ -243,7 +272,10 @@ public abstract class AbstractCellFactory implements CellFactory {
      * {@link #getMaxQueueSize() queue size} are determined heuristically based
      * on the {@link Runtime#availableProcessors() available processors}.
      * @return The number of parallel workers or -1.
-     * @since 2.5.2 */
+     * @since 2.5.2
+     * @deprecated
+     */
+    @Deprecated(since = "5.4")
     public final int getMaxParallelWorkers() {
         return m_maxParallelWorkers;
     }
@@ -253,7 +285,10 @@ public abstract class AbstractCellFactory implements CellFactory {
      * {@link #setParallelProcessing(boolean, int, int)} and
      * {@link #getMaxParallelWorkers()} for details.
      * @return the maxQueueSize or -1.
-     * @since 2.5.2 */
+     * @since 2.5.2
+     * @deprecated
+     */
+    @Deprecated(since = "5.4")
     public final int getMaxQueueSize() {
         return m_maxQueueSize;
     }

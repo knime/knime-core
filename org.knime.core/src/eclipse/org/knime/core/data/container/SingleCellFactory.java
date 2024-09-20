@@ -56,21 +56,32 @@ import org.knime.core.data.DataRow;
 /**
  * Convenience implementation of a cell factory with one new column.
  *
- * <p>As of v2.5 the input table can be processed concurrently. This property
- * should only be set if (i) the processing of an individual row is expensive,
- * i.e. takes significantly longer than pure I/O and (ii) there are no
- * interdependency between the row calculations.
+ * The cells can be produced concurrently, see {@link Parallelization} for details.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class SingleCellFactory extends AbstractCellFactory {
 
-    /** Create new cell factory that provides one column given by newColSpec.
-     * The calculation is done sequentially (no parallel processing of input).
+    /**
+     * Create new cell factory that provides one column given by newColSpec. The calculation is done sequentially (no
+     * parallel processing of input).
+     *
+     * @param newColSpec The spec of the new column.
+     * @see #SingleCellFactory(Parallelization, DataColumnSpec)
+     */
+    protected SingleCellFactory(final DataColumnSpec newColSpec) {
+        super(newColSpec);
+    }
+
+    /**
+     * Create new cell factory that provides one column given by newColSpec. The calculation is done sequentially (no
+     * parallel processing of input).
+     *
+     * @param parallelziation The parallelization mode. See {@link Parallelization}.
      * @param newColSpec The spec of the new column.
      */
-    public SingleCellFactory(final DataColumnSpec newColSpec) {
-        super(newColSpec);
+    protected SingleCellFactory(final Parallelization parallelziation, final DataColumnSpec newColSpec) {
+        super(parallelziation, newColSpec);
     }
 
     /** Create new cell factory that provides one column given by newColSpec.
@@ -79,8 +90,10 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * @param newColSpec The spec of the new column.
      * @see #setParallelProcessing(boolean)
      * @since 2.5
+     * @deprecated
      */
-    public SingleCellFactory(final boolean processConcurrently,
+    @Deprecated(since = "5.4")
+    protected SingleCellFactory(final boolean processConcurrently,
             final DataColumnSpec newColSpec) {
         super(processConcurrently, newColSpec);
     }
@@ -93,8 +106,10 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * @param newColSpec The spec of the new column.
      * @see #setParallelProcessing(boolean, int, int)
      * @since 2.5
+     * @deprecated
      */
-    public SingleCellFactory(final boolean processConcurrently,
+    @Deprecated(since = "5.4")
+    protected SingleCellFactory(final boolean processConcurrently,
             final int workerCount, final int maxQueueSize,
             final DataColumnSpec newColSpec) {
         super(processConcurrently, workerCount, maxQueueSize, newColSpec);
