@@ -325,6 +325,8 @@ public interface TableBackend {
      * @return the sliced table
      * @since 5.3
      */
+    // TODO (TP) Currently the Selection slice has TableFilter meaning (rowkey not included, column indices -1). This should be fixed.
+    //           See https://knime-com.atlassian.net/browse/AP-22318
     KnowsRowCountTable[] slice(ExecutionContext exec, BufferedDataTable table, Selection[] slices,
         IntSupplier tableIdSupplier);
 
