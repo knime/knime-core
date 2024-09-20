@@ -50,6 +50,7 @@ package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataColumnDomain;
@@ -60,6 +61,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.v2.RowKeyType;
+import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -236,6 +238,58 @@ public final class ValueSchemaUtils {
      */
     public static final ValueSchema updateDataTableSpec(final ValueSchema schema, final DataTableSpec spec) {
         return new UpdatedValueSchema(spec, schema);
+    }
+
+    /**
+     * Assign new random column names.
+     *
+     * @param schema input schema
+     * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with new random column names.
+     */
+    public static ValueSchema renameToRandomColumnNames(final ValueSchema schema) {
+        var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
+        Arrays.setAll(valueFactories, schema::getValueFactory);
+
+        final DataTableSpec sourceSpec = schema.getSourceSpec();
+        var colSpecs = new DataColumnSpec[sourceSpec.getNumColumns()];
+        Arrays.setAll(colSpecs, i -> {
+            DataColumnSpecCreator creator = new DataColumnSpecCreator(sourceSpec.getColumnSpec(i));
+            creator.setName("random-" + UUID.randomUUID().toString());
+            return creator.createSpec();
+        });
+        var spec = new DataTableSpec(colSpecs);
+
+        return create(spec, valueFactories);
+    }
+
+    /**
+     * Create a new {@code ValueSchema} comprising only the specified columns. The {@code columnIndices} are including
+     * RowID, that is, RowID columns has index 0.
+     *
+     * @param schema input schema
+     * @param columnIndices indices of columns to select
+     * @return a new {@code ColumnarValueSchema} comprising only the specified columns
+     */
+    public static ValueSchema selectColumns(final ValueSchema schema, final int... columnIndices) {
+        var valueFactories = new ValueFactory<?, ?>[columnIndices.length];
+        Arrays.setAll(valueFactories, i -> schema.getValueFactory(columnIndices[i]));
+
+        final DataTableSpec sourceSpec = schema.getSourceSpec();
+        var colSpecs = new DataColumnSpec[columnIndices.length];
+        Arrays.setAll(colSpecs, i -> sourceSpec.getColumnSpec(columnIndices[i] - 1));
+        var spec = new DataTableSpec(colSpecs);
+
+        return create(spec, valueFactories);
+    }
+
+    /**
+     * Checks whether a schema includes a RowID column.
+     *
+     * @param schema to check
+     * @return true if the schema has a RowID column
+     */
+    public static final boolean hasRowID(final ValueSchema schema) {
+        return schema.numColumns() > 0 && schema.getValueFactory(0) instanceof RowKeyValueFactory;
     }
 
     private ValueSchemaUtils() {
