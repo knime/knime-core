@@ -70,9 +70,27 @@ import org.knime.core.node.ExecutionMonitor;
 public abstract class AbstractCellFactory implements CellFactory {
 
     /**
+     * A capability defined in the constructor suggesting to the framework how the computation can be
+     * parallelized. This is a hint to the framework and does not necessarily mean that the computation
+     * is actually parallelized.
+     * @since 5.4
+     */
+    public enum Parallelization {
+        /** No parallelization is possible (e.g. due to row-dependencies) */
+        NONE,
+        /** Parallelization by row, this will also enable parallel computation when used with table row backend. */
+        BY_ROW,
+        /** Parallelization by table slice (partition of the table), this will enable parallelization
+         * in the columnar backend but not in the row backend. */
+        BY_SLICE
+    }
+
+    /**
      * Template for the progress message.
      */
     private static final String PROGRESS_TEMPLATE = "Processed row %s/%s (\"%s\")";
+
+    private final Parallelization m_parallelization;
 
     private final DataColumnSpec[] m_colSpecs;
 
@@ -96,6 +114,7 @@ public abstract class AbstractCellFactory implements CellFactory {
                     + "contain null elements");
         }
         m_colSpecs = colSpecs;
+        m_parallelization = Parallelization.NONE;
         m_isSetProgressWithIntOverridden = isSetProgressWithIntOverridden();
     }
 
@@ -143,6 +162,14 @@ public abstract class AbstractCellFactory implements CellFactory {
             final DataColumnSpec... colSpecs) {
         this(colSpecs);
         setParallelProcessing(processConcurrently, workerCount, maxQueueSize);
+    }
+
+    /**
+     * @return the parallelization defined in the constructor.
+     * @since 5.4
+     */
+    Parallelization getParallelization() {
+        return m_parallelization;
     }
 
     /** Enables or disables parallel processing of the rows. The two relevant
