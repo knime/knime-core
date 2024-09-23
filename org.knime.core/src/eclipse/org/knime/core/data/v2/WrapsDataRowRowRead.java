@@ -44,87 +44,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 22, 2020 (dietzc): created
+ *   23 Sept 2024 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.v2;
 
-import java.io.IOException;
+import java.util.function.Supplier;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.v2.RowContainer;
-import org.knime.core.data.v2.RowWrite;
-import org.knime.core.data.v2.RowWriteCursor;
-import org.knime.core.data.v2.schema.ValueSchema;
-import org.knime.core.node.BufferedDataContainer;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.RowKeyValue;
 
 /**
- * Legacy implementation for {@link RowContainer} using {@link BufferedDataContainer} as storage backend.
+ * Special row read that is used in {@link RowRead#suppliedBy(Supplier, int)} to wrap a {@link DataRow} as a
+ * {@link RowRead}, where the RowRead instance can be re-used.
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-final class BufferedRowContainer implements RowContainer, RowWriteCursor {
+class WrapsDataRowRowRead implements DataRowRowRead {
 
-    static final DataCell MISSING_CELL = DataType.getMissingCell();
+    private final Supplier<DataRow> m_currentRowSupplier;
+    private final int m_numColumns;
 
-    private final BufferedRowWrite m_row;
-
-    private final BufferedDataContainer m_delegate;
-
-    private boolean m_needsCommit;
-
-    BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
-        m_row = new BufferedRowWrite(delegate::addRowToTable, schema);
-        m_delegate = delegate;
+    WrapsDataRowRowRead(final Supplier<DataRow> currentRowSupplier, final int numColumns) {
+        m_currentRowSupplier = currentRowSupplier;
+        m_numColumns = numColumns;
     }
 
     @Override
-    public RowWriteCursor createCursor() {
-        return this;
+    public int getNumColumns() {
+        return m_numColumns;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <D extends DataValue> D getValue(final int index) {
+        final var cell = getAsDataCell(index);
+        return cell.isMissing() ? null : (D)cell;
     }
 
     @Override
-    public RowWrite forward() {
-        commitIfNecessary();
-        m_needsCommit = true;
-        return m_row;
-    }
-
-    private void commitIfNecessary() {
-        if (m_needsCommit) {
-            m_row.commit();
-            m_needsCommit = false;
-        }
+    public boolean isMissing(final int index) {
+        return getAsDataCell(index).isMissing();
     }
 
     @Override
-    public boolean canForward() {
-        return true;
+    public RowKeyValue getRowKey() {
+        return materializeDataRow().getKey();
     }
 
     @Override
-    public BufferedDataTable finish() throws IOException {
-        commitIfNecessary();
-        m_delegate.close();
-        return m_delegate.getTable();
+    public DataCell getAsDataCell(final int index) {
+        return materializeDataRow().getCell(index);
     }
 
     @Override
-    public void close() {
-        // called before finish
-        if (!m_delegate.isClosed()) {
-            m_delegate.close();
-            m_delegate.getBufferedTable().close();
-        }
-    }
-
-    /**
-     * @return the delegate container, for unit tests.
-     */
-    BufferedDataContainer getDelegate() {
-        return m_delegate;
+    public DataRow materializeDataRow() {
+        return m_currentRowSupplier.get();
     }
 
 }

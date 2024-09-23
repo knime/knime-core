@@ -44,87 +44,31 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 22, 2020 (dietzc): created
+ *   10 Oct 2024 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data.v2;
 
-import java.io.IOException;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.v2.RowContainer;
-import org.knime.core.data.v2.RowWrite;
-import org.knime.core.data.v2.RowWriteCursor;
-import org.knime.core.data.v2.schema.ValueSchema;
-import org.knime.core.node.BufferedDataContainer;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.data.DataRow;
 
 /**
- * Legacy implementation for {@link RowContainer} using {@link BufferedDataContainer} as storage backend.
+ * Marker interface to signal that this {@link RowRead} is cheap to call {@link RowRead#materializeDataRow()} on,
+ * e.g. since it already contains a {@link DataRow} and materialization is therefore a simple "get".
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @since 5.4
+ *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+ * @noreference This interface is not intended to be referenced by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-final class BufferedRowContainer implements RowContainer, RowWriteCursor {
-
-    static final DataCell MISSING_CELL = DataType.getMissingCell();
-
-    private final BufferedRowWrite m_row;
-
-    private final BufferedDataContainer m_delegate;
-
-    private boolean m_needsCommit;
-
-    BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
-        m_row = new BufferedRowWrite(delegate::addRowToTable, schema);
-        m_delegate = delegate;
-    }
-
-    @Override
-    public RowWriteCursor createCursor() {
-        return this;
-    }
-
-    @Override
-    public RowWrite forward() {
-        commitIfNecessary();
-        m_needsCommit = true;
-        return m_row;
-    }
-
-    private void commitIfNecessary() {
-        if (m_needsCommit) {
-            m_row.commit();
-            m_needsCommit = false;
-        }
-    }
-
-    @Override
-    public boolean canForward() {
-        return true;
-    }
-
-    @Override
-    public BufferedDataTable finish() throws IOException {
-        commitIfNecessary();
-        m_delegate.close();
-        return m_delegate.getTable();
-    }
-
-    @Override
-    public void close() {
-        // called before finish
-        if (!m_delegate.isClosed()) {
-            m_delegate.close();
-            m_delegate.getBufferedTable().close();
-        }
-    }
+public interface DataRowRowRead extends RowRead {
 
     /**
-     * @return the delegate container, for unit tests.
+     * Gets the wrapped data row.
+     *
+     * @return wrapped data row
      */
-    BufferedDataContainer getDelegate() {
-        return m_delegate;
+    default DataRow getDataRow() {
+        return materializeDataRow();
     }
-
 }
