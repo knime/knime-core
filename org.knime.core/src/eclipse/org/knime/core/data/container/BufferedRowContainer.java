@@ -51,25 +51,13 @@ package org.knime.core.data.container;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.RowContainer;
-import org.knime.core.data.v2.RowKeyReadValue;
-import org.knime.core.data.v2.RowKeyWriteValue;
-import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.table.access.BufferedAccesses;
-import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
-import org.knime.core.table.access.ReadAccess;
 
 /**
  * Legacy implementation for {@link RowContainer} using {@link BufferedDataContainer} as storage backend.
@@ -79,17 +67,17 @@ import org.knime.core.table.access.ReadAccess;
  */
 final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
-    private static final DataCell MISSING_CELL = DataType.getMissingCell();
+    static final DataCell MISSING_CELL = DataType.getMissingCell();
 
     private final BufferedRowWrite m_row;
 
     private final BufferedDataContainer m_delegate;
 
-    private boolean m_needsCommit = false;
+    private boolean m_needsCommit;
 
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
-        m_row = new BufferedRowWrite(delegate, schema);
         m_delegate = delegate;
+        m_row = new BufferedRowWrite(schema);
     }
 
     @Override
@@ -106,7 +94,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     private void commitIfNecessary() {
         if (m_needsCommit) {
-            m_row.commit();
+            m_delegate.addRowToTable(m_row.materializeDataRow());
             m_needsCommit = false;
         }
     }
@@ -137,205 +125,6 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
      */
     BufferedDataContainer getDelegate() {
         return m_delegate;
-    }
-
-    private static final class BufferedRowWrite implements RowWrite {
-
-        private final BufferedDataContainer m_delegate;
-
-        private final NullableReadValue[] m_readValues;
-
-        private final WriteValue<?>[] m_writeValues;
-
-        private final RowKeyReadValue m_rowKeyReadValue;
-
-        /* two fields below were added as part of AP-23029 */
-
-        /** If any field was set to be missing after a row content was set via {@link #setFrom(RowRead)}. */
-        private final boolean[] m_forcedMissings;
-
-        /** A row that was set via {@link #setFrom(RowRead)} - in most of the cases that data will come from
-         * another table whose cursor is backed by a {@link BufferedDataTable}. */
-        private DataRow m_currentRowWhenCallingSetFrom;
-
-        private BufferedRowWrite(final BufferedDataContainer delegate, final ValueSchema schema) {
-            m_delegate = delegate;
-            int numFactories = schema.numFactories();
-            m_readValues = new NullableReadValue[numFactories];
-            m_writeValues = new WriteValue[numFactories];
-            m_forcedMissings = new boolean[numFactories];
-
-            for (int i = 0; i < numFactories; i++) {//NOSONAR
-                var valueFactory = schema.getValueFactory(i);
-                final var access = BufferedAccesses.createBufferedAccess(valueFactory.getSpec());
-                m_readValues[i] = new NullableReadValue(valueFactory, access);
-                m_writeValues[i] = valueFactory.createWriteValue(access);
-            }
-
-            m_rowKeyReadValue = (RowKeyReadValue)m_readValues[0].getDelegate();
-        }
-
-        @Override
-        public <W extends WriteValue<?>> W getWriteValue(final int index) {
-            @SuppressWarnings("unchecked")
-            final W cast = (W)m_writeValues[index + 1];
-            return cast;
-        }
-
-        @Override
-        public int getNumColumns() {
-            return m_readValues.length - 1;
-        }
-
-        @Override
-        public void setMissing(final int index) {
-        	// +1 to account for the row key
-            m_readValues[index + 1].setMissing();
-            m_forcedMissings[index + 1] = true;
-        }
-
-        @Override
-        public void setRowKey(final String rowKey) {
-            ((RowKeyWriteValue)m_writeValues[0]).setRowKey(rowKey);
-        }
-
-        @Override
-        public void setRowKey(final RowKeyValue rowKey) {
-            ((RowKeyWriteValue)m_writeValues[0]).setRowKey(rowKey);
-        }
-
-        @Override
-        public void setFrom(final RowRead row) {
-            // reset all read value accesses and m_forceMissing fields in case they were set/called prior
-            // 'setFrom' (corner case)
-            for (int i = 0; i < m_readValues.length; i++) {
-                m_readValues[i].setMissing();
-                m_forcedMissings[i] = false;
-            }
-            if (row instanceof FallbackRowCursor fbrc) {
-            	// special case where the new table api is used but the workflow is using row backend,
-                // eg. new row filter (in 5.3) copying input to output, see AP-23029
-                m_currentRowWhenCallingSetFrom = fbrc.getCurrentRow();
-            } else {
-                setRowKey(row.getRowKey());
-                final var numCells = row.getNumColumns();
-                for (var i = 0; i < numCells; i++) {
-                    if (row.isMissing(i)) {
-                        setMissing(i);
-                    } else {
-                        m_writeValues[i + 1].setValue(row.getValue(i));
-                    }
-                }
-            }
-        }
-
-        void commit() {
-            if (!addRowIfSetViaSetFrom()) {
-                // TODO handle case where no row key is required?
-                if (m_readValues[0].isMissing()) {
-                    throw new IllegalStateException("RowKey not set.");
-                }
-
-                DataCell[] cells = new DataCell[m_readValues.length - 1];
-                // We have to loop once to reset our VolatileAccesses after reading
-                for (int i = 1; i < m_readValues.length; i++) {
-                    if (!m_readValues[i].isMissing()) {
-                        cells[i - 1] = m_readValues[i].getDataCell();
-
-                        // invalidate for next iteration
-                        m_readValues[i].setMissing();
-                        m_forcedMissings[i] = false;
-                    } else {
-                        cells[i - 1] = MISSING_CELL;
-                    }
-                }
-                // cells are copied in row, BlobSupportDataRow because it saves one row creation in the Buffer class
-                m_delegate.addRowToTable(new BlobSupportDataRow(new RowKey(m_rowKeyReadValue.getString()), cells));
-            }
-        }
-
-        /**
-         * Add a row to the table if it was set via {@link #setFrom(RowRead)}.
-         *
-         * @return {@code true} if a row was added, {@code false} otherwise (then the individual fields will be set).
-         */
-        private boolean addRowIfSetViaSetFrom() {
-            if (m_currentRowWhenCallingSetFrom == null) {
-                return false;
-            }
-            DataCell[] cellCopies = null;
-            RowKey rowKey = null;
-            if (!m_readValues[0].isMissing()) {
-                rowKey = new RowKey(m_rowKeyReadValue.getString());
-                cellCopies = copyCells(m_currentRowWhenCallingSetFrom);
-            }
-            // check for each field if a value was set manually after `setFrom` was called.
-            for (int i = 1; i < m_readValues.length; i++) {
-                if (!m_readValues[i].isMissing() || m_forcedMissings[i]) {
-                    if (cellCopies == null) {
-                        rowKey = m_currentRowWhenCallingSetFrom.getKey();
-                        cellCopies = copyCells(m_currentRowWhenCallingSetFrom);
-                    }
-                    if (m_forcedMissings[i]) {
-                        cellCopies[i - 1] = MISSING_CELL;
-                    } else {
-                        cellCopies[i - 1] = m_readValues[i].getDataCell();
-                    }
-                }
-            }
-            final DataRow row;
-            if (cellCopies == null) {
-                row = m_currentRowWhenCallingSetFrom;
-            } else {
-                row = new BlobSupportDataRow(rowKey, cellCopies);
-                for (int i = 0; i < m_readValues.length; i++) {
-                    m_readValues[i].setMissing();
-                    m_forcedMissings[i] = false;
-                }
-            }
-            m_delegate.addRowToTable(row);
-            m_currentRowWhenCallingSetFrom = null;
-            return true;
-        }
-
-        private static DataCell[] copyCells(final DataRow currentRowWhenCallingSetFrom) {
-            DataCell[] cellCopies;
-            cellCopies = new DataCell[currentRowWhenCallingSetFrom.getNumCells()];
-            for (int j = 0; j < cellCopies.length; j++) {
-                cellCopies[j] = currentRowWhenCallingSetFrom instanceof BlobSupportDataRow bsr
-                        ? bsr.getRawCell(j) : currentRowWhenCallingSetFrom.getCell(j);
-            }
-            return cellCopies;
-        }
-
-        private static final class NullableReadValue {
-
-            private final ReadValue m_delegate;
-
-            private final BufferedAccess m_access;
-
-            NullableReadValue(final ValueFactory<ReadAccess, ?> factory, final BufferedAccess access) {
-                m_delegate = factory.createReadValue(access);
-                m_access = access;
-            }
-
-            public ReadValue getDelegate() {
-                return m_delegate;
-            }
-
-            public final DataCell getDataCell() {
-                return m_delegate.getDataCell();
-            }
-
-            public final boolean isMissing() {
-                return m_access.isMissing();
-            }
-
-            public final void setMissing() {
-                m_access.setMissing();
-            }
-
-        }
     }
 
 }

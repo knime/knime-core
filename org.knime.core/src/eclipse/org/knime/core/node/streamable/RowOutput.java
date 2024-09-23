@@ -47,7 +47,17 @@
  */
 package org.knime.core.node.streamable;
 
+import java.util.UUID;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.BufferedRowWrite;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.RowKeyType;
+import org.knime.core.data.v2.RowWrite;
+import org.knime.core.data.v2.RowWriteCursor;
+import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataTable;
 
 /**
@@ -58,6 +68,85 @@ import org.knime.core.node.BufferedDataTable;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public abstract class RowOutput extends PortOutput {
+
+    /**
+     * Returns a {@link RowWriteCursor} to fill the row output.
+     * Counterpart to {@link RowInput#asCursor()}. See the <b>warnings</b> there.
+     * @param spec data table spec used to write rows
+     *
+     * @return adapter to use the row output as a row write cursor
+     * @since 5.4
+     */
+    public InterruptibleRowWriteCursor asWriteCursor(final DataTableSpec spec) {
+        return new FallbackWriteCursor(spec);
+    }
+
+    /**
+     * An adatper for {@link RowOutput}s whose {@link #canForward()}, {@link #forward()}, and {@link #close()}
+     * methods may throw an undeclared {@link InterruptedException} from underlying calls.
+     *
+     * @since 5.4
+     *
+     * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+     *
+     * @noreference This interface is not intended to be referenced by clients.
+     */
+    public interface InterruptibleRowWriteCursor extends RowWriteCursor {
+    }
+
+    /**
+     * Default implementation that just delegates to the {@link #push()} method.
+     */
+    private final class FallbackWriteCursor implements InterruptibleRowWriteCursor {
+
+        private boolean m_closed;
+        private final BufferedRowWrite m_rowWrite;
+
+        private boolean m_needsCommit;
+
+        public FallbackWriteCursor(final DataTableSpec spec) {
+            final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
+                new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
+            m_rowWrite = new BufferedRowWrite(schema);
+        }
+
+        @Override
+        public RowWrite forward() {
+            try {
+                commitIfNecessary();
+                m_needsCommit = true;
+                return m_rowWrite;
+            } catch (final InterruptedException e) { // NOSONAR exception is rethrown
+                throw ExceptionUtils.asRuntimeException(e);
+            }
+        }
+
+        private void commitIfNecessary() throws InterruptedException {
+            if (m_needsCommit) {
+                push(m_rowWrite.materializeDataRow());
+                m_needsCommit = false;
+            }
+        }
+
+        @Override
+        public void close() {
+            if (!m_closed) {
+                try {
+                    commitIfNecessary();
+                    RowOutput.this.close();
+                    m_closed = true;
+                } catch (final InterruptedException e) { // NOSONAR exception is rethrown
+                    throw ExceptionUtils.asRuntimeException(e);
+                }
+            }
+        }
+
+        @Override
+        public boolean canForward() {
+            return true;
+        }
+
+    }
 
     /**
      * Adds a new row to the output. The method will block if previously added
@@ -77,8 +166,10 @@ public abstract class RowOutput extends PortOutput {
      * @since 2.12
      */
     public void setFully(final BufferedDataTable table) throws InterruptedException {
-        for (DataRow r : table) {
-            push(r);
+        try (final var in = table.cursor(); final var out = asWriteCursor(table.getSpec())) {
+            while (in.canForward()) {
+                out.forward().setFrom(in.forward());
+            }
         }
         close();
     }

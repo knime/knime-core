@@ -44,67 +44,31 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sep 10, 2020 (dietzc): created
+ *   10 Oct 2024 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
 package org.knime.core.data.v2;
 
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.RowKeyValue;
-import org.knime.core.data.container.BlobSupportDataRow;
 
 /**
- * Read access to a data row.
+ * Marker interface to signal that this {@link RowRead} is cheap to call {@link RowRead#materializeDataRow()} on,
+ * e.g. since it already contains a {@link DataRow} and materialization is therefore a simple "get".
  *
- * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
- * @since 4.3
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @since 5.4
  *
+ * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  * @noreference This interface is not intended to be referenced by clients.
+ * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowRead extends RowValueRead {
+public interface DataRowRowRead extends RowRead {
 
     /**
-     * Adapter factory method to create a {@link RowRead} which can be supplied by a sequence of {@link DataRow}s
-     * which are made available through the given supplier.
+     * Gets the wrapped data row.
      *
-     * @param currentRowSupplier supplier for the current {@link DataRow}
-     * @param numColumns number of columns of the rows
-     * @return the created {@link RowRead}
-     * @since 5.3
+     * @return wrapped data row
      */
-    static RowRead suppliedBy(final Supplier<DataRow> currentRowSupplier, final int numColumns) {
-        return new WrapsDataRowRowRead(currentRowSupplier, numColumns);
-    }
-
-    /**
-     * Adapter factory method to create a {@link RowRead} representing a single {@link DataRow}.
-     *
-     * @param row the row to be adapted, may be {@code null}
-     * @return the created {@link RowRead}, {@code null} if the given row is {@code null}
-     * @since 5.3
-     */
-    static RowRead from(final DataRow row) {
-        return row == null ? null : suppliedBy(() -> row, row.getNumCells());
-    }
-
-    /**
-     * @return the {@link RowKeyReadValue}
-     */
-    RowKeyValue getRowKey();
-
-    /**
-     * Returns an immutable {@link DataRow} containing the contents of the current state of this {@link RowRead}.
-     *
-     * @return the immutable data row
-     * @since 5.3
-     */
-    default DataRow materializeDataRow() {
-        return new BlobSupportDataRow(new RowKey(getRowKey().getString()), IntStream.range(0, getNumColumns()) //
-            .mapToObj(this::getAsDataCell) //
-            .toArray(DataCell[]::new));
+    default DataRow getDataRow() {
+        return materializeDataRow();
     }
 }

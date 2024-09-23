@@ -54,6 +54,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
+import org.knime.core.data.v2.DataRowRowRead;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowRead;
 
@@ -62,7 +63,7 @@ import org.knime.core.data.v2.RowRead;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz
  */
-final class FallbackRowCursor implements RowCursor, RowRead {
+final class FallbackRowCursor implements RowCursor, DataRowRowRead {
 
     private static final class InvalidDataRow implements DataRow {
 
@@ -157,5 +158,10 @@ final class FallbackRowCursor implements RowCursor, RowRead {
     @Override
     public boolean canForward() {
         return m_delegate.hasNext();
+    }
+
+    @Override
+    public DataRow materializeDataRow() {
+        return m_currentRow;
     }
 }

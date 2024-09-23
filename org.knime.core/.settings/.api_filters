@@ -405,6 +405,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/streamable/RowInput.java" type="org.knime.core.node.streamable.RowInput$InterruptibleRowCursor">
+        <filter comment="Beta Streaming API" id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.streamable.RowInput.InterruptibleRowCursor"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>
