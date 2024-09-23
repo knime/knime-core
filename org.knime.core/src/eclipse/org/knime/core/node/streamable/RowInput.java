@@ -74,20 +74,28 @@ public abstract class RowInput extends PortInput {
      * </ul>
      * @return adapter to use the row input as a row cursor
      *
-     * @since 5.3
+     * @since 5.4
      */
     public InterruptibleRowCursor asCursor() {
-        return new InterruptibleRowCursor();
+        return new PollingRowCursor();
+    }
+
+
+    /**
+     * An adapter for {@link RowInput}s whose {@link #canForward()}, {@link #forward()}, and {@link #getNumColumns()}
+     * methods may throw an undeclared {@link InterruptedException} from underlying calls
+     * (e.g. to {@link RowInput#poll()}).
+     *
+     * @since 5.4
+     */
+    public interface InterruptibleRowCursor extends RowCursor {
     }
 
     /**
-     * An adapter for {@link RowInput}s which in which {@link #canForward()} and {@link #forward()} methods may
-     *   throw an undeclared {@link InterruptedException} from an underlying call to {@link RowInput#poll()}.
-     *
-     * @since 5.3
+     * Default implementation that just delegates to the {@link #poll()} method.
      */
     @SuppressWarnings("javadoc")
-    public final class InterruptibleRowCursor implements RowCursor {
+    private final class PollingRowCursor implements InterruptibleRowCursor {
 
         private DataRow m_current;
 
@@ -97,7 +105,7 @@ public abstract class RowInput extends PortInput {
 
         private boolean m_closed;
 
-        private InterruptibleRowCursor() {
+        private PollingRowCursor() {
         }
 
         @Override
@@ -123,7 +131,7 @@ public abstract class RowInput extends PortInput {
                         return false;
                     }
                 } catch (final InterruptedException ex) { // NOSONAR exception is rethrown
-                    throw ExceptionUtils.<RuntimeException>rethrow(ex);
+                    throw ExceptionUtils.asRuntimeException(ex);
                 }
 
             }

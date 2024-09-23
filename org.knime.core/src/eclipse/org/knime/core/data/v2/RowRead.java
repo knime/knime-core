@@ -53,7 +53,6 @@ import java.util.stream.IntStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.container.BlobSupportDataRow;
@@ -78,40 +77,7 @@ public interface RowRead extends RowValueRead {
      * @since 5.3
      */
     static RowRead suppliedBy(final Supplier<DataRow> currentRowSupplier, final int numColumns) {
-        return new RowRead() { // NOSONAR
-
-            @Override
-            public int getNumColumns() {
-                return numColumns;
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public <D extends DataValue> D getValue(final int index) {
-                final var cell = getAsDataCell(index);
-                return cell.isMissing() ? null : (D)cell;
-            }
-
-            @Override
-            public boolean isMissing(final int index) {
-                return getAsDataCell(index).isMissing();
-            }
-
-            @Override
-            public RowKeyValue getRowKey() {
-                return materializeDataRow().getKey();
-            }
-
-            @Override
-            public DataCell getAsDataCell(final int index) {
-                return materializeDataRow().getCell(index);
-            }
-
-            @Override
-            public DataRow materializeDataRow() {
-                return currentRowSupplier.get();
-            }
-        };
+        return new WrapsDataRowRowRead(currentRowSupplier, numColumns);
     }
 
     /**
