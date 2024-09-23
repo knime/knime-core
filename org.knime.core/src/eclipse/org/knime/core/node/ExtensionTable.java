@@ -188,7 +188,7 @@ public abstract class ExtensionTable implements ContainerTable {
      * @since 4.3
      */
     public final BufferedDataTable create(final ExecutionContext exec) {
-        BufferedDataTable table = new BufferedDataTable(this, exec.getDataRepository());
+        final var table = BufferedDataTable.wrapTableFromTableBackend(this, exec.getDataRepository());
         table.setOwnerRecursively(exec.getNode());
         return table;
     }
