@@ -48,7 +48,7 @@
  */
 package org.knime.core.node;
 
-import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
@@ -103,13 +103,13 @@ public final class InternalTableAPI {
      * @param exec execution context used to report progress, check for cancellation, or create intermediate tables
      * @param table table to process chunk-wise
      * @param chunkSize maximum chunk size
-     * @param batchConsumer consumer for chunks
+     * @param batchConsumer consumer for chunks, indicating if chunking should continue after the current chunk
      * @throws CanceledExecutionException if execution was canceled
      *
      * @since 5.4
      */
     public static void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
-            final Consumer<RowBatch> batchConsumer) throws CanceledExecutionException {
+            final Predicate<RowBatch> batchConsumer) throws CanceledExecutionException {
         exec.chunked(table, chunkSize, batchConsumer);
     }
 

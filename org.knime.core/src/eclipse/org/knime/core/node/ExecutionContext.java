@@ -53,7 +53,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.knime.core.data.DataTable;
@@ -670,7 +670,7 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     void chunked(final BufferedDataTable table,
-        final long chunkSize, final Consumer<RowBatch> batchConsumer) throws CanceledExecutionException {
+        final long chunkSize, final Predicate<RowBatch> batchConsumer) throws CanceledExecutionException {
         getTableBackend().chunked(this, table, chunkSize, m_dataRepository::generateNewID, batchConsumer);
     }
 
