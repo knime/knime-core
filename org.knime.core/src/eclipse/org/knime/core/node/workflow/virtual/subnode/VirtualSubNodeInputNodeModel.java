@@ -55,7 +55,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.knime.core.data.DataRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -125,12 +124,17 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
                 PortObject[] inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
                 for (int i = 0; i < outputs.length; i++) {
                     if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
-                        // stream port content if it's data
-                        BufferedDataTable bdt = (BufferedDataTable)(inputData[i]);
-                        RowOutput rowOutput = (RowOutput)outputs[i];
-                        for (DataRow dr : bdt) {
-                            rowOutput.push(dr);
+                        // Only stream port content if it's data by using the
+                        // buffered data tables cursor.
+                        final var rowOutput = (RowOutput)outputs[i];
+                        final var table = ((BufferedDataTable)inputData[i]);
+                        try (final var in = table.cursor();
+                             final var out = rowOutput.asWriteCursor(table.getSpec())) {
+                            while (in.canForward()) {
+                                out.forward().setFrom(in.forward());
+                            }
                         }
+
                         rowOutput.close();
                     } else {
                         ((PortObjectOutput)outputs[i]).setPortObject(inputData[i]);

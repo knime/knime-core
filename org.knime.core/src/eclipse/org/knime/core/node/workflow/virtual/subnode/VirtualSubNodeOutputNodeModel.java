@@ -61,9 +61,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -236,19 +234,22 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
                     throws Exception {
-                PortObject[] inObjects = new PortObject[getNrInPorts()];
-                for (int i = 0; i < inObjects.length; i++) {
-                    PortType inPortType = getInPortType(i);
+                final var inObjects = new PortObject[getNrInPorts()];
+                for (var i = 0; i < inObjects.length; i++) {
+                    final var inPortType = getInPortType(i);
                     if (inputs[i].isInactive()) {
                         inObjects[i] = InactiveBranchPortObject.INSTANCE;
                     } else if (BufferedDataTable.TYPE.equals(inPortType)) {
-                        BufferedDataContainer container = exec.createDataContainer((DataTableSpec)inSpecs[i]);
-                        DataRow r;
-                        while ((r = ((RowInput)inputs[i]).poll()) != null) {
-                            container.addRowToTable(r);
+                        final var input = (RowInput)inputs[i];
+                        try (final var in = input.asCursor();
+                            final var output = exec.createRowContainer((DataTableSpec)inSpecs[i]);
+                            final var out = output.createCursor()) {
+                            while (in.canForward()) {
+                                out.forward().setFrom(in.forward());
+                            }
+                            inObjects[i] = output.finish();
                         }
-                        container.close();
-                        inObjects[i] = container.getTable();
+                        input.close();
                     } else {
                         inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
                     }
