@@ -9,16 +9,16 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.TableBackend"/>
+                <message_argument value="chunked(ExecutionContext, BufferedDataTable, long, IntSupplier)"/>
+            </message_arguments>
+        </filter>
         <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection[], IntSupplier)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.TableBackend"/>
-                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
+                <message_argument value="chunked(ExecutionContext, BufferedDataTable, long, IntSupplier, Consumer&lt;RowBatch&gt;)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -39,14 +39,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.BufferSettings"/>
                 <message_argument value="withOutputFormat(TableStoreFormat)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/container/BufferedTableBackend.java" type="org.knime.core.data.container.BufferedTableBackend">
-        <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.container.BufferedTableBackend"/>
-                <message_argument value="slice(ExecutionContext, BufferedDataTable, Selection, IntSupplier)"/>
             </message_arguments>
         </filter>
     </resource>

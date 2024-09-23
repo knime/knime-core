@@ -48,10 +48,13 @@
  */
 package org.knime.core.node;
 
+import java.util.function.Consumer;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.RowBatch;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -92,6 +95,22 @@ public final class InternalTableAPI {
     public static BufferedDataTable[] multiSlice(final ExecutionContext exec, final BufferedDataTable table,
         final Selection... slices) {
         return exec.createSlicedTables(table, slices);
+    }
+
+    /**
+     * Creates batches from the given table.
+     *
+     * @param exec execution context used to report progress, check for cancellation, or create intermediate tables
+     * @param table table to process chunk-wise
+     * @param chunkSize maximum chunk size
+     * @param batchConsumer consumer for chunks
+     * @throws CanceledExecutionException if execution was canceled
+     *
+     * @since 5.4
+     */
+    public static void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
+            final Consumer<RowBatch> batchConsumer) throws CanceledExecutionException {
+        exec.chunked(table, chunkSize, batchConsumer);
     }
 
     /**

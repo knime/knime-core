@@ -51,19 +51,23 @@ package org.knime.core.data.container;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
@@ -218,6 +222,16 @@ public final class BufferedTableBackend implements TableBackend {
         var inputSpec = table.getDataTableSpec();
         var slicer = new TableSlicer(inputSpec, slices);
         return slicer.slice(exec, table);
+    }
+
+    @Override
+    public void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
+        final IntSupplier tableIdSupplier, final Consumer<RowBatch> consumer) throws CanceledExecutionException {
+        try (final var supplier = new ChunkingCursorSupplier(exec, table, chunkSize)) {
+            while (supplier.hasNext()) {
+                consumer.accept(supplier.next());
+            }
+        }
     }
 
     private static final class TableSlicer {
@@ -465,4 +479,45 @@ public final class BufferedTableBackend implements TableBackend {
         return new TableSpecReplacerTable(table, newSpec);
     }
 
+    /**
+     * Chunks the given table into row batches of the given size.
+     */
+    static class ChunkingCursorSupplier implements AutoCloseable {
+
+        private final ExecutionContext m_exec;
+        private final BufferedDataTable m_table;
+        private final long m_chunkSize;
+        private final RowCursor m_tableCursor;
+
+        public ChunkingCursorSupplier(final ExecutionContext exec, final BufferedDataTable table,
+            final long chunkSize) {
+            m_exec = exec;
+            m_table = table;
+            m_chunkSize = chunkSize;
+            m_tableCursor = table.cursor();
+        }
+
+        public RowBatch next() throws CanceledExecutionException {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            final var buffer = new ArrayList<DataRow>();
+            for (long l = 0; l < m_chunkSize && m_tableCursor.canForward(); l++) {
+                m_exec.checkCanceled();
+                buffer.add(m_tableCursor.forward().materializeDataRow());
+            }
+
+            return new InMemoryRowBatch(m_table.getSpec(), buffer);
+        }
+
+        public boolean hasNext() {
+            return m_tableCursor.canForward();
+        }
+
+        @Override
+        public void close() {
+            m_tableCursor.close();
+        }
+
+    }
 }
