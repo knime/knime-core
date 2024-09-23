@@ -279,11 +279,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     static BufferedDataTable wrapTableFromTableBackend(final KnowsRowCountTable table,
         final IDataRepository dataRepository) {
-        if (table instanceof RearrangeColumnsTable) {
-            return new BufferedDataTable((RearrangeColumnsTable)table, dataRepository);
-        } else {
-            return new BufferedDataTable(table, dataRepository.generateNewID(), dataRepository);
+        if (table instanceof RearrangeColumnsTable rct) {
+            return new BufferedDataTable(rct, dataRepository);
         }
+        if (table instanceof ContainerTable ct) {
+            return new BufferedDataTable(ct,  ct.getTableId(), dataRepository);
+        }
+        return new BufferedDataTable(table, dataRepository.generateNewID(), dataRepository);
     }
 
     private BufferedDataTable(final KnowsRowCountTable table, final int id,
@@ -990,7 +992,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      *
      * @noimplement This interface is not intended to be implemented by clients.
      */
-    public static interface KnowsRowCountTable extends DataTable {
+    public interface KnowsRowCountTable extends DataTable {
         /**
          * Row count of the table.
          * @return The row count.
@@ -1030,7 +1032,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         /** Overridden to narrow return type to closeable iterator.
          * {@inheritDoc} */
         @Override
-        public CloseableRowIterator iterator();
+        CloseableRowIterator iterator();
 
         /**
          * @return {@link RowCursor} to access rows of a table.
