@@ -47,8 +47,8 @@ package org.knime.core.data;
 
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.IntSupplier;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.knime.core.data.container.ColumnRearranger;
@@ -343,7 +343,7 @@ public interface TableBackend {
      * @since 5.4
      */
     void chunked(ExecutionContext exec, BufferedDataTable table, long chunkSize,
-        IntSupplier tableIdSupplier, Consumer<RowBatch> batchConsumer) throws CanceledExecutionException;
+        IntSupplier tableIdSupplier, Predicate<RowBatch> batchConsumer) throws CanceledExecutionException;
 
     /**
      * Replaces the spec of the input table.

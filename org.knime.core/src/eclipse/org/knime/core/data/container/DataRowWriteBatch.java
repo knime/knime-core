@@ -82,7 +82,7 @@ public final class DataRowWriteBatch implements WriteBatch {
     public DataRowWriteBatch(final DataTableSpec spec) {
         final var schema =
             ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
-        m_row = new BufferedRowWrite(m_buffer::add, schema);
+        m_row = new BufferedRowWrite(schema);
         m_spec = spec;
     }
 
@@ -98,7 +98,7 @@ public final class DataRowWriteBatch implements WriteBatch {
 
     private void commitIfNecessary() {
         if (m_needsCommit) {
-            m_row.commit();
+            m_buffer.add(m_row.materializeDataRow());
             m_needsCommit = false;
         }
     }

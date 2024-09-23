@@ -53,9 +53,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.function.IntUnaryOperator;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -226,10 +226,12 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
-        final IntSupplier tableIdSupplier, final Consumer<RowBatch> consumer) throws CanceledExecutionException {
+        final IntSupplier tableIdSupplier, final Predicate<RowBatch> consumer) throws CanceledExecutionException {
         try (final var supplier = new ChunkingCursorSupplier(exec, table, chunkSize)) {
             while (supplier.hasNext()) {
-                consumer.accept(supplier.next());
+                if (!consumer.test(supplier.next())) {
+                    break;
+                }
             }
         }
     }

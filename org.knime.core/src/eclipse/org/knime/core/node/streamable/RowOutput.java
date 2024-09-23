@@ -166,10 +166,8 @@ public abstract class RowOutput extends PortOutput {
      * @since 2.12
      */
     public void setFully(final BufferedDataTable table) throws InterruptedException {
-        try (final var in = table.cursor(); final var out = asWriteCursor(table.getSpec())) {
-            while (in.canForward()) {
-                out.forward().setFrom(in.forward());
-            }
+        for (DataRow r : table) {
+            push(r);
         }
         close();
     }
