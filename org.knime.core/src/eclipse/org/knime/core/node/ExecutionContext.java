@@ -53,6 +53,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.knime.core.data.DataTable;
@@ -72,6 +73,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -665,6 +667,11 @@ public class ExecutionContext extends ExecutionMonitor {
         return Stream.of(tableSlices)//
                 .map(this::wrapTableFromBackend)
                 .toArray(BufferedDataTable[]::new);
+    }
+
+    void chunked(final BufferedDataTable table,
+        final long chunkSize, final Consumer<RowBatch> batchConsumer) throws CanceledExecutionException {
+        getTableBackend().chunked(this, table, chunkSize, m_dataRepository::generateNewID, batchConsumer);
     }
 
     private BufferedDataTable wrapTableFromBackend(final KnowsRowCountTable table) {

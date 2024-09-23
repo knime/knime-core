@@ -47,6 +47,7 @@ package org.knime.core.data;
 
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 
@@ -56,6 +57,7 @@ import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -314,19 +316,34 @@ public interface TableBackend {
         throws CanceledExecutionException;
 
     /**
-     * Slices the input table according to the provided TableFilter. Example: The table filter defines a column
-     * selection of 2, 5 and 7 and defines a row range from 1000 to 1005, then the sliced table will have 3 columns and
-     * 6 rows (the to index in TableFilter is inclusive).
+     * Slices the input table according to the provided {@link Selection slices}. Example: The selection defines a
+     * column selection of 2, 5 and 7 and defines a row range from 1000 to 1005, then the sliced table will have
+     * 3 columns and 5 rows.
      *
      * @param exec for reporting progress and the potential creation of tables
      * @param table to slice
-     * @param slice the definition of the slice
+     * @param slices the definition of the slices
      * @param tableIdSupplier provides IDs for potentially created ContainerTables
      * @return the sliced table
      * @since 5.3
      */
     KnowsRowCountTable[] slice(ExecutionContext exec, BufferedDataTable table, Selection[] slices,
         IntSupplier tableIdSupplier);
+
+    /**
+     * Chunks the table into cursors according to the given chunk size (the last chunk may be smaller).
+     * In contrast to {@link #slice(ExecutionContext, BufferedDataTable, Selection[], IntSupplier)}
+     *
+     * @param exec for reporting progress and
+     * @param table
+     * @param chunkSize
+     * @param tableIdSupplier
+     * @param batchConsumer consumer of produced row batches
+     * @throws CanceledExecutionException
+     * @since 5.4
+     */
+    void chunked(ExecutionContext exec, BufferedDataTable table, long chunkSize,
+        IntSupplier tableIdSupplier, Consumer<RowBatch> batchConsumer) throws CanceledExecutionException;
 
     /**
      * Replaces the spec of the input table.
