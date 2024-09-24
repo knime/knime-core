@@ -48,6 +48,10 @@
  */
 package org.knime.core.node.workflow.virtual.parchunk;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Predicate;
+
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
@@ -127,46 +131,40 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
         }
     }
 
-    /**
-     * @return number of executed chunks
-     */
-    public int nrExecutedChunks() {
-        int count = 0;
-        for (int i = 0; i < m_chunks.length; i++) {
-            ParallelizedChunkContent pcc = m_chunks[i];
-            if (pcc.isExecuted()) {
+    private int numberOfChunksMatching(final Predicate<ParallelizedChunkContent> condition) {
+        if (Arrays.stream(m_chunks).anyMatch(Objects::isNull)) {
+            throw new IllegalStateException("Chunks have been cleaned up already, "
+                + "please re-execute the start node.");
+        }
+        var count = 0;
+        for (var i = 0; i < m_chunks.length; i++) {
+            final ParallelizedChunkContent pcc = m_chunks[i];
+            if (pcc != null && condition.test(pcc)) {
                 count++;
             }
         }
         return count;
+    }
+
+    /**
+     * @return number of executed chunks
+     */
+    public int nrExecutedChunks() {
+        return numberOfChunksMatching(ParallelizedChunkContent::isExecuted);
     }
 
     /**
      * @return number of executing chunks
      */
     public int nrExecutingChunks() {
-        int count = 0;
-        for (int i = 0; i < m_chunks.length; i++) {
-            ParallelizedChunkContent pcc = m_chunks[i];
-            if (pcc.executionInProgress()) {
-                count++;
-            }
-        }
-        return count;
+        return numberOfChunksMatching(ParallelizedChunkContent::executionInProgress);
     }
 
     /**
      * @return number of failed (==IDLE) chunks
      */
     public int nrFailedChunks() {
-        int count = 0;
-        for (int i = 0; i < m_chunks.length; i++) {
-            ParallelizedChunkContent pcc = m_chunks[i];
-            if ((!pcc.executionInProgress()) && (!pcc.isExecuted())) {
-                count++;
-            }
-        }
-        return count;
+        return numberOfChunksMatching(pcc -> !pcc.executionInProgress() && !pcc.isExecuted());
     }
 
     /**
