@@ -170,7 +170,7 @@ public final class NodeLogger {
      * @since 5.4
      */
     public void warn(final Throwable thrw) {
-        log(Level.WARN, thrw.getMessage(), thrw);
+        log(Level.WARN, thrw != null ? thrw.getMessage() : null, thrw);
     }
 
     /**
@@ -199,7 +199,7 @@ public final class NodeLogger {
      * @since 5.4
      */
     public void debug(final Throwable thrw) {
-        log(Level.DEBUG, thrw.getMessage(), thrw);
+        log(Level.DEBUG, thrw != null ? thrw.getMessage() : null, thrw);
     }
 
     /**
@@ -301,7 +301,7 @@ public final class NodeLogger {
      * @since 5.4
      */
     public void info(final Throwable thrw) {
-        log(Level.INFO, thrw.getMessage(), thrw);
+        log(Level.INFO, thrw != null ? thrw.getMessage() : null, thrw);
     }
 
     /**
@@ -330,7 +330,7 @@ public final class NodeLogger {
      * @since 5.4
      */
     public void error(final Throwable thrw) {
-        log(Level.ERROR, thrw.getMessage(), thrw);
+        log(Level.ERROR, thrw != null ? thrw.getMessage() : null, thrw);
     }
 
     /**
@@ -359,7 +359,7 @@ public final class NodeLogger {
      * @since 5.4
      */
     public void fatal(final Throwable thrw) {
-        log(Level.FATAL, thrw.getMessage(), thrw);
+        log(Level.FATAL, thrw != null ? thrw.getMessage() : null, thrw);
     }
 
     /**

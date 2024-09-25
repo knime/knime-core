@@ -215,7 +215,7 @@ final class LogBuffer {
      */
     void log(final Level level, final String name, final Object msg, final Throwable cause) {
         m_logBuffer.add(new BufferedLogMessage(Instant.now(), Objects.requireNonNull(name),
-            Objects.requireNonNull(level), Objects.requireNonNull(msg), cause));
+            Objects.requireNonNull(level), Objects.requireNonNullElse(msg, ""), cause));
     }
 
 }

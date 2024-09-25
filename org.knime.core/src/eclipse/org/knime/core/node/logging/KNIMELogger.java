@@ -899,7 +899,7 @@ public final class KNIMELogger {
      * Log the message at the specified level.
      *
      * @param level level to log under
-     * @param message message to log
+     * @param message nullable message to log
      * @param cause optional cause for the log message
      * @param considerWFDirAppenders whether or not to consider workflow directory appenders
      */
