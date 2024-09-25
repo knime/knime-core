@@ -110,6 +110,18 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
     }
 
     /**
+     * Returns true if any the stored chunks have already been nullified,
+     * i.e. the chunking is done and chunks were cleaned up.
+     *
+     * @return whether the master is chunk and chunks have been cleaned up
+     * @see #cleanupChunks()
+     * @since 5.4
+     */
+    public boolean hasClearedChunks() {
+        return Arrays.stream(m_chunks).anyMatch(Objects::isNull);
+    }
+
+    /**
      * @param i index
      * @return chunk of given index
      */
@@ -132,10 +144,6 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
     }
 
     private int numberOfChunksMatching(final Predicate<ParallelizedChunkContent> condition) {
-        if (Arrays.stream(m_chunks).anyMatch(Objects::isNull)) {
-            throw new IllegalStateException("Chunks have been cleaned up already, "
-                + "please re-execute the start node.");
-        }
         var count = 0;
         for (var i = 0; i < m_chunks.length; i++) {
             final ParallelizedChunkContent pcc = m_chunks[i];
@@ -174,7 +182,7 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
         synchronized (m_chunks) {
             for (int i = 0; i < m_chunks.length; i++) {
                 ParallelizedChunkContent pbc = m_chunks[i];
-                if (pbc.executionInProgress()) {
+                if (pbc != null && pbc.executionInProgress()) {
                     pbc.cancelExecution();
                 }
             }
