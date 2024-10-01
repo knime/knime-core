@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
@@ -190,8 +191,9 @@ public final class DataColumnSpec {
         final DataColumnMetaDataManager metaData) {
 
         final String nullError = "Do not init DataColumnSpec with null arguments!";
-        List<String> elNamesAsList = Collections.unmodifiableList(
-            Arrays.asList(CheckUtils.checkArgumentNotNull(elNames, nullError)));
+        CheckUtils.checkArgumentNotNull(elNames, nullError);
+        List<String> elNamesAsList = ArrayUtils.isEmpty(elNames) ? Collections.emptyList()
+            : Collections.unmodifiableList(Arrays.asList(elNames));
         CheckUtils.checkArgument(!elNamesAsList.contains(null), "Element names must not contain null elements");
 
         m_name = CheckUtils.checkArgumentNotNull(name, nullError);

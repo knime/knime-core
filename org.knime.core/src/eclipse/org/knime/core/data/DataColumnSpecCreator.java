@@ -60,6 +60,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.IntPredicate;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
@@ -579,8 +580,7 @@ public final class DataColumnSpecCreator {
      * @return newly created <code>DataColumnSpec</code>
      */
     public DataColumnSpec createSpec() {
-        String[] elNames =
-            m_elementNames == null ? new String[0] : m_elementNames;
+        String[] elNames = Objects.requireNonNullElse(m_elementNames, ArrayUtils.EMPTY_STRING_ARRAY);
         return new DataColumnSpec(m_name, elNames, m_type, m_domain, m_properties, m_sizeHandler, m_colorHandler,
             m_shapeHandler, m_valueFormatHandler, m_filterHandler, m_metaDataCreator.create());
     }
