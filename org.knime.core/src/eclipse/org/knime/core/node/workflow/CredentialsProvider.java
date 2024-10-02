@@ -83,8 +83,8 @@ public final class CredentialsProvider {
      */
     public static final CredentialsProvider EMPTY_CREDENTIALS_PROVIDER = new CredentialsProvider();
 
-    private final NodeContainer m_client;
-    private final CredentialsStore m_store;
+    private NodeContainer m_client;
+    private CredentialsStore m_store;
 
     /** Creates new provider for a given node container and a store to read
      * from.
@@ -185,6 +185,17 @@ public final class CredentialsProvider {
         if (m_store != null) {
             m_store.clearClient(m_client);
         }
+    }
+
+    /**
+     * Clears references, after calling this method this object is not usable anymore.
+     * @since 5.4
+     */
+    // added as part of AP-23380
+    void cleanup() {
+        clearClientHistory();
+        m_client = null;
+        m_store = null;
     }
 
     /** {@inheritDoc} */

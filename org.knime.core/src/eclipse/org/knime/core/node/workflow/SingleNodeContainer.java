@@ -607,6 +607,15 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @param isLoopRestart See {@link Node#cleanOutPorts(boolean)}. */
     abstract void cleanOutPorts(final boolean isLoopRestart);
 
+    @Override
+    void cleanup() {
+        super.cleanup();
+        final var credentialsProvider = getCredentialsProvider();
+        if (credentialsProvider != null) {
+            credentialsProvider.cleanup();
+        }
+    }
+
     /** Enable (or disable) queuing of underlying node for execution. This
      * really only changes the state of the node. If flag==true and when all
      * pre-conditions for execution are fulfilled (e.g. configuration succeeded
@@ -1225,6 +1234,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 // no change
                 return;
             }
+            oldProvider.cleanup();
         }
         performSetCredentialsProvider(new CredentialsProvider(this, store));
     }
