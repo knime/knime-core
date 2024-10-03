@@ -117,6 +117,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.knime.core.data.container.DataContainerSettings;
+import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -242,6 +243,11 @@ public final class WorkflowManager extends NodeContainer
 
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowManager.class);
+
+    private static final InstanceCounter<WorkflowManager> PROJECT_COUNTER =
+            InstanceCounter.register(WorkflowManager.class, "project");
+    private static final InstanceCounter<WorkflowManager> NO_PROJECT_COUNTER =
+            InstanceCounter.register(WorkflowManager.class, "no project");
 
     /**
      * Name of this workflow (usually displayed at top of the node figure). May be null to use name of workflow
@@ -484,6 +490,7 @@ public final class WorkflowManager extends NodeContainer
             // otherwise we may have incoming and/or outgoing dependencies...
             m_workflowContext = context;
         }
+        (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         m_dataRepository = dataRepositoryOptional.orElseGet(() -> new WorkflowDataRepository());
         m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
@@ -566,6 +573,7 @@ public final class WorkflowManager extends NodeContainer
         } else {
             workflowContext = null;
         }
+        (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         m_workflowContext = workflowContext;
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
@@ -658,6 +666,7 @@ public final class WorkflowManager extends NodeContainer
                 : new WorkflowDataRepository();
             m_workflowContext = null;
         }
+        (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
     }
 

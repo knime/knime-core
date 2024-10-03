@@ -51,6 +51,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.lang.ref.Cleaner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,6 +65,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -384,6 +386,16 @@ public final class ThreadUtils {
         }
     }
 
+    private static final AtomicInteger CLEANER_THREAD_FACTORY_COUNTER = new AtomicInteger(0);
+
+    // singleton cleaner. Logs errors without workflow context information (since called from GC)
+    private static final Cleaner CLEANER = Cleaner.create(r -> {
+        final var thread = new Thread(r, "KNIME-Cleaner-" + CLEANER_THREAD_FACTORY_COUNTER.getAndIncrement());
+        thread.setUncaughtExceptionHandler((t, e) -> logger.warn("Error in KNIME cleaner: " + e.getMessage(), e));
+        thread.setDaemon(true);
+        return thread;
+    });
+
     /**
      * Creates a {@link Runnable} that carries the current {@link NodeContext} with it. The context is set before the
      * original {@link Runnable} is executed and removed again in the end. This is useful if a {@link Runnable} is
@@ -525,6 +537,16 @@ public final class ThreadUtils {
                 runnable.run();
             }
         };
+    }
+
+    /**
+     * Access to a singleton {@link Cleaner} instance that is used within KNIME AP. Possible exceptions are logged
+     * without workflow context information to the KNIME log.
+     * @return A singleton {@link Cleaner} instance.
+     * @since 5.4
+     */
+    public static Cleaner cleaner() {
+        return CLEANER;
     }
 
     /**

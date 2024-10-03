@@ -64,6 +64,7 @@ import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.node.AbstractNodeView.ViewableModel;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
@@ -215,6 +216,8 @@ public abstract class NodeModel implements ViewableModel {
 //        return m_nodeConfiguration;
 //    }
 
+    private static final InstanceCounter<NodeModel> INSTANCE_COUNTER = InstanceCounter.register(NodeModel.class);
+
     /**
      * The node logger for this class; do not make static to make sure the right
      * class name is printed in messages.
@@ -276,6 +279,7 @@ public abstract class NodeModel implements ViewableModel {
     protected NodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
         // create logger
         m_logger = NodeLogger.getLogger(this.getClass());
+        INSTANCE_COUNTER.track(this); // NOSONAR (partially constructed instance)
 
         // init message listener array
         m_warningListeners = new CopyOnWriteArraySet<NodeModelWarningListener>();

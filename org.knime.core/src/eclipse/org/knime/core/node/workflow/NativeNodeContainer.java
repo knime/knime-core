@@ -68,6 +68,7 @@ import org.knime.core.data.filestore.internal.LoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NestedLoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
+import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -126,6 +127,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NativeNodeContainer.class);
 
+    private static final InstanceCounter<NativeNodeContainer> INSTANCE_COUNTER =
+        InstanceCounter.register(NativeNodeContainer.class);
+
     /** underlying node. */
     private final Node m_node;
 
@@ -162,6 +166,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         super(parent, id);
         m_node = n;
         setPortNames();
+        INSTANCE_COUNTER.track(this); // NOSONAR
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
@@ -182,6 +187,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 + " did not provide Node instance for "
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
         setPortNames();
+        INSTANCE_COUNTER.track(this); // NOSONAR
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
@@ -199,6 +205,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
             def.getNodeName(), getClass().getSimpleName(), id);
         setPortNames();
+        INSTANCE_COUNTER.track(this); // NOSONAR
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
