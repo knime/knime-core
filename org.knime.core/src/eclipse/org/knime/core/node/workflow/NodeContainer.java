@@ -1353,8 +1353,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /** The input stack associated with this node - for ordinary nodes this is the the merged stack of the input
      * (ignoring any variables pushed by the node itself), for workflows this is the workflow variable "stack".
-     * @return The stack, usually not null when used in "normal operation" (possible TODO: unset the stack when node
-     * is reset).
+     * @return The stack, usually not null when used in "normal operation".
      * @since 3.1 */
     public abstract FlowObjectStack getFlowObjectStack();
 

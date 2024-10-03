@@ -5202,6 +5202,7 @@ public final class WorkflowManager extends NodeContainer
     /** Reset node and notify listeners. */
     private void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
         assert m_workflowLock.isHeldByCurrentThread();
+        createAndSetFlowObjectStackFor(snc, new FlowObjectStack[] {}); // AP-21890
         snc.rawReset();
         snc.getNodeTimer().resetNode();
         if (snc.isModelCompatibleTo(LoopStartNode.class)) {
