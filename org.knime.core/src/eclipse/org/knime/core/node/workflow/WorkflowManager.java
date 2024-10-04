@@ -9141,6 +9141,13 @@ public final class WorkflowManager extends NodeContainer
         for (Map.Entry<Integer, ? extends NodeContainerPersistor> nodeEntry : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
+            final var pers = nodeEntry.getValue();
+            final var metaPersistor = pers.getMetaPersistor();
+            final var ncRefDir = metaPersistor.getNodeContainerDirectory();
+            if (!canModifyStructure()) {
+                final var name = ncRefDir != null ? ("\"" + ncRefDir.getFile().getName() + "\"") : "node container";
+                CheckUtils.checkState(false, "Cannot load %s into workflow since execution is in progress", name);
+            }
 
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
@@ -9149,11 +9156,8 @@ public final class WorkflowManager extends NodeContainer
                 if (m_workflow.containsNodeKey(subId)) {
                     subId = m_workflow.createUniqueID();
                 }
-                NodeContainerPersistor pers = nodeEntry.getValue();
                 translationMap.put(suffix, subId);
                 NodeContainer container = pers.getNodeContainer(this, subId);
-                NodeContainerMetaPersistor metaPersistor = pers.getMetaPersistor();
-                ReferencedFile ncRefDir = metaPersistor.getNodeContainerDirectory();
                 if (ncRefDir != null) {
                     // the nc dir is in the deleted locations list if the node was deleted and is now restored (undo)
                     deletedFilesInNCDir.remove(ncRefDir);
