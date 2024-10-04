@@ -861,7 +861,7 @@ public final class WorkflowManager extends NodeContainer
         final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
         CheckUtils.checkArgument(nodeIDSuffix >= -1, "Suffix must be -1 or larger or equal to 0: %d", nodeIDSuffix);
         try (WorkflowLock lock = lock()) {
-            CheckUtils.checkState(canModifyStructure(), "Cannot add node to %s at this time (execution in progress)",
+            CheckUtils.checkState(canModifyStructure(), "Cannot add new node to \"%s\" since execution is in progress",
                 getNameWithID());
             final NodeID id;
             if (nodeIDSuffix >= 0) {
@@ -1224,7 +1224,8 @@ public final class WorkflowManager extends NodeContainer
             CheckUtils.checkState(isNewProject, "Children of ROOT workflow manager must have 'isProject' flag set");
         }
         CheckUtils.checkState(!(isNewProject && hasPorts), "Projects must not have ports");
-        CheckUtils.checkState(canModifyStructure(), "Cannot add nodes/subnodes to workflow (in execution?)");
+        CheckUtils.checkState(canModifyStructure(),
+            "Cannot add new metanodes or components to the workflow since execution is in progress");
         NodeID newID;
         WorkflowManager wfm;
         try (WorkflowLock lock = lock()) {
@@ -8398,12 +8399,12 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowCopyContent paste(final WorkflowPersistor persistor) {
         try (WorkflowLock lock = lock()) {
-            CheckUtils.checkState(canModifyStructure(), "Can't currently paste into workflow");
+            CheckUtils.checkState(canModifyStructure(), "Cannot paste into workflow since execution is in progress");
             try {
-                return loadContent(persistor, new HashMap<Integer, BufferedDataTable>(), new FlowObjectStack(getID()),
+                return loadContent(persistor, new HashMap<>(), new FlowObjectStack(getID()),
                     new ExecutionMonitor(), new LoadResult("Paste into Workflow"), false);
             } catch (CanceledExecutionException e) {
-                throw new IllegalStateException("Cancelation although no access" + " on execution monitor");
+                throw new IllegalStateException("Cancelation although no access on execution monitor");
             }
         }
     }
@@ -8416,7 +8417,7 @@ public final class WorkflowManager extends NodeContainer
      */
     public WorkflowCopyContent paste(final DefClipboardContent content) {
         try (WorkflowLock lock = lock()) {
-            CheckUtils.checkState(canModifyStructure(), "Can't currently paste into workflow");
+            CheckUtils.checkState(canModifyStructure(), "Cannot paste into workflow since execution is in progress");
             try {
                 var defClipboardContent = DefClipboard.getInstance().getContent();
                 // compare payload identifiers, if they match the global DefClipboard contains everything
@@ -9148,7 +9149,6 @@ public final class WorkflowManager extends NodeContainer
 
         for (Map.Entry<Integer, ? extends NodeContainerPersistor> nodeEntry : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
-            NodeID subId = new NodeID(getID(), suffix);
             final var pers = nodeEntry.getValue();
             final var metaPersistor = pers.getMetaPersistor();
             final var ncRefDir = metaPersistor.getNodeContainerDirectory();
@@ -9161,6 +9161,7 @@ public final class WorkflowManager extends NodeContainer
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster environment)
             try (WorkflowLock lock = lock()) {
+                var subId = new NodeID(getID(), suffix);
                 if (m_workflow.containsNodeKey(subId)) {
                     subId = m_workflow.createUniqueID();
                 }
