@@ -64,8 +64,14 @@ import org.knime.core.data.DataTable;
  */
 public interface RowBatch extends DataTable {
 
+    /**
+     * @return the number of rows in this batch
+     */
     long size();
 
+    /**
+     * @return a cursor over the rows in this batch
+     */
     RowCursor cursor();
 
 }
