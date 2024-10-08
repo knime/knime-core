@@ -98,22 +98,29 @@ public class HiLiteTranslatorTest {
             }
         });
         var toHiLiteHandler = new HiLiteHandler();
+        var toHiLiteHandler2 = new HiLiteHandler();
         translator.addToHiLiteHandler(toHiLiteHandler);
+        translator.addToHiLiteHandler(toHiLiteHandler2);
 
         var testHiLiteListener = new TestHiLiteListener();
+        var testHiLiteListener2 = new TestHiLiteListener();
         toHiLiteHandler.addHiLiteListener(testHiLiteListener);
+        toHiLiteHandler2.addHiLiteListener(testHiLiteListener2);
         var fromHiLiteHandler = translator.getFromHiLiteHandler();
 
         /* downstream events */
 
         fromHiLiteHandler.fireHiLiteEvent(new KeyEvent(new Object(), rowKey1), async);
         assertListener(testHiLiteListener, rowKey2, async);
+        assertListener(testHiLiteListener2, rowKey2, async);
 
         fromHiLiteHandler.fireUnHiLiteEvent(new KeyEvent(new Object(), rowKey1), async);
         assertListener(testHiLiteListener, rowKey2, async);
+        assertListener(testHiLiteListener2, rowKey2, async);
 
         fromHiLiteHandler.fireClearHiLiteEvent(new KeyEvent(new Object(), rowKey1), async);
         assertListener(testHiLiteListener, rowKey2, async);
+        assertListener(testHiLiteListener2, rowKey2, async);
 
         /* upstream events */
 

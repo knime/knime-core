@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.property.hilite;
 
+import static org.knime.core.node.property.hilite.HiLiteTranslator.FORCE_SYNC_FIRE;
+
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -600,11 +602,19 @@ public class HiLiteHandler {
         if (async) {
             ViewUtils.runOrInvokeLaterInEDT(r);
         } else {
+            // Only allow the flag to be removed again by the 'setter'.
+            // Otherwise it will be removed too early since this method is called recursively.
+            var removeForceSyncFireFlag = false;
             try {
-                HiLiteTranslator.FORCE_SYNC_FIRE.set(Boolean.TRUE);
+                if (FORCE_SYNC_FIRE.get() == null) {
+                    FORCE_SYNC_FIRE.set(Boolean.TRUE);
+                    removeForceSyncFireFlag = true;
+                }
                 r.run();
             } finally {
-                HiLiteTranslator.FORCE_SYNC_FIRE.remove();
+                if (removeForceSyncFireFlag) {
+                    FORCE_SYNC_FIRE.remove();
+                }
             }
         }
     }
