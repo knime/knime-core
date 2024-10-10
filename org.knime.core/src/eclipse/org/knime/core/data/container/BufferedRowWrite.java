@@ -48,10 +48,9 @@
  */
 package org.knime.core.data.container;
 
-import java.util.function.Consumer;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.RowKeyValue;
 import org.knime.core.data.v2.DataRowRowRead;
@@ -70,20 +69,16 @@ import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
 
 /**
- * <p>Implementation of row write that writes data into a consumer of {@link DataRow}s.
+ * <p>Implementation of row write that buffers writes and offers to produce {@link DataRow}s with the current
+ * buffered contents, invalidating its buffer in the process.
  *
  * <p>This particular implementation allows setting the data row very cheaply via {@link #setFrom(RowRead)},
  * if the passed row read is a {@link DataRowRowRead}, i.e. it is already only a wrapper around a data row.
  *
- * <p><b>Important:</b> if changes to this write via its setters should be reflected in the data row consumer,
- *   {@link #commit()} <b>must</b> be called.
- *
  * @since 5.4
  */
 // extracted from DataRowContainer class in 5.4
-public final class BufferedRowWrite implements RowWrite {
-
-    private final Consumer<DataRow> m_consumer;
+public final class BufferedRowWrite implements RowWrite, RowRead {
 
     private final BufferedRowWrite.NullableReadValue[] m_readValues;
 
@@ -103,11 +98,9 @@ public final class BufferedRowWrite implements RowWrite {
     /**
      * Creates a new row write using the given value schema and data row consumer.
      *
-     * @param rowConsumer consumer of data rows written via this row write
      * @param schema schema to use for rows
      */
-    public BufferedRowWrite(final Consumer<DataRow> rowConsumer, final ValueSchema schema) {
-        m_consumer = rowConsumer;
+    public BufferedRowWrite(final ValueSchema schema) {
         int numFactories = schema.numFactories();
         // according to JavaDoc of `numFactories()`, this is "num columns + 1", so at least 1, even if we have no cols
         CheckUtils.checkState(numFactories >= 1,
@@ -181,41 +174,47 @@ public final class BufferedRowWrite implements RowWrite {
     }
 
     /**
-     * Commits this write's content to be reflected in the row consumer.
+     * {@inheritDoc}
+     *
+     * <p><b>Important:</b> After calling this method, the current buffer is reset.
      */
-    public void commit() {
-        if (!addRowIfSetViaSetFrom()) {
-            // TODO handle case where no row key is required?
-            if (m_readValues[0].isMissing()) {
-                throw new IllegalStateException("RowKey not set.");
-            }
-
-            DataCell[] cells = new DataCell[m_readValues.length - 1];
-            // We have to loop once to reset our VolatileAccesses after reading
-            for (int i = 1; i < m_readValues.length; i++) {
-                if (!m_readValues[i].isMissing()) {
-                    cells[i - 1] = m_readValues[i].getDataCell();
-
-                    // invalidate for next iteration
-                    m_readValues[i].setMissing();
-                    m_forcedMissings[i] = false;
-                } else {
-                    cells[i - 1] = BufferedRowContainer.MISSING_CELL;
-                }
-            }
-            // cells are copied in row, BlobSupportDataRow because it saves one row creation in the Buffer class
-            m_consumer.accept(new BlobSupportDataRow(new RowKey(m_rowKeyReadValue.getString()), cells));
+    @Override
+    public DataRow materializeDataRow() {
+        final var rowViaSetFrom = addRowIfSetViaSetFrom();
+        if (rowViaSetFrom != null) {
+            return rowViaSetFrom;
         }
+        // TODO handle case where no row key is required?
+        if (m_readValues[0].isMissing()) {
+            throw new IllegalStateException("RowKey not set.");
+        }
+
+        DataCell[] cells = new DataCell[m_readValues.length - 1];
+        // We have to loop once to reset our VolatileAccesses after reading
+        for (int i = 1; i < m_readValues.length; i++) {
+            if (!m_readValues[i].isMissing()) {
+                cells[i - 1] = m_readValues[i].getDataCell();
+
+                // invalidate for next iteration
+                m_readValues[i].setMissing();
+                m_forcedMissings[i] = false;
+            } else {
+                cells[i - 1] = BufferedRowContainer.MISSING_CELL;
+            }
+        }
+        // cells are copied in row, BlobSupportDataRow because it saves one row creation in the Buffer class
+        return new BlobSupportDataRow(new RowKey(m_rowKeyReadValue.getString()), cells);
     }
 
     /**
      * Add a row to the table if it was set via {@link #setFrom(RowRead)}.
      *
      * @return {@code true} if a row was added, {@code false} otherwise (then the individual fields will be set).
+     * @throws X
      */
-    private boolean addRowIfSetViaSetFrom() {
+    private DataRow addRowIfSetViaSetFrom() {
         if (m_currentRowWhenCallingSetFrom == null) {
-            return false;
+            return null;
         }
         DataCell[] cellCopies = null;
         RowKey rowKey = null;
@@ -247,9 +246,8 @@ public final class BufferedRowWrite implements RowWrite {
                 m_forcedMissings[i] = false;
             }
         }
-        m_consumer.accept(row);
         m_currentRowWhenCallingSetFrom = null;
-        return true;
+        return row;
     }
 
     private static DataCell[] copyCells(final DataRow currentRowWhenCallingSetFrom) {
@@ -289,5 +287,20 @@ public final class BufferedRowWrite implements RowWrite {
             m_access.setMissing();
         }
 
+    }
+
+    @Override
+    public <D extends DataValue> D getValue(final int index) {
+        return (D) m_readValues[index + 1].getDelegate().getDataCell();
+    }
+
+    @Override
+    public boolean isMissing(final int index) {
+        return m_readValues[index + 1].isMissing();
+    }
+
+    @Override
+    public RowKeyValue getRowKey() {
+        return m_rowKeyReadValue;
     }
 }

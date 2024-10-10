@@ -76,8 +76,8 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
     private boolean m_needsCommit;
 
     BufferedRowContainer(final BufferedDataContainer delegate, final ValueSchema schema) {
-        m_row = new BufferedRowWrite(delegate::addRowToTable, schema);
         m_delegate = delegate;
+        m_row = new BufferedRowWrite(schema);
     }
 
     @Override
@@ -94,7 +94,7 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
 
     private void commitIfNecessary() {
         if (m_needsCommit) {
-            m_row.commit();
+            m_delegate.addRowToTable(m_row.materializeDataRow());
             m_needsCommit = false;
         }
     }

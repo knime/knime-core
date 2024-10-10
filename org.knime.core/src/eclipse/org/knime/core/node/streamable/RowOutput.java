@@ -98,13 +98,12 @@ public abstract class RowOutput extends PortOutput {
         private boolean m_closed;
         private final BufferedRowWrite m_rowWrite;
 
-        private DataRow m_next;
         private boolean m_needsCommit;
 
         public PushingRowWriteCursor(final DataTableSpec spec) {
             final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
                 new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
-            m_rowWrite = new BufferedRowWrite(row -> m_next = row, schema);
+            m_rowWrite = new BufferedRowWrite(schema);
         }
 
         @Override
@@ -120,9 +119,8 @@ public abstract class RowOutput extends PortOutput {
 
         private void commitIfNecessary() throws InterruptedException {
             if (m_needsCommit) {
-                m_rowWrite.commit();
+                push(m_rowWrite.materializeDataRow());
                 m_needsCommit = false;
-                push(m_next);
             }
         }
 
@@ -133,7 +131,6 @@ public abstract class RowOutput extends PortOutput {
                     commitIfNecessary();
                     RowOutput.this.close();
                     m_closed = true;
-                    m_next = null;
                 } catch (final InterruptedException e) { // NOSONAR exception is rethrown
                     throw ExceptionUtils.asRuntimeException(e);
                 }
