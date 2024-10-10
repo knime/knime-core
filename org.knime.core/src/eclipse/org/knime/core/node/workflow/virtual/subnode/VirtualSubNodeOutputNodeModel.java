@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -242,8 +243,14 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                     } else if (BufferedDataTable.TYPE.equals(inPortType)) {
                         final var input = (RowInput)inputs[i];
                         try (final var in = input.asCursor();
-                            final var output = exec.createRowContainer((DataTableSpec)inSpecs[i]);
-                            final var out = output.createCursor()) {
+                                final var output = exec.createRowContainer((DataTableSpec)inSpecs[i],
+                                    DataContainerSettings.builder() //
+                                        // output does not change any rows
+                                        .withCheckDuplicateRowKeys(false) //
+                                        // behavior from old call to ExecutionContext#createDataContainer(inSpec)
+                                        .withInitializedDomain(true) //
+                                        .build());
+                                final var out = output.createCursor()) {
                             while (in.canForward()) {
                                 out.forward().setFrom(in.forward());
                             }
