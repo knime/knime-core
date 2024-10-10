@@ -64,6 +64,7 @@ import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.table.access.BufferedAccesses;
 import org.knime.core.table.access.BufferedAccesses.BufferedAccess;
 import org.knime.core.table.access.ReadAccess;
@@ -108,6 +109,9 @@ public final class BufferedRowWrite implements RowWrite {
     public BufferedRowWrite(final Consumer<DataRow> rowConsumer, final ValueSchema schema) {
         m_consumer = rowConsumer;
         int numFactories = schema.numFactories();
+        // according to JavaDoc of `numFactories()`, this is "num columns + 1", so at least 1, even if we have no cols
+        CheckUtils.checkState(numFactories >= 1,
+                "Expected at least one value factory, was: %d".formatted(numFactories));
         m_readValues = new BufferedRowWrite.NullableReadValue[numFactories];
         m_writeValues = new WriteValue[numFactories];
         m_forcedMissings = new boolean[numFactories];
@@ -119,7 +123,7 @@ public final class BufferedRowWrite implements RowWrite {
             m_writeValues[i] = valueFactory.createWriteValue(access);
         }
 
-        m_rowKeyReadValue = (RowKeyReadValue)m_readValues[0].getDelegate();
+        m_rowKeyReadValue = (RowKeyReadValue)m_readValues[0].getDelegate(); // NOSONAR we have at least one factory
     }
 
     @Override
@@ -136,7 +140,7 @@ public final class BufferedRowWrite implements RowWrite {
 
     @Override
     public void setMissing(final int index) {
-    	// +1 to account for the row key
+        // +1 to account for the row key
         m_readValues[index + 1].setMissing();
         m_forcedMissings[index + 1] = true;
     }
@@ -160,7 +164,7 @@ public final class BufferedRowWrite implements RowWrite {
             m_forcedMissings[i] = false;
         }
         if (row instanceof DataRowRowRead dataRowRead) {
-        	// special case where the new table api is used but the workflow is using row backend,
+            // special case where the new table api is used but the workflow is using row backend,
             // eg. new row filter (in 5.3) copying input to output, see AP-23029
             m_currentRowWhenCallingSetFrom = dataRowRead.getDataRow();
         } else {
