@@ -121,23 +121,24 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
             @Override
             public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
                 assert inputs.length == 0;
-                PortObject[] inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
+                final var inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
                 for (int i = 0; i < outputs.length; i++) {
-                    if (BufferedDataTable.TYPE.equals(getOutPortType(i))) {
-                        // Only stream port content if it's data by using the
-                        // buffered data tables cursor.
-                        final var rowOutput = (RowOutput)outputs[i];
-                        final var table = ((BufferedDataTable)inputData[i]);
-                        try (final var in = table.cursor();
-                             final var out = rowOutput.asWriteCursor(table.getSpec())) {
-                            while (in.canForward()) {
-                                out.forward().setFrom(in.forward());
-                            }
-                        }
-
-                        rowOutput.close();
-                    } else {
+                    if (!BufferedDataTable.TYPE.equals(getOutPortType(i))) {
                         ((PortObjectOutput)outputs[i]).setPortObject(inputData[i]);
+                        continue;
+                    }
+                    // Only stream port content if it is data
+                    final var rowOutput = (RowOutput)outputs[i];
+                    final var table = ((BufferedDataTable)inputData[i]);
+                    try (final var in = table.cursor();
+                            final var out = rowOutput.asWriteCursor(table.getSpec())) {
+                        while (in.canForward()) {
+                            out.forward().setFrom(in.forward());
+                        }
+                    } finally {
+                        // these cursors can throw interrupted exceptions, so we have to make sure we close the output
+                        // even if this flies past us
+                        rowOutput.close();
                     }
                 }
             }
