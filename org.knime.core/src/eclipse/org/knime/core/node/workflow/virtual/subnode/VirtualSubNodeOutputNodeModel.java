@@ -240,25 +240,29 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                     final var inPortType = getInPortType(i);
                     if (inputs[i].isInactive()) {
                         inObjects[i] = InactiveBranchPortObject.INSTANCE;
-                    } else if (BufferedDataTable.TYPE.equals(inPortType)) {
-                        final var input = (RowInput)inputs[i];
-                        try (final var in = input.asCursor();
-                                final var output = exec.createRowContainer((DataTableSpec)inSpecs[i],
-                                    DataContainerSettings.builder() //
-                                        // output does not change any rows
-                                        .withCheckDuplicateRowKeys(false) //
-                                        // behavior from old call to ExecutionContext#createDataContainer(inSpec)
-                                        .withInitializedDomain(true) //
-                                        .build());
-                                final var out = output.createCursor()) {
-                            while (in.canForward()) {
-                                out.forward().setFrom(in.forward());
-                            }
-                            inObjects[i] = output.finish();
-                        }
-                        input.close();
-                    } else {
+                        continue;
+                    } else if (!BufferedDataTable.TYPE.equals(inPortType)) {
                         inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
+                        continue;
+                    }
+                    final var input = (RowInput)inputs[i];
+                    try (final var in = input.asCursor();
+                            final var output = exec.createRowContainer((DataTableSpec)inSpecs[i],
+                                DataContainerSettings.builder() //
+                                    // output does not change any rows
+                                    .withCheckDuplicateRowKeys(false) //
+                                    // behavior from old call to ExecutionContext#createDataContainer(inSpec)
+                                    .withInitializedDomain(true) //
+                                    .build());
+                            final var out = output.createCursor()) {
+                        while (in.canForward()) {
+                            out.forward().setFrom(in.forward());
+                        }
+                        inObjects[i] = output.finish();
+                    } finally {
+                        // these cursors can throw interrupted exceptions, so we have to make sure we close the
+                        // input even if this flies past us
+                        input.close();
                     }
                 }
                 setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
