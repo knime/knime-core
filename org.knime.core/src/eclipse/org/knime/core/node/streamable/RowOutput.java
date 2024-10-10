@@ -78,7 +78,7 @@ public abstract class RowOutput extends PortOutput {
      * @since 5.4
      */
     public InterruptibleRowWriteCursor asWriteCursor(final DataTableSpec spec) {
-        return new PushingRowWriteCursor(spec);
+        return new FallbackWriteCursor(spec);
     }
 
     /**
@@ -86,6 +86,10 @@ public abstract class RowOutput extends PortOutput {
      * methods may throw an undeclared {@link InterruptedException} from underlying calls.
      *
      * @since 5.4
+     *
+     * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+     *
+     * @noreference This interface is not intended to be referenced by clients.
      */
     public interface InterruptibleRowWriteCursor extends RowWriteCursor {
     }
@@ -93,14 +97,14 @@ public abstract class RowOutput extends PortOutput {
     /**
      * Default implementation that just delegates to the {@link #push()} method.
      */
-    private final class PushingRowWriteCursor implements InterruptibleRowWriteCursor {
+    private final class FallbackWriteCursor implements InterruptibleRowWriteCursor {
 
         private boolean m_closed;
         private final BufferedRowWrite m_rowWrite;
 
         private boolean m_needsCommit;
 
-        public PushingRowWriteCursor(final DataTableSpec spec) {
+        public FallbackWriteCursor(final DataTableSpec spec) {
             final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
                 new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
             m_rowWrite = new BufferedRowWrite(schema);
@@ -162,8 +166,10 @@ public abstract class RowOutput extends PortOutput {
      * @since 2.12
      */
     public void setFully(final BufferedDataTable table) throws InterruptedException {
-        for (DataRow r : table) {
-            push(r);
+        try (final var in = table.cursor(); final var out = asWriteCursor(table.getSpec())) {
+            while (in.canForward()) {
+                out.forward().setFrom(in.forward());
+            }
         }
         close();
     }

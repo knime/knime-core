@@ -77,9 +77,8 @@ public abstract class RowInput extends PortInput {
      * @since 5.4
      */
     public InterruptibleRowCursor asCursor() {
-        return new PollingRowCursor();
+        return new FallbackRowCursor();
     }
-
 
     /**
      * An adapter for {@link RowInput}s whose {@link #canForward()}, {@link #forward()}, and {@link #getNumColumns()}
@@ -87,6 +86,11 @@ public abstract class RowInput extends PortInput {
      * (e.g. to {@link RowInput#poll()}).
      *
      * @since 5.4
+     *
+     * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
+     *
+     * @noreference This interface is not intended to be referenced by clients.
+     * @noextend This interface is not intended to be extended by clients.
      */
     public interface InterruptibleRowCursor extends RowCursor {
     }
@@ -95,7 +99,7 @@ public abstract class RowInput extends PortInput {
      * Default implementation that just delegates to the {@link #poll()} method.
      */
     @SuppressWarnings("javadoc")
-    private final class PollingRowCursor implements InterruptibleRowCursor {
+    private final class FallbackRowCursor implements InterruptibleRowCursor {
 
         private DataRow m_current;
 
@@ -105,7 +109,7 @@ public abstract class RowInput extends PortInput {
 
         private boolean m_closed;
 
-        private PollingRowCursor() {
+        private FallbackRowCursor() {
         }
 
         @Override
