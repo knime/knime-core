@@ -73,7 +73,6 @@ import org.knime.core.table.row.Selection;
  *
  * @since 4.3
  *
- * @noreference This interface is not intended to be referenced by clients.
  * @noextend This interface is not intended to be extended by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  *
@@ -126,6 +125,10 @@ public interface TableBackend {
      */
     default long getReservedOffHeapBytes() {
         return 0;
+    }
+
+    default void newIgnored() {
+        // test method, to be removed (AP-23020)
     }
 
     /**
