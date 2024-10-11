@@ -237,7 +237,10 @@ public final class WorkflowSegmentExecutor {
 
     /**
      * Executes the workflow segment and additionally returns a hierarchical list containing the error and warning
-     * messages of all nodes.
+     * messages of all nodes. Reset messages are filtered out if they don't contain nested error or warning messages.
+     * The method is used in
+     * org.knime.python3.nodes/src/main/java/org/knime/python3/nodes/ports/PythonWorkflowPortObject.java to construct an
+     * exception message for python nodes.
      *
      * @param inputData the input data to be used for execution
      * @param exec for cancellation
@@ -250,7 +253,8 @@ public final class WorkflowSegmentExecutor {
     public WorkflowSegmentExecutionResult executeWorkflowAndCollectNodeMessages(final PortObject[] inputData,
         final ExecutionContext exec) throws Exception {
         var executionResult = executeWorkflow(inputData, exec);
-        return new WorkflowSegmentExecutionResult(executionResult.getFirst(), executionResult.getSecond(), recursivelyExtractNodeMessages(m_wfm));
+        return new WorkflowSegmentExecutionResult(executionResult.getFirst(), executionResult.getSecond(),
+            recursivelyExtractNodeMessages(m_wfm));
     }
 
     private void checkWfmNonNull() {
@@ -269,13 +273,15 @@ public final class WorkflowSegmentExecutor {
             wfm = w;
         } else if (nc instanceof SubNodeContainer snc) {
             wfm = snc.getWorkflowManager();
+        } else {
+            throw new IllegalStateException("Received unexpected NodeContainer.");
         }
-        return wfm.getNodeContainers().stream().map(
-            n -> new WorkflowSegmentNodeMessage(n.getName(), n.getID(), n.getNodeMessage(), recursivelyExtractNodeMessages(n)))
-                .filter(msg -> (!msg.recursiveMessages().isEmpty()) ||
-                    (msg.message().getMessageType() == Type.ERROR) ||
-                    (msg.message().getMessageType() == Type.WARNING))
-                .toList();
+        return wfm.getNodeContainers().stream()
+            .map(n -> new WorkflowSegmentNodeMessage(n.getName(), n.getID(), n.getNodeMessage(),
+                recursivelyExtractNodeMessages(n)))
+            .filter(msg -> (!msg.recursiveMessages().isEmpty()) || (msg.message().getMessageType() == Type.ERROR)
+                || (msg.message().getMessageType() == Type.WARNING))
+            .toList();
     }
 
     /**
@@ -285,12 +291,14 @@ public final class WorkflowSegmentExecutor {
      * @param nodeName the node name
      * @param nodeID the node ID
      * @param message the error message of the node
-     * @param recursiveMessages a list of node messages for nested nodes if the node is a container,
-     *            otherwise an empty list
+     * @param recursiveMessages a list of node messages for nested nodes if the node is a container, otherwise an empty
+     *            list
      *
      * @since 5.4
      */
-    public record WorkflowSegmentNodeMessage(String nodeName, NodeID nodeID, NodeMessage message, List<WorkflowSegmentNodeMessage> recursiveMessages) {}
+    public record WorkflowSegmentNodeMessage(String nodeName, NodeID nodeID, NodeMessage message,
+        List<WorkflowSegmentNodeMessage> recursiveMessages) {
+    }
 
     /**
      * Represents the result of the executed workflow including a hierarchical list of the error and warning messages
@@ -302,7 +310,8 @@ public final class WorkflowSegmentExecutor {
      *
      * @since 5.4
      */
-    public record WorkflowSegmentExecutionResult(PortObject[] portObjectCopies, List<FlowVariable> flowVariables, List<WorkflowSegmentNodeMessage> nodeMessages) {
+    public record WorkflowSegmentExecutionResult(PortObject[] portObjectCopies, List<FlowVariable> flowVariables,
+        List<WorkflowSegmentNodeMessage> nodeMessages) {
         @Override
         public boolean equals(final Object obj) {
             if (this == obj) {
