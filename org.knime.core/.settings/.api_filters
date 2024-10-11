@@ -289,6 +289,49 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="java.lang.Iterable"/>
+                <message_argument value="iterator()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="org.knime.core.table.schema.ColumnarSchema"/>
+                <message_argument value="getSpec(int)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+            <message_arguments>
+                <message_argument value="hasRowID(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+            <message_arguments>
+                <message_argument value="renameToRandomColumnNames(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+            <message_arguments>
+                <message_argument value="selectColumns(ValueSchema, int[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateDataTableSpec(ValueSchema, DataTableSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateDataTableSpec(ValueSchema, Map&lt;Integer,DataColumnDomain&gt;, Map&lt;Integer,DataColumnMetaData[]&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/internal/CorePlugin.java" type="org.knime.core.internal.CorePlugin">
         <filter comment="new field, not sure why @since is not enough (binary incompatible?)" id="336658481">
             <message_arguments>
