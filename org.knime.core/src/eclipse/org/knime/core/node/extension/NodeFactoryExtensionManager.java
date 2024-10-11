@@ -110,14 +110,4 @@ public final class NodeFactoryExtensionManager {
             .map(nodeFactory -> (NodeFactory<? extends NodeModel>)nodeFactory);
     }
 
-    /**
-     * Added in 4.2 as implementation to {@link NodeFactory#addLoadedFactory(Class)}. Access discouraged and also
-     * deprecated as API in NodeFactory.
-     *
-     * @param factoryClass The factory to add
-     * @since 4.2
-     */
-    public void addLoadedFactory(final Class<? extends NodeFactory<NodeModel>> factoryClass) {
-        NodeFactoryProvider.getInstance().addLoadedFactory(factoryClass);
-    }
 }

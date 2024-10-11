@@ -348,6 +348,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeFactoryExtensionManager.java" type="org.knime.core.node.extension.NodeFactoryExtensionManager">
+        <filter comment="AP-23411 - removed hidden methods in deprecated classes, no matches in KNIME code (unlikely it's used by a 3rd party)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.extension.NodeFactoryExtensionManager"/>
+                <message_argument value="addLoadedFactory(Class&lt;? extends NodeFactory&lt;NodeModel&gt;&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/extension/NodeFactoryProvider.java" type="org.knime.core.node.extension.NodeFactoryProvider">
+        <filter comment="AP-23411 - removed hidden methods in deprecated classes, no matches in KNIME code (unlikely it's used by a 3rd party)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.extension.NodeFactoryProvider"/>
+                <message_argument value="addLoadedFactory(Class&lt;? extends NodeFactory&lt;NodeModel&gt;&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec">
         <filter comment="refactoring of internal API as part of NXT-2570" id="338722907">
             <message_arguments>

@@ -53,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,8 +64,9 @@ import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.context.NodeCreationConfiguration;
-import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.missing.MissingNodeFactory;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -266,7 +268,6 @@ public abstract class NodeFactory<T extends NodeModel> {
         // not been initialized
 
         addBundleInformation();
-        addLoadedFactory(getClass());
         m_initialized = true;
     }
 
@@ -739,17 +740,21 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Adds the given factory class to the list of loaded factory classes.
+     * Adds the given factory class to the list of loaded factory classes. As of version 5.4 this implementation is
+     * empty, only logging an error.
      *
      * @param factoryClass a factory class
      * @deprecated 3rd party contributions should register their nodes through KNIME's node extension point, possibly
      *             setting the "hidden" flag.
      */
-    @Deprecated
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) {
-        NodeFactoryProvider.getInstance() //
-            .addLoadedFactory((Class<? extends NodeFactory<NodeModel>>)factoryClass);
+    @Deprecated(forRemoval = true, since = "4.2")
+    @SuppressWarnings({"rawtypes"})
+    public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) { // NOSONAR (deprecation)
+        String pluginName = Optional.ofNullable(FrameworkUtil.getBundle(factoryClass)).map(Bundle::getSymbolicName)
+            .map(" (contributed by bundle \"%s\")"::formatted).orElse("");
+        NodeLogger.getLogger(NodeFactory.class).errorWithFormat("Method 'addLoadedFactory' is deprecated; static "
+            + "registration of factory class \"%s\"%s was ignored - to be registered via extension point",
+            factoryClass.getName(), pluginName);
     }
 
     /////////////////////////////////////////////////////////////

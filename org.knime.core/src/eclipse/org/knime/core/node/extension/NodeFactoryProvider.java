@@ -49,25 +49,23 @@
 package org.knime.core.node.extension;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
+import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.extension.NodeSpecCollectionProvider.Progress;
 import org.knime.core.node.util.CheckUtils;
 import org.osgi.framework.Bundle;
@@ -110,8 +108,6 @@ public final class NodeFactoryProvider {
      * </ul>
      */
     private Map<String, NodeSetFactoryExtension> m_factoryNameToNodeSetFactoryExtensionMap;
-
-    private Collection<Class<NodeFactory<NodeModel>>> m_loadedNodeFactories = new ConcurrentLinkedDeque<>();
 
     private NodeFactoryProvider() {
     }
@@ -161,11 +157,6 @@ public final class NodeFactoryProvider {
                 nodeSetFactoryExtension.getClassForFactoryClassName(factoryClassName);
             return Optional.of((NodeFactory<T>)classForFactoryClassName.newInstance());
         }
-        Optional<Class<NodeFactory<NodeModel>>> loadedNodeFactory = m_loadedNodeFactories.stream() //
-            .filter(f -> f.getClass().getName().equals(factoryClassName)).findFirst();
-        if (loadedNodeFactory.isPresent()) {
-            return Optional.of((NodeFactory<T>)loadedNodeFactory.get().newInstance());
-        }
         return Optional.empty();
     }
 
@@ -195,14 +186,6 @@ public final class NodeFactoryProvider {
         }
 
         return optFactory;
-    }
-
-    /**
-     * @param factoryClass
-     */
-    @SuppressWarnings("unchecked")
-    public void addLoadedFactory(final Class<? extends NodeFactory<NodeModel>> factoryClass) {
-        m_loadedNodeFactories.add((Class<NodeFactory<NodeModel>>)factoryClass);
     }
 
     /**
