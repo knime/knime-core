@@ -61,7 +61,7 @@ import org.knime.core.data.RowKeyValue;
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
-class WrapsDataRowRowRead implements DataRowRowRead {
+final class WrapsDataRowRowRead implements DataRowRowRead {
 
     private final Supplier<DataRow> m_currentRowSupplier;
     private final int m_numColumns;

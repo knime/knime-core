@@ -231,23 +231,31 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
     @Override
     public StreamableOperator createStreamableOperator(
         final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
-                    throws Exception {
-                final var inObjects = new PortObject[getNrInPorts()];
-                for (var i = 0; i < inObjects.length; i++) {
-                    final var inPortType = getInPortType(i);
-                    if (inputs[i].isInactive()) {
-                        inObjects[i] = InactiveBranchPortObject.INSTANCE;
-                        continue;
-                    } else if (!BufferedDataTable.TYPE.equals(inPortType)) {
-                        inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
-                        continue;
-                    }
+        return new VirtualSubNodeOutputOperator(inSpecs);
+    }
+
+    private final class VirtualSubNodeOutputOperator extends StreamableOperator {
+
+        private final PortObjectSpec[] m_inSpecs;
+
+        private VirtualSubNodeOutputOperator(final PortObjectSpec[] inSpecs) {
+            m_inSpecs = inSpecs;
+        }
+
+        @Override
+        public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec)
+                throws Exception {
+            final var inObjects = new PortObject[getNrInPorts()];
+            for (var i = 0; i < inObjects.length; i++) {
+                final var inPortType = getInPortType(i);
+                if (inputs[i].isInactive()) {
+                    inObjects[i] = InactiveBranchPortObject.INSTANCE;
+                } else  if (!BufferedDataTable.TYPE.equals(inPortType)) {
+                    inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
+                } else {
                     final var input = (RowInput)inputs[i];
                     try (final var in = input.asCursor();
-                            final var output = exec.createRowContainer((DataTableSpec)inSpecs[i],
+                            final var output = exec.createRowContainer((DataTableSpec)m_inSpecs[i],
                                 DataContainerSettings.builder() //
                                     // output does not change any rows
                                     .withCheckDuplicateRowKeys(false) //
@@ -265,9 +273,9 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
                         input.close();
                     }
                 }
-                setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
             }
-        };
+            setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
+        }
     }
 
     /**

@@ -117,32 +117,34 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel i
     @Override
     public StreamableOperator createStreamableOperator(final PartitionInfo partitionInfo,
             final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new StreamableOperator() {
-            @Override
-            public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
-                assert inputs.length == 0;
-                final var inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
-                for (int i = 0; i < outputs.length; i++) {
-                    if (!BufferedDataTable.TYPE.equals(getOutPortType(i))) {
-                        ((PortObjectOutput)outputs[i]).setPortObject(inputData[i]);
-                        continue;
+        return new VirtualSubNodeInputOperator();
+    }
+
+    private final class VirtualSubNodeInputOperator extends StreamableOperator {
+        @Override
+        public void runFinal(final PortInput[] inputs, final PortOutput[] outputs, final ExecutionContext exec) throws Exception {
+            assert inputs.length == 0;
+            final var inputData = ArrayUtils.remove(m_subNodeContainer.fetchInputData(exec), 0);
+            for (int i = 0; i < outputs.length; i++) {
+                if (!BufferedDataTable.TYPE.equals(getOutPortType(i))) {
+                    ((PortObjectOutput)outputs[i]).setPortObject(inputData[i]);
+                    continue;
+                }
+                // Only stream port content if it is data
+                final var rowOutput = (RowOutput)outputs[i];
+                final var table = ((BufferedDataTable)inputData[i]);
+                try (final var in = table.cursor();
+                        final var out = rowOutput.asWriteCursor(table.getSpec())) {
+                    while (in.canForward()) {
+                        out.forward().setFrom(in.forward());
                     }
-                    // Only stream port content if it is data
-                    final var rowOutput = (RowOutput)outputs[i];
-                    final var table = ((BufferedDataTable)inputData[i]);
-                    try (final var in = table.cursor();
-                            final var out = rowOutput.asWriteCursor(table.getSpec())) {
-                        while (in.canForward()) {
-                            out.forward().setFrom(in.forward());
-                        }
-                    } finally {
-                        // these cursors can throw interrupted exceptions, so we have to make sure we close the output
-                        // even if this flies past us
-                        rowOutput.close();
-                    }
+                } finally {
+                    // these cursors can throw interrupted exceptions, so we have to make sure we close the output
+                    // even if this flies past us
+                    rowOutput.close();
                 }
             }
-        };
+        }
     }
 
     /**
