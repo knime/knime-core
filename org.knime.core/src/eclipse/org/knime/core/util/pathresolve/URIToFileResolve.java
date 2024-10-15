@@ -144,10 +144,11 @@ public interface URIToFileResolve {
     /**
      * @param uri KNIME URI of an item (workflow, shared component, etc.)
      * @return the version history of that item on a KNIME Hub
+     * @throws ResourceAccessException
      * @throws IllegalArgumentException if the given URI does not use have the knime scheme.
      * @since 5.1
      */
-    List<NamedItemVersion> getHubItemVersions(final URI uri);
+    List<NamedItemVersion> getHubItemVersions(final URI uri) throws ResourceAccessException;
 
     /**
      * Resolves the given URI into a local file. If the URI does not represent a local file (e.g. a remote file on a

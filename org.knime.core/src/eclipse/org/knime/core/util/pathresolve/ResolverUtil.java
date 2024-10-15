@@ -309,9 +309,10 @@ public final class ResolverUtil {
     /**
      * @param uri to an item (workflow, workflow project, shared component)
      * @return the version history of the given item
+     * @throws ResourceAccessException
      * @since 5.1
      */
-    public static List<NamedItemVersion> getHubItemVersions(final URI uri) {
+    public static List<NamedItemVersion> getHubItemVersions(final URI uri) throws ResourceAccessException {
         CheckUtils.checkState(serviceTracker != null, "No service available to resolve uri: %s", uri);
         var resolver = (URIToFileResolve)serviceTracker.getService();
         CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
