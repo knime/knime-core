@@ -390,6 +390,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         NodeContext.pushContext(this);
         try {
             m_node.cleanup();
+            m_node.setFlowObjectStack(null, null); // flow objects (scopes, loops) might have refs to WFM
             clearFileStoreHandler();
         } finally {
             NodeContext.removeLastContext();
