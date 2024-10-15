@@ -383,6 +383,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
         NodeContext.pushContext(this);
         try {
             m_node.cleanup();
+            // safe code for 5.3.3+ bug fix release: using non-null stacks, in case 3rd party code depends on it
+            // this should not be needed as no further interaction is done with the node after cleanup,
+            // at least none triggered from KNIME Core.
+            // starting 5.4.x, both arguments will be null
+            m_node.setFlowObjectStack(new FlowObjectStack(getID()), new FlowObjectStack(getID()));
             clearFileStoreHandler();
         } finally {
             NodeContext.removeLastContext();

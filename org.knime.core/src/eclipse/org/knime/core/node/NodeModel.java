@@ -402,6 +402,7 @@ public abstract class NodeModel implements ViewableModel {
             }
             m_views.clear();
         }
+        clearLoopContext();
         m_warningListeners.clear();
     }
 
