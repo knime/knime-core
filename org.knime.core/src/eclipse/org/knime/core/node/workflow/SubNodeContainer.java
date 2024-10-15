@@ -1681,6 +1681,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         m_wfm.removeNodeStateChangeListener(m_wfmStateChangeListener);
         m_wfm.removeListener(m_wfmListener);
         m_wfm.cleanup();
+        m_subnodeScopeContext.cleanup();
     }
 
     /**
