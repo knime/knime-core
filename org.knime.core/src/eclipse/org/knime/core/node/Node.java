@@ -1836,7 +1836,7 @@ public final class Node {
      * Any output and intermediate tables must already be removed from the WorkflowDataRepository.
      */
     public void cleanup() {
-        m_model.unregisterAllViews();
+        m_model.cleanup();
         try {
             m_model.onDispose();
         } catch (Throwable t) {
