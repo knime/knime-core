@@ -55,7 +55,7 @@ import org.knime.core.node.util.CheckUtils;
  */
 final class FlowSubnodeScopeContext extends FlowScopeContext {
 
-    private final SubNodeContainer m_snc;
+    private SubNodeContainer m_snc;
 
     FlowSubnodeScopeContext(final SubNodeContainer snc) {
         m_snc = CheckUtils.checkArgumentNotNull(snc, "Owning SNC must not be null");
@@ -80,7 +80,16 @@ final class FlowSubnodeScopeContext extends FlowScopeContext {
     }
 
     SubNodeContainer getSubNodeContainer() {
+        CheckUtils.checkState(m_snc != null, "Subnode container has been disposed");
         return m_snc;
+    }
+
+    /**
+     * Added as part of AP-23380 - NodeModel instance might leak (bugs in 3rd party code), and hold on to their flow
+     * variable stack, which might contain objects of this type.
+     */
+    void cleanup() {
+        m_snc = null;
     }
 
     /** {@inheritDoc} */
