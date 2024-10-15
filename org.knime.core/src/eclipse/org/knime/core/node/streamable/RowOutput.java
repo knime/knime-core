@@ -59,6 +59,7 @@ import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 
 /**
  * Output of a sequence of rows. See description of super class when the output
@@ -162,10 +163,11 @@ public abstract class RowOutput extends PortOutput {
      * {@link #push(DataRow)}.
      * @param table The non-null table to set.
      * @throws InterruptedException If canceled while offering data to downstream nodes.
+     * @throws CanceledExecutionException If execution was canceled
      * @throws IllegalStateException If rows were added previously.
      * @since 2.12
      */
-    public void setFully(final BufferedDataTable table) throws InterruptedException {
+    public void setFully(final BufferedDataTable table) throws InterruptedException, CanceledExecutionException {
         for (DataRow r : table) {
             push(r);
         }

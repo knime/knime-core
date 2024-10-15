@@ -67,13 +67,13 @@ import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
-import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWrite;
 import org.knime.core.data.v2.RowWriteCursor;
+import org.knime.core.data.v2.SizeAwareDataTable;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.node.BufferedDataContainer;
@@ -226,7 +226,8 @@ public final class BufferedTableBackend implements TableBackend {
 
     @Override
     public void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
-        final IntSupplier tableIdSupplier, final Predicate<RowBatch> consumer) throws CanceledExecutionException {
+        final IntSupplier tableIdSupplier, final Predicate<SizeAwareDataTable> consumer)
+                throws CanceledExecutionException {
         try (final var supplier = new ChunkingCursorSupplier(exec, table, chunkSize)) {
             while (supplier.hasNext()) {
                 if (!consumer.test(supplier.next())) {
@@ -499,7 +500,7 @@ public final class BufferedTableBackend implements TableBackend {
             m_tableCursor = table.cursor();
         }
 
-        public RowBatch next() throws CanceledExecutionException {
+        public SizeAwareDataTable next() throws CanceledExecutionException {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
@@ -509,7 +510,7 @@ public final class BufferedTableBackend implements TableBackend {
                 buffer.add(m_tableCursor.forward().materializeDataRow());
             }
 
-            return new InMemoryRowBatch(m_table.getSpec(), buffer);
+            return new InMemoryDataTable(m_table.getSpec(), buffer);
         }
 
         public boolean hasNext() {

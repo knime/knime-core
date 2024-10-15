@@ -54,7 +54,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowBatch;
+import org.knime.core.data.v2.SizeAwareDataTable;
 import org.knime.core.table.row.Selection;
 
 /**
@@ -109,7 +109,7 @@ public final class InternalTableAPI {
      * @since 5.4
      */
     public static void chunked(final ExecutionContext exec, final BufferedDataTable table, final long chunkSize,
-            final Predicate<RowBatch> batchConsumer) throws CanceledExecutionException {
+            final Predicate<SizeAwareDataTable> batchConsumer) throws CanceledExecutionException {
         exec.chunked(table, chunkSize, batchConsumer);
     }
 

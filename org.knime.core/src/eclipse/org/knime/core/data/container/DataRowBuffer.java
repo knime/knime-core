@@ -46,32 +46,88 @@
  * History
  *   19 Sept 2024 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.data.v2;
+package org.knime.core.data.container;
 
-import org.knime.core.data.DataTable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.RowBuffer;
+import org.knime.core.data.v2.RowKeyType;
+import org.knime.core.data.v2.RowWrite;
+import org.knime.core.data.v2.RowWriteCursor;
+import org.knime.core.data.v2.SizeAwareDataTable;
+import org.knime.core.data.v2.schema.ValueSchemaUtils;
 
 /**
- * A batch of rows that can provide a cursor over the contained rows and knows its size.
+ * A fully in-memory row batch that materializes the row write contents in-memory.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
- *
  * @since 5.4
- *
- * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
- *
- * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
  */
-public interface RowBatch extends DataTable {
+public final class DataRowBuffer implements RowBuffer, RowWriteCursor {
 
-    /**
-     * @return the number of rows in this batch
-     */
-    long size();
+    private final DataTableSpec m_spec;
 
-    /**
-     * @return a cursor over the rows in this batch
-     */
-    RowCursor cursor();
+    private final List<DataRow> m_buffer = new ArrayList<>();
+
+    private final BufferedRowWrite m_row;
+
+    private boolean m_needsCommit;
+
+    private boolean m_closed;
+
+    public DataRowBuffer(final DataTableSpec spec) {
+        final var schema =
+            ValueSchemaUtils.create(spec, RowKeyType.CUSTOM, new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
+        m_row = new BufferedRowWrite(schema);
+        m_spec = spec;
+    }
+
+    @Override
+    public RowWrite forward() {
+        if (m_closed) {
+            throw new IllegalStateException("Write batch is already closed");
+        }
+        commitIfNecessary();
+        m_needsCommit = true;
+        return m_row;
+    }
+
+    private void commitIfNecessary() {
+        if (m_needsCommit) {
+            m_buffer.add(m_row.materializeDataRow());
+            m_needsCommit = false;
+        }
+    }
+
+    @Override
+    public boolean canForward() {
+        return true;
+    }
+
+    @Override
+    public void close() {
+        m_closed = true;
+    }
+
+    @Override
+    public SizeAwareDataTable finish() {
+        commitIfNecessary();
+        return new InMemoryDataTable(m_spec, m_buffer);
+    }
+
+    @Override
+    public long size() {
+        return m_buffer.size();
+    }
+
+    @Override
+    public RowWriteCursor createCursor() {
+        return this;
+    }
 
 }

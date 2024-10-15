@@ -73,9 +73,9 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
-import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
 import org.knime.core.data.v2.RowWriteCursor;
+import org.knime.core.data.v2.SizeAwareDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.CheckUtils;
@@ -670,7 +670,7 @@ public class ExecutionContext extends ExecutionMonitor {
     }
 
     void chunked(final BufferedDataTable table,
-        final long chunkSize, final Predicate<RowBatch> batchConsumer) throws CanceledExecutionException {
+        final long chunkSize, final Predicate<SizeAwareDataTable> batchConsumer) throws CanceledExecutionException {
         getTableBackend().chunked(this, table, chunkSize, m_dataRepository::generateNewID, batchConsumer);
     }
 
@@ -934,6 +934,11 @@ public class ExecutionContext extends ExecutionMonitor {
                 m_localDataRepo.addTable(container);
             }
             return table;
+        }
+
+        @Override
+        public long size() {
+            return m_backendDelegate.size();
         }
 
     }

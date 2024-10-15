@@ -57,8 +57,8 @@ import org.knime.core.data.container.DataContainerDelegate;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.ILocalDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowContainer;
+import org.knime.core.data.v2.SizeAwareDataTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -343,7 +343,7 @@ public interface TableBackend {
      * @since 5.4
      */
     void chunked(ExecutionContext exec, BufferedDataTable table, long chunkSize,
-        IntSupplier tableIdSupplier, Predicate<RowBatch> batchConsumer) throws CanceledExecutionException;
+        IntSupplier tableIdSupplier, Predicate<SizeAwareDataTable> batchConsumer) throws CanceledExecutionException;
 
     /**
      * Replaces the spec of the input table.

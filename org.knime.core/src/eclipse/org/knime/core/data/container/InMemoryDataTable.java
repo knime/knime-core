@@ -5,10 +5,10 @@ import java.util.Collection;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.v2.RowBatch;
 import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.v2.SizeAwareDataTable;
 
-final class InMemoryRowBatch implements RowBatch {
+final class InMemoryDataTable implements SizeAwareDataTable {
 
     private final DataTableSpec m_spec;
 
@@ -21,7 +21,7 @@ final class InMemoryRowBatch implements RowBatch {
      * @param spec data table spec
      * @param buffer buffer of data rows
      */
-    InMemoryRowBatch(final DataTableSpec spec, final Collection<DataRow> buffer) {
+    InMemoryDataTable(final DataTableSpec spec, final Collection<DataRow> buffer) {
         m_spec = spec;
         m_buffer = buffer;
     }
@@ -33,7 +33,6 @@ final class InMemoryRowBatch implements RowBatch {
 
     @Override
     public RowCursor cursor() {
-        // this needs to be a FallbackRowCursor if the marker interface DataRowRowRead is removed
         return new IteratorAdapterRowCursor(m_spec, iterator());
     }
 

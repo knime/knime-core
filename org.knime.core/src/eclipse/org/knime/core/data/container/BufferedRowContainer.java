@@ -127,4 +127,9 @@ final class BufferedRowContainer implements RowContainer, RowWriteCursor {
         return m_delegate;
     }
 
+    @Override
+    public long size() {
+        return m_delegate.size();
+    }
+
 }

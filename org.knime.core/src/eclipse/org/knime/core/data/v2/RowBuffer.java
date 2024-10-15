@@ -49,7 +49,7 @@
 package org.knime.core.data.v2;
 
 /**
- * Cursor that can be written to and that can be finished, creating a {@link RowBatch row batch}.
+ * Buffer that can be written to and that can be finished, creating a {@link SizeAwareDataTable}.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  * @since 5.4
@@ -57,14 +57,30 @@ package org.knime.core.data.v2;
  * @apiNote API still experimental. It might change in future releases of KNIME Analytics Platform.
  *
  * @noreference This interface is not intended to be referenced by clients.
- * @noextend This interface is not intended to be extended by clients.
  */
-public interface WriteBatch extends RowWriteCursor {
+public interface RowBuffer extends AutoCloseable {
 
-    RowBatch finish();
+    // TODO it would be less error-prone to obtain the table from closing the cursor...
 
     /**
-     * @return current size of the write batch
+     * Finish the buffer and create a table.
+     * @return table with current buffer contents
+     * @throws Exception
+     */
+    SizeAwareDataTable finish() throws Exception; // NOSONAR implementations are allowed to throw any exception they want, since close() allows the same
+
+    /**
+     * Create a new write cursor.
+     *
+     * @implNote NB: Currently only a single cursor is supported i.e. always the same cursor will be returned by this
+     *           method.
+     *
+     * @return a cursor.
+     */
+    RowWriteCursor createCursor();
+
+    /**
+     * @return current size of the buffer
      */
     long size();
 }

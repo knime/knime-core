@@ -70,7 +70,6 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
@@ -93,6 +92,7 @@ import org.knime.core.data.container.filter.TableFilter;
 import org.knime.core.data.container.storage.TableStoreFormat;
 import org.knime.core.data.container.storage.TableStoreFormatRegistry;
 import org.knime.core.data.v2.RowCursor;
+import org.knime.core.data.v2.SizeAwareDataTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
@@ -122,7 +122,7 @@ import org.knime.core.util.MutableBoolean;
 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class BufferedDataTable implements DataTable, PortObject {
+public final class BufferedDataTable implements SizeAwareDataTable, PortObject {
 
     /** Define port type of objects of this class when used as PortObjects.
      */
@@ -379,6 +379,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @apiNote Must not to be called by clients. Experimental API.
      * @since 4.2.2
      */
+    @Override
     public RowCursor cursor(){
         return m_delegate.cursor();
     }
@@ -488,6 +489,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @return the number of rows
      * @since 3.0
      */
+    @Override
     public long size() {
         return m_delegate.size();
     }
@@ -992,7 +994,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      *
      * @noimplement This interface is not intended to be implemented by clients.
      */
-    public interface KnowsRowCountTable extends DataTable {
+    public interface KnowsRowCountTable extends SizeAwareDataTable {
         /**
          * Row count of the table.
          * @return The row count.
@@ -1008,6 +1010,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          * @return the number of rows
          * @since 3.0
          */
+        @Override
         long size();
 
         /** Save the table to a file.
@@ -1039,6 +1042,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
          * @apiNote Must not to be called by clients. Experimental API.
          * @since 4.3
          */
+        @Override
         RowCursor cursor();
 
         /**

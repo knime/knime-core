@@ -51,7 +51,6 @@ package org.knime.core.data.v2;
 import java.io.IOException;
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.table.cursor.LookaheadCursor;
 
 /**
  * Container to store new rows. RowContainers automatically extend themselves in case more rows are added.
@@ -61,17 +60,8 @@ import org.knime.core.table.cursor.LookaheadCursor;
  *
  * @noreference This interface is not intended to be referenced by clients.
  */
-public interface RowContainer extends AutoCloseable {
+public interface RowContainer extends RowBuffer {
 
-    /**
-     * Create a new {@link LookaheadCursor} over {@link RowWrite}s.
-     *
-     * @implNote NB: Currently only a single cursor is supported i.e. always the same cursor will be returned by this
-     *           method.
-     *
-     * @return a cursor.
-     */
-    RowWriteCursor createCursor();
 
     /**
      * Turn {@link RowContainer} content into a {@link BufferedDataTable}. Subsequent calls to {@link #close()} will be
@@ -80,6 +70,7 @@ public interface RowContainer extends AutoCloseable {
      * @return a new BufferedDataTable representing
      * @throws IOException
      */
+    @Override
     BufferedDataTable finish() throws IOException;
 
     @Override
