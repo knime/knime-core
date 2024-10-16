@@ -789,20 +789,26 @@
    <extension
          point="org.knime.core.EarlyStartup">
       <provider
-            startupStage="AFTER_PROFILES_SET"
-            class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
+            startupStage="EARLIEST"
+            class="org.knime.core.node.logging.JavaUtilLoggingAdapter">
       </provider>
       <provider
             startupStage="AFTER_PROFILES_SET"
             class="org.knime.core.node.logging.KNIMELogger$EarlyStartupInitializer">
       </provider>
+      
+      <!-- 
+          Needs to be collected/run after KNIMELogger$EarlyStartupInitializer, see comments in PR of AP-22604:
+          EclipseProxyServiceInitializer which makes use of ACL (in knime-shared) is after the 
+          KNIMELogger$EarlyStartupInitializer which initializes the logging setup (incl. making the ACL “bridge“ work). 
+      -->
+      <provider
+            startupStage="AFTER_PROFILES_SET"
+            class="org.knime.core.eclipseUtil.EclipseProxyServiceInitializer">
+      </provider>
       <provider
             startupStage="BEFORE_WFM_CLASS_LOADED"
             class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
-      </provider>
-      <provider
-            class="org.knime.core.node.logging.JavaUtilLoggingAdapter"
-            startupStage="EARLIEST">
       </provider>
    </extension>
 </plugin>
