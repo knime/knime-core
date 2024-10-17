@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Core Workbench
+Bundle-SymbolicName: org.knime.core.workbench;singleton:=true
+Bundle-Version: 5.4.0.qualifier
+Bundle-ClassPath: knime-core-workbench.jar
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Eclipse-BundleShape: jar
+Automatic-Module-Name: org.knime.core.workbench
