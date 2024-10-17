@@ -75,7 +75,7 @@ public final class FlowTryCatchContext extends FlowScopeContext {
     public static String ERROR_STACKTRACE = "_error_stacktrace";
 
     /* variables for information retrieved by the WFM */
-    private boolean m_errorCaught = false;
+    private boolean m_errorCaught;
     private String m_node;
     private String m_reason;
     private String m_stacktrace;
@@ -90,7 +90,35 @@ public final class FlowTryCatchContext extends FlowScopeContext {
         m_errorCaught = true;
         m_node = CheckUtils.checkArgumentNotNull(node);
         m_reason = CheckUtils.checkArgumentNotNull(reason);
+        // stack trace can be null, that is valid
         m_stacktrace = stacktrace;
+    }
+
+    /**
+     * Convenience method that ensures consistency between this {@link FlowTryCatchContext} and the
+     * given per-node {@link FlowObjectStack} by passing the same arguments.
+     * <p>
+     * Uses {@link #setError(String, String, String)} internally.
+     * </p>
+     *
+     * @param node the node name
+     * @param reason the error reason
+     * @param stacktrace nullable (thus optional) current stacktrace
+     * @param fos the corresponding flow object stack
+     * @since 5.4
+     */
+    public void setErrorToFlowObjectStack(final String node, final String reason, final String stacktrace,
+        final FlowObjectStack fos) {
+        // (1) Set to `FlowTryCatchContext`.
+        setError(node, reason, stacktrace);
+
+        // (2) Set to `FlowObjectStack`.
+        fos.push(new FlowVariable(ERROR_FLAG, 1));
+        fos.push(new FlowVariable(ERROR_NODE, node));
+        fos.push(new FlowVariable(ERROR_REASON, reason));
+        if (stacktrace != null) {
+            fos.push(new FlowVariable(ERROR_STACKTRACE, stacktrace));
+        }
     }
 
     /**
