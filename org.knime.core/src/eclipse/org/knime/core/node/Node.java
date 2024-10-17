@@ -65,6 +65,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -114,6 +115,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.wizard.WizardNode;
@@ -1033,10 +1035,8 @@ public final class Node {
                         createWarningMessageAndNotify(Message.fromSummary("Execution canceled"));
                         return false;
                     } catch (Throwable e) {
-                        createErrorMessageAndNotify(Message.fromSummary( //
-                            String.format("Unable to clone input data at port %d (%s): %s", //
-                                i, m_inputs[i].getName(), e.getMessage())),
-                            e);
+                        createMessageAwareErrorAndNotify(String.format("Unable to clone input data at port %d (%s)", //
+                            i, m_inputs[i].getName()), e);
                         return false;
                     }
                 }
@@ -1076,26 +1076,24 @@ public final class Node {
                         // failure inside an active try-catch:
                         // make node inactive but preserve error message.
                         reset();
-                        PortObject[] outs = new PortObject[getNrOutPorts()];
+                        final var outs = new PortObject[getNrOutPorts()];
                         Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
                         setOutPortObjects(outs, false, false);
-                        createErrorMessageAndNotify(
-                            Message.fromSummary("Execution failed in Try-Catch block: " + th.getMessage()));
+                        createMessageAwareErrorAndNotify("Execution failed in Try-Catch block", th);
                         // and store information catch-node can report it
-                        FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
-                        StringWriter thstack = new StringWriter();
-                        th.printStackTrace(new PrintWriter(thstack));
-                        tcslc.setError(getName(), th.getMessage(), thstack.toString());
-                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
+                        final var details = ClassUtils.castOptional(MessageAwareException.class, th) //
+                            .map(mae -> mae.getKNIMEMessage().toLogPrintable()) //
+                            .orElse(null);
+                        final var stacktrace = new StringWriter();
+                        th.printStackTrace(new PrintWriter(stacktrace));
+                        tcslc.setErrorToFlowObjectStack(getName(), th.getMessage(), details, stacktrace.toString(),
+                            getNodeModel().getOutgoingFlowObjectStack());
                         return true;
                     }
                 }
                 Message message;
-                if (th instanceof MessageAwareException) {
-                    var rawMessage = ((MessageAwareException)th).getKNIMEMessage();
+                if (th instanceof MessageAwareException mae) {
+                    var rawMessage = mae.getKNIMEMessage();
                     message = rawMessage.renderIssueDetails(ArrayUtils.remove(newInData, 0));
                 } else {
                     String m = EXECUTE_FAILED_PREFIX;
@@ -1543,6 +1541,29 @@ public final class Node {
         return result;
     }
 
+    /**
+     * Given a non-null (!) {@link Throwable}, tries to retrieve its message if it is a {@link MessageAwareException}.
+     * <ul>
+     * <li>If it succeeds, this message will be re-used with a prefixed summary.</li>
+     * <li>If the throwable is not message-aware, its message will be concatenated with the given prefix.</li>
+     * </ul>
+     * The created and prefixed {@link Message} is then returned.
+     *
+     * @param prefix the message (summary) prefix
+     * @param t throwable to check whether it is message-aware
+     */
+    private static Message createPrefixedMessageFromThrowable(final String prefix, final Throwable t) {
+        final UnaryOperator<String> prefixer = message -> StringUtils.isNotEmpty(prefix) //
+            ? String.format("%s: %s", prefix, message) : message;
+        return ClassUtils.castOptional(MessageAwareException.class, t) //
+            .map(mae -> {
+                final var message = mae.getKNIMEMessage();
+                return message.modify() //
+                    .withSummary(prefixer.apply(message.getSummary())) //
+                    .build().orElseThrow();
+            }) //
+            .orElseGet(() -> Message.fromSummary(prefixer.apply(t.getMessage())));
+    }
 
     /**
      * Creates a new {@link NodeMessage} object of type warning and notifies
@@ -1552,6 +1573,21 @@ public final class Node {
      */
     private void createWarningMessageAndNotify(final Message warningMessage) {
         createWarningMessageAndNotify(warningMessage, null);
+    }
+
+    /**
+     * From a non-null, potentially message-aware {@link Throwable}, creates a prefixed warning {@link Message}
+     * and passes it to {@link #createWarningMessageAndNotify(Message, Throwable)}.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @param warningPrefix the prefix of the warning message, can be {@code null}
+     * @param t its stacktrace is logged at debug level
+     * @since 5.4
+     */
+    public void createMessageAwareWarningAndNotify(final String warningPrefix, final Throwable t) {
+        CheckUtils.checkArgumentNotNull(t);
+        final var message = createPrefixedMessageFromThrowable(warningPrefix, t);
+        createWarningMessageAndNotify(message, t);
     }
 
     /**
@@ -1581,6 +1617,21 @@ public final class Node {
      */
     private void createErrorMessageAndNotify(final Message errorMessage) {
         createErrorMessageAndNotify(errorMessage, null);
+    }
+
+    /**
+     * From a non-null, potentially message-aware {@link Throwable}, creates a prefixed error {@link Message}
+     * and passes it to {@link #createErrorMessageAndNotify(Message, Throwable)}.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     * @param errorPrefix the prefix of the error message, can be {@code null}
+     * @param t its stacktrace is logged at debug level
+     * @since 5.4
+     */
+    public void createMessageAwareErrorAndNotify(final String errorPrefix, final Throwable t) {
+        CheckUtils.checkArgumentNotNull(t);
+        final var message = createPrefixedMessageFromThrowable(errorPrefix, t);
+        createErrorMessageAndNotify(message, t);
     }
 
     /**
@@ -1953,16 +2004,11 @@ public final class Node {
                 LOGGER.debugWithFormat("Configure succeeded. (%s)", getName());
                 success = true;
             } catch (InvalidSettingsException ise) {
-                final Message message;
-                if (ise instanceof MessageAwareException mae) {
-                    message = mae.getKNIMEMessage();
-                } else {
-                    message = Message.fromSummary(ise.getMessage());
-                }
-                createWarningMessageAndNotify(message, ise.getCause());
+                // no prefix, just using the ISE message as warning
+                createMessageAwareWarningAndNotify(null, ise);
             } catch (Throwable t) {
-                var error = String.format("Configure failed (%s): %s", t.getClass().getSimpleName(), t.getMessage());
-                createErrorMessageAndNotify(Message.fromSummary(error), t);
+                createMessageAwareErrorAndNotify(String.format("Configure failed (%s)", t.getClass().getSimpleName()),
+                    t);
             }
         }
         return success;
@@ -2467,11 +2513,7 @@ public final class Node {
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Throwable e) {
-                String details = "<no details available>";
-                if (e.getMessage() != null && e.getMessage().length() > 0) {
-                    details = e.getMessage();
-                }
-                createErrorMessageAndNotify(Message.fromSummary("Unable to load internals: " + details), e);
+                createMessageAwareErrorAndNotify("Unable to load internals", e);
                 if (!(e instanceof IOException)) {
                     LOGGER.coding("loadInternals() should only cause IOException.", e);
                 }

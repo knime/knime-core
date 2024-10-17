@@ -259,11 +259,8 @@ public abstract class NodeExecutionJob implements Runnable {
                     ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
                 snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
                 // and store information such that the catch-node can report it
-                FlowObjectStack fos = snc.getOutgoingFlowObjectStack();
-                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, snc.getName()));
-                fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, errorMessage));
-                tcslc.setError(snc.getName(), errorMessage, null);
+                tcslc.setErrorToFlowObjectStack(snc.getName(), errorMessage, null, null,
+                    snc.getOutgoingFlowObjectStack());
                 return true;
             }
         }

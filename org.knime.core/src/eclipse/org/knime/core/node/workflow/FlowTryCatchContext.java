@@ -45,6 +45,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Objects;
+
 import org.knime.core.node.util.CheckUtils;
 
 /** Pushed on top of the stack inside a try-catch construct. Stores reasons
@@ -70,27 +72,66 @@ public final class FlowTryCatchContext extends FlowScopeContext {
      */
     public static String ERROR_REASON = "_error_reason";
     /**
+     * @since 5.4
+     */
+    public static final String ERROR_DETAILS = "_error_details";
+    /**
      * @since 3.1
      */
     public static String ERROR_STACKTRACE = "_error_stacktrace";
 
     /* variables for information retrieved by the WFM */
-    private boolean m_errorCaught = false;
+    private boolean m_errorCaught;
     private String m_node;
     private String m_reason;
+    private String m_details;
     private String m_stacktrace;
 
     /** Store information about an error that was caught.
      * @param node
      * @param reason
+     * @param details
      * @param stacktrace
-     * @since 3.1
+     * @since 5.4
      */
-    public void setError(final String node, final String reason, final String stacktrace) {
+    public void setError(final String node, final String reason, final String details, final String stacktrace) {
         m_errorCaught = true;
         m_node = CheckUtils.checkArgumentNotNull(node);
         m_reason = CheckUtils.checkArgumentNotNull(reason);
+        m_details = CheckUtils.checkArgumentNotNull(details);
+        // stacktrace can be null
         m_stacktrace = stacktrace;
+    }
+
+    /**
+     * Convenience method that ensures consistency between this {@link FlowTryCatchContext} and the
+     * given per-node {@link FlowObjectStack} by passing the same arguments.
+     * <p>
+     * Uses {@link #setError(String, String, String, String)} internally.
+     * </p>
+     *
+     * @param node the node name
+     * @param reason the error reason
+     * @param details more error details than the short reason
+     * @param stacktrace nullable (thus optional) current stacktrace
+     * @param fos the corresponding flow object stack
+     * @since 5.4
+     */
+    public void setErrorToFlowObjectStack(final String node, final String reason, final String details,
+        final String stacktrace, final FlowObjectStack fos) {
+        final var nonNullDetails = Objects.requireNonNullElse(details, reason);
+
+        // (1) Set to `FlowTryCatchContext`.
+        setError(node, reason, nonNullDetails, stacktrace);
+
+        // (2) Set to `FlowObjectStack`.
+        fos.push(new FlowVariable(ERROR_FLAG, 1));
+        fos.push(new FlowVariable(ERROR_NODE, node));
+        fos.push(new FlowVariable(ERROR_REASON, reason));
+        fos.push(new FlowVariable(ERROR_DETAILS, nonNullDetails));
+        if (stacktrace != null) {
+            fos.push(new FlowVariable(ERROR_STACKTRACE, stacktrace));
+        }
     }
 
     /**
@@ -115,6 +156,14 @@ public final class FlowTryCatchContext extends FlowScopeContext {
      */
     public String getReason() {
         return m_reason;
+    }
+
+    /**
+     * @return details
+     * @since 5.4
+     */
+    public String getDetails() {
+        return m_details;
     }
 
     /**

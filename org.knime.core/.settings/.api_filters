@@ -414,6 +414,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FlowTryCatchContext.java" type="org.knime.core.node.workflow.FlowTryCatchContext">
+        <filter comment="removed public method, no API" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
+                <message_argument value="setError(String, String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
         <filter comment="added method to &quot;quasi-sealed&quot; interface (no api)" id="403804204">
             <message_arguments>
