@@ -53,6 +53,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.NodeLogger;
@@ -309,13 +310,28 @@ public final class ResolverUtil {
     /**
      * @param uri to an item (workflow, workflow project, shared component)
      * @return the version history of the given item
-     * @throws ResourceAccessException
+     * @deprecated use {@link ResolverUtil#getHubItemVersionList(URI)}
      * @since 5.1
      */
-    public static List<NamedItemVersion> getHubItemVersions(final URI uri) throws ResourceAccessException {
+    @Deprecated(since = "5.4")
+    public static List<NamedItemVersion> getHubItemVersions(final URI uri) {
+        try {
+            return getHubItemVersionList(uri);
+        } catch (ResourceAccessException ex) {
+            throw ExceptionUtils.asRuntimeException(ex);
+        }
+    }
+
+    /**
+     * @param uri to an item (workflow, workflow project, shared component)
+     * @return the version history of the given item
+     * @throws ResourceAccessException
+     * @since 5.4
+     */
+    public static List<NamedItemVersion> getHubItemVersionList(final URI uri) throws ResourceAccessException {
         CheckUtils.checkState(serviceTracker != null, "No service available to resolve uri: %s", uri);
         var resolver = (URIToFileResolve)serviceTracker.getService();
         CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
-        return resolver.getHubItemVersions(uri);
+        return resolver.getHubItemVersionList(uri);
     }
 }
