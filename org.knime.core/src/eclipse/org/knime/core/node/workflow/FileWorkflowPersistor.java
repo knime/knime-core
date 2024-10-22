@@ -1083,7 +1083,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         /* read connections */
-        exec.setMessage("connection information");
+        exec.setMessage("Getting connection information...");
         NodeSettingsRO connections;
         try {
             connections = loadSettingsForConnections(m_workflowSett);
@@ -2060,7 +2060,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                 subExec.setProgress(1.0);
             }
 
-            execMon.setMessage("connection information");
+            execMon.setMessage("Getting connection information...");
             NodeSettingsWO connSettings = saveSettingsForConnections(preFilledSettings);
             int connectionNumber = 0;
             for (ConnectionContainer cc : wm.getConnectionContainers()) {
