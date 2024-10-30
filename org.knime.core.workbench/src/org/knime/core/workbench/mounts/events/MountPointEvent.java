@@ -50,6 +50,7 @@ package org.knime.core.workbench.mounts.events;
 
 import java.util.EventObject;
 
+import org.knime.core.workbench.mounts.WorkbenchMountPoint;
 import org.knime.core.workbench.mounts.WorkbenchMountTable;
 
 /**
@@ -59,16 +60,16 @@ import org.knime.core.workbench.mounts.WorkbenchMountTable;
 @SuppressWarnings("serial")
 public class MountPointEvent extends EventObject {
 
-    private final String m_mountPointID;
+    private transient WorkbenchMountPoint m_mountPoint;
 
     /**
      * Constructs a new MountPointEvent.
      *
      * @param mountPointID the ID of the mount point associated with this event
      */
-    public MountPointEvent(final String mountPointID) {
+    public MountPointEvent(final WorkbenchMountPoint mountPoint) {
         super(WorkbenchMountTable.class);
-        m_mountPointID = mountPointID;
+        m_mountPoint = mountPoint;
     }
 
     @SuppressWarnings("unchecked")
@@ -83,6 +84,10 @@ public class MountPointEvent extends EventObject {
      * @return the mount point ID
      */
     public String getMountPointID() {
-        return m_mountPointID;
+        return m_mountPoint.getMountID();
+    }
+
+    public WorkbenchMountPoint getMountPoint() {
+        return m_mountPoint;
     }
 }
