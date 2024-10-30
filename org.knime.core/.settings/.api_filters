@@ -483,19 +483,19 @@
     <resource path="src/eclipse/org/knime/core/util/EclipseUtil.java" type="org.knime.core.util.EclipseUtil">
         <filter id="1142947843">
             <message_arguments>
-                <message_argument value="5.3.3, also introduced in 5.4"/>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
                 <message_argument value="currentUIPerspective()"/>
             </message_arguments>
         </filter>
         <filter id="1142947843">
             <message_arguments>
-                <message_argument value="5.3.3, also introduced in 5.4"/>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
                 <message_argument value="determineAPUsage()"/>
             </message_arguments>
         </filter>
         <filter id="1142947843">
             <message_arguments>
-                <message_argument value="5.3.3, also introduced in 5.4"/>
+                <message_argument value="5.3.2, also introduced in 5.4"/>
                 <message_argument value="determineClassicUIUsage()"/>
             </message_arguments>
         </filter>
