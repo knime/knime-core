@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -66,6 +67,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.function.FailableFunction;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -375,6 +377,23 @@ public final class WorkbenchMountTable {
     public static WorkbenchMountPoint getMountPoint(final String mountID) {
         synchronized (MOUNTED) {
             return MOUNTED.get(mountID);
+        }
+    }
+
+    /**
+     * Applies the given function on a collection of all currently mounted mount points.
+     * The function application is thread-safe, because no mountpoints are mounted or unmounted by other threads
+     * during the course of the function application.
+     *
+     * @param <T> return type of function application
+     * @param mountedFn function to apply on collection
+     * @return result of function
+     * @throws E exception thrown by function
+     */
+    public static <T, E extends Throwable> T
+            withMounted(final FailableFunction<Collection<WorkbenchMountPoint>, T, E> mountedFn) throws E {
+        synchronized (MOUNTED) {
+            return mountedFn.apply(MOUNTED.values());
         }
     }
 
