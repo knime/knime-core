@@ -92,8 +92,13 @@ public final class WorkbenchMountPoint {
     }
 
     @SuppressWarnings("unchecked")
-    <T extends MountPointProvider> T getProvider(final Class<T> providerType, final Function<String, T> providerFactory) {
+    public <T extends MountPointProvider> T getProvider(final Class<T> providerType, final Function<String, T> providerFactory) {
         return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply(m_storage));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
+        return Optional.ofNullable((T)m_contentProviders.get(providerType));
     }
 
     public void dispose(final Class<? extends MountPointProvider> cl) {
