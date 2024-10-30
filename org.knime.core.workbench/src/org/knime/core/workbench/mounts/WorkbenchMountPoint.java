@@ -96,6 +96,11 @@ public final class WorkbenchMountPoint {
         return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply(m_storage));
     }
 
+    @SuppressWarnings("unchecked")
+    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
+        return Optional.ofNullable((T)m_contentProviders.get(providerType));
+    }
+
     public void dispose(final Class<? extends MountPointProvider> cl) {
         Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
     }
