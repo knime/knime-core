@@ -59,10 +59,10 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mounts.WorkbenchMountPoint;
-import org.knime.core.workbench.mounts.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler;
-import org.knime.core.workbench.mounts.WorkbenchMountTable;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.LoggerFactory;
 
@@ -99,14 +99,14 @@ public class ExplorerPreferenceInitializer extends
     public static void loadDefaultMountPoints() {
         IEclipsePreferences defaultPrefStore = DefaultScope.INSTANCE.getNode(WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID);
 
-        List<WorkbenchMountPointDefinition> addableDefs = WorkbenchMountTable.getAddableContentProviders();
+        List<WorkbenchMountPointDefinition<?>> addableDefs = WorkbenchMountTable.getAddableContentProviders();
         // Set the default mount points
         final List<MountSettings> settingsList = new ArrayList<MountSettings>();
         final List<String> include = getIncludedDefaultMountPoints();
 
-        for (WorkbenchMountPointDefinition fac : addableDefs) {
+        for (WorkbenchMountPointDefinition<?> fac : addableDefs) {
             if (fac.getDefaultMountID().stream().anyMatch(include::contains)) {
-                WorkbenchMountPoint mp = null;
+                WorkbenchMountPoint<?> mp = null;
                 try {
                     mp = fac.createMountPoint(fac.getDefaultMountID().orElseThrow(),
                         WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);

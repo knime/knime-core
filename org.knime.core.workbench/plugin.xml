@@ -4,9 +4,19 @@
    <extension-point id="org.knime.core.workbench.mount" name="KNIME Mount Point Definition" schema="schema/org.knime.core.workbench.mount.exsd"/>
    <extension
          point="org.knime.core.workbench.mount">
-         <MountPointDefinition
-               identifier="org.knime.core.workbench.localworkspace.LocalWorkspaceMountPoint">
-         </MountPointDefinition>
+      <MountPointDefinition
+            defaultMountID="LOCAL"
+            settingsHandlerClass="org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointSettingsHandler"
+            supportsMultipleInstances="false"
+            typeIdentifier="org.knime.workbench.explorer.workspace">
+      </MountPointDefinition>
+      <MountPointDefinition
+            defaultMountID="knime-temp-space"
+            settingsHandlerClass="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointSettingsHandler"
+            supportsMultipleInstances="false"
+            typeIdentifier="com.knime.explorer.tempspace">
+      </MountPointDefinition>
    </extension>
+
 
 </plugin>

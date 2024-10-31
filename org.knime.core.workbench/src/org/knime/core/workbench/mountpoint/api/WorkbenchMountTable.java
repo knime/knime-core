@@ -45,7 +45,7 @@
  * Created: Mar 17, 2011
  * Author: ohl
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.mountpoint.api;
 
 import java.io.IOException;
 import java.net.URI;
@@ -64,9 +64,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler.Storage;
-import org.knime.core.workbench.mounts.events.MountPointEvent;
-import org.knime.core.workbench.mounts.events.MountPointListener;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler.Storage;
+import org.knime.core.workbench.mountpoint.api.events.MountPointEvent;
+import org.knime.core.workbench.mountpoint.api.events.MountPointListener;
 import org.knime.core.workbench.preferences.MountSettings;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
@@ -150,8 +150,9 @@ public final class WorkbenchMountTable {
      * @return a new content provider instance - or null if user canceled.
      * @throws IOException if the mounting fails
      */
-    public static WorkbenchMountPoint mount(final String mountID, final String providerID) throws IOException {
-        WorkbenchMountPointDefinition definition = WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
+    public static WorkbenchMountPoint<?> mount(final String mountID, final String providerID) throws IOException {
+        WorkbenchMountPointDefinition<?> definition =
+            WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
                 .orElseThrow(() -> new IOException("No mount point definition found for " + providerID));
         return mountOrRestore(mountID, definition, WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
     }
@@ -339,7 +340,7 @@ public final class WorkbenchMountTable {
      *
      * @return a map of available content providers (key = name, value = ID).
      */
-    public static List<WorkbenchMountPointDefinition> getAddableContentProviders() {
+    public static List<WorkbenchMountPointDefinition<?>> getAddableContentProviders() {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
                 .filter(mpDef -> mpDef.supportsMultipleInstances() || !(isMounted(mpDef.getTypeIdentifier()))) //
@@ -454,12 +455,13 @@ public final class WorkbenchMountTable {
 
     /* Mounts all hidden spaces that provide a default mount id. */
     private static void mountTempSpace() {
-        final var tempDefOptional = WorkbenchActivator.getInstance().getMountPointDefinition(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
+        final var tempDefOptional =
+                WorkbenchActivator.getInstance().getMountPointDefinition(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
         if (tempDefOptional.isEmpty()) {
             LOGGER.error("No mount point definition for temp space found.");
             return;
         }
-        final WorkbenchMountPointDefinition tempDef = tempDefOptional.get();
+        final WorkbenchMountPointDefinition<?> tempDef = tempDefOptional.get();
         String mountID = tempDef.getDefaultMountID().orElse(null);
         if (tempDef.isTemporaryMountPoint() && mountID != null) {
             try {
@@ -481,7 +483,7 @@ public final class WorkbenchMountTable {
         List<MountSettings> mountSettingsToSave = new ArrayList<>();
         synchronized (MOUNTED) {
             for (MountSettings ms : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
-                WorkbenchMountPoint workbenchMountPoint = MOUNTED.get(ms.getMountID());
+                WorkbenchMountPoint<?> workbenchMountPoint = MOUNTED.get(ms.getMountID());
                 if (workbenchMountPoint != null) {
                     try {
                         ms = new MountSettings(workbenchMountPoint);

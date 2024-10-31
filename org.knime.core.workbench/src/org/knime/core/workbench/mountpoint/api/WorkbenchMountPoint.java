@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,61 +42,91 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Oct 29, 2024 (wiswedel): created
  */
-package org.knime.core.workbench;
+package org.knime.core.workbench.mountpoint.api;
 
-import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.auth.Authenticator;
 
-public final class WorkbenchActivator implements BundleActivator {
+/**
+ * Represents a content tree in the KNIME Explorer.
+ *
+ * @author ohl, University of Konstanz
+ */
+public final class WorkbenchMountPoint<S extends WorkbenchMountPointSettings> {
 
-    private static WorkbenchActivator instance;
+    private final WorkbenchMountPointDefinition<S> m_definition;
 
-    private Map<String, WorkbenchMountPointDefinition<?>> m_mountPointDefinitionMap;
+    private final String m_mountID;
 
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        instance = this;
-        m_mountPointDefinitionMap = WorkbenchMountPointDefinition.collectDefinitions();
-    }
+    private S m_settings;
 
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        m_mountPointDefinitionMap = null;
-        instance = null;
-    }
+    private Authenticator m_authenticator;
 
-    public Collection<WorkbenchMountPointDefinition<?>> getMountPointDefinitions() {
-        return m_mountPointDefinitionMap.values();
+    private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
+
+    WorkbenchMountPoint(final WorkbenchMountPointDefinition<S> definition, final String mountID,
+        final S settings) {
+        m_definition = definition;
+        m_mountID = mountID;
+        m_settings = settings;
+        m_contentProviders = new LinkedHashMap<>();
     }
 
     /**
-     * @return mount point definition for a type registered in an extension point
+     * @return the definition
      */
-    @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> Optional<WorkbenchMountPointDefinition<S>>
-        getMountPointDefinition(final String typeIdentifier) {
-        return Optional.ofNullable((WorkbenchMountPointDefinition<S>)m_mountPointDefinitionMap.get(typeIdentifier));
+    public WorkbenchMountPointDefinition<S> getDefinition() {
+        return m_definition;
+    }
+
+    public String getMountID() {
+        return m_mountID;
+    }
+
+    public synchronized Optional<Authenticator> getAuthenticator() {
+        return Optional.ofNullable(m_authenticator);
+    }
+
+    public synchronized <T extends Authenticator> T getOrCreateAuthenticator(final Supplier<T> authenticatorSupplier) {
+        if (m_authenticator == null) {
+            m_authenticator = authenticatorSupplier.get();
+        }
+        return (T)m_authenticator;
+    }
+
+    public synchronized S getSettings() {
+        return m_settings;
+    }
+
+    public synchronized void setSettings(final S settings) {
+        CheckUtils.checkArgumentNotNull(settings, "Settings must not be null");
+        m_settings = settings;
     }
 
     @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> WorkbenchMountPointDefinition<S>
-    getMountPointDefinitionOrFail(final String typeIdentifier) {
-        return (WorkbenchMountPointDefinition<S>)getMountPointDefinition(typeIdentifier)
-            .orElseThrow(() -> new IllegalStateException(
-                String.format("No mount point definition found for \"%s\"", typeIdentifier)));
+    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
+        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
+        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
     }
 
-    public static WorkbenchActivator getInstance() {
-        return instance;
+    @SuppressWarnings("unchecked")
+    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
+        return Optional.ofNullable((T)m_contentProviders.get(providerType));
     }
 
+    public void dispose(final Class<? extends MountPointProvider> cl) {
+        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
+    }
+
+    public void dispose() {
+        m_contentProviders.values().forEach(MountPointProvider::dispose);
+        m_contentProviders.clear();
+    }
 }

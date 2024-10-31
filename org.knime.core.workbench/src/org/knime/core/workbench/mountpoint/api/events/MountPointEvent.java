@@ -44,41 +44,51 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2024 (wiswedel): created
+ *   Oct 18, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.mountpoint.api.events;
 
-import java.io.IOException;
-import java.util.Objects;
+import java.util.EventObject;
 
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.osgi.service.prefs.Preferences;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 
 /**
+ * Event object for mount point changes.
  *
  * @author wiswedel
  */
-public interface WorkbenchMountPointSettingsHandler {
+@SuppressWarnings("serial")
+public class MountPointEvent extends EventObject {
 
-    static final Storage EMPTY_STORAGE = new Storage("");
+    private final WorkbenchMountPoint m_mountPoint;
 
-    record Storage(String storageString) {
-        public Storage {
-            Objects.requireNonNull(storageString);
-        }
+    /**
+     * Constructs a new MountPointEvent.
+     *
+     * @param mountPoint mount point associated with this event
+     */
+    public MountPointEvent(final WorkbenchMountPoint mountPoint) {
+        super(WorkbenchMountTable.class);
+        m_mountPoint = mountPoint;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Class<WorkbenchMountTable> getSource() {
+        return (Class<WorkbenchMountTable>)super.getSource();
+    }
 
+    /**
+     * Returns the ID of the mount point associated with this event.
+     *
+     * @return the mount point ID
+     */
+    public String getMountPointID() {
+        return m_mountPoint.getMountID();
+    }
 
-    WorkbenchMountPointSettings fromStorage(final Storage storage) throws IOException;
-
-    Storage toStorage(final WorkbenchMountPointSettings settings) throws IOException;
-
-    void saveStateToPreferenceNode(final IEclipsePreferences node, final WorkbenchMountPointSettings settings);
-
-    WorkbenchMountPointSettings loadStateFromPreferenceNode(final Preferences node);
-
-    // TODO refactor or accept the fact that this is a bit of a hack
-    String asLabel(final WorkbenchMountPointSettings settings);
-
+    public WorkbenchMountPoint getMountPoint() {
+        return m_mountPoint;
+    }
 }
