@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,77 +43,43 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 30, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
-import org.knime.core.util.auth.Authenticator;
+package org.knime.core.workbench;
 
 /**
- * Represents a content tree in the KNIME Explorer.
  *
- * @author ohl, University of Konstanz
+ * @author wiswedel
  */
-public final class WorkbenchMountPoint {
+public final class WorkbenchConstants {
 
-    private final WorkbenchMountPointDefinition m_definition;
+    public static final String PLUGIN_ID = "org.knime.core.workbench";
 
-    private final String m_mountID;
+    /** The plug-in which historically has hosted the preferences. Preferences are read/written under this root. */
+    public static final String WORKBENCH_PREFERENCES_PLUGIN_ID = "org.knime.workbench.explorer.view";
 
-    private final WorkbenchMountPointSettings m_settings;
+    /** The special "temp space" (used, e.g. for yellow bar editors) */
+    public static final String TYPE_IDENTIFIER_TEMP_SPACE = "com.knime.explorer.tempspace";
 
-    private Authenticator m_authenticator;
+    /** Preference constant for mount points for the Explorer (xml format). */
+    public static final String P_EXPLORER_MOUNT_POINT_XML = "knime.explorer.mountpoint.xml";
 
-    private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
-
-    WorkbenchMountPoint(final WorkbenchMountPointDefinition definition, final String mountID,
-        final WorkbenchMountPointSettings settings) {
-        m_definition = definition;
-        m_mountID = mountID;
-        m_settings = settings;
-        m_contentProviders = new LinkedHashMap<>();
-    }
+    /** Preference constant for mount points for the Explorer. */
+    @Deprecated
+    public static final String P_EXPLORER_MOUNT_POINT = "knime.explorer.mountpoint";
 
     /**
-     * @return the definition
+     * Pref constant to link the original meta node to a newly defined template.
      */
-    public WorkbenchMountPointDefinition getDefinition() {
-        return m_definition;
-    }
+    public static final String P_EXPLORER_LINK_ON_NEW_TEMPLATE = "knime.explorer.link_on_new_template";
 
-    public String getMountID() {
-        return m_mountID;
-    }
+    /** Copied value of org.eclipse.jface.dialogs.MessageDialogWithToggle.PROMPT. */
+    public static final String P_DEFAULT_PROMPT_ACTION = "prompt";
 
-    public Optional<Authenticator> getAuthenticator() {
-        return Optional.ofNullable(m_authenticator);
-    }
+    /** Preference constant for showing a warning dialog when connecting to an older server */
+    public static final String P_SHOW_OLDER_SERVER_WARNING_DIALOG = "knime.explorer.show_older_server_warning";
+    /** The default value for whether a warning dialog should appear when connecting to an older server or not */
+    public static final boolean P_DEFAULT_SHOW_OLDER_SERVER_WARNING_DIALOG = true;
 
-    public WorkbenchMountPointSettings getSettings() {
-        return m_settings;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
-        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
-        return Optional.ofNullable((T)m_contentProviders.get(providerType));
-    }
-
-    public void dispose(final Class<? extends MountPointProvider> cl) {
-        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
-    }
-
-    public void dispose() {
-        m_contentProviders.values().forEach(MountPointProvider::dispose);
-        m_contentProviders.clear();
-    }
 }
