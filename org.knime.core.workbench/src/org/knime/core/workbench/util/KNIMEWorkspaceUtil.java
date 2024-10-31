@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,77 +43,71 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Jun 18, 2019 (Moritz Heine, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.util;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
-import org.knime.core.util.auth.Authenticator;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.osgi.service.prefs.BackingStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Represents a content tree in the KNIME Explorer.
+ * Workspace utility class that can be used to set and get the workspace version.
+ * <p/>
+ * This version can be used to determine if an update of AP occurred or if an older workspace has been opened with a
+ * newer AP version. The version is usually in the format 'yyyyMMdd'.
  *
- * @author ohl, University of Konstanz
+ * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-public final class WorkbenchMountPoint {
+public final class KNIMEWorkspaceUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KNIMEWorkspaceUtil.class);
 
-    private final WorkbenchMountPointDefinition m_definition;
+    // TODO change
+    private static final String PLUGIN_ID = "org.knime.workbench.core";
 
-    private final String m_mountID;
+    private static final String WORKSPACE_VERSION = "knime.workspace.version";
 
-    private final WorkbenchMountPointSettings m_settings;
-
-    private Authenticator m_authenticator;
-
-    private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
-
-    WorkbenchMountPoint(final WorkbenchMountPointDefinition definition, final String mountID,
-        final WorkbenchMountPointSettings settings) {
-        m_definition = definition;
-        m_mountID = mountID;
-        m_settings = settings;
-        m_contentProviders = new LinkedHashMap<>();
+    private KNIMEWorkspaceUtil() {
     }
 
     /**
-     * @return the definition
+     * Returns the currently version of the workspace, or -1 if the version does not exist yet.
+     * <p/>
+     * Versions are usually in the format 'yyyyMMdd'.
+     *
+     * @return The version.
      */
-    public WorkbenchMountPointDefinition getDefinition() {
-        return m_definition;
+    public synchronized static int getVersion() {
+        final int version = DefaultScope.INSTANCE.getNode(PLUGIN_ID).getInt(WORKSPACE_VERSION, -1);
+
+        if (version != -1) {
+            setVersion(version);
+            return version;
+        }
+
+        final IEclipsePreferences pref = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
+
+        return pref.getInt(WORKSPACE_VERSION, -1);
     }
 
-    public String getMountID() {
-        return m_mountID;
+    /**
+     * Sets the version that shall be persisted for the workspace.
+     *
+     * @param version The version in format 'yyyyMMdd'.
+     */
+    public synchronized static void setVersion(final int version) {
+        final IEclipsePreferences pref = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
+
+        pref.putInt(WORKSPACE_VERSION, version);
+        try {
+            pref.flush();
+        } catch (BackingStoreException e) {
+            LOGGER.info("Couldn't write version into preference file", e);
+        }
     }
 
-    public Optional<Authenticator> getAuthenticator() {
-        return Optional.ofNullable(m_authenticator);
-    }
-
-    public WorkbenchMountPointSettings getSettings() {
-        return m_settings;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
-        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
-        return Optional.ofNullable((T)m_contentProviders.get(providerType));
-    }
-
-    public void dispose(final Class<? extends MountPointProvider> cl) {
-        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
-    }
-
-    public void dispose() {
-        m_contentProviders.values().forEach(MountPointProvider::dispose);
-        m_contentProviders.clear();
-    }
 }
