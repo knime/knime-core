@@ -66,12 +66,12 @@ import org.knime.core.node.config.base.SimpleConfig;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mounts.WorkbenchMountPoint;
-import org.knime.core.workbench.mounts.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettings;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler.Storage;
-import org.knime.core.workbench.mounts.WorkbenchMountTable;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler.Storage;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.knime.core.workbench.util.KNIMEWorkspaceUtil;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
@@ -177,9 +177,9 @@ public class MountSettings {
      * @param cp the content provider to create mount settings for
      * @throws IOException
      */
-    public MountSettings(final WorkbenchMountPoint cp) throws IOException {
+    public <S extends WorkbenchMountPointSettings> MountSettings(final WorkbenchMountPoint<S> cp) throws IOException {
         m_mountID = cp.getMountID();
-        final WorkbenchMountPointDefinition definition = cp.getDefinition();
+        final WorkbenchMountPointDefinition<S> definition = cp.getDefinition();
         final String label = definition.getSettingsHandler().asLabel(cp.getSettings());
         m_displayName = m_mountID + " (" + label + ")";
         m_factoryID = definition.getTypeIdentifier();
@@ -498,7 +498,7 @@ public class MountSettings {
                 && ExplorerPreferenceInitializer.getIncludedDefaultMountPoints()
                     .contains(CoreConstants.KNIME_HUB_MOUNT_ID)) {
 
-                final Optional<WorkbenchMountPointDefinition> hubMountDef =
+                final Optional<WorkbenchMountPointDefinition<?>> hubMountDef =
                 WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
                     .filter(e -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e.getDefaultMountID().orElse(null))) //
                     .findFirst();
@@ -507,7 +507,7 @@ public class MountSettings {
                 if (hubMountDef.isPresent() && loadedSettingsList.stream()
                     .noneMatch(e -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e.getDefaultMountID()))) {
                     try {
-                        final WorkbenchMountPoint tempHubMountPoint = hubMountDef.get().createMountPoint(
+                        final WorkbenchMountPoint<?> tempHubMountPoint = hubMountDef.get().createMountPoint(
                             CoreConstants.KNIME_HUB_MOUNT_ID, WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
                         final MountSettings hubSettings = new MountSettings(tempHubMountPoint);
                         hubSettings.m_mountPointNumber = -2;
@@ -693,7 +693,7 @@ public class MountSettings {
     private static void saveMountSettingsToNode(final MountSettings settings, final IEclipsePreferences node,
         final int mountPointNumber) {
 
-        Optional<WorkbenchMountPointDefinition> factory =
+        Optional<WorkbenchMountPointDefinition<WorkbenchMountPointSettings>> factory =
             WorkbenchActivator.getInstance().getMountPointDefinition(settings.getFactoryID());
 
         if (factory.isEmpty()) {
@@ -702,10 +702,10 @@ public class MountSettings {
             return;
         }
 
-        final WorkbenchMountPointDefinition workbenchMountPointDefinition = factory.get();
+        final WorkbenchMountPointDefinition<WorkbenchMountPointSettings> workbenchMountPointDefinition = factory.get();
         try {
-            final WorkbenchMountPointSettingsHandler setHandler = workbenchMountPointDefinition.getSettingsHandler();
-            final WorkbenchMountPointSettings wmpSettings = setHandler.fromStorage(new Storage(settings.getContent()));
+            final var setHandler = workbenchMountPointDefinition.getSettingsHandler();
+            final var wmpSettings = setHandler.fromStorage(new Storage(settings.getContent()));
             setHandler.saveStateToPreferenceNode(node, wmpSettings);
         } catch (IOException ex) {
             LOGGER.atError().setCause(ex).log("Could not save mount point settings for '{}'.", settings.getMountID());
@@ -735,12 +735,13 @@ public class MountSettings {
                 String mountID = node.get(MOUNT_ID, "");
                 String factoryID = node.get(FACTORY_ID, "");
 
-                Optional<WorkbenchMountPointDefinition> definition = WorkbenchActivator.getInstance().getMountPointDefinition(factoryID);
+                Optional<WorkbenchMountPointDefinition<WorkbenchMountPointSettings>> definition =
+                        WorkbenchActivator.getInstance().getMountPointDefinition(factoryID);
                 Storage content = WorkbenchMountPointSettingsHandler.EMPTY_STORAGE;
                 String displayName = "";
                 if (definition.isPresent()) {
-                    WorkbenchMountPointSettingsHandler settingsHandler = definition.get().getSettingsHandler();
-                    WorkbenchMountPointSettings wmpSettings = settingsHandler.loadStateFromPreferenceNode(node);
+                    final var settingsHandler = definition.get().getSettingsHandler();
+                    final var wmpSettings = settingsHandler.loadStateFromPreferenceNode(node);
                     content = settingsHandler.toStorage(wmpSettings);
                     displayName = mountID + " (" + settingsHandler.asLabel(wmpSettings) + ")";
                 }

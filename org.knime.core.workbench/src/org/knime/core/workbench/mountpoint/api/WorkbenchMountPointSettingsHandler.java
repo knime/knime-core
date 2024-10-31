@@ -44,27 +44,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 18, 2024 (wiswedel): created
+ *   Oct 30, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts.events;
+package org.knime.core.workbench.mountpoint.api;
 
-import java.util.EventListener;
+import java.io.IOException;
+import java.util.Objects;
+
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.osgi.service.prefs.Preferences;
 
 /**
- * Listener interface for mount point events.
+ *
+ * @author wiswedel
  */
-public interface MountPointListener extends EventListener {
-    /**
-     * Called when a mount point is added.
-     *
-     * @param event the event object containing details about the mount point addition
-     */
-    void mountPointAdded(MountPointEvent event);
+public interface WorkbenchMountPointSettingsHandler<T extends WorkbenchMountPointSettings> {
 
-    /**
-     * Called when a mount point is removed.
-     *
-     * @param event the event object containing details about the mount point removal
-     */
-    void mountPointRemoved(MountPointEvent event);
+    static final Storage EMPTY_STORAGE = new Storage("");
+
+    record Storage(String storageString) {
+        public Storage {
+            Objects.requireNonNull(storageString);
+        }
+    }
+
+
+
+    T fromStorage(final Storage storage) throws IOException;
+
+    Storage toStorage(final T settings) throws IOException;
+
+    void saveStateToPreferenceNode(final IEclipsePreferences node, final T settings);
+
+    T loadStateFromPreferenceNode(final Preferences node);
+
+    // TODO refactor or accept the fact that this is a bit of a hack
+    String asLabel(final T settings);
+
 }

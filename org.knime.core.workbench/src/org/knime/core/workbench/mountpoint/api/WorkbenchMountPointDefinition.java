@@ -46,7 +46,7 @@
  * History
  *   Oct 22, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.mountpoint.api;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -63,7 +63,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler.Storage;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author wiswedel
  */
-public final class WorkbenchMountPointDefinition {
+public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSettings> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkbenchMountPointDefinition.class);
 
@@ -91,34 +91,50 @@ public final class WorkbenchMountPointDefinition {
 
     private final String m_defaultMountID;
 
-    private final LazyInitializer<WorkbenchMountPointSettingsHandler> m_settingsHandlerInitializer;
+    private final LazyInitializer<WorkbenchMountPointSettingsHandler<S>> m_settingsHandlerInitializer;
 
     private WorkbenchMountPointDefinition(final String typeIdentifier, final String defaultMountID,
         final boolean supportsMultipleInstances,
-        final LazyInitializer<WorkbenchMountPointSettingsHandler> settingsHandlerInitializer) {
+        final LazyInitializer<WorkbenchMountPointSettingsHandler<S>> settingsHandlerInitializer) {
         m_typeIdentifier = typeIdentifier;
         m_defaultMountID = defaultMountID;
         m_supportsMultipleInstances = supportsMultipleInstances;
         m_settingsHandlerInitializer = settingsHandlerInitializer;
     }
 
+    /**
+     * @return a unique ID (e.g. "com.knime.explorer.filesystem", etc.)
+     */
     public String getTypeIdentifier() {
         return m_typeIdentifier;
     }
 
+    /**
+     * @return if multiple instances of this mount point type can be created/added. For instance, a local workspace can
+     *         only be added once, while a hub mount point can be added multiple times.
+     */
     public boolean supportsMultipleInstances() {
         return m_supportsMultipleInstances;
     }
 
+    /**
+     * @return a unique mount ID if this mount point should appear by default in the mount table. Or null, if it
+     *         shouldn't be mounted by default. If an ID is returned the instantiation of the corresponding content
+     *         provider must not open any dialog (or cause any other interaction).
+     */
     public Optional<String> getDefaultMountID() {
         return Optional.ofNullable(m_defaultMountID);
     }
 
+    /**
+     * Always returns <code>false</code>. Except for the one temp space provider implementation.
+     * @return <code>false</code>. Almost always.
+     */
     public boolean isTemporaryMountPoint() {
         return m_typeIdentifier.equals(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
     }
 
-    public WorkbenchMountPointSettingsHandler getSettingsHandler() throws IOException {
+    public WorkbenchMountPointSettingsHandler<S> getSettingsHandler() throws IOException {
         try {
             return m_settingsHandlerInitializer.get();
         } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
@@ -128,10 +144,22 @@ public final class WorkbenchMountPointDefinition {
         }
     }
 
-    public static Map<String, WorkbenchMountPointDefinition> collectDefinitions() {
+    public WorkbenchMountPoint<S> createMountPoint(final String mountID, final Storage storage) throws IOException {
+        WorkbenchMountPointSettingsHandler<S> settingsHandler;
+        try {
+            settingsHandler = m_settingsHandlerInitializer.get();
+        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
+            throw new IOException(String.format("Failed to create settings handler for extension with "
+                + "type identifier %s", m_typeIdentifier), ex.getCause());
+        }
+        S settings = settingsHandler.fromStorage(storage);
+        return new WorkbenchMountPoint<>(this, mountID, settings);
+    }
+
+    public static Map<String, WorkbenchMountPointDefinition<?>> collectDefinitions() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-        Map<String, WorkbenchMountPointDefinition> result = new LinkedHashMap<>();
+        Map<String, WorkbenchMountPointDefinition<?>> result = new LinkedHashMap<>();
         for (IExtension ext : point.getExtensions()) {
             for (IConfigurationElement element : ext.getConfigurationElements()) {
                 final String identifier = element.getAttribute(EXT_ATT_TYPE_IDENTIFIER);
@@ -153,9 +181,9 @@ public final class WorkbenchMountPointDefinition {
                     continue;
                 }
                 // init lazy to avoid 3rd party bundle activation until needed
-                LazyInitializer<WorkbenchMountPointSettingsHandler> settingsHandlerInitializer =
-                    LazyInitializer.<WorkbenchMountPointSettingsHandler> builder() //
-                        .setInitializer(() -> (WorkbenchMountPointSettingsHandler)element
+                LazyInitializer<WorkbenchMountPointSettingsHandler<?>> settingsHandlerInitializer =
+                    LazyInitializer.<WorkbenchMountPointSettingsHandler<?>> builder() //
+                        .setInitializer(() -> (WorkbenchMountPointSettingsHandler<?>)element
                             .createExecutableExtension(EXT_ATT_SETTINGS_HANDLER_CLASS)) //
                         .get();
                 result.put(identifier, new WorkbenchMountPointDefinition(identifier, defaultMountID,
@@ -163,18 +191,6 @@ public final class WorkbenchMountPointDefinition {
             }
         }
         return Collections.unmodifiableMap(result);
-    }
-
-    public WorkbenchMountPoint createMountPoint(final String mountID, final Storage storage) throws IOException {
-        WorkbenchMountPointSettingsHandler settingsHandler;
-        try {
-            settingsHandler = m_settingsHandlerInitializer.get();
-        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
-            throw new IOException(String.format("Failed to create settings handler for extension with "
-                + "type identifier %s", m_typeIdentifier), ex.getCause());
-        }
-        WorkbenchMountPointSettings settings = settingsHandler.fromStorage(storage);
-        return new WorkbenchMountPoint(this, mountID, settings);
     }
 
 }

@@ -56,8 +56,8 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListe
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.NodeChangeEvent;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.knime.core.workbench.mounts.WorkbenchMountTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

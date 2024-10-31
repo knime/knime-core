@@ -35,7 +35,7 @@
          <attribute name="typeIdentifier" type="string" use="required">
             <annotation>
                <documentation>
-                  The identifier of the type of mount point, designating e.g. server or hub or local mount type.
+                  The identifier of the type of mount point, something unique.
                </documentation>
             </annotation>
          </attribute>
