@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -42,77 +43,42 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
+ * History
+ *   Oct 30, 2024 (wiswedel): created
  */
 package org.knime.core.workbench.mounts;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
+import java.io.IOException;
+import java.util.Objects;
 
-import org.knime.core.util.auth.Authenticator;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.osgi.service.prefs.Preferences;
 
 /**
- * Represents a content tree in the KNIME Explorer.
  *
- * @author ohl, University of Konstanz
+ * @author wiswedel
  */
-public final class WorkbenchMountPoint {
+public interface WorkbenchMountPointSettingsHandler {
 
-    private final WorkbenchMountPointDefinition m_definition;
+    static final Storage EMPTY_STORAGE = new Storage("");
 
-    private final String m_mountID;
-
-    private final WorkbenchMountPointSettings m_settings;
-
-    private Authenticator m_authenticator;
-
-    private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
-
-    WorkbenchMountPoint(final WorkbenchMountPointDefinition definition, final String mountID,
-        final WorkbenchMountPointSettings settings) {
-        m_definition = definition;
-        m_mountID = mountID;
-        m_settings = settings;
-        m_contentProviders = new LinkedHashMap<>();
+    record Storage(String storageString) {
+        public Storage {
+            Objects.requireNonNull(storageString);
+        }
     }
 
-    /**
-     * @return the definition
-     */
-    public WorkbenchMountPointDefinition getDefinition() {
-        return m_definition;
-    }
 
-    public String getMountID() {
-        return m_mountID;
-    }
 
-    public Optional<Authenticator> getAuthenticator() {
-        return Optional.ofNullable(m_authenticator);
-    }
+    WorkbenchMountPointSettings fromStorage(final Storage storage) throws IOException;
 
-    public WorkbenchMountPointSettings getSettings() {
-        return m_settings;
-    }
+    Storage toStorage(final WorkbenchMountPointSettings settings) throws IOException;
 
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
-        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
-    }
+    void saveStateToPreferenceNode(final IEclipsePreferences node, final WorkbenchMountPointSettings settings);
 
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
-        return Optional.ofNullable((T)m_contentProviders.get(providerType));
-    }
+    WorkbenchMountPointSettings loadStateFromPreferenceNode(final Preferences node);
 
-    public void dispose(final Class<? extends MountPointProvider> cl) {
-        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
-    }
+    // TODO refactor or accept the fact that this is a bit of a hack
+    String asLabel(final WorkbenchMountPointSettings settings);
 
-    public void dispose() {
-        m_contentProviders.values().forEach(MountPointProvider::dispose);
-        m_contentProviders.clear();
-    }
 }
