@@ -44,11 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 24, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.mountpoint.contribution;
 
-/** Concrete providers, e.g. old explorer mount points or "modern UI" space providers will implement this. */
-public interface MountPointProvider {
-    void dispose();
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
+
+/**
+ * No-op settings for local workspace and temp space.
+ *
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ */
+public final class NoopMountPointSettings implements WorkbenchMountPointSettings {
+
+    /** Static singleton. */
+    public static final NoopMountPointSettings INSTANCE = new NoopMountPointSettings();
+
+    private NoopMountPointSettings() {
+        // no-op
+    }
+
 }
