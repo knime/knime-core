@@ -47,7 +47,6 @@
  */
 package org.knime.core.workbench.mounts;
 
-import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -133,8 +132,12 @@ public final class WorkbenchMountTable {
         CHANGE_LISTENER.remove(listener); // NOSONAR (no performance hotspot)
     }
 
-    private static void notifyListeners(final MountPointEvent event) {
+    private static void notifyMountPointAdded(final MountPointEvent event) {
         CHANGE_LISTENER.forEach(listener -> listener.mountPointAdded(event));
+    }
+
+    private static void notifyMountPointRemoved(final MountPointEvent event) {
+        CHANGE_LISTENER.forEach(listener -> listener.mountPointRemoved(event));
     }
 
     /**
@@ -206,18 +209,12 @@ public final class WorkbenchMountTable {
         if (!compareSortOrder(mountIDs)) {
             synchronized (MOUNTED) {
                 for (String mountID : mountIDs) {
-                    WorkbenchMountPoint workbenchMountPoint = MOUNTED.get(mountID);
-                    if (workbenchMountPoint != null) {
-                        /*
-                         * Remove the mount point and insert it again immediately to
-                         * get the same order as in the mount id list.
-                         */
+                    final var wmp = MOUNTED.get(mountID);
+                    if (wmp != null) {
                         MOUNTED.remove(mountID);
-                        notifyListeners(new PropertyChangeEvent(workbenchMountPoint, MOUNT_POINT_PROPERTY,
-                            mountID, null));
-                        MOUNTED.put(mountID, workbenchMountPoint);
-                        notifyListeners(new PropertyChangeEvent(workbenchMountPoint,
-                            MOUNT_POINT_PROPERTY, null, mountID));
+                        notifyMountPointRemoved(new MountPointEvent(wmp));
+                        MOUNTED.put(mountID, wmp);
+                        notifyMountPointAdded(new MountPointEvent(wmp));
                     }
                 }
             }
@@ -236,7 +233,7 @@ public final class WorkbenchMountTable {
             }
             // compare entry set with mount ID list
             Iterator<Entry<String, WorkbenchMountPoint>> iterator = MOUNTED.entrySet().iterator();
-            for (int i = 0; i < mountIDs.size(); i++) {
+            for (var i = 0; i < mountIDs.size(); i++) {
                 if (!mountIDs.get(i).equals(iterator.next().getKey())) {
                     return false;
                 }
@@ -276,6 +273,7 @@ public final class WorkbenchMountTable {
     private static WorkbenchMountPoint mountOrRestore(final String mountID,
             final WorkbenchMountPointDefinition definition, final Storage storage) throws IOException {
         checkMountID(mountID);
+        WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
             // can't mount different providers with the same ID
             WorkbenchMountPoint existMp = MOUNTED.get(mountID);
@@ -296,32 +294,34 @@ public final class WorkbenchMountTable {
                 throw new IllegalStateException("Cannot mount " + definition.getTypeIdentifier() + " multiple times.");
             }
 
-            final WorkbenchMountPoint newProvider = definition.createMountPoint(mountID, storage);
-            MOUNTED.put(mountID, newProvider);
-            notifyListeners(new PropertyChangeEvent(mp, MOUNT_POINT_PROPERTY, null, mp.getMountID()));
-            return newProvider;
+            mp = definition.createMountPoint(mountID, storage);
+            MOUNTED.put(mountID, mp);
         }
+        notifyMountPointAdded(new MountPointEvent(mp));
+        return mp;
     }
 
     /**
-     * @param mountID the id to unmount
-     * @return true if unmounting was successful, false otherwise
+     * Unmount mount point specified by given mount ID, notifying all listeners.
+     *
+     * @param mountID the ID of the mount point to unmount
+     * @return {@code true} if unmounting was successful, {@code false} otherwise
      */
     public static synchronized boolean unmount(final String mountID) {
+        WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
-            WorkbenchMountPoint mp = MOUNTED.remove(mountID);
+            mp = MOUNTED.remove(mountID);
             if (mp == null) {
                 return false;
             }
-            mp.dispose();
-            notifyListeners(new PropertyChangeEvent(mp, MOUNT_POINT_PROPERTY,
-                    mp.getMountID(), null));
-            return true;
         }
+        notifyMountPointRemoved(new MountPointEvent(mp));
+        mp.dispose();
+        return true;
     }
 
     /**
-     * Unmounts all MountPoints.
+     * Unmounts all mount points, ignoring whether unmount was successful or not.
      */
     public static void unmountAll() {
         synchronized (MOUNTED) {
