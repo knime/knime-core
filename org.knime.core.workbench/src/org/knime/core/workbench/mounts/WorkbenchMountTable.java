@@ -55,30 +55,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.prefs.BackingStoreException;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableFunction;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.workbench.WorkbenchActivator;
+import org.knime.core.workbench.WorkbenchConstants;
+import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler.Storage;
 import org.knime.core.workbench.mounts.events.MountPointEvent;
 import org.knime.core.workbench.mounts.events.MountPointListener;
-import org.knime.workbench.explorer.view.AbstractContentProvider;
-import org.knime.workbench.explorer.view.AbstractContentProviderFactory;
-import org.knime.workbench.explorer.view.preferences.ExplorerPreferenceInitializer;
-import org.knime.workbench.explorer.view.preferences.MountSettings;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
+import org.knime.core.workbench.preferences.MountSettings;
 import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +148,9 @@ public final class WorkbenchMountTable {
      * @throws IOException if the mounting fails
      */
     public static WorkbenchMountPoint mount(final String mountID, final String providerID) throws IOException {
-        return mountOrRestore(mountID, providerID, null);
+        WorkbenchMountPointDefinition definition = WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
+                .orElseThrow(() -> new IOException("No mount point definition found for " + providerID));
+        return mountOrRestore(mountID, definition, WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
     }
 
     /**
@@ -262,9 +254,12 @@ public final class WorkbenchMountTable {
      * @return a new content provider instance - or null if user canceled.
      * @throws IOException if the mounting fails
      */
-    public static WorkbenchMountPoint mount(final String mountID,
-            final String providerID, final String storage) throws IOException {
-        return mountOrRestore(mountID, providerID, storage);
+    public static WorkbenchMountPoint mount(final String mountID, final String providerID, final String storage)
+        throws IOException {
+        WorkbenchMountPointDefinition definition = WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
+            .orElseThrow(() -> new IOException("No mount point definition found for " + providerID));
+        return mountOrRestore(mountID, definition,
+            storage == null ? WorkbenchMountPointSettingsHandler.EMPTY_STORAGE : new Storage(storage));
     }
 
     /**
@@ -279,33 +274,29 @@ public final class WorkbenchMountTable {
      * @return
      */
     private static WorkbenchMountPoint mountOrRestore(final String mountID,
-            final String typeIdentifier, final String storage) throws IOException {
+            final WorkbenchMountPointDefinition definition, final Storage storage) throws IOException {
         checkMountID(mountID);
         synchronized (MOUNTED) {
             // can't mount different providers with the same ID
             WorkbenchMountPoint existMp = MOUNTED.get(mountID);
             if (existMp != null) {
-                if (!Objects.equals(existMp.getDefinition().getTypeIdentifier(), typeIdentifier)) {
+                if (!Objects.equals(existMp.getDefinition(), definition)) {
                     LOGGER.debug("The mount point definition with the specified type ({}) is already mounted with "
-                            + "requested ID ({}).", typeIdentifier, mountID);
+                            + "requested ID ({}).", definition.getTypeIdentifier(), mountID);
                     return existMp;
                 }
                 throw new IOException(String.format("There is a different content mounted with the same mountID "
                     + "\"%s\" but different type: \"%s\" vs \"%s\"",
-                    mountID, typeIdentifier, existMp.getDefinition().getTypeIdentifier()));
+                    mountID, definition.getTypeIdentifier(), existMp.getDefinition().getTypeIdentifier()));
             }
 
             // TODO review checked exception type
-            WorkbenchMountPointDefinition def = WorkbenchActivator.getInstance() //
-                .getMountPointDefinition(typeIdentifier) //
-                .orElseThrow(() -> new IOException(
-                    "The mount point definition with the specified id (" + typeIdentifier + ") is not available."));
-            if (!def.supportsMultipleInstances() && isMounted(typeIdentifier)) {
+            if (!definition.supportsMultipleInstances() && isMounted(definition.getTypeIdentifier())) {
                 // should be prevented by the UI, hence unchecked exception
-                throw new IllegalStateException("Cannot mount " + def.getTypeIdentifier() + " multiple times.");
+                throw new IllegalStateException("Cannot mount " + definition.getTypeIdentifier() + " multiple times.");
             }
 
-            final WorkbenchMountPoint newProvider = def.createMountPoint(mountID, storage);
+            final WorkbenchMountPoint newProvider = definition.createMountPoint(mountID, storage);
             MOUNTED.put(mountID, newProvider);
             notifyListeners(new PropertyChangeEvent(mp, MOUNT_POINT_PROPERTY, null, mp.getMountID()));
             return newProvider;
@@ -349,7 +340,6 @@ public final class WorkbenchMountTable {
      * @return a map of available content providers (key = name, value = ID).
      */
     public static List<WorkbenchMountPointDefinition> getAddableContentProviders() {
-        var result = new LinkedList<WorkbenchMountPointDefinition>();
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
                 .filter(mpDef -> mpDef.supportsMultipleInstances() || !(isMounted(mpDef.getTypeIdentifier()))) //
@@ -421,125 +411,90 @@ public final class WorkbenchMountTable {
         unmountAll();
         mountTempSpace();
         synchronized (MOUNTED) {
-            for (MountSettings ms : getMountSettings()) {
-                // ignore inactive
+            for (MountSettings ms : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
                 if (!ms.isActive()) {
                     continue;
                 }
                 String mountID = ms.getMountID();
                 String storage = ms.getContent();
                 if (storage == null) {
-                    LOGGER.error("Corrupted mount table state storage. "
-                            + "Can't restore mount point '" + mountID + "'.");
+                    LOGGER.error("Corrupted mount table state storage. Can't restore mount point \"{}\".", mountID);
                     continue;
                 }
+
                 String factID = ms.getFactoryID();
                 if (factID == null) {
-                    LOGGER.error("Corrupted mount table state storage. "
-                            + "Can't restore mount point '" + mountID + "'.");
+                    LOGGER.error("Corrupted mount table state storage. Can't restore mount point \"{}\".", mountID);
+                    continue;
+                }
+
+                WorkbenchMountPointDefinition definition =
+                        WorkbenchActivator.getInstance().getMountPointDefinition(factID).orElse(null);
+                if (definition == null) {
+                    LOGGER.error("Unknown mount type \"{}\" stored, can't restore mount point \"{}\".", factID,
+                        mountID);
                     continue;
                 }
 
                 try {
-                    if (mountOrRestore(mountID, factID, storage)
-                            == null) {
-                        LOGGER.error("Unable to restore mount point '"
-                                + mountID + "' (from " + factID
-                                + ": returned null).");
+                    if (mountOrRestore(mountID, definition, new Storage(storage)) == null) {
+                        LOGGER.error("Unable to restore mount point '{}' (from {}: returned null).", mountID, factID);
                     }
                 } catch (Throwable t) {
                     String msg = t.getMessage();
                     if (msg == null || msg.isEmpty()) {
                         msg = "<no details>";
                     }
-                    LOGGER.error("Unable to restore mount point '" + mountID
-                            + "' (from " + factID + "): " + msg, t);
+                    LOGGER.atError().setCause(t).log("Unable to restore mount point '{}' (from {}): {}", mountID,
+                        factID, msg);
                 }
             }
         }
-
-    }
-
-    private static List<MountSettings> getMountSettings() {
-        // AP-8989 switching to IEclipsePreferences
-        List<MountSettings> mountSettings = new ArrayList<>();
-
-        IEclipsePreferences mountPointNode = InstanceScope.INSTANCE.getNode(MountSettings.getMountpointPreferenceLocation());
-        String[] childrenNames = null;
-        try {
-            childrenNames = mountPointNode.childrenNames();
-        } catch (BackingStoreException e) {
-            LOGGER.error("Unabled to read mount point preferences: " + e.getMessage(), e);
-        }
-
-        if (!ArrayUtils.isEmpty(childrenNames)) {
-            mountSettings = MountSettings.loadSortedMountSettingsFromPreferenceNode();
-        } else {
-            IPreferenceStore pStore = ExplorerActivator.getDefault().getPreferenceStore();
-            String mpSettings;
-            if (ExplorerPreferenceInitializer.existsMountPreferencesXML()) {
-                mpSettings = pStore.getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
-            } else {
-                mpSettings = pStore.getString(PreferenceConstants.P_EXPLORER_MOUNT_POINT);
-            }
-            if (StringUtils.isEmpty(mpSettings)) {
-                ExplorerPreferenceInitializer.loadDefaultMountPoints();
-                mpSettings = pStore.getDefaultString(PreferenceConstants.P_EXPLORER_MOUNT_POINT_XML);
-            }
-             mountSettings = MountSettings.parseSettings(mpSettings, true);
-             mountSettings.addAll(MountSettings.loadSortedMountSettingsFromDefaultPreferenceNode());
-        }
-
-        return mountSettings;
     }
 
     /* Mounts all hidden spaces that provide a default mount id. */
     private static void mountTempSpace() {
-        List<AbstractContentProviderFactory> contentProviders = getAddableContentProviders();
-        for (AbstractContentProviderFactory fac : contentProviders) {
-            String mountID = fac.getDefaultMountID();
-            if (fac.isTempSpace() && mountID != null) {
-                try {
-                    mountOrRestore(mountID, fac.getID(), null);
-                    LOGGER.info("Mounted Explorer Temp Space '" + mountID + "' - " + fac.getID());
-                    return; // mounting only one temp space
-                } catch (IOException e) {
-                    LOGGER.error("Unable to mount the temp space '" + mountID + "' - " + fac.getID(), e);
-                }
+        final var tempDefOptional = WorkbenchActivator.getInstance().getMountPointDefinition(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
+        if (tempDefOptional.isEmpty()) {
+            LOGGER.error("No mount point definition for temp space found.");
+            return;
+        }
+        final WorkbenchMountPointDefinition tempDef = tempDefOptional.get();
+        String mountID = tempDef.getDefaultMountID().orElse(null);
+        if (tempDef.isTemporaryMountPoint() && mountID != null) {
+            try {
+                mountOrRestore(mountID, tempDef, WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
+                LOGGER.info("Mounted Explorer Temp Space '{}' - {}", mountID, tempDef.getTypeIdentifier());
+            } catch (IOException e) {
+                LOGGER.atError().setCause(e).log("Unable to mount the temp space '{}' - {}", mountID,
+                    tempDef.getTypeIdentifier());
             }
         }
-        LOGGER.debug("No Explorer Temp Space available.");
     }
 
     /**
      * Updates the settings of all providers in the preferences. Some providers may get additional attributes once they
-     * are used (e.g. the REST address for server mount points) which should be persisted.
+     * are used (e.g. the REST address for server mount points) which should be persisted. (e.g. user name)
      * @since 7.3
      */
     public static void updateProviderSettings() {
-        // AP-8989 switching to IEclipsePreferences
-        Map<String, AbstractContentProvider> mountedContent = getMountedContent();
         List<MountSettings> mountSettingsToSave = new ArrayList<>();
-
-        for (MountSettings ms : getMountSettings()) {
-            if (mountedContent.containsKey(ms.getMountID())) {
-                mountSettingsToSave.add(new MountSettings(mountedContent.get(ms.getMountID())));
-            } else {
+        synchronized (MOUNTED) {
+            for (MountSettings ms : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
+                WorkbenchMountPoint workbenchMountPoint = MOUNTED.get(ms.getMountID());
+                if (workbenchMountPoint != null) {
+                    try {
+                        ms = new MountSettings(workbenchMountPoint);
+                    } catch (IOException ex) {
+                        LOGGER.atError().setCause(ex).log("Failed to update mount point settings for '{}'",
+                            ms.getMountID());
+                        // ignored, save unchanged
+                    }
+                }
                 mountSettingsToSave.add(ms);
             }
         }
-
         MountSettings.saveMountSettings(mountSettingsToSave);
 
-    }
-
-    /**
-     * Returns the collected ContentProviderFactories.
-     *
-     * @return the collected ContentProviderFactories
-     * @since 8.2
-     */
-    public static TreeMap<String, AbstractContentProviderFactory> getContentProviderFactories() {
-        return CONTENT_FACTORIES;
     }
 }

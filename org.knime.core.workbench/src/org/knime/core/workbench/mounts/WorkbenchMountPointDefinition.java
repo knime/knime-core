@@ -48,16 +48,22 @@
  */
 package org.knime.core.workbench.mounts;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.workbench.WorkbenchConstants;
+import org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler.Storage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,17 +71,35 @@ import org.slf4j.LoggerFactory;
  *
  * @author wiswedel
  */
-// TODO record
 public final class WorkbenchMountPointDefinition {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkbenchMountPointDefinition.class);
 
     private static final String EXT_POINT_ID = "org.knime.core.workbench.mount";
 
+    private static final String EXT_ATT_TYPE_IDENTIFIER = "typeIdentifier";
+
+    private static final String EXT_ATT_DEFAULT_MOUNT_ID = "defaultMountID";
+
+    private static final String EXT_ATT_SUPPORTS_MULTIPLE_INSTANCES = "supportsMultipleInstances";
+
+    private static final String EXT_ATT_SETTINGS_HANDLER_CLASS = "settingsHandlerClass";
+
     private final String m_typeIdentifier;
 
-    private WorkbenchMountPointDefinition(final String typeIdentifier) {
+    private final boolean m_supportsMultipleInstances;
+
+    private final String m_defaultMountID;
+
+    private final LazyInitializer<WorkbenchMountPointSettingsHandler> m_settingsHandlerInitializer;
+
+    private WorkbenchMountPointDefinition(final String typeIdentifier, final String defaultMountID,
+        final boolean supportsMultipleInstances,
+        final LazyInitializer<WorkbenchMountPointSettingsHandler> settingsHandlerInitializer) {
         m_typeIdentifier = typeIdentifier;
+        m_defaultMountID = defaultMountID;
+        m_supportsMultipleInstances = supportsMultipleInstances;
+        m_settingsHandlerInitializer = settingsHandlerInitializer;
     }
 
     public String getTypeIdentifier() {
@@ -83,7 +107,25 @@ public final class WorkbenchMountPointDefinition {
     }
 
     public boolean supportsMultipleInstances() {
-        return false; // TODO fix me in ext point
+        return m_supportsMultipleInstances;
+    }
+
+    public Optional<String> getDefaultMountID() {
+        return Optional.ofNullable(m_defaultMountID);
+    }
+
+    public boolean isTemporaryMountPoint() {
+        return m_typeIdentifier.equals(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
+    }
+
+    public WorkbenchMountPointSettingsHandler getSettingsHandler() throws IOException {
+        try {
+            return m_settingsHandlerInitializer.get();
+        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
+            throw new IOException(String
+                .format("Failed to create settings handler for extension with type identifier %s", m_typeIdentifier),
+                ex.getCause());
+        }
     }
 
     public static Map<String, WorkbenchMountPointDefinition> collectDefinitions() {
@@ -92,24 +134,47 @@ public final class WorkbenchMountPointDefinition {
         Map<String, WorkbenchMountPointDefinition> result = new LinkedHashMap<>();
         for (IExtension ext : point.getExtensions()) {
             for (IConfigurationElement element : ext.getConfigurationElements()) {
-                final String identifier = element.getAttribute("typeIdentifier");
+                final String identifier = element.getAttribute(EXT_ATT_TYPE_IDENTIFIER);
                 if (StringUtils.isBlank(identifier)) {
                     LOGGER.error("Mount point identifier is missing in extension {}", ext.getContributor().getName());
-                } else {
-                    result.put(identifier, new WorkbenchMountPointDefinition(identifier));
+                    continue;
                 }
+                final String defaultMountID = element.getAttribute(EXT_ATT_DEFAULT_MOUNT_ID);
+                if (defaultMountID != null && !WorkbenchMountTable.isValidMountID(defaultMountID)) { // null is OK
+                    LOGGER.error("Invalid {} \"{}\" in extension in {}", EXT_ATT_DEFAULT_MOUNT_ID, defaultMountID,
+                        ext.getContributor().getName());
+                    continue;
+                }
+                final String supportsMultipleInstancesS = element.getAttribute(EXT_ATT_SUPPORTS_MULTIPLE_INSTANCES);
+                final boolean supportsMultipleInstances = Boolean.parseBoolean(supportsMultipleInstancesS);
+                final String settingsHandlerClassS = element.getAttribute(EXT_ATT_SETTINGS_HANDLER_CLASS);
+                if (StringUtils.isBlank(settingsHandlerClassS)) {
+                    LOGGER.error("Settings handler class is missing in extension {}", ext.getContributor().getName());
+                    continue;
+                }
+                // init lazy to avoid 3rd party bundle activation until needed
+                LazyInitializer<WorkbenchMountPointSettingsHandler> settingsHandlerInitializer =
+                    LazyInitializer.<WorkbenchMountPointSettingsHandler> builder() //
+                        .setInitializer(() -> (WorkbenchMountPointSettingsHandler)element
+                            .createExecutableExtension(EXT_ATT_SETTINGS_HANDLER_CLASS)) //
+                        .get();
+                result.put(identifier, new WorkbenchMountPointDefinition(identifier, defaultMountID,
+                    supportsMultipleInstances, settingsHandlerInitializer));
             }
         }
         return Collections.unmodifiableMap(result);
     }
 
-    /**
-     * @param mountID
-     * @param storage
-     * @return
-     */
-    public WorkbenchMountPoint createMountPoint(final String mountID, final String storage) {
-        return new WorkbenchMountPoint(this, mountID, storage);
+    public WorkbenchMountPoint createMountPoint(final String mountID, final Storage storage) throws IOException {
+        WorkbenchMountPointSettingsHandler settingsHandler;
+        try {
+            settingsHandler = m_settingsHandlerInitializer.get();
+        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
+            throw new IOException(String.format("Failed to create settings handler for extension with "
+                + "type identifier %s", m_typeIdentifier), ex.getCause());
+        }
+        WorkbenchMountPointSettings settings = settingsHandler.fromStorage(storage);
+        return new WorkbenchMountPoint(this, mountID, settings);
     }
 
 }

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -41,78 +42,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
+ * History
+ *   Oct 30, 2024 (wiswedel): created
  */
 package org.knime.core.workbench.mounts;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
-import org.knime.core.util.auth.Authenticator;
-
 /**
- * Represents a content tree in the KNIME Explorer.
- *
- * @author ohl, University of Konstanz
+ * 
+ * @author wiswedel
  */
-public final class WorkbenchMountPoint {
+public interface WorkbenchMountPointSettings {
 
-    private final WorkbenchMountPointDefinition m_definition;
-
-    private final String m_mountID;
-
-    private final WorkbenchMountPointSettings m_settings;
-
-    private Authenticator m_authenticator;
-
-    private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
-
-    WorkbenchMountPoint(final WorkbenchMountPointDefinition definition, final String mountID,
-        final WorkbenchMountPointSettings settings) {
-        m_definition = definition;
-        m_mountID = mountID;
-        m_settings = settings;
-        m_contentProviders = new LinkedHashMap<>();
-    }
-
-    /**
-     * @return the definition
-     */
-    public WorkbenchMountPointDefinition getDefinition() {
-        return m_definition;
-    }
-
-    public String getMountID() {
-        return m_mountID;
-    }
-
-    public Optional<Authenticator> getAuthenticator() {
-        return Optional.ofNullable(m_authenticator);
-    }
-
-    public WorkbenchMountPointSettings getSettings() {
-        return m_settings;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
-        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
-        return Optional.ofNullable((T)m_contentProviders.get(providerType));
-    }
-
-    public void dispose(final Class<? extends MountPointProvider> cl) {
-        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
-    }
-
-    public void dispose() {
-        m_contentProviders.values().forEach(MountPointProvider::dispose);
-        m_contentProviders.clear();
-    }
 }
