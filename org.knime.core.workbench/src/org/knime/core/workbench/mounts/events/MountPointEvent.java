@@ -54,18 +54,19 @@ import org.knime.core.workbench.mounts.WorkbenchMountPoint;
 import org.knime.core.workbench.mounts.WorkbenchMountTable;
 
 /**
+ * Event object for mount point changes.
  *
  * @author wiswedel
  */
 @SuppressWarnings("serial")
 public class MountPointEvent extends EventObject {
 
-    private transient WorkbenchMountPoint m_mountPoint;
+    private final WorkbenchMountPoint m_mountPoint;
 
     /**
      * Constructs a new MountPointEvent.
      *
-     * @param mountPointID the ID of the mount point associated with this event
+     * @param mountPoint mount point associated with this event
      */
     public MountPointEvent(final WorkbenchMountPoint mountPoint) {
         super(WorkbenchMountTable.class);
