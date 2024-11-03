@@ -386,7 +386,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     void cleanup() {
-        super.cleanup();
         NodeContext.pushContext(this);
         try {
             m_node.cleanup();
@@ -395,6 +394,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
         } finally {
             NodeContext.removeLastContext();
         }
+        // call after node has been cleaned up, (DB) extensions rely on credentials provider (AP-23380)
+        super.cleanup();
     }
 
     /** {@inheritDoc} */
