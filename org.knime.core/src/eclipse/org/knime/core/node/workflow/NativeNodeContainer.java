@@ -392,6 +392,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
         } finally {
             NodeContext.removeLastContext();
         }
+        // AP-23380 (temporary fix): clear credentials provider in this class, not the super class,
+        // do it AFTER node cleanup
+        final var credentialsProvider = getCredentialsProvider();
+        if (credentialsProvider != null) {
+            credentialsProvider.cleanup();
+        }
     }
 
     /** {@inheritDoc} */
