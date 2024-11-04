@@ -63,7 +63,7 @@ public final class XMLValueRenderer2 extends MultiLineStringValueRenderer {
     /**
      * Maximum number of characters to render.
      */
-    private static final int MAX_RENDER_CHARS = 10000;
+    private static final int MAX_RENDER_CHARS = 1000;
 
     /**
      * Factory for {@link XMLValueRenderer2}.
