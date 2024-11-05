@@ -54,6 +54,7 @@ import org.knime.core.data.v2.schema.ValueSchema;
  * Extends both {@code RowRead} and {@code RowWrite}. A {@code RowBuffer} can be used as a "staging row" for preparing a
  * {@code RowRead} to be {@link RowWriteCursor#commit(RowRead) committed} to a {@code RowWriteCursor}.
  *
+ * @since 5.4
  * @author Tobias Pietzsch
  */
 public interface RowBuffer extends RowRead, RowWrite {

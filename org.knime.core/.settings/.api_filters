@@ -289,6 +289,34 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/RowContainer.java" type="org.knime.core.data.v2.RowContainer">
+        <filter comment="AP-21999: All RowContainer implementation know the schema, this method just exposed it. This is needed for the RowContainer::createRowBuffer method" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowContainer"/>
+                <message_argument value="getSchema()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/RowWriteCursor.java" type="org.knime.core.data.v2.RowWriteCursor">
+        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="commit(RowRead)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="canForward()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
+                <message_argument value="forward()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
         <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
             <message_arguments>

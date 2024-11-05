@@ -58,6 +58,7 @@ import org.knime.core.table.row.ReadAccessRow;
 /**
  * Implements a {@link RowRead} based on a {@link ReadAccessRow}.
  *
+ * @since 5.4
  * @author Tobias Pieztsch
  */
 public class ReadAccessRowRead implements RowRead {

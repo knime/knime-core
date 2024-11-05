@@ -57,6 +57,7 @@ import org.knime.core.table.row.WriteAccessRow;
 /**
  * Implements a {@link RowWrite} based on a {@link WriteAccessRow}.
  *
+ * @since 5.4
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 public final class WriteAccessRowWrite implements RowWrite {

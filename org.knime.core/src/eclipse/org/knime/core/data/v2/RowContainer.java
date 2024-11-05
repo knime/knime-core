@@ -67,6 +67,7 @@ public interface RowContainer extends AutoCloseable {
     /**
      * Get the {@code ValueSchema} of this container.
      *
+     * @since 5.4
      * @return the ValueSchema of this container
      */
     ValueSchema getSchema();
@@ -79,6 +80,7 @@ public interface RowContainer extends AutoCloseable {
      * <p>
      * {@code RowBuffer} instances are meant to be re-used: set values, commit, set new values, commit, etc.
      *
+     * @since 5.4
      * @return a new RowBuffer with the schema of this container
      */
     default RowBuffer createRowBuffer() {
