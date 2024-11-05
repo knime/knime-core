@@ -45,6 +45,7 @@
  */
 package org.knime.core.data.container;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.RowCursor;
 import org.knime.core.data.v2.RowRead;
@@ -58,20 +59,23 @@ final class FallbackRowCursor implements RowCursor {
 
     private final CloseableRowIterator m_delegate;
 
-    private final DataRowRead m_rowRead;
+    private DataRow m_current;
+
+    private final RowRead m_rowRead;
 
     private final int m_numValues;
 
     FallbackRowCursor(final CloseableRowIterator delegate, final DataTableSpec spec) {
         m_delegate = delegate;
-        m_rowRead = new DataRowRead();
         m_numValues = spec.getNumColumns();
+        m_rowRead = RowRead.suppliedBy(() -> m_current, m_numValues);
     }
 
     @Override
     public RowRead forward() {
         if (m_delegate.hasNext()) {
-            return m_rowRead.setDelegate(m_delegate.next());
+            m_current = m_delegate.next();
+            return m_rowRead;
         }
         return null;
     }
@@ -79,6 +83,7 @@ final class FallbackRowCursor implements RowCursor {
     @Override
     public void close() {
         m_delegate.close();
+        m_current = null;
     }
 
     @Override
