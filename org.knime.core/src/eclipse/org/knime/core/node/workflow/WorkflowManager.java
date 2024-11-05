@@ -387,6 +387,8 @@ public final class WorkflowManager extends NodeContainer
 
     private WorkflowContextV2 m_workflowContext;
 
+    private final WorkflowResourceCache m_workflowResourceCache;
+
     private DataContainerSettings m_dataContainerSettings;
 
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
@@ -476,6 +478,7 @@ public final class WorkflowManager extends NodeContainer
             // be any dependencies to parent
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowLock = new WorkflowLock(this);
+            m_workflowResourceCache = new WorkflowResourceCache();
             m_workflowContext = context; // might be null
             createAndSetWorkflowTempDirectory(context);
             m_tableBackendSettings = new WorkflowTableBackendSettings();
@@ -489,6 +492,7 @@ public final class WorkflowManager extends NodeContainer
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             // otherwise we may have incoming and/or outgoing dependencies...
             m_workflowContext = context;
+            m_workflowResourceCache = null;
         }
         (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         m_dataRepository = dataRepositoryOptional.orElseGet(() -> new WorkflowDataRepository());
@@ -570,8 +574,10 @@ public final class WorkflowManager extends NodeContainer
                     WorkflowContextV2.forTemporaryWorkflow(getNodeContainerDirectory().getFile().toPath(), null);
             }
             createAndSetWorkflowTempDirectory(workflowContext);
+            m_workflowResourceCache = new WorkflowResourceCache();
         } else {
             workflowContext = null;
+            m_workflowResourceCache = null;
         }
         (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         m_workflowContext = workflowContext;
@@ -656,6 +662,7 @@ public final class WorkflowManager extends NodeContainer
             m_workflowLock = new WorkflowLock(this);
             m_dataRepository = new WorkflowDataRepository();
             m_tableBackendSettings = new WorkflowTableBackendSettings();
+            m_workflowResourceCache = new WorkflowResourceCache();
             // TODO  m_workflowContext derived from save location (see old persistor constructor)
             if (isProject) {
                 //TODO m_metadata = ...;
@@ -665,6 +672,7 @@ public final class WorkflowManager extends NodeContainer
             m_dataRepository = m_directNCParent != null ? m_directNCParent.getProjectWFM().getWorkflowDataRepository()
                 : new WorkflowDataRepository();
             m_workflowContext = null;
+            m_workflowResourceCache = null;
         }
         (isProject ? PROJECT_COUNTER : NO_PROJECT_COUNTER).track(this); // NOSONAR
         LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
@@ -10125,6 +10133,9 @@ public final class WorkflowManager extends NodeContainer
                 nc.cleanup();
             }
             getConnectionContainers().stream().forEach(c -> c.cleanup());
+            if (m_workflowResourceCache != null) {
+                m_workflowResourceCache.dispose();
+            }
             if (m_tmpDir != null) {
                 // delete the flow temp dir that we created
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
@@ -10137,7 +10148,6 @@ public final class WorkflowManager extends NodeContainer
                     }
                 });
             }
-
             m_dataRepository = null;
         }
     }
@@ -11138,6 +11148,14 @@ public final class WorkflowManager extends NodeContainer
      */
     public void setWorkflowContext(final WorkflowContextV2 newWorkflowContext) {
         m_workflowContext = newWorkflowContext;
+    }
+
+    /**
+     * @return for projects, the non-null {@link WorkflowResourceCache}. For other instances, null.
+     * @since 5.4
+     */
+    WorkflowResourceCache getWorkflowResourceCache() {
+        return m_workflowResourceCache;
     }
 
     /**

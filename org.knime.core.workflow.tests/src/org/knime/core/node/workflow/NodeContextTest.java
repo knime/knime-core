@@ -245,6 +245,7 @@ public class NodeContextTest {
     public void testEmptyContext() {
         NodeContext.pushContext((NodeContext)null);
         assertThat("Unexpected node context", NodeContext.getContext(), is(nullValue()));
+        assertThat("Unexpected node context", NodeContext.getContextOptional(), is(Optional.empty()));
         NodeContext.removeLastContext(); // must not throw an exception
     }
 

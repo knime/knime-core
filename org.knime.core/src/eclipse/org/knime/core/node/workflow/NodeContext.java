@@ -254,6 +254,15 @@ public final class NodeContext {
     }
 
     /**
+     * Wraps the result of {@link #getContext()} in an {@link Optional}.
+     * @return An optional representing the current node context.
+     * @since 5.4
+     */
+    public static Optional<NodeContext> getContextOptional() {
+        return Optional.ofNullable(getContext());
+    }
+
+    /**
      * Pushes a new context on the context stack for the current thread using the given node container.
      *
      * @param nodeContainer the node container for the current thread, must not be <code>null</code>
