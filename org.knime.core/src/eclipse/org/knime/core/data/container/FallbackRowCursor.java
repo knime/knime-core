@@ -83,7 +83,6 @@ final class FallbackRowCursor implements RowCursor {
     @Override
     public void close() {
         m_delegate.close();
-        m_current = null;
     }
 
     @Override
