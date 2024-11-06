@@ -118,14 +118,25 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
         return DESCRIPTION;
     }
 
-    private static final int TRUNCATED_LENGTH = 10_000;
+    private static final int TRUNCATED_LENGTH = 1_000;
 
-    /** Truncates long strings to a size that they won't cause endless loops when rendering. */
     static String truncateOverlyLongStrings(final String s) {
+        return truncateOverlyLongStrings(s, TRUNCATED_LENGTH);
+    }
+
+    /**
+     * Truncates long strings to a size that they won't cause endless loops when rendering.
+     *
+     * @param s the to-be-truncated string
+     * @param truncatedLength the length (in characters) of the truncated string
+     * @return the truncated string
+     * @since 5.4
+     */
+    public static String truncateOverlyLongStrings(final String s, final int truncatedLength) {
         final int length = StringUtils.length(s);
-        if (length > TRUNCATED_LENGTH) {
-            return String.format("%s ... (truncated %d characters)", StringUtils.truncate(s, TRUNCATED_LENGTH),
-                length - TRUNCATED_LENGTH);
+        if (length > truncatedLength) {
+            return String.format("%s ... (truncated %d characters)", StringUtils.truncate(s, truncatedLength),
+                length - truncatedLength);
         }
         return s;
     }
