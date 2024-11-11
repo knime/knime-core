@@ -55,13 +55,18 @@
           "additionalProperties": {
             "type": "integer"
           }
+        },
+        "settingsChanged": {
+            "description": "The number of times node settings were changed by the user via a dialog.",
+            "type": "integer"
         }
       },
       "required": [
         "nodes",
         "metaNodes",
         "wrappedNodes",
-        "createdVia"
+        "createdVia",
+        "settingsChanged"
       ]
     },
     "uptime": {
@@ -75,6 +80,14 @@
     "remoteWorkflowsOpened": {
       "description": "The total number of workflows opened from a Server or Hub repository (not via the remote workflow editor).",
       "type": "integer"
+    },
+    "workflowsCreated": {
+        "description": "The total number of workflows created in the local space",
+        "type": "integer"
+    },
+    "remoteWorkflowsCreated": {
+        "description": "The total number of workflows created on a Server or Hub repository",
+        "type": "integer"
     },
     "columnarStorageWorkflowsOpened": {
       "description": "The number of workflows that have been opened with the columnar backend enabled.",
@@ -133,6 +146,8 @@
     "uptime",
     "workflowsOpened",
     "remoteWorkflowsOpened",
+    "workflowsCreated",
+    "remoteWorkflowsCreated",
     "columnarStorageWorkflowsOpened",
     "workflowsImported",
     "workflowsExported",

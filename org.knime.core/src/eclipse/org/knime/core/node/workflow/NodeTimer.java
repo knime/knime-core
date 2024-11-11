@@ -218,8 +218,16 @@ public final class NodeTimer {
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
         private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
 
+        // Reported since 5.4 -- stores number of times the node settings were changed via the dialog
+        private int m_nodeSettingsChanged;
+
+        // Reported since 5.4 -- stores number of times a workflow was created via the UI (local or remote repository)
+        private int m_workflowsCreated;
+        private int m_remoteWorkflowsCreated;
+
         private int m_workflowsImported = 0;
         private int m_workflowsExported = 0;
+
         private int m_launches = 0;
         private int m_crashes = 0;
         private long m_timeOfLastSave = System.currentTimeMillis() - SAVEINTERVAL + 1000*60;
@@ -237,6 +245,14 @@ public final class NodeTimer {
             }
             //load the global stats
             readFromFile();
+        }
+
+        /**
+         * @return {@code true} if globaltimer is enabled, {@code false} otherwise
+         * @since 5.4
+         */
+        public static boolean isEnabled() {
+            return !DISABLE_GLOBAL_TIMER;
         }
 
         private void addExecutionTime(final NodeContainer nc, final boolean success, final long exectime) {
@@ -321,6 +337,35 @@ public final class NodeTimer {
             if (usesColumnarStorageBackend(wfm)) {
                 m_columnarStorageWorkflowsOpened++;
             }
+        }
+
+        /**
+         * Called when a workflow is created independent of its source, e.g. local or remote.
+         * The type is used to distinguish between workflows created in the LOCAL or a remote repository.
+         *
+         * @param localOrRemote {@link WorkflowType#LOCAL} if created in the LOCAL repository,
+         *  {@link WorkflowType#REMOTE} otherwise (remote repository)
+         * @since 5.4
+         */
+        public void incWorkflowCreate(final WorkflowType localOrRemote) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_workflowsCreated++;
+            if (WorkflowType.REMOTE == localOrRemote) {
+                m_remoteWorkflowsCreated++;
+            }
+        }
+
+        /**
+         * Called when the node settings were modified and saved by the user, by clicking OK in the dialog.
+         * @since 5.4
+         */
+        public void incNodeSettingsChanged() {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            m_nodeSettingsChanged++;
         }
 
         /**
@@ -551,11 +596,14 @@ public final class NodeTimer {
                         jobNodesCreated.add(e.getKey().name(), e.getValue().intValue());
                     }
                     job2.add("createdVia", jobNodesCreated);
+                    job2.add("settingsChanged", m_nodeSettingsChanged);
             }
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
             job.add("workflowsOpened", m_workflowsOpened);
             job.add("remoteWorkflowsOpened", m_remoteWorkflowsOpened);
+            job.add("workflowsCreated", m_workflowsCreated);
+            job.add("remoteWorkflowsCreated", m_remoteWorkflowsCreated);
             job.add("columnarStorageWorkflowsOpened", m_columnarStorageWorkflowsOpened);
             job.add("workflowsImported", m_workflowsImported);
             job.add("workflowsExported", m_workflowsExported);
@@ -850,12 +898,21 @@ public final class NodeTimer {
                                         new MutableInteger(joNodesCreated.getInt(nodeKey)));
                                 }
                             }
+
+                            // settings changes via dialog
+                            m_nodeSettingsChanged = jo2.getInt("settingsChanged", 0);
                             break;
                         case "workflowsOpened":
                             m_workflowsOpened = jo.getInt(key);
                             break;
                         case "remoteWorkflowsOpened":
                             m_remoteWorkflowsOpened = jo.getInt(key);
+                            break;
+                        case "workflowsCreated":
+                            m_workflowsCreated = jo.getInt(key, m_workflowsCreated);
+                            break;
+                        case "remoteWorkflowsCreated":
+                            m_remoteWorkflowsCreated = jo.getInt(key, m_remoteWorkflowsCreated);
                             break;
                         case "columnarStorageWorkflowsOpened":
                             m_columnarStorageWorkflowsOpened = jo.getInt(key);
@@ -928,9 +985,12 @@ public final class NodeTimer {
             m_nodesCreatedVia = new LinkedHashMap<>();
             m_workflowsOpened = 0;
             m_remoteWorkflowsOpened = 0;
+            m_workflowsCreated = 0;
+            m_remoteWorkflowsCreated = 0;
             m_columnarStorageWorkflowsOpened = 0;
             m_workflowsImported = 0;
             m_workflowsExported = 0;
+            m_nodeSettingsChanged = 0;
             m_webUIPerspectiveSwitches = 0;
             m_javaUIPerspectiveSwitches = 0;
             m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
@@ -943,9 +1003,12 @@ public final class NodeTimer {
             m_nodesCreatedVia = new LinkedHashMap<>();
             m_workflowsOpened = 0;
             m_remoteWorkflowsOpened = 0;
+            m_workflowsCreated = 0;
+            m_remoteWorkflowsCreated = 0;
             m_columnarStorageWorkflowsOpened = 0;
             m_workflowsImported = 0;
             m_workflowsExported = 0;
+            m_nodeSettingsChanged = 0;
             m_webUIPerspectiveSwitches = 0;
             m_javaUIPerspectiveSwitches = 0;
             m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;

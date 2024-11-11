@@ -63,6 +63,7 @@ import org.knime.core.node.exec.dataexchange.in.PortObjectInNodeFactory;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeTimer.GlobalNodeStats;
 import org.knime.core.node.workflow.NodeTimer.GlobalNodeStats.NodeCreationType;
+import org.knime.core.node.workflow.NodeTimer.GlobalNodeStats.WorkflowType;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -133,6 +134,7 @@ public class NodeTimerTest {
     void setup() throws IOException {
         NodeTimer.GLOBAL_TIMER.resetAllCounts();
         m_wfm = WorkflowManagerUtil.createEmptyWorkflow();
+        NodeTimer.GLOBAL_TIMER.incWorkflowCreate(WorkflowType.LOCAL);
     }
 
     /**
@@ -159,6 +161,10 @@ public class NodeTimerTest {
         assertThatJson(jsonString, "/nodestats/createdVia").isEqualTo("""
                 {"WEB_UI" : 1}
                 """);
+        // no settings changed yet via dialog
+        assertThatJson(jsonString, "/nodestats/settingsChanged").isEqualTo("0");
+        // the empty workflow created in `@BeforeEach`
+        assertThatJson(jsonString, "/workflowsCreated").isEqualTo("1");
 
         var schema = readNodeTimerSchema();
         var errors = schema.validate(MAPPER.readTree(jsonString));
