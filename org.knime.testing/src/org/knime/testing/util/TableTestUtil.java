@@ -86,6 +86,7 @@ import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.image.png.PNGImageCell;
 import org.knime.core.data.image.png.PNGImageCellFactory;
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ValueFormatHandler;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCell;
 import org.knime.core.data.vector.bitvector.SparseBitVectorCellFactory;
 import org.knime.core.node.BufferedDataContainer;
@@ -149,9 +150,26 @@ public final class TableTestUtil {
          * @return this builder
          */
         public SpecBuilder addColumn(final String name, final DataType type, final ColorHandler colorHandler) {
+            return addColumn(name, type, colorHandler, null);
+        }
+
+        /**
+         * Add a column with a given name, attached colorHandler and of a given type to this spec.
+         *
+         * @param name the name of the to-be-added column
+         * @param type the type of the to-be-added column
+         * @param colorHandler the color handler that is to be attached to the to-be-added column. Null if none.
+         * @param formatHandler the {@link ValueFormatHandler} that should be attached to the column
+         * @return this builder
+         */
+        public SpecBuilder addColumn(final String name, final DataType type, final ColorHandler colorHandler,
+            final ValueFormatHandler formatHandler) {
             final var colSpecBuilder = new DataColumnSpecCreator(name, type);
             if (colorHandler != null) {
                 colSpecBuilder.setColorHandler(colorHandler);
+            }
+            if (formatHandler != null) {
+                colSpecBuilder.setValueFormatHandler(formatHandler);
             }
             m_columnSpecs.add(colSpecBuilder.createSpec());
             return this;
@@ -585,6 +603,8 @@ public final class TableTestUtil {
          */
         private final ColorHandler m_colorHandler;
 
+        private final ValueFormatHandler m_formatHandler;
+
         /**
          * @param name the name of the column
          * @param type the {@link DataType} of the column
@@ -602,10 +622,23 @@ public final class TableTestUtil {
          */
         public ObjectColumn(final String name, final DataType type, final ColorHandler colorHandler,
             final Object[] data) {
+            this(name, type, colorHandler, data, null);
+        }
+
+        /**
+         * @param name the name of the column
+         * @param type the {@link DataType} of the column
+         * @param colorHandler the color handler that should be attached to the columns. Null if none
+         * @param data the source of the row values of the column
+         * @param formatHandler the {@link ValueFormatHandler} that should be attached to the column
+         */
+        public ObjectColumn(final String name, final DataType type, final ColorHandler colorHandler,
+            final Object[] data, final ValueFormatHandler formatHandler) {
             m_name = name;
             m_type = type;
             m_colorHandler = colorHandler;
             m_data = data;
+            m_formatHandler = formatHandler;
         }
     }
 
@@ -626,7 +659,8 @@ public final class TableTestUtil {
         final ObjectColumn... objectColumns) {
         final var columnList = new ArrayList<ObjectColumn>(Arrays.asList(objectColumns));
         final var specBuilder = new SpecBuilder();
-        columnList.forEach(col -> specBuilder.addColumn(col.m_name, col.m_type, col.m_colorHandler));
+        columnList
+            .forEach(col -> specBuilder.addColumn(col.m_name, col.m_type, col.m_colorHandler, col.m_formatHandler));
         final var spec = specBuilder.build();
         final var builder = new TableBuilder(spec, cellify);
         if (!columnList.isEmpty()) {
