@@ -809,8 +809,10 @@ public final class KNIMEConstants {
      *
      * @return the Path to the existing KNIME directory
      * @throws IOException if the directory cannot be created or accessed
+     * @noreference This method is not intended to be referenced by clients.
+     * @apiNote Internal API only.
      */
-    private static Path getOrCreateKNIMEDir() throws IOException {
+    public static Path getOrCreateKNIMEDir() throws IOException {
         final File userDirectory = FileUtils.getUserDirectory();
         if (userDirectory == null) {
             throw new IOException("Cannot get user directory");
