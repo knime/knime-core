@@ -874,6 +874,7 @@ public final class WorkflowManager extends NodeContainer
      * @return the node id of the created node.
      * @since 4.2
      */
+    @SuppressWarnings("unchecked")
     public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
         final ModifiableNodeCreationConfiguration creationConfig, final int nodeIDSuffix) {
         CheckUtils.checkArgument(nodeIDSuffix >= -1, "Suffix must be -1 or larger or equal to 0: %d", nodeIDSuffix);
@@ -887,9 +888,15 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 id = m_workflow.createUniqueID();
             }
-            @SuppressWarnings("unchecked")
-            NativeNodeContainer container =
-                new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), id);
+            NativeNodeContainer container;
+            //since the node does not exist yet we push the wfm since node implementations might require workflow ctxt
+            NodeContext.pushContext((Object)this);
+            try {
+                container =
+                    new NativeNodeContainer(this, new Node((NodeFactory<NodeModel>)factory, creationConfig), id);
+            } finally {
+                NodeContext.removeLastContext();
+            }
             addNodeContainer(container, true);
             configureNodeAndSuccessors(id, true);
             // save node settings if source URL/context was provided (bug 5772)
