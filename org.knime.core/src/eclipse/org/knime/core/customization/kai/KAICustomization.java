@@ -75,6 +75,7 @@ public record KAICustomization(
      * @param suggestExtensions whether K-AI should suggest extensions or not
      * @param hub customization of the hubs K-AI is allowed to use as backend
      * @param disable whether to disable all K-AI related features
+     * @since 5.4
      */
     public KAICustomization(final boolean suggestExtensions, final KAIHubCustomization hub,
     final boolean disable) {
