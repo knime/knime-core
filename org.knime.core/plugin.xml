@@ -810,9 +810,5 @@
             startupStage="BEFORE_WFM_CLASS_LOADED"
             class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
       </provider>
-      <provider
-            class="org.knime.core.internal.LongPathCheckerEarlyStartup"
-            startupStage="AFTER_PROFILES_SET">
-      </provider>
    </extension>
 </plugin>
