@@ -58,22 +58,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @param suggestExtensions whether K-AI should suggest extensions in its Q&A mode
  * @param hub allows to customize which hubs K-AI is allowed to connect to
+ * @param disable whether to disable all K-AI related features
  * @since 5.3
  * @noreference This class is not intended to be referenced by clients.
  */
-public record KAICustomization(@JsonProperty("suggestExtensions") boolean suggestExtensions, KAIHubCustomization hub) {
+public record KAICustomization(
+    @JsonProperty("suggestExtensions") boolean suggestExtensions, KAIHubCustomization hub,
+    boolean disable) {
 
     /**
      * Default customization.
      */
-    public static final KAICustomization DEFAULT = new KAICustomization(true, KAIHubCustomization.DEFAULT);
+    public static final KAICustomization DEFAULT = new KAICustomization(true, KAIHubCustomization.DEFAULT, false);
 
     /**
      * @param suggestExtensions whether K-AI should suggest extensions or not
      * @param hub customization of the hubs K-AI is allowed to use as backend
+     * @param disable whether to disable all K-AI related features
      */
-    public KAICustomization(final boolean suggestExtensions, final KAIHubCustomization hub) {
+    public KAICustomization(final boolean suggestExtensions, final KAIHubCustomization hub,
+    final boolean disable) {
         this.suggestExtensions = suggestExtensions;
         this.hub = Objects.requireNonNullElse(hub, KAIHubCustomization.DEFAULT);
+        this.disable = disable;
     }
 }
