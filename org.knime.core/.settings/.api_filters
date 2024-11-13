@@ -8,6 +8,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/customization/kai/KAICustomization.java" type="org.knime.core.customization.kai.KAICustomization">
+        <filter comment="no external API, jackson is backward compatible (new field)" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.customization.kai.KAICustomization"/>
+                <message_argument value="KAICustomization(boolean, KAIHubCustomization)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
         <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="403804204">
             <message_arguments>

@@ -77,6 +77,18 @@ final class KAICustomizationTest {
     }
 
     @Test
+    void testDeserializationWithNewDefaultFieldAP21668() throws Exception {
+        var ymlInput = """
+                suggestExtensions: false
+                disable: true
+                """;
+        var customization = mapper.readValue(ymlInput, KAICustomization.class);
+        assertNotNull(customization);
+        assertEquals(false, customization.suggestExtensions());
+        assertEquals(true, customization.disable());
+    }
+
+    @Test
     void testDefaultName() throws Exception {
         var ymlInput = """
                 suggestExtensions: true
