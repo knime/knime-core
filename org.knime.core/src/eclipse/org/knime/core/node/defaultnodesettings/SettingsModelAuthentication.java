@@ -160,6 +160,14 @@ public final class SettingsModelAuthentication extends SettingsModel {
         }
 
         /**
+         * @return true if this type is {@link #USER} or {@link #USER_PWD}.
+         * @noreference This enum method is not intended to be referenced by clients.
+         */
+        public boolean requiresUsername() {
+            return this == USER || this == USER_PWD;
+        }
+
+        /**
          * @param actionCommand the action command
          * @return the {@link AuthenticationType} for the action command
          */
@@ -282,13 +290,15 @@ public final class SettingsModelAuthentication extends SettingsModel {
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no default value, throw an exception instead
-        Config config = settings.getConfig(m_configName);
-        AuthenticationType authType = AuthenticationType.valueOf(config.getString(SELECTED_TYPE));
-        String username = config.getString(USERNAME);
-        String password = authType.requiresPassword() //
-                ? config.getPassword(PASSWORD, secretKey) //
-                : EMPTY_PASSWORD;
-        setValues(authType, config.getString(CREDENTIAL), username, password);
+        final var config = settings.getConfig(m_configName);
+        final var authType = AuthenticationType.valueOf(config.getString(SELECTED_TYPE));
+        final var credentials = authType == AuthenticationType.CREDENTIALS //
+            ? config.getString(CREDENTIAL) : EMPTY_CREDENTIAL;
+        final var username = authType.requiresUsername() //
+            ? config.getString(USERNAME) : EMPTY_USERNAME;
+        final var password = authType.requiresPassword() //
+            ? config.getPassword(PASSWORD, secretKey) : EMPTY_PASSWORD;
+        setValues(authType, credentials, username, password);
     }
 
     /**
@@ -316,8 +326,12 @@ public final class SettingsModelAuthentication extends SettingsModel {
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
         Config config = settings.addConfig(m_configName);
-        config.addString(CREDENTIAL, m_credentials);
-        config.addString(USERNAME, m_username);
+        if (useCredential()) {
+            config.addString(CREDENTIAL, m_credentials);
+        }
+        if (m_type.requiresUsername()) {
+            config.addString(USERNAME, m_username);
+        }
         if (m_type.requiresPassword()) { // only when needed, see AP-15442
             config.addPassword(PASSWORD, secretKey, m_password);
         }
