@@ -392,6 +392,29 @@ final class ValueFactoryUtilsTest {
     }
 
     @Test
+    void testGetTypeNameForLogicalTypeString() {
+        // void
+        String logicalVoid = "{\"value_factory_class\":\"org.knime.core.data.v2.value.VoidValueFactory\"}";
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalVoid)).isEqualTo("DataCell");
+
+        // JSON contains data_type
+        String logicalURI = "{\"value_factory_class\":\"org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory\",\"data_type\":{\"cell_class\":\"org.knime.core.data.uri.URIDataCell\"}}";
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalURI)).isEqualTo("URI");
+
+        // collection, value factory registered in SPECIFIC_COLLECTION_FACTORY_PROVIDER
+        String logicalStringSet = "{\"value_factory_class\": \"org.knime.core.data.v2.value.StringSetValueFactory\"}";
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalStringSet)).isEqualTo("Set");
+
+        // not-registered value factory
+        String logicalPeriod = "{\"value_factory_class\":\"org.knime.core.data.v2.time.PeriodValueFactory\"}";
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalPeriod)).isEqualTo("Period");
+
+        // collection, not-registered value factory
+        String logicalSet = "{\"value_factory_class\":\"org.knime.core.data.v2.value.SetValueFactory\"}";
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalSet)).isEqualTo("Set");
+    }
+
+    @Test
     void testLoadValueFactory() {
         var dataRepo = NotInWorkflowDataRepository.newInstance();
 

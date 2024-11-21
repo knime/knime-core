@@ -343,6 +343,44 @@ public final class ValueFactoryUtils {
         }
     }
 
+    /**
+     * Returns the human-readable name from the JSON representation of a logical type.
+     * The name does not include the inner types of collections (see {@link DataType#getName()}).
+     * @param logicalType The JSON representation of the logical type
+     * @return The {@link DataType}
+     * @throws IllegalArgumentException if the logical type can not be mapped to a JSON {@link DataTraits}
+     * @since 5.4
+     */
+    public static String getTypeNameForLogicalTypeString(final String logicalType) {
+        JsonNode json;
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            json = objectMapper.readTree(logicalType);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException("Failed to read logical type JSON.", ex);
+        }
+        final String valueFactoryName = json.get(CFG_VALUE_FACTORY_CLASS).asText();
+
+        if (VoidValueFactory.class.getName().equals(valueFactoryName)) {
+            return DataType.getType(DataCell.class).getName();
+        } else if (json.has(CFG_DATA_TYPE)) {
+            return loadDataTypeFromJson((ObjectNode)json.get(CFG_DATA_TYPE)).getName();
+        } else if (SPECIFIC_COLLECTION_FACTORY_PROVIDER.hasFactoryFor(valueFactoryName)) {
+            return SPECIFIC_COLLECTION_FACTORY_PROVIDER
+                .getTypeFor(SPECIFIC_COLLECTION_FACTORY_PROVIDER.getFactoryFor(valueFactoryName))
+                .getName();
+        } else {
+            var factory = getValueFactoryFromExtensionPoint(valueFactoryName).orElseThrow();
+            if (factory instanceof CollectionValueFactory) {
+                // we create a collection of strings to access the collection name
+                var cellClass = REGISTRY.getCellClassForValueFactory(factory);
+                return DataType.getType(cellClass, StringCell.TYPE).getName();
+            } else {
+                return getDataTypeFromExtensionPoint(factory).getName();
+            }
+        }
+    }
+
     private static ValueFactory<?, ?> getValueFactoryFromExtensionPoint(final DataTraits traits,
         final IDataRepository dataRepository, final String valueFactoryName) {
         var valueFactory = getValueFactoryFromExtensionPoint(valueFactoryName)
