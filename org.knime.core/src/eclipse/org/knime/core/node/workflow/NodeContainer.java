@@ -1138,7 +1138,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         NodeContext.pushContext(this);
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(sett);
-            NodeTimer.GLOBAL_TIMER.incNodeSettingsChanged();
+            NodeTimer.GLOBAL_TIMER.incNodeSettingsChanged(this);
             m_parent.loadNodeSettings(getID(), sett);
             return sett;
         } finally {

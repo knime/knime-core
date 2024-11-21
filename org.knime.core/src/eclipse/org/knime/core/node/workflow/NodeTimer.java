@@ -190,6 +190,8 @@ public final class NodeTimer {
             int executionCount = 0;
             int failureCount = 0;
             int creationCount = 0;
+            // Reported since 5.4 -- number of times the settings were changed for this node by a user via the dialog
+            int settingsChangedCount;
             String likelySuccessor = N_A;
             String successorNodeName = N_A;
             final String nodeName;
@@ -217,9 +219,6 @@ public final class NodeTimer {
         private String m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
         //Reported since 5.0 -- Stores the number of nodes added via different means in KNIME UI
         private LinkedHashMap<NodeCreationType, MutableInteger> m_nodesCreatedVia = new LinkedHashMap<>();
-
-        // Reported since 5.4 -- stores number of times the node settings were changed via the dialog
-        private int m_nodeSettingsChanged;
 
         // Reported since 5.4 -- stores number of times a workflow was created via the UI (local or remote repository)
         private int m_workflowsCreated;
@@ -293,6 +292,26 @@ public final class NodeTimer {
             }
         }
 
+        /**
+         * Called when the node settings were modified and saved by the user, by clicking OK in the dialog.
+         * @param nc the node container whose settings were changed
+         * @since 5.4
+         */
+        public void incNodeSettingsChanged(final NodeContainer nc) {
+            if (DISABLE_GLOBAL_TIMER) {
+                return;
+            }
+            synchronized(this) {
+                var ns = m_globalNodeStats.get(NodeKey.get(nc));
+                if (ns == null) {
+                    ns = new NodeStats(nc.getName());
+                    m_globalNodeStats.put(NodeKey.get(nc), ns);
+                }
+                ns.settingsChangedCount++;
+                processStatChanges();
+            }
+        }
+
         public void addConnectionCreation(final NodeContainer source, final NodeContainer dest) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
@@ -355,17 +374,6 @@ public final class NodeTimer {
             if (WorkflowType.REMOTE == localOrRemote) {
                 m_remoteWorkflowsCreated++;
             }
-        }
-
-        /**
-         * Called when the node settings were modified and saved by the user, by clicking OK in the dialog.
-         * @since 5.4
-         */
-        public void incNodeSettingsChanged() {
-            if (DISABLE_GLOBAL_TIMER) {
-                return;
-            }
-            m_nodeSettingsChanged++;
         }
 
         /**
@@ -559,6 +567,7 @@ public final class NodeTimer {
                             job3.add("nrfails", ns.failureCount);
                             job3.add("exectime", ns.executionTime);
                             job3.add("nrcreated", ns.creationCount);
+                            job3.add("nrsettingsChanged", ns.settingsChangedCount);
                             job3.add("successor", ns.likelySuccessor);
                             job3.add("successornodename", ns.successorNodeName);
                             jab.add(job3);
@@ -575,6 +584,7 @@ public final class NodeTimer {
                         jobMeta.add("nrfails", ns.failureCount);
                         jobMeta.add("exectime", ns.executionTime);
                         jobMeta.add("nrcreated", ns.creationCount);
+                        jobMeta.add("nrsettingsChanged", ns.settingsChangedCount);
                     }
                     job2.add("metaNodes", jobMeta);
 
@@ -587,6 +597,7 @@ public final class NodeTimer {
                         jobSub.add("nrfails", ns.failureCount);
                         jobSub.add("exectime", ns.executionTime);
                         jobSub.add("nrcreated", ns.creationCount);
+                        jobSub.add("nrsettingsChanged", ns.settingsChangedCount);
                     }
                     job2.add("wrappedNodes", jobSub);
 
@@ -596,7 +607,6 @@ public final class NodeTimer {
                         jobNodesCreated.add(e.getKey().name(), e.getValue().intValue());
                     }
                     job2.add("createdVia", jobNodesCreated);
-                    job2.add("settingsChanged", m_nodeSettingsChanged);
             }
             job.add("nodestats", job2);
             job.add("uptime", getAvgUpTime());
@@ -835,6 +845,7 @@ public final class NodeTimer {
                                 JsonNumber num = job3.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = job3.getInt("nrcreated", 0);
+                                final var settingsChangedCount = job3.getInt("nrsettingsChanged", 0);
                                 String successor = job3.getString("successor", "");
                                 String successorNodeName = job3.getString("successornodename", "");
                                 NodeStats ns = new NodeStats(nodeName);
@@ -842,6 +853,7 @@ public final class NodeTimer {
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
+                                ns.settingsChangedCount = settingsChangedCount;
                                 ns.likelySuccessor = successor;
                                 ns.successorNodeName = successorNodeName;
                                 m_globalNodeStats.put(new NodeKey(NativeNodeContainer.class, nodeID), ns);
@@ -861,6 +873,7 @@ public final class NodeTimer {
                                 JsonNumber num = jobMeta.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jobMeta.getInt("nrcreated", 0);
+                                // metanodes don't have a dialog, so don't get settings changed counted
                                 NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
@@ -882,11 +895,13 @@ public final class NodeTimer {
                                 JsonNumber num = jubSub.getJsonNumber("exectime");
                                 Long time = num == null ? 0 : num.longValue();
                                 int creationCount = jubSub.getInt("nrcreated", 0);
+                                final var settingsChangedCount = jubSub.getInt("nrsettingsChanged", 0);
                                 NodeStats ns = new NodeStats(nodeName);
                                 ns.executionCount = execCount;
                                 ns.failureCount = failCount;
                                 ns.executionTime = time;
                                 ns.creationCount = creationCount;
+                                ns.settingsChangedCount = settingsChangedCount;
                                 m_globalNodeStats.put(new NodeKey(SubNodeContainer.class), ns);
                             }
 
@@ -899,8 +914,6 @@ public final class NodeTimer {
                                 }
                             }
 
-                            // settings changes via dialog
-                            m_nodeSettingsChanged = jo2.getInt("settingsChanged", 0);
                             break;
                         case "workflowsOpened":
                             m_workflowsOpened = jo.getInt(key);
@@ -990,7 +1003,6 @@ public final class NodeTimer {
             m_columnarStorageWorkflowsOpened = 0;
             m_workflowsImported = 0;
             m_workflowsExported = 0;
-            m_nodeSettingsChanged = 0;
             m_webUIPerspectiveSwitches = 0;
             m_javaUIPerspectiveSwitches = 0;
             m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;
@@ -1008,7 +1020,6 @@ public final class NodeTimer {
             m_columnarStorageWorkflowsOpened = 0;
             m_workflowsImported = 0;
             m_workflowsExported = 0;
-            m_nodeSettingsChanged = 0;
             m_webUIPerspectiveSwitches = 0;
             m_javaUIPerspectiveSwitches = 0;
             m_lastUsedPerspective = CLASSIC_PERSPECTIVE_PLACEHOLDER;

@@ -89,7 +89,8 @@ public class NodeTimerTest {
                 "exectime": 0,
                 "nrcreated": 1,
                 "successor": "NodeContainer",
-                "successornodename": "component"
+                "successornodename": "component",
+                "nrsettingsChanged": 1
             }
                      """;
 
@@ -102,7 +103,8 @@ public class NodeTimerTest {
                 "exectime": 0,
                 "nrcreated": 2,
                 "successor": "org.knime.core.node.workflow.SubNodeContainer",
-                "successornodename": "component"
+                "successornodename": "component",
+                "nrsettingsChanged": 1
             }
                      """;
 
@@ -112,7 +114,8 @@ public class NodeTimerTest {
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
-                "nrcreated": 1
+                "nrcreated": 1,
+                "nrsettingsChanged": 0
             }
                 """;
 
@@ -122,7 +125,8 @@ public class NodeTimerTest {
                 "nrexecs": 0,
                 "nrfails": 0,
                 "exectime": 0,
-                "nrcreated": 1
+                "nrcreated": 1,
+                "nrsettingsChanged": 0
             },
                     """;
 
@@ -146,6 +150,7 @@ public class NodeTimerTest {
     void testNodeStatsInNodeUsageFile() throws IOException {
         var nnc = createNode();
         NodeTimer.GLOBAL_TIMER.addNodeCreation(nnc);
+        NodeTimer.GLOBAL_TIMER.incNodeSettingsChanged(nnc);
         NodeTimer.GLOBAL_TIMER.incNodeCreatedVia(NodeCreationType.WEB_UI);
 
         var wfm = createMetanode();
@@ -161,8 +166,6 @@ public class NodeTimerTest {
         assertThatJson(jsonString, "/nodestats/createdVia").isEqualTo("""
                 {"WEB_UI" : 1}
                 """);
-        // no settings changed yet via dialog
-        assertThatJson(jsonString, "/nodestats/settingsChanged").isEqualTo("0");
         // the empty workflow created in `@BeforeEach`
         assertThatJson(jsonString, "/workflowsCreated").isEqualTo("1");
 

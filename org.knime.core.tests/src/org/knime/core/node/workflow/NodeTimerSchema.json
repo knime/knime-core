@@ -55,18 +55,13 @@
           "additionalProperties": {
             "type": "integer"
           }
-        },
-        "settingsChanged": {
-            "description": "The number of times node settings were changed by the user via a dialog.",
-            "type": "integer"
         }
       },
       "required": [
         "nodes",
         "metaNodes",
         "wrappedNodes",
-        "createdVia",
-        "settingsChanged"
+        "createdVia"
       ]
     },
     "uptime": {
@@ -187,6 +182,10 @@
         "nrcreated": {
           "description": "The overall numbers of creations of this node.",
           "type": "integer"
+        },
+        "nrsettingsChanged": {
+            "description": "The number of times node settings for this node were changed by the user via a dialog.",
+            "type": "integer"
         },
         "successor": {
           "description": "The id of the most recently used successor-node for this node.",
