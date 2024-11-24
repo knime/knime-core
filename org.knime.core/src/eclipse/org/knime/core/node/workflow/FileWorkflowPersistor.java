@@ -1426,17 +1426,19 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     ReferencedFile loadNodeFile(final NodeSettingsRO settings, final ReferencedFile workflowDirRef)
         throws InvalidSettingsException {
         String fileString = settings.getString("node_settings_file");
-        CheckUtils.checkNotNull(fileString, "Unable to read settings file for node %s", settings.getKey());
+        CheckUtils.checkSettingNotNull(fileString, "Unable to read settings file for node %s", settings.getKey());
 
         final File workflowDir = workflowDirRef.getFile();
         final Path workflowDirAsPath = workflowDir.toPath();
 
         // fileString looks like "File Reader(#1)/settings.xml"
         Path filePath = Paths.get(fileString);
-        if (filePath.getNameCount() > 0) {
+
+        // robustness check in case the folder name has wrong casing (AP-23528): "File Reader(#1)" vs. "file reader(#1)"
+        if (filePath.getNameCount() >= 2) { // first level: folder name, second level (unchanged): xml file name
             final Path filePathParent = filePath.getName(0);
 
-            // if "File Reader(#1)" does not exist, find directory ignoring case (e.g. "file reader(#1)")) - AP-23528
+            // if "File Reader(#1)" does not exist, find directory ignoring case (e.g. "file reader(#1)"))
             if (!Files.exists(workflowDirAsPath.resolve(filePathParent))) {
                 getLogger().debugWithFormat("Parent directory of node settings file does not exist: \"%s\"",
                     filePathParent);
