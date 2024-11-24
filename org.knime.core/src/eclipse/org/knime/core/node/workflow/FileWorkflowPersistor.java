@@ -54,6 +54,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -73,7 +75,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.TableBackend;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.internal.ReferencedFile;
@@ -1422,16 +1426,45 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     ReferencedFile loadNodeFile(final NodeSettingsRO settings, final ReferencedFile workflowDirRef)
         throws InvalidSettingsException {
         String fileString = settings.getString("node_settings_file");
-        if (fileString == null) {
-            throw new InvalidSettingsException("Unable to read settings " + "file for node " + settings.getKey());
+        CheckUtils.checkNotNull(fileString, "Unable to read settings file for node %s", settings.getKey());
+
+        final File workflowDir = workflowDirRef.getFile();
+        final Path workflowDirAsPath = workflowDir.toPath();
+
+        // fileString looks like "File Reader(#1)/settings.xml"
+        Path filePath = Paths.get(fileString);
+        if (filePath.getNameCount() > 0) {
+            final Path filePathParent = filePath.getName(0);
+
+            // if "File Reader(#1)" does not exist, find directory ignoring case (e.g. "file reader(#1)")) - AP-23528
+            if (!Files.exists(workflowDirAsPath.resolve(filePathParent))) {
+                getLogger().debugWithFormat("Parent directory of node settings file does not exist: \"%s\"",
+                    filePathParent);
+                final Path childrenPath = filePath.subpath(1, filePath.getNameCount());
+                try (final Stream<Path> dirWalker = Files.walk(workflowDirAsPath, 1)) {
+                    filePath = dirWalker //
+                        .skip(1) // the workflowDir itself is not interesting
+                        .filter(p -> StringUtils.equalsIgnoreCase( //
+                            filePathParent.toString(), p.getFileName().toString())) //
+                        .findFirst() //
+                        .map(Path::getFileName) // makes it relative (only the directory name)
+                        .map(path -> {
+                            getLogger().debugWithFormat("Found matching directory: \"%s\"", path);
+                            return path;
+                        }) //
+                        .map(matchingPath -> matchingPath.resolve(childrenPath)) //
+                        .orElse(filePath);
+                } catch (IOException ex) {
+                    throw new InvalidSettingsException(String.format("Unable to list directory content in \"%s\": %s",
+                        workflowDirAsPath.toString(), ex.getMessage()), ex);
+                }
+            }
         }
-        File workflowDir = workflowDirRef.getFile();
-        // fileString is something like "File Reader(#1)/settings.xml", thus
-        // it contains two levels of the hierarchy. We leave it here to the
-        // java.io.File implementation to resolve these levels
-        File fullFile = new File(workflowDir, fileString);
+
+        // why java.io.File (again)? Old code...
+        File fullFile = workflowDirAsPath.resolve(filePath).toFile();
         if (!fullFile.isFile() || !fullFile.canRead()) {
-            throw new InvalidSettingsException("Unable to read settings " + "file " + fullFile.getAbsolutePath());
+            throw new InvalidSettingsException("Unable to read settings file " + fullFile.getAbsolutePath());
         }
         Stack<String> children = new Stack<String>();
         File workflowDirAbsolute = workflowDir.getAbsoluteFile();
