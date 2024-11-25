@@ -76,6 +76,8 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
 
     private final SubNodeContainer m_nc;
 
+    private final WorkflowDef m_workflow;
+
     /**
      * @param nc
      * @param passwordHandler
@@ -83,6 +85,9 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
     public SubnodeContainerToDefAdapter(final SubNodeContainer nc, final PasswordRedactor passwordHandler) {
         super(nc, passwordHandler);
         m_nc = nc;
+        // copy workflow immediately to avoid propagating changes recursively
+        // through node container reference held here (not a copy!)
+        m_workflow = CoreToDefUtil.copyToDefWithUISettings(m_nc.getWorkflowManager(), m_passwordHandler);
     }
 
     /**
@@ -90,7 +95,7 @@ public class SubnodeContainerToDefAdapter extends SingleNodeContainerToDefAdapte
      */
     @Override
     public WorkflowDef getWorkflow() {
-        return CoreToDefUtil.copyToDefWithUISettings(m_nc.getWorkflowManager(), m_passwordHandler);
+        return m_workflow;
     }
 
     /**
