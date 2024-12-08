@@ -52,9 +52,12 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.knime.core.customization.ui.UICustomization.WelcomeAPEndPointURLType;
 import org.knime.core.customization.ui.actions.MenuEntry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -74,6 +77,7 @@ public class UICustomizationTest {
                 menuEntries:
                   - name: "Company Help Portal"
                     link: "https://help.company.com/knime"
+                welcomeAPEndpointURL: "https://hub.company.com/some-custom-endpoint"
                 """;
 
         UICustomization uiCustomization = mapper.readValue(ymlInput, UICustomization.class);
@@ -87,6 +91,12 @@ public class UICustomizationTest {
         assertEquals("Company Help Portal", entry.getName());
         assertEquals("https://help.company.com/knime", entry.getLink());
         assertNotNull(uiCustomization.toString());
+
+        Optional<String> welcomeAPEndpointURL = uiCustomization.getWelcomeAPEndpointURL();
+        WelcomeAPEndPointURLType welcomeAPEndpointURLType = uiCustomization.getWelcomeAPEndpointURLType();
+        assertEquals(UICustomization.WelcomeAPEndPointURLType.CUSTOM, welcomeAPEndpointURLType);
+        assertEquals("https://hub.company.com/some-custom-endpoint", welcomeAPEndpointURL.get());
+
     }
 
     @Test
@@ -101,6 +111,26 @@ public class UICustomizationTest {
         List<MenuEntry> menuEntries = uiCustomization.getMenuEntries();
         assertNotNull(menuEntries);
         assertEquals(0, menuEntries.size());
+
+        assertEquals(UICustomization.WelcomeAPEndPointURLType.DEFAULT, uiCustomization.getWelcomeAPEndpointURLType());
+    }
+
+    @Test
+    void testEmptyDeserialization2() throws Exception {
+        // is an empty string a yaml? -> it's a valid stream but contains no document
+        // https://stackoverflow.com/questions/62458683/is-an-empty-string-a-valid-yaml-document
+        String ymlInput = """
+                welcomeAPEndpointURL: null
+                """;
+
+        UICustomization uiCustomization = mapper.readValue(ymlInput, UICustomization.class);
+
+        assertNotNull(uiCustomization);
+        List<MenuEntry> menuEntries = uiCustomization.getMenuEntries();
+        assertNotNull(menuEntries);
+        assertEquals(0, menuEntries.size());
+
+        assertEquals(UICustomization.WelcomeAPEndPointURLType.NONE, uiCustomization.getWelcomeAPEndpointURLType());
     }
 
     @Test
@@ -114,9 +144,15 @@ public class UICustomizationTest {
                   - name: "Company Help Portal"
                 """;
 
+        String ymlInputInvalidURL = """
+                welcomeAPEndpointURL: "<invalid-url>"
+                """;
+
         assertThrows(JsonProcessingException.class, () -> mapper.readValue(ymlInputMissingName, UICustomization.class));
 
         assertThrows(JsonProcessingException.class, () -> mapper.readValue(ymlInputMissingLink, UICustomization.class));
+
+        assertThrows(IOException.class, () -> mapper.readValue(ymlInputInvalidURL, UICustomization.class));
     }
 
 }
