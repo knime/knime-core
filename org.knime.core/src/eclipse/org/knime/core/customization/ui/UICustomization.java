@@ -49,12 +49,12 @@
 package org.knime.core.customization.ui;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.knime.core.customization.ui.actions.MenuEntry;
 import org.knime.core.node.util.CheckUtils;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Represents the UI customization settings that include a list of menu entries.
@@ -63,17 +63,41 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel
  */
+@JsonDeserialize(using = UICustomizationDeserializer.class)
 public final class UICustomization {
 
     /** No customization, no additional entries in the menu etc.
      * @noreference This field is not intended to be referenced by clients. */
-    public static final UICustomization DEFAULT = new UICustomization(List.of());
+    public static final UICustomization DEFAULT =
+        new UICustomization(List.of(), WelcomeAPEndPointURLType.DEFAULT, null);
 
     private final List<MenuEntry> m_menuEntries;
 
-    @JsonCreator
-    UICustomization(@JsonProperty("menuEntries") final List<MenuEntry> menuEntries) {
+    private final WelcomeAPEndPointURLType m_welcomeAPEndpointURLType;
+
+    private final String m_welcomeAPEndpointURL;
+
+    /**
+     * The type of the welcomeAP endpoint URL.
+     *
+     * @since 5.5
+     */
+    public enum WelcomeAPEndPointURLType {
+        /** Default (KNIME hosted) endpoint. */
+        @SuppressWarnings("hiding") // UICustomization.DEFAULT
+        DEFAULT,
+        /** Custom endpoint, typically defined via business hub. */
+        CUSTOM,
+        /** No endpoint (= no title data on home/welcome page).*/
+        NONE
+    }
+
+    // not a @JsonCreator (done via custom deserializer)
+    UICustomization(final List<MenuEntry> menuEntries, final WelcomeAPEndPointURLType urlType,
+        final String welcomeAPEndpointURL) {
         m_menuEntries = CheckUtils.checkArgumentNotNull(menuEntries, "MenuEntries cannot be null");
+        m_welcomeAPEndpointURLType = CheckUtils.checkArgumentNotNull(urlType, "URL type cannot be null");
+        m_welcomeAPEndpointURL = welcomeAPEndpointURL;
     }
 
     /**
@@ -83,8 +107,25 @@ public final class UICustomization {
         return m_menuEntries;
     }
 
+    /**
+     * @return the welcomeAPEndpointURLType
+     * @since 5.5
+     */
+    public WelcomeAPEndPointURLType getWelcomeAPEndpointURLType() {
+        return m_welcomeAPEndpointURLType;
+    }
+
+    /**
+     * @return the welcomeAPEndpointURL
+     * @since 5.5
+     */
+    public Optional<String> getWelcomeAPEndpointURL() {
+        return Optional.of(m_welcomeAPEndpointURL);
+    }
+
     @Override
     public String toString() {
-        return String.format("UI{menuEntries=%s}", m_menuEntries);
+        return String.format("UI{menuEntries=%s, welcomeAPEndpointURLType=%s, welcomeAPEndpointURL=%s}", m_menuEntries,
+            m_welcomeAPEndpointURLType, m_welcomeAPEndpointURL);
     }
 }
