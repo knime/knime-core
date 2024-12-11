@@ -226,8 +226,8 @@ public abstract class AbstractFileStoreValueFactory
 
         /**
          * Get the appropriate {@link FileStoreCell} for the given value. If the value implements the correct
-         * {@link FileStoreCell} class already, the method should return the value again and should refrain from creating
-         * a new cell. Use {@link #createFileStore()} to create file stores for the cell.
+         * {@link FileStoreCell} class already, the method should return the value again and should refrain from
+         * creating a new cell. Use {@link #createFileStore()} to create file stores for the cell.
          *
          * @param value the value that should be used
          * @return a {@link FileStoreCell}
@@ -279,11 +279,17 @@ public abstract class AbstractFileStoreValueFactory
          * Set the serialized {@link FileStoreKey} in the access at location 0 and make sure that the file stores are
          * flushed and translated to local.
          *
-         * @param fsCell the cell holding the file stores
+         * @param fsCell the cell holding the file stores, or null if it should be set to missing
          * @throws IOException if updating the file store keys after translating them to local failed
          * @throws IOException if flushing the file stores failed
          */
         protected final void setFileStoreData(final FileStoreCell fsCell) throws IOException {
+            if (fsCell == null) {
+                // 0-th position is the file store key, needs to be reset in case it's re-used (AP-23712)
+                m_access.getWriteAccess(0).setMissing();
+                return;
+            }
+
             if (mustBeFlushedPriorSave(fsCell)) {
                 final var fileStores = FileStoreUtil.getFileStores(fsCell);
                 final var fileStoreKeys = new FileStoreKey[fileStores.length];
