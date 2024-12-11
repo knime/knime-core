@@ -211,6 +211,7 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
                 } else {
                     // Write the content to the table if it is not in a file store
                     setTableData(value, blobAccess);
+                    setFileStoreData(null); // FileStoreData is missing in this case
                 }
             } catch (IOException ex) {
                 throw new IllegalStateException(ex);
@@ -221,7 +222,6 @@ public abstract class TableOrFileStoreValueFactory<V extends DataValue> extends 
         protected void setTableData(final V value, final VarBinaryWriteAccess access) {
             // NB: Only called when we do not write into the file store
             access.setObject(value, m_serializer);
-
         }
     }
 
