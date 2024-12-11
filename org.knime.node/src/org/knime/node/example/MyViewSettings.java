@@ -42,65 +42,18 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
  *   Dec 11, 2024 (hornm): created
  */
 package org.knime.node.example;
 
-import org.knime.node.DefaultNode;
-import org.knime.node.DefaultNodeFactory;
+import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 
 /**
- *
+ * 
+ * @author hornm
  */
-public class MyNodeFactory extends DefaultNodeFactory {
-
-    // TODOs
-    // * view
-    //   * default view settings
-    //   * view data
-    //   * selection translation
-    //   * image generation
-    //     * also conditionally based on the settings
-    //     * dimensions
-    //     * port
-    // * configure
-    // * execute
-    //   * default settings
-    //   * simple streaming
-    //     * dynamic
-    //   * hilite/selection translation
-    // * configurable ports
-    // * internal data (credentials uuid, hiliting)
-    // * (streaming and view)
-    // * deprecation
-    // * hidden
-    private static DefaultNode NODE = DefaultNode //
-        .name("My Node") //
-        .icon("icon.png") //
-        .shortDescription("foo") //
-        .fullDescription("bar") //
-        .model(b -> b //
-            .settingsClass(MyModelSettings.class) //
-            .addInputTable("in", "desc") //
-            .configure((i, o) -> {
-            }) //
-            .execute((i, o) -> {
-            }) //
-        ) //
-        .view(b -> b //
-            .settingsClass(MyViewSettings.class) //
-        ) //
-        .keywords("k1", "k2") //
-        .nodeType(NodeType.Learner) //
-        .sinceVersion(5, 5, 0); //
-
-    /**
-    *
-    */
-    public MyNodeFactory() {
-        super(NODE);
-    }
+public class MyViewSettings implements DefaultNodeSettings {
 
 }
