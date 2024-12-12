@@ -64,17 +64,40 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Version;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.data.RpcDataService;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.impl.ExternalResource;
 import org.knime.core.webui.node.impl.PortDescription;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
+import org.knime.core.webui.page.Page;
+import org.knime.node.DefaultNode.Model;
 
 /**
  * TODO update
  *
  * Configuration for a {@link WebUINodeFactory WebUI node}.
  *
- * @author Marc Bux, KNIME GmbH, Berlin, Germany
+ * NOTE:
+ *
+ * Builder pattern principles:
+ * <ul>
+ * <li>no build-method</li>
+ * <li>no initial 'builder'-method</li>
+ * <li>required properties first</li>
+ * <li>optional properties last</li>
+ * <li>no prefixes for setters</li>
+ * <li>'add'-prefix to allow multiple invocations (e.g. lists)</li>
+ * <li>method/lambda parameters are defined in single objects, i.e. input/output objects; i.e. no combinatoric parameter
+ * variations we'd need account for</li>
+ * <li>complex parameters/nested objects follow same builder pattern; builders are as parameter</li>
+ * <li>builders are meant to build the respective objects by composition only and must not be designed in a way to allow
+ * enable inheritance, too
+ * <li>
+ * </ul>
+ *
+ * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public final class DefaultNode {
 
@@ -115,12 +138,8 @@ public final class DefaultNode {
         m_fullDescription = fullDescription;
     }
 
-    /**
-     * @param name the name of the node, as shown in the node repository and description
-     * @return the subsequent build stage
-     */
-    public static RequireIcon name(final String name) {
-        return icon -> shortDescription -> fullDescription -> model -> {
+    public static RequireName create() {
+        return name -> icon -> shortDescription -> fullDescription -> model -> {
             var defaultNode = new DefaultNode(name, icon, shortDescription, fullDescription);
             model.apply(settingsClass -> {
                 defaultNode.m_modelSettingsClass = settingsClass;
@@ -128,6 +147,14 @@ public final class DefaultNode {
             });
             return defaultNode;
         };
+    }
+
+    public interface RequireName {
+        /**
+         * @param name the name of the node, as shown in the node repository and description
+         * @return the subsequent build stage
+         */
+        RequireIcon name(final String name);
     }
 
     /**
@@ -311,6 +338,8 @@ public final class DefaultNode {
 
     public interface ConfigureOutput {
 
+        <S extends DefaultNodeSettings> S getSettings();
+
         <S extends PortObjectSpec> void setOutSpec(int index, S spec);
 
         <S extends PortObjectSpec> void setOutSpec(S... specs);
@@ -318,6 +347,8 @@ public final class DefaultNode {
     }
 
     public interface ExecuteInput {
+
+        <S extends DefaultNodeSettings> S getSettings();
 
         <D extends PortObject> D getInData(int index);
 
@@ -336,9 +367,9 @@ public final class DefaultNode {
         // TODO serializable data
         <D> void setInternalData(D data);
 
-        void setInternalData(BufferedDataTable... data);
+        void setInternalTables(BufferedDataTable... data);
 
-        void setInternalData(PortObject... data);
+        void setInternalPortObjects(PortObject... data);
 
         void setWarning(Message message);
 
@@ -359,12 +390,46 @@ public final class DefaultNode {
      * @param nodeView
      * @return
      */
-    public DefaultNode view(final Function<RequireViewSettings, RequireNothing> nodeView) {
+    public DefaultNode view(final Function<RequireViewSettings, RequireDataServices> nodeView) {
         return this;
     }
 
     public interface RequireViewSettings {
-        RequireNothing settingsClass(Class<? extends DefaultNodeSettings> settingsClass);
+        RequireViewDescription settingsClass(Class<? extends DefaultNodeSettings> settingsClass);
+    }
+
+    public interface RequireViewDescription {
+        RequireViewPage viewDescription(String viewDescription);
+    }
+
+    public interface RequireViewPage {
+        // TODO refactor page builder to follow new principles
+        RequireDataServices page(Function<ViewInput, Page> page);
+    }
+
+    public interface RequireDataServices {
+        // TODO refactor build to refactor to follow new principles
+        RequireDataServices initialDataService(InitialDataService initialDataService);
+
+        <D> RequireDataServices initialData(Function<ViewInput, D> initialDataSupplier);
+
+        // TODO refactor build to refactor to follow new principles
+        RequireDataServices rpcDataService(RpcDataService dataService);
+
+        <S> RequireDataServices dataService(Function<ViewInput, S> dataService);
+
+    }
+
+    public interface ViewInput {
+
+        <S extends DefaultNodeSettings> S getSettings();
+
+        <D> D getInternalData();
+
+        BufferedDataTable[] getInternalTables();
+
+        PortObject[] getInternalPortObjects();
+
     }
 
     /* NODE OPTIONALS */

@@ -50,6 +50,7 @@ package org.knime.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.CanceledExecutionException;
@@ -57,6 +58,7 @@ import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -174,6 +176,16 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
      * {@inheritDoc}
      */
     @Override
+    protected Optional<PortsConfigurationBuilder> createPortsConfigBuilder() {
+        // TODO
+        return Optional.empty();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final NodeDialog createNodeDialog() {
         // TODO view settings
         return new DefaultNodeDialog(SettingsType.MODEL, m_node.m_modelSettingsClass);
@@ -260,6 +272,30 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
     @Override
     public final NodeView createNodeView(final NodeModel nodeModel) {
         // TODO
+        return null;
+    }
+
+    // TODO remove!!
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    // TODO remove!!
+    @Override
+    protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
+        return null;
+    }
+
+    // TODO remove!!
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    // TODO remove!!
+    @Override
+    public org.knime.core.node.NodeView<NodeModel> createNodeView(final int viewIndex, final NodeModel nodeModel) {
         return null;
     }
 
