@@ -107,6 +107,8 @@ import org.knime.core.webui.page.Page;
  * Custom node model implementation
  * Configurable ports
  * Execute input to implement other context objects
+ * Exception if properties are already set
+ * internal data holder
  */
 public final class DefaultNode {
 
@@ -408,7 +410,7 @@ public final class DefaultNode {
     }
 
     public interface RequireViewDescription {
-        RequireViewPage viewDescription(String viewDescription);
+        RequireViewPage description(String viewDescription);
     }
 
     public interface RequireViewPage {
