@@ -71,7 +71,6 @@ import org.knime.core.webui.node.impl.ExternalResource;
 import org.knime.core.webui.node.impl.PortDescription;
 import org.knime.core.webui.node.impl.WebUINodeFactory;
 import org.knime.core.webui.page.Page;
-import org.knime.node.DefaultNode.Model;
 
 /**
  * TODO update
@@ -98,6 +97,16 @@ import org.knime.node.DefaultNode.Model;
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
+ */
+/*
+ * Open TODOs:
+ *
+ * Base View node model version dependent defaults (respect that in default node model implementation)
+ * Validate default view&model settings
+ * Multiple views
+ * Custom node model implementation
+ * Configurable ports
+ * Execute input to implement other context objects
  */
 public final class DefaultNode {
 
