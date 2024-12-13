@@ -74,6 +74,10 @@ public final class DefaultView implements FluentNodeAPI {
 
     final Function<ViewInput, Page> m_pageFct;
 
+    Function<ViewInput, InitialDataService<?>> m_initialDataServiceFct;
+
+    Function<ViewInput, RpcDataService> m_rpcDataServiceFct;
+
     static RequireViewSettings create() {
         return settingsClass -> description -> pageFct -> new DefaultView(settingsClass, description,
             viewInput -> pageFct.apply(viewInput, Page.create()));
@@ -105,22 +109,24 @@ public final class DefaultView implements FluentNodeAPI {
 
     // TODO refactor build to refactor to follow new principles
     public DefaultView initialDataService(final InitialDataService initialDataService) {
+        // TODO
         return this;
     }
 
     public <D> DefaultView initialData(final Function<ViewInput, D> initialDataSupplier) {
+        m_initialDataServiceFct = vi -> InitialDataService.builder(() -> initialDataSupplier.apply(vi)).build();
         return this;
 
     }
 
     // TODO refactor build to refactor to follow new principles
     DefaultView rpcDataService(final RpcDataService dataService) {
-
+        // TODO
         return this;
     }
 
     public <S> DefaultView dataService(final Function<ViewInput, S> dataService) {
-
+        m_rpcDataServiceFct = vi -> RpcDataService.builder(dataService.apply(vi)).build();
         return this;
     }
 

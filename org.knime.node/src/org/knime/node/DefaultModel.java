@@ -60,7 +60,6 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.impl.PortDescription;
 
 /**
  * Fluent API to create a node model - not to be created directly but via the {@link DefaultNode}
@@ -74,7 +73,7 @@ public final class DefaultModel implements FluentNodeAPI {
         return settingsClass -> new RequirePortsAndConfigure(new DefaultModel(settingsClass));
     }
 
-    Class<? extends DefaultNodeSettings> m_modelSettingsClass;
+    Class<? extends DefaultNodeSettings> m_settingsClass;
 
     BiConsumer<ConfigureInput, ConfigureOutput> m_configure;
 
@@ -87,7 +86,7 @@ public final class DefaultModel implements FluentNodeAPI {
     final List<PortDescription> m_outputPortDescriptions = new ArrayList<>();
 
     private DefaultModel(final Class<? extends DefaultNodeSettings> settingsClass) {
-        m_modelSettingsClass = settingsClass;
+        m_settingsClass = settingsClass;
     }
 
     public interface RequireModelSettings {
