@@ -1361,6 +1361,18 @@ public final class Node {
         return m_factory.getNodeDescription();
     }
 
+    /**
+     * Internal API to retrieve the description from a NodeFactory without having to create a Node instance.
+     *
+     * @param nodeFactory to return the description of
+     * @return the description of the node
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.5
+     */
+    public static NodeDescription invokeGetNodeDescription(final NodeFactory<?> nodeFactory) {
+        return nodeFactory.getNodeDescription();
+    }
+
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
      * is valid (non-null, correct type, etc.)
