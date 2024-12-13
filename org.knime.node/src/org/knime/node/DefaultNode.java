@@ -51,51 +51,24 @@ package org.knime.node;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.FluentNodeAPI;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.message.Message;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Version;
-import org.knime.core.webui.data.InitialDataService;
-import org.knime.core.webui.data.RpcDataService;
-import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.impl.ExternalResource;
-import org.knime.core.webui.node.impl.PortDescription;
-import org.knime.core.webui.node.impl.WebUINodeFactory;
-import org.knime.core.webui.page.Page;
+import org.knime.node.DefaultModel.RequireModelSettings;
+import org.knime.node.DefaultView.RequireViewSettings;
 
 /**
- * TODO update
+ * Fluent API to create/compose a node as required by the {@link DefaultNodeFactory}. <br>
  *
- * Configuration for a {@link WebUINodeFactory WebUI node}.
- *
- * NOTE:
- *
- * Builder pattern principles:
- * <ul>
- * <li>no build-method</li>
- * <li>no initial 'builder'-method</li>
- * <li>required properties first</li>
- * <li>optional properties last</li>
- * <li>no prefixes for setters</li>
- * <li>'add'-prefix to allow multiple invocations (e.g. lists)</li>
- * <li>method/lambda parameters are defined in single objects, i.e. input/output objects; i.e. no combinatoric parameter
- * variations we'd need account for</li>
- * <li>complex parameters/nested objects follow same builder pattern; builders are as parameter</li>
- * <li>builders are meant to build the respective objects by composition only and must not be designed in a way to allow
- * enable inheritance, too
- * <li>
- * </ul>
+ * Start with {@link #create()}.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+ * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 /*
@@ -110,7 +83,17 @@ import org.knime.core.webui.page.Page;
  * Exception if properties are already set
  * internal data holder
  */
-public final class DefaultNode {
+public final class DefaultNode implements FluentNodeAPI {
+
+    /**
+     * Entry point to the node creator
+     *
+     * @return the first stage of the creator
+     */
+    public static RequireName create() {
+        return name -> icon -> shortDescription -> fullDescription -> modelFct -> new DefaultNode(name, icon,
+            shortDescription, fullDescription, modelFct.apply(DefaultModel.create()));
+    }
 
     final String m_name;
 
@@ -120,45 +103,33 @@ public final class DefaultNode {
 
     final String m_fullDescription;
 
+    final DefaultModel m_model;
+
+    DefaultView m_view;
+
     // TODO lazy init?
     List<ExternalResource> m_externalResources = new ArrayList<>();
 
     NodeType m_nodeType;
-
-    Class<? extends DefaultNodeSettings> m_modelSettingsClass;
-
-    private BiConsumer<ConfigureInput, ConfigureOutput> m_configure;
-
-    private BiConsumer<ExecuteInput, ExecuteOutput> m_execute;
-
-    // TODO lazy init?
-    final List<PortDescription> m_inputPortDescriptions = new ArrayList<>();
-
-    // TODO lazy init?
-    final List<PortDescription> m_outputPortDescriptions = new ArrayList<>();
 
     // TODO lazy init?
     List<String> m_keywords = new ArrayList<>();
 
     Version m_sinceVersion;
 
-    DefaultNode(final String name, final String icon, final String shortDescription, final String fullDescription) {
+    /*
+     * Constructor that receives all the required properties.
+     */
+    private DefaultNode(final String name, final String icon, final String shortDescription,
+        final String fullDescription, final DefaultModel model) {
         m_name = name;
         m_icon = icon;
         m_shortDescription = shortDescription;
         m_fullDescription = fullDescription;
+        m_model = model;
     }
 
-    public static RequireName create() {
-        return name -> icon -> shortDescription -> fullDescription -> model -> {
-            var defaultNode = new DefaultNode(name, icon, shortDescription, fullDescription);
-            model.apply(settingsClass -> {
-                defaultNode.m_modelSettingsClass = settingsClass;
-                return defaultNode.createRequirePortsAndConfigure();
-            });
-            return defaultNode;
-        };
-    }
+    /* REQUIRED PROPERTIES */
 
     public interface RequireName {
         /**
@@ -205,245 +176,29 @@ public final class DefaultNode {
     }
 
     /**
-     * The build stage that requires the model settings.
+     * The the nested that requires the model settings.
      */
     @FunctionalInterface
     public interface RequireModel { // NOSONAR
         /**
-         * @param modelSettingsClass the type of the model settings
-         * @return the subsequent build stage
+         * @param model a function receiving the first stage to create the {@link DefaultModel} and returning the
+         *            {@link DefaultModel}
+         * @return the {@link DefaultNode}
          */
-        DefaultNode model(Function<RequireModelSettings, RequireNothing> nodeModel);
+        DefaultNode model(Function<RequireModelSettings, DefaultModel> model);
     }
 
-    public interface RequireModelSettings {
-        RequirePortsAndConfigure settingsClass(Class<? extends DefaultNodeSettings> settingsClass);
-    }
-
-    private RequirePortsAndConfigure createRequirePortsAndConfigure() {
-        return new RequirePortsAndConfigure();
-    }
-
-    public class RequirePortsAndConfigure {
-
-        /**
-         * Adds another input table to the node.
-         *
-         * @param name the name of the node's next input table
-         * @param description the description of the node's next input table
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addInputTable(final String name, final String description) {
-            return addInputTable(name, description, false);
-        }
-
-        /**
-         * Adds another input table to the node.
-         *
-         * @param name the name of the node's next input table
-         * @param description the description of the node's next input table
-         * @param configurable whether the port is configurable
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addInputTable(final String name, final String description,
-            final boolean configurable) {
-            return addInputPort(name, BufferedDataTable.TYPE, description, configurable);
-        }
-
-        /**
-         * Adds another input port to the node.
-         *
-         * @param name the name of the node's next input port
-         * @param type the type of the node's next input port
-         * @param description the description of the node's next input port
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addInputPort(final String name, final PortType type, final String description) {
-            return addInputPort(name, type, description, false);
-        }
-
-        /**
-         * Adds another input port to the node.
-         *
-         * @param name the name of the node's next input port
-         * @param type the type of the node's next input port
-         * @param description the description of the node's next input port
-         * @param configurable whether the port is configurable
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addInputPort(final String name, final PortType type, final String description,
-            final boolean configurable) {
-            m_inputPortDescriptions.add(new PortDescription(name, type, description, configurable));
-            return this;
-        }
-
-        /**
-         * Adds another output table to the node.
-         *
-         * @param name the name of the node's next output table
-         * @param description the description of the node's next output table
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addOutputTable(final String name, final String description) {
-            return addOutputTable(name, description, false);
-        }
-
-        /**
-         * Adds another output table to the node.
-         *
-         * @param name the name of the node's next output table
-         * @param description the description of the node's next output table
-         * @param configurable whether the port is configurable
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addOutputTable(final String name, final String description,
-            final boolean configurable) {
-            return addOutputPort(name, BufferedDataTable.TYPE, description, configurable);
-        }
-
-        /**
-         * Adds another output port to the node.
-         *
-         * @param name the name of the node's next output port
-         * @param type the type of the node's next output port
-         * @param description the description of the node's next output port
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addOutputPort(final String name, final PortType type,
-            final String description) {
-            return addOutputPort(name, type, description, false);
-        }
-
-        /**
-         * Adds another output port to the node.
-         *
-         * @param name the name of the node's next output port
-         * @param type the type of the node's next output port
-         * @param description the description of the node's next output port
-         * @param configurable whether the port is configurable
-         * @return this build stage
-         */
-        public RequirePortsAndConfigure addOutputPort(final String name, final PortType type, final String description,
-            final boolean configurable) {
-            m_outputPortDescriptions.add(new PortDescription(name, type, description, configurable));
-            return this;
-        }
-
-        public RequireExecute configure(final BiConsumer<ConfigureInput, ConfigureOutput> configure) {
-            m_configure = configure;
-            return execute -> {
-                m_execute = execute;
-                return new RequireNothing() {
-                };
-            };
-        }
-    }
-
-    public interface ConfigureInput {
-
-        <S extends PortObjectSpec> S getInSpec(int index);
-
-        <S extends PortObjectSpec> S[] getInSpecs();
-
-    }
-
-    public interface ConfigureOutput {
-
-        <S extends DefaultNodeSettings> S getSettings();
-
-        <S extends PortObjectSpec> void setOutSpec(int index, S spec);
-
-        <S extends PortObjectSpec> void setOutSpec(S... specs);
-
-    }
-
-    public interface ExecuteInput {
-
-        <S extends DefaultNodeSettings> S getSettings();
-
-        <D extends PortObject> D getInData(int index);
-
-        <D extends PortObject> D[] getInData();
-
-        ExecutionContext getExecutionContext();
-
-    }
-
-    public interface ExecuteOutput {
-
-        <D extends PortObject> void setOutData(int index, D data);
-
-        <D extends PortObject> void setOutData(D... data);
-
-        // TODO serializable data
-        <D> void setInternalData(D data);
-
-        void setInternalTables(BufferedDataTable... data);
-
-        void setInternalPortObjects(PortObject... data);
-
-        void setWarning(Message message);
-
-    }
-
-    public interface RequireExecute {
-        RequireNothing execute(BiConsumer<ExecuteInput, ExecuteOutput> execute);
-
-    }
-
-    // TODO naming!
-    public interface RequireNothing {
-    }
+    /* OPTIONAL PROPERTIES */
 
     /**
-     * TODO
-     *
-     * @param nodeView
-     * @return
+     * @param view a function receiving the first stage to create the {@link DefaultView} and returning the
+     *            {@link DefaultView}
+     * @return this
      */
-    public DefaultNode view(final Function<RequireViewSettings, RequireDataServices> nodeView) {
+    public DefaultNode view(final Function<RequireViewSettings, DefaultView> view) {
+        m_view = view.apply(DefaultView.create());
         return this;
     }
-
-    public interface RequireViewSettings {
-        RequireViewDescription settingsClass(Class<? extends DefaultNodeSettings> settingsClass);
-    }
-
-    public interface RequireViewDescription {
-        RequireViewPage description(String viewDescription);
-    }
-
-    public interface RequireViewPage {
-        // TODO refactor page builder to follow new principles
-        RequireDataServices page(Function<ViewInput, Page> page);
-    }
-
-    public interface RequireDataServices {
-        // TODO refactor build to refactor to follow new principles
-        RequireDataServices initialDataService(InitialDataService initialDataService);
-
-        <D> RequireDataServices initialData(Function<ViewInput, D> initialDataSupplier);
-
-        // TODO refactor build to refactor to follow new principles
-        RequireDataServices rpcDataService(RpcDataService dataService);
-
-        <S> RequireDataServices dataService(Function<ViewInput, S> dataService);
-
-    }
-
-    public interface ViewInput {
-
-        <S extends DefaultNodeSettings> S getSettings();
-
-        <D> D getInternalData();
-
-        BufferedDataTable[] getInternalTables();
-
-        PortObject[] getInternalPortObjects();
-
-    }
-
-    /* NODE OPTIONALS */
 
     /**
      * Sets the node type. This affects how the node is shown, e.g., Loop Start nodes are shown in light blue and form a

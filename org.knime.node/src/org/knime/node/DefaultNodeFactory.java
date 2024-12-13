@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ConfigurableNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
@@ -66,6 +67,9 @@ import org.knime.core.node.context.NodeCreationConfiguration;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.webui.data.ApplyDataService;
+import org.knime.core.webui.data.InitialDataService;
+import org.knime.core.webui.data.RpcDataService;
 import org.knime.core.webui.node.dialog.NodeDialog;
 import org.knime.core.webui.node.dialog.NodeDialogFactory;
 import org.knime.core.webui.node.dialog.SettingsType;
@@ -73,6 +77,8 @@ import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewFactory;
+import org.knime.core.webui.page.Page;
+import org.knime.node.DefaultView.ViewInput;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
@@ -181,14 +187,13 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
         return Optional.empty();
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public final NodeDialog createNodeDialog() {
         // TODO view settings
-        return new DefaultNodeDialog(SettingsType.MODEL, m_node.m_modelSettingsClass);
+        return new DefaultNodeDialog(SettingsType.MODEL, m_node.m_model.m_modelSettingsClass);
     }
 
     /**
@@ -205,10 +210,10 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
      */
     @Override
     public final NodeModel createNodeModel() {
-        var inPorts =
-            m_node.m_inputPortDescriptions.stream().map(portDesc -> portDesc.getType()).toArray(PortType[]::new);
-        var outPorts =
-            m_node.m_outputPortDescriptions.stream().map(portDesc -> portDesc.getType()).toArray(PortType[]::new);
+        var inPorts = m_node.m_model.m_inputPortDescriptions.stream().map(portDesc -> portDesc.getType())
+            .toArray(PortType[]::new);
+        var outPorts = m_node.m_model.m_outputPortDescriptions.stream().map(portDesc -> portDesc.getType())
+            .toArray(PortType[]::new);
         return new NodeModel(inPorts, outPorts) {
 
             private DefaultNodeSettings m_modelSettings;
@@ -235,7 +240,7 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
             @Override
             protected void saveSettingsTo(final NodeSettingsWO settings) {
                 // TODO view settings
-                DefaultNodeSettings.saveSettings(m_node.m_modelSettingsClass, m_modelSettings, settings);
+                DefaultNodeSettings.saveSettings(m_node.m_model.m_modelSettingsClass, m_modelSettings, settings);
 
             }
 
@@ -255,7 +260,7 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
             @Override
             protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
                 // TODO view settings
-                m_modelSettings = DefaultNodeSettings.loadSettings(settings, m_node.m_modelSettingsClass);
+                m_modelSettings = DefaultNodeSettings.loadSettings(settings, m_node.m_model.m_modelSettingsClass);
             }
 
             @Override
@@ -271,8 +276,77 @@ public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeMod
      */
     @Override
     public final NodeView createNodeView(final NodeModel nodeModel) {
-        // TODO
-        return null;
+        var view = m_node.m_view;
+        return new NodeView() {
+
+            private ViewInput m_input;
+
+            @Override
+            public Page getPage() {
+                return view.m_pageFct.apply(m_input);
+            }
+
+            @Override
+            public <D> Optional<InitialDataService<D>> createInitialDataService() {
+                // TODO Auto-generated method stub
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<RpcDataService> createRpcDataService() {
+                // TODO Auto-generated method stub
+                return Optional.empty();
+            }
+
+            @Override
+            public <D> Optional<ApplyDataService<D>> createApplyDataService() {
+                // TODO Auto-generated method stub
+                return Optional.empty();
+            }
+
+            @Override
+            public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void loadValidatedSettingsFrom(final NodeSettingsRO settings) {
+                m_input = new ViewInput() {
+
+                    @Override
+                    public <S extends DefaultNodeSettings> S getSettings() {
+                        try {
+                            return (S)DefaultNodeSettings.loadSettings(settings, view.m_settingsClass);
+                        } catch (InvalidSettingsException ex) {
+                            // TODO Auto-generated catch block
+                            throw new IllegalStateException();
+                        }
+                    }
+
+                    @Override
+                    public BufferedDataTable[] getInternalTables() {
+                        // TODO get tables from node model (e.g. via BufferedDataTableHolder)
+                        return null;
+                    }
+
+                    @Override
+                    public PortObject[] getInternalPortObjects() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public <D> D getInternalData() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+                };
+
+            }
+
+        };
+
     }
 
     // TODO remove!!
