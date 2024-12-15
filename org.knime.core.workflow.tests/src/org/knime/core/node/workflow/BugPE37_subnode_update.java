@@ -51,10 +51,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 
@@ -75,7 +74,7 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
     private NodeID m_diffChecker_After_23;
     private NodeID m_diffChecker_After_27;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         final var workflowDir = getDefaultWorkflowDirectory();
         NodeID wfmID = loadAndSetWorkflowInWorkspace(workflowDir, workflowDir.getParentFile());
@@ -90,7 +89,7 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
     }
 
     /** Runs the workflow without updating linked metanodes and expects the 'left' side to be green. */
-    @Test(timeout = 10000L)
+    @Test
     public void testRunBeforeUpdate() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
@@ -105,7 +104,7 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
     }
 
     /** Runs the workflow after updating linked metanodes and expects the 'right' side to be green. */
-    @Test(timeout = 10000L)
+    @Test
     public void testRunAfterUpdate() throws Exception {
         WorkflowManager manager = getManager();
         List<NodeID> linkedMetaNodes = manager.getLinkedMetaNodes(true);
@@ -113,20 +112,20 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
-            Assert.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
+            org.junit.jupiter.api.Assertions.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
         }
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
-            Assert.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
-            Assert.assertThat("Update should be flagged", parent.hasUpdateableMetaNodeLink(id), is(true));
-            Assert.assertThat("Can't update metanode link", parent.canUpdateMetaNodeLink(id), is(true));
+            org.junit.jupiter.api.Assertions.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
+            org.junit.jupiter.api.Assertions.assertThat("Update should be flagged", parent.hasUpdateableMetaNodeLink(id), is(true));
+            org.junit.jupiter.api.Assertions.assertThat("Can't update metanode link", parent.canUpdateMetaNodeLink(id), is(true));
         }
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
             NodeContainerTemplateLinkUpdateResult updateRes = parent.updateMetaNodeLink(id, new ExecutionMonitor(), lH);
-            Assert.assertThat("Not expected to have errors", updateRes.hasErrors(), is(false));
+            org.junit.jupiter.api.Assertions.assertThat("Not expected to have errors", updateRes.hasErrors(), is(false));
         }
 
         executeAllAndWait();
@@ -140,7 +139,7 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }

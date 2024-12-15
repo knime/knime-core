@@ -50,8 +50,8 @@ import java.util.Set;
 
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 /** AP-14686: Container nodes with new option "Use fully qualified name in REST representation"
@@ -63,14 +63,14 @@ public class BugAP14686_containerNodesWithNodeIDSuffix extends WorkflowTestCase 
 
 	private NodeID m_containerVariableInputID;
 	private NodeID m_containerRowOutputID;
-	
-    @Before
+
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID wfmID = loadAndSetWorkflow();
         m_containerVariableInputID = wfmID.createChild(15);
         m_containerRowOutputID = wfmID.createChild(10);
     }
-    
+
     @Test
     public void testInputNodeNames() {
     	Set<String> inputNodeKeys = getManager().getInputNodes().keySet();
@@ -80,7 +80,7 @@ public class BugAP14686_containerNodesWithNodeIDSuffix extends WorkflowTestCase 
 				"simple-input-row", "simple-input-table", "simple-input-variable" //
 		));
     }
-    
+
     @Test
     public void testOutputNodeNames() {
     	Set<String> outputNodeKeys = getManager().getExternalOutputs().keySet();
@@ -89,7 +89,7 @@ public class BugAP14686_containerNodesWithNodeIDSuffix extends WorkflowTestCase 
 				"simple-output-json", "simple-output-row", "simple-output-table" //
 		));
     }
-    
+
     @Test
     public void testInputNodeNamesAfterDuplication() {
     	WorkflowManager manager = getManager();
@@ -104,7 +104,7 @@ public class BugAP14686_containerNodesWithNodeIDSuffix extends WorkflowTestCase 
 				inputNodeKeys.stream().filter(s -> s.startsWith("simple-input-variable-")).count(),
 				CoreMatchers.equalTo(2L));
     }
-    
+
     @Test
     public void testOutputNodeNamesAfterDuplication() {
     	WorkflowManager manager = getManager();

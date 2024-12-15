@@ -44,7 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +54,9 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.util.ViewUtils;
@@ -99,7 +99,7 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
         }
     };
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_crossTab2 = new NodeID(baseID, 2);
@@ -155,7 +155,7 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
      * {@inheritDoc}
      */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         Logger.getRootLogger().removeAppender(m_logAppender);
         super.tearDown();

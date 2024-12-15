@@ -50,13 +50,13 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThat;
 
 import java.io.IOException;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

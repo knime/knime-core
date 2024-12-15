@@ -51,13 +51,13 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 
 /**
@@ -71,7 +71,7 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
     private NodeID m_javaSnippet_After_Expand_3;
     private NodeID m_stringInput5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableDiffer7 = new NodeID(baseID, 7);

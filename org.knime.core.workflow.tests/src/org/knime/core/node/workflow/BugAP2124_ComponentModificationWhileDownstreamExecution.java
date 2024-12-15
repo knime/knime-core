@@ -45,22 +45,21 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
-
 
 /**
  * Tests manipulation of a component during and after execution.
@@ -68,7 +67,7 @@ import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
  * @author Bernd Wiswedel
  */
 public class BugAP2124_ComponentModificationWhileDownstreamExecution extends WorkflowTestCase {
-	
+
 	private static final String BLOCK_ID_OUTER = "AP-21243_Lock_Outer";
 	private static final String BLOCK_ID_INNER = "AP-21243_Lock_Inner";
 
@@ -82,7 +81,7 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
 	private ReentrantLock m_inComponentLock;
 	private ReentrantLock m_outComponentLock;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator_1 = new NodeID(baseID, 1);
@@ -105,7 +104,7 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
     	checkState(m_tableToVar_8, EXECUTED);
     	checkState(getManager(), EXECUTED);
     }
-    
+
     /** Keep inner component running, then try to manipulate the component while it's running (operations allowed). */
     @Test
     public void testModificationWhileComponentIsExecuting() throws Exception {
@@ -125,7 +124,7 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
 				.getNodeIDs()[0];
 			checkState(copiedNode, CONFIGURED);
 			executeAndWait(copiedNode);
-			
+
 			// can also reset stuff inside the component (but don't because then it won't complete)
 			assertThat("can reset inside of executing component", innerMostComponentWFM.canResetNode(copiedNode));
     	} finally {
@@ -134,7 +133,7 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
     	waitWhileInExecution();
     	checkState(getManager(), EXECUTED);
     }
-    
+
     /** Execute inner component, but keep downstream nodes running, then try to manipulate the component 
      * (operations not allowed). */
     @Test
@@ -146,15 +145,15 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
     		waitWhile(m_blockOuter_10, nc -> nc.getInternalState() != EXECUTING, 3);
     		waitWhileNodeInExecution(m_tableToVar_8);
     		checkState(m_componentOuter_11, EXECUTED);
-    		
+
     		final NodeContainer varEditNode = findNodeContainer(m_variableEdit_11_0_9_7_0_6);
     		final WorkflowManager innerMostComponentWFM = varEditNode.getParent();
-    		
+
     		// component is currently executing - it's allowed to drop new nodes and run them
 			final DefClipboardContent def = innerMostComponentWFM.copyToDef(
 					WorkflowCopyContent.builder().setNodeIDs(m_variableEdit_11_0_9_7_0_6).build(),
 					PasswordRedactor.asNull());
-    		
+
 			assertThrows("Workflow manipuation not allowed", IllegalStateException.class,
 					() -> innerMostComponentWFM.paste(def));
 			assertFalse("cannot remove connection",
@@ -168,8 +167,8 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
     	waitWhileInExecution();
     	checkState(getManager(), EXECUTED);
     }
-    
-    @After
+
+    @AfterEach
     @Override
     public void tearDown() throws Exception {
     	BlockingRepository.removeAll(BLOCK_ID_INNER);

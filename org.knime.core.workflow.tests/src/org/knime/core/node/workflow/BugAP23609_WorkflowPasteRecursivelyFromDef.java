@@ -53,13 +53,13 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.shared.workflow.storage.clipboard.DefClipboardContent;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
+import java.nio.file.Path;
 
 /**
  * Tests the bug described in AP-23609 for components (i.e. {@link SubNodeContainer}s)
@@ -72,44 +72,44 @@ public class BugAP23609_WorkflowPasteRecursivelyFromDef extends WorkflowTestCase
 
 	// nodes the the component test case
 	private NodeID m_topComponentID;
-	
+
 	// nodes for the metanode test cast
 	private NodeID m_topMetanodeID;
-	
-	@Rule
-	public final TemporaryFolder m_tempFolder = new TemporaryFolder();
-	
-	@Before
+
+	@TempDir
+	Path m_tempFolder;
+
+	@BeforeEach
 	public void beforeEach() throws Exception {
-		File copiedFolder = m_tempFolder.newFolder(BugAP23609_WorkflowPasteRecursivelyFromDef.class.getSimpleName());
+		File copiedFolder = m_tempFolder.resolve(BugAP23609_WorkflowPasteRecursivelyFromDef.class.getSimpleName()).toFile();
 		FileUtils.copyDirectory(getDefaultWorkflowDirectory(), copiedFolder);
 		NodeID baseID = loadAndSetWorkflow(copiedFolder);
 		m_topComponentID = new NodeID(baseID, 4);
 		m_topMetanodeID = new NodeID(baseID, 5);
 	}
-	
+
 	/** Copy the top most component and paste it into itself and once again into the newly pasted component. */
 	@Test
 	public void testRecursivePasteOfOriginalComponent() throws Exception {
 		final WorkflowManager wfm = getManager();
 		wfm.removeNode(m_topMetanodeID); // this is the component test, remove metanode.
-		
+
 		final WorkflowCopyContent copyContent = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topComponentID) //
 				.setIncludeInOutConnections(false) //
 				.build();
-		
+
 		final DefClipboardContent clipboardContent = wfm.copyToDef(copyContent, PasswordRedactor.asNull());
 		final WorkflowManager topComponentWFM = 
 				((SubNodeContainer)wfm.findNodeContainer(m_topComponentID)).getWorkflowManager();
-		
+
 		WorkflowCopyContent pastedOuterContent = topComponentWFM.paste(clipboardContent);
 		final NodeID[] pastedOuterNodeIDs = pastedOuterContent.getNodeIDs();
 		assertThat(pastedOuterNodeIDs.length, is(1));
 		final NodeID pastedOuterNodeID = pastedOuterNodeIDs[0];
 		final SubNodeContainer pastedOuterSubNode = topComponentWFM.getNodeContainer(pastedOuterNodeID,
 				SubNodeContainer.class, true);
-		
+
 		final WorkflowManager pastedOuterSubNodeWFM = (pastedOuterSubNode).getWorkflowManager();
 		WorkflowCopyContent pastedInnerContent = pastedOuterSubNodeWFM.paste(clipboardContent);
 		final NodeID[] pastedInnerNodeIDs = pastedInnerContent.getNodeIDs();
@@ -117,78 +117,78 @@ public class BugAP23609_WorkflowPasteRecursivelyFromDef extends WorkflowTestCase
 		final NodeID pastedInnerNodeID = pastedInnerNodeIDs[0];
 		final SubNodeContainer pastedInnerSubNode = pastedOuterSubNodeWFM.getNodeContainer(pastedInnerNodeID,
 				SubNodeContainer.class, true);
-		
+
 		assertThat(pastedInnerSubNode, is(notNullValue()));
-		
+
 		final long tableContainerNodeCount = countTableCreatorsInWorkflow(wfm);
 		assertThat("Number of Table Creator nodes after pasting", tableContainerNodeCount, is(3L));
 		wfm.save(wfm.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), true);
 	}
-	
+
 	/** Copy the top most metanode and paste it into itself and once again into the newly pasted component. */
 	@Test
 	public void testRecursivePasteOfOriginalMetanode() throws Exception {
 		final WorkflowManager wfm = getManager();
 		wfm.removeNode(m_topComponentID); // this is the metanode test, remove component.
-		
+
 		final WorkflowCopyContent copyContent = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topMetanodeID) //
 				.setIncludeInOutConnections(false) //
 				.build();
-		
+
 		final DefClipboardContent clipboardContent = wfm.copyToDef(copyContent, PasswordRedactor.asNull());
 		final WorkflowManager topMetanodeWFM = (WorkflowManager)wfm.findNodeContainer(m_topMetanodeID);
-		
+
 		WorkflowCopyContent pastedOuterContent = topMetanodeWFM.paste(clipboardContent);
 		final NodeID[] pastedOuterNodeIDs = pastedOuterContent.getNodeIDs();
 		assertThat(pastedOuterNodeIDs.length, is(1));
 		final NodeID pastedOuterNodeID = pastedOuterNodeIDs[0];
 		final WorkflowManager pastedOuterMetaNode = topMetanodeWFM.getNodeContainer(pastedOuterNodeID,
 				WorkflowManager.class, true);
-		
+
 		WorkflowCopyContent pastedInnerContent = pastedOuterMetaNode.paste(clipboardContent);
 		final NodeID[] pastedInnerNodeIDs = pastedInnerContent.getNodeIDs();
 		assertThat(pastedInnerNodeIDs.length, is(1));
 		final NodeID pastedInnerNodeID = pastedInnerNodeIDs[0];
 		final WorkflowManager pastedInnerMetaNode = pastedOuterMetaNode.getNodeContainer(pastedInnerNodeID,
 				WorkflowManager.class, true);
-		
+
 		assertThat(pastedInnerMetaNode, is(notNullValue()));
-		
+
 		final long tableContainerNodeCount = countTableCreatorsInWorkflow(wfm);
 		assertThat("Number of Table Creator nodes after pasting", tableContainerNodeCount, is(3L));
 		wfm.save(wfm.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), true);
 	}
-	
+
 	/** Copy the top most component and paste it into itself, then copy top-most compenent again, and paste it into the
 	 * previously inserted component. */
 	@Test
 	public void testRecursivePasteOfModifiedComponent() throws Exception {
 		final WorkflowManager wfm = getManager();
 		wfm.removeNode(m_topMetanodeID); // this is the component test, remove metanode.
-		
+
 		final WorkflowCopyContent copyContent = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topComponentID) //
 				.setIncludeInOutConnections(false) //
 				.build();
-		
+
 		final DefClipboardContent clipboardContent = wfm.copyToDef(copyContent, PasswordRedactor.asNull());
 		final WorkflowManager topComponentWFM = 
 				((SubNodeContainer)wfm.findNodeContainer(m_topComponentID)).getWorkflowManager();
-		
+
 		WorkflowCopyContent pastedOuterContent = topComponentWFM.paste(clipboardContent);
 		final NodeID[] pastedOuterNodeIDs = pastedOuterContent.getNodeIDs();
 		assertThat(pastedOuterNodeIDs.length, is(1));
 		final NodeID pastedOuterNodeID = pastedOuterNodeIDs[0];
 		final SubNodeContainer pastedOuterSubNode = topComponentWFM.getNodeContainer(pastedOuterNodeID,
 				SubNodeContainer.class, true);
-		
+
 		final WorkflowCopyContent copyContentNew = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topComponentID) //
 				.setIncludeInOutConnections(false) //
 				.build();
 		final DefClipboardContent clipboardContentNew = wfm.copyToDef(copyContentNew, PasswordRedactor.asNull());
-		
+
 		final WorkflowManager pastedOuterSubNodeWFM = (pastedOuterSubNode).getWorkflowManager();
 		WorkflowCopyContent pastedInnerContent = pastedOuterSubNodeWFM.paste(clipboardContentNew);
 		final NodeID[] pastedInnerNodeIDs = pastedInnerContent.getNodeIDs();
@@ -196,56 +196,56 @@ public class BugAP23609_WorkflowPasteRecursivelyFromDef extends WorkflowTestCase
 		final NodeID pastedInnerNodeID = pastedInnerNodeIDs[0];
 		final SubNodeContainer pastedInnerSubNode = pastedOuterSubNodeWFM.getNodeContainer(pastedInnerNodeID,
 				SubNodeContainer.class, true);
-		
+
 		assertThat(pastedInnerSubNode, is(notNullValue()));
-		
+
 		final long tableContainerNodeCount = countTableCreatorsInWorkflow(wfm);
 		assertThat("Number of Table Creator nodes after pasting", tableContainerNodeCount, is(4L));
 		wfm.save(wfm.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), true);
 	}
-	
+
 	/** Copy the top most component and paste it into itself, then copy top-most compenent again, and paste it into the
 	 * previously inserted component. */
 	@Test
 	public void testRecursivePasteOfModifiedMetanode() throws Exception {
 		final WorkflowManager wfm = getManager();
 		wfm.removeNode(m_topComponentID); // this is the metanode test, remove component.
-		
+
 		final WorkflowCopyContent copyContent = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topMetanodeID) //
 				.setIncludeInOutConnections(false) //
 				.build();
-		
+
 		final DefClipboardContent clipboardContent = wfm.copyToDef(copyContent, PasswordRedactor.asNull());
 		final WorkflowManager topMetanodeWFM = (WorkflowManager)wfm.findNodeContainer(m_topMetanodeID);
-		
+
 		WorkflowCopyContent pastedOuterContent = topMetanodeWFM.paste(clipboardContent);
 		final NodeID[] pastedOuterNodeIDs = pastedOuterContent.getNodeIDs();
 		assertThat(pastedOuterNodeIDs.length, is(1));
 		final NodeID pastedOuterNodeID = pastedOuterNodeIDs[0];
 		final WorkflowManager pastedOuterMetaNode = topMetanodeWFM.getNodeContainer(pastedOuterNodeID,
 				WorkflowManager.class, true);
-		
+
 		final WorkflowCopyContent copyContentNew = WorkflowCopyContent.builder() //
 				.setNodeIDs(m_topMetanodeID) //
 				.setIncludeInOutConnections(false) //
 				.build();
 		final DefClipboardContent clipboardContentNew = wfm.copyToDef(copyContentNew, PasswordRedactor.asNull());
-		
+
 		WorkflowCopyContent pastedInnerContent = pastedOuterMetaNode.paste(clipboardContentNew);
 		final NodeID[] pastedInnerNodeIDs = pastedInnerContent.getNodeIDs();
 		assertThat(pastedInnerNodeIDs.length, is(1));
 		final NodeID pastedInnerNodeID = pastedInnerNodeIDs[0];
 		final WorkflowManager pastedInnerMetaNode = pastedOuterMetaNode.getNodeContainer(pastedInnerNodeID,
 				WorkflowManager.class, true);
-		
+
 		assertThat(pastedInnerMetaNode, is(notNullValue()));
-		
+
 		final long tableContainerNodeCount = countTableCreatorsInWorkflow(wfm);
 		assertThat("Number of Table Creator nodes after pasting", tableContainerNodeCount, is(4L));
 		wfm.save(wfm.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), true);
 	}
-	
+
 	private static int countTableCreatorsInWorkflow(final NodeContainerTemplate wfm) {
 		int count = 0;
 		for (NodeContainer nc : wfm.getNodeContainers()) {
@@ -259,5 +259,5 @@ public class BugAP23609_WorkflowPasteRecursivelyFromDef extends WorkflowTestCase
 		}
 		return count;
 	}
-		
+
 }

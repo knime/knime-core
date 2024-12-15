@@ -45,8 +45,8 @@
 package org.knime.core.node.workflow;
 
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
@@ -56,8 +56,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGUR
 import java.util.Collections;
 import java.util.function.Predicate;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.wizard.page.WizardPage;
 
 
@@ -79,7 +79,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
     private NodeID m_javaEdit_InMetaNode_8_4;
     private NodeID m_javaEdit_3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subnodeFirstPage_6 = baseID.createChild(6);

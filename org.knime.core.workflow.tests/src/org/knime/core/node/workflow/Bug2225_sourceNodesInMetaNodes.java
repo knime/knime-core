@@ -46,9 +46,9 @@ package org.knime.core.node.workflow;
 
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
@@ -63,7 +63,7 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
     private NodeID m_counterOutLoop;
     private NodeID m_tblView;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_loopStart = new NodeID(baseID, 2);
@@ -105,9 +105,8 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }
 
-}

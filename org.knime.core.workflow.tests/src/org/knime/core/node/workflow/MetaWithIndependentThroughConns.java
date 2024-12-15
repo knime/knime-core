@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -59,7 +59,7 @@ public class MetaWithIndependentThroughConns extends WorkflowTestCase {
     private NodeID m_bottomSink;
     private NodeID m_metaWithOnlyThrough;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_topSource = new NodeID(baseID, 1);

@@ -48,9 +48,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.Pair;
 
@@ -71,7 +71,7 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
     private NodeID m_failInSub_6_1;
     private NodeID m_rowFilterNone_5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator_1 = new NodeID(baseID, 1);
@@ -88,9 +88,9 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
     public void testMessageAfterExecute() throws Exception {
         WorkflowManager manager = getManager();
         List<Pair<String, NodeMessage>> messages = manager.getNodeMessages(Type.WARNING, Type.ERROR);
-        Assert.assertNotNull(messages);
+        Assertions.assertNotNull(messages);
         removeSubnodeWarningNoExecutedPredecessor(messages);
-        Assert.assertTrue("Non empty: " + messages, messages.isEmpty());
+        Assertions.assertTrue(messages.isEmpty(), "Non empty: " + messages);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_rowFilterEmpty_2, m_metaNodeFail_3,
             m_rowFilterNone_4, m_failInMeta_3_1, m_subNodeFail_6, m_failInSub_6_1, m_rowFilterNone_5);
         executeAllAndWait();
@@ -100,13 +100,13 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
         List<Pair<String, NodeMessage>> warnErrorMsgs =
                 manager.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR);
 
-        Assert.assertEquals(1, warnMsgs.size());
-        Assert.assertEquals(2, errorMsgs.size());
-        Assert.assertEquals(3, warnErrorMsgs.size());
+        Assertions.assertEquals(1, warnMsgs.size());
+        Assertions.assertEquals(2, errorMsgs.size());
+        Assertions.assertEquals(3, warnErrorMsgs.size());
 
         Pair<String, NodeMessage> pair = warnMsgs.get(0);
-        Assert.assertTrue(pair.getFirst().contains(manager.getNodeContainer(m_rowFilterEmpty_2).getName()));
-        Assert.assertTrue(pair.getSecond().getMessage().contains("empty"));
+        Assertions.assertTrue(pair.getFirst().contains(manager.getNodeContainer(m_rowFilterEmpty_2).getName()));
+        Assertions.assertTrue(pair.getSecond().getMessage().contains("empty"));
 
         List<NodeID> expectedErrorIDs = Arrays.asList(m_failInMeta_3_1, m_failInSub_6_1);
         for (Pair<String, NodeMessage> p : errorMsgs) {
@@ -118,15 +118,15 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
                     break;
                 }
             }
-            Assert.assertTrue("Corresponding node with error msg not found: " + nodeName, found);
+            Assertions.assertTrue(found, "Corresponding node with error msg not found: " + nodeName);
             // "This node fails on each execution"
-            Assert.assertTrue(p.getSecond().getMessage().contains("fail"));
+            Assertions.assertTrue(p.getSecond().getMessage().contains("fail"));
         }
         reset(m_tableCreator_1);
         messages = manager.getNodeMessages(Type.WARNING, Type.ERROR);
-        Assert.assertNotNull(messages);
+        Assertions.assertNotNull(messages);
         removeSubnodeWarningNoExecutedPredecessor(messages);
-        Assert.assertTrue("Non empty: " + messages, messages.isEmpty());
+        Assertions.assertTrue(messages.isEmpty(), "Non empty: " + messages);
     }
 
     /** Remove first warning message associated with "subnode has no data" message. Workaround that we remove

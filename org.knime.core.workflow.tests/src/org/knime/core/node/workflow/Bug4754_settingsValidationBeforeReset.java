@@ -44,11 +44,11 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 
@@ -66,7 +66,7 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
     private NodeID m_tableChecker_5;
     private NodeID m_tableChecker_6;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator_1 = new NodeID(baseID, 1);
@@ -83,7 +83,7 @@ public class Bug4754_settingsValidationBeforeReset extends WorkflowTestCase {
      */
     @Test
     public void testLoadBogusIntoMetaNode() throws Exception {
-        Assume.assumeTrue("No settings validation in metanodes (yet)", false);
+        Assumptions.assumeTrue("No settings validation in metanodes (yet)", false);
         WorkflowManager manager = getManager();
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_metaNode_2, m_tableChecker_5);
         NodeSettings s = new NodeSettings("meta-node");

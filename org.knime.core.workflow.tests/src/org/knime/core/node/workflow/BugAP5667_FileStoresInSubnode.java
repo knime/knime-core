@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -54,13 +54,10 @@ import java.io.File;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
@@ -71,7 +68,6 @@ import org.knime.core.util.FileUtil;
  * https://bugs.knime.org/AP-5667
  * @author wiswedel, University of Konstanz
  */
-@RunWith(Parameterized.class)
 public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
 
     /** Changes done to the workflow before we run the test. */
@@ -86,40 +82,13 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         SubnodeInSubnode
     }
 
-    @Parameters(name="{0}")
     public static TestModifications[] createParameters() {
         return TestModifications.values();
     }
 
-    @Parameter
-    public TestModifications m_testModification;
-
-    private File m_workflowDir;
-    private NodeID m_dataGen_1;
-    private NodeID m_testFileStore_10;
-    private NodeID m_subnode_5;
-    private NodeID m_loopStart_3;
-    private NodeID m_loopEnd_6;
-
-    @Before
-    public void setUp() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
-        FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
-        initWorkflowFromTemp();
-    }
-
-    private void initWorkflowFromTemp() throws Exception {
-        // will save the workflow in one of the test ...don't write SVN folder
-        NodeID baseID = loadAndSetWorkflow(m_workflowDir);
-        m_dataGen_1 = new NodeID(baseID, 1);
-        m_subnode_5 = new NodeID(baseID, 5);
-        m_loopStart_3 = new NodeID(baseID, 3);
-        m_loopEnd_6 = new NodeID(baseID, 6);
-        m_testFileStore_10 = new NodeID(baseID, 10);
-    }
-
-    @Test
-    public void test() throws Exception {
+    @ParameterizedTest(name="{0}")
+    @MethodSource("createParameters")
+    public void test(TestModifications m_testModification) throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
         tweakWorkflow(manager);
@@ -142,6 +111,23 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         executeAllAndWait();
         checkCountFileStores();
         checkState(manager, EXECUTED);
+    }
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
+        FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
+        initWorkflowFromTemp();
+    }
+
+    private void initWorkflowFromTemp() throws Exception {
+        // will save the workflow in one of the test ...don't write SVN folder
+        NodeID baseID = loadAndSetWorkflow(m_workflowDir);
+        m_dataGen_1 = new NodeID(baseID, 1);
+        m_subnode_5 = new NodeID(baseID, 5);
+        m_loopStart_3 = new NodeID(baseID, 3);
+        m_loopEnd_6 = new NodeID(baseID, 6);
+        m_testFileStore_10 = new NodeID(baseID, 10);
     }
 
     private void tweakWorkflow(final WorkflowManager manager) {
@@ -191,7 +177,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);

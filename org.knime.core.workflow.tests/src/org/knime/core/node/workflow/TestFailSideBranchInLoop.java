@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 
 /**
  *
@@ -59,7 +59,7 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
     private NodeID m_csvWriterInLoop13;
     private NodeID m_loopEnd4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGen2 = new NodeID(baseID, 2);
@@ -70,7 +70,7 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
 
     @Test
     public void bug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
-        Assume.assumeTrue("Disabled - outstanding hidden problems", false);
+        Assumptions.assumeTrue("Disabled - outstanding hidden problems", false);
         checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);

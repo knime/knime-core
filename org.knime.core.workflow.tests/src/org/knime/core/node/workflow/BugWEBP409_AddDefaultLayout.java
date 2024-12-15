@@ -46,14 +46,14 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -76,7 +76,7 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 *
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -110,6 +110,7 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
+	@Test
 	public void testLoadingSavedLayouts() throws Exception {
 		final WorkflowManager wfm = getManager();
 		checkState(m_subNode1, InternalNodeContainerState.CONFIGURED);
@@ -129,6 +130,7 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 *
 	 * @throws Exception
 	 */
+	@Test
 	public void testDefaultLayoutCreatingSubNode() throws Exception {
 		final WorkflowManager wfm = getManager();
 		SubNodeContainer container1 = (SubNodeContainer) findNodeContainer(m_subNode1);
@@ -146,6 +148,7 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
+	@Test
 	public void testSuccessfulExecution() throws Exception {
 		executeAllAndWait();
 		checkStateOfMany(InternalNodeContainerState.EXECUTED, m_subNode1, m_subNode2);
@@ -156,6 +159,7 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 *
 	 * @throws Exception
 	 */
+	@Test
 	public void testSaveAndLoadLayoutVersion() throws Exception {
 		WorkflowManager wfm = getManager();
 		wfm.save(m_workflowDir, new ExecutionMonitor(), true);

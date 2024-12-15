@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Problem was that workflow only consisting of meta nodes don't update their status after parent#executeUpToHere
@@ -55,7 +55,7 @@ import org.junit.Test;
  */
 public class Bug6026_ExecuteUpToNotWorking extends WorkflowTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         loadAndSetWorkflow();
     }

@@ -1,13 +1,13 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -34,7 +34,7 @@ public class BugAP18224_UpdateInnerComponentsFails2 extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		final var workspaceDir = getDefaultWorkflowDirectory();
 		var baseId = loadAndSetWorkflowInWorkspace(new File(workspaceDir, "mainWorkflow"), workspaceDir);
@@ -52,8 +52,9 @@ public class BugAP18224_UpdateInnerComponentsFails2 extends WorkflowTestCase {
 		assertTrue("Expected meta node update available",
 				getManager().checkUpdateMetaNodeLink(m_olderVersionComponent, loadHelper));
 		getManager().updateMetaNodeLink(m_olderVersionComponent, new ExecutionMonitor(), loadHelper);
-		assertThrows("Expect an IOException to be thrown because node template is non-existent", IOException.class,
-				() -> getManager().checkUpdateMetaNodeLink(m_newerVersionComponent, loadHelper));
+		assertThrows(IOException.class,
+				() -> getManager().checkUpdateMetaNodeLink(m_newerVersionComponent, loadHelper),
+				"Expect an IOException to be thrown because node template is non-existent");
 
 		executeAndWait(m_tableDiff);
 		checkState(m_tableDiff, InternalNodeContainerState.EXECUTED);

@@ -44,12 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -85,9 +85,11 @@ public class BugAP7982_FutureKNIMEVersion_FutureVersion extends WorkflowTestCase
     }
 
     /** Load workflow, expect no errors. */
-    @Test(expected = UnsupportedWorkflowVersionException.class)
+    @Test
     public void loadWorkflowFail() throws Exception {
-        loadWorkflow(false);
+        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(UnsupportedWorkflowVersionException.class, () -> {
+            loadWorkflow(false);
+        });
     }
 
     private WorkflowLoadResult loadWorkflow(final boolean tryToLoadInsteadOfFail) throws Exception {

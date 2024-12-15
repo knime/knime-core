@@ -44,10 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 
@@ -73,7 +73,7 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
     private NodeID m_metaDifferentDefault_7;
     private NodeID m_metaHiddenLink_19;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         final var workflowDir = getWorkflowDirectory("testRecursiveMetaNodeUpdate_Group/TestRecursiveMetaNodeUpdate");
         NodeID baseID = loadAndSetWorkflowInWorkspace(workflowDir, workflowDir.getParentFile());

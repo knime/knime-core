@@ -44,12 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
@@ -65,7 +65,7 @@ public class SimpleLoop extends WorkflowTestCase {
     private NodeID m_counterOutSinkLoop;
     private NodeID m_tblView;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_loopStart = new NodeID(baseID, 2);
