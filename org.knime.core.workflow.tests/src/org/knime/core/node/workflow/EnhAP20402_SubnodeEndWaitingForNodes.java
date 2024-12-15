@@ -53,6 +53,7 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
@@ -237,6 +238,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
 		return subnodeWFM;
 	}
 
+	@AfterEach
 	@Override
     public void tearDown() throws Exception {
     	super.tearDown();

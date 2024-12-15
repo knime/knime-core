@@ -44,21 +44,20 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.Version;
-
-import org.opentest4j.AssertionFailedError;
 
 /**
  * Load a workflow created by older version of KNIME and load it. Don't expect any errors on load.
@@ -78,7 +77,8 @@ public class BugAP7982_FutureKNIMEVersion_AllCompatible extends WorkflowTestCase
             public UnknownKNIMEVersionLoadPolicy getUnknownKNIMEVersionLoadPolicy(
                 final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
                 final boolean isNightlyBuild) {
-                throw new AssertionFailedError("Not to be called - workflow is expected to be compatible");
+            	Assertions.fail("Not to be called - workflow is expected to be compatible");
+            	return null; // never returned
             }
         });
         setManager(loadWorkflow.getWorkflowManager());

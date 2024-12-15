@@ -52,6 +52,7 @@ import java.io.File;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.SandboxedNodeCreator;
 import org.knime.core.node.exec.SandboxedNodeCreator.SandboxedNode;
@@ -67,6 +68,7 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
     private NodeID m_rowSplitter;
     private NodeID m_tableCreator;
@@ -74,7 +76,6 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
 
     @BeforeEach
     public void setUp() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         m_sandboxedWM = WorkflowManager.ROOT.createAndAddProject(
             "Sandboxed Temp Workflow", new WorkflowCreationHelper());
@@ -96,7 +97,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
      * @throws Exception
      */
     @Test
-    public void testExecuteAfterSandboxedNodeCreation() throws Exception {
+    public void testExecuteAfterSandboxedNodeCreation(@TempDir File sandboxedDir) throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, CONFIGURED);
 
@@ -108,8 +109,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
         ExecutionMonitor exec = new ExecutionMonitor();
 
         // Set the location and the WFM
-        File sandboxedDir = FileUtil.createTempDir(getClass().getSimpleName() + "-sandboxed");
-
+        sandboxedDir.delete();
 
         // Create the SandboxedNode
         SandboxedNodeCreator nodeCreator = new SandboxedNodeCreator(rowSplitter, inputData, m_sandboxedWM);
@@ -135,7 +135,6 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
     public void tearDown() throws Exception {
         WorkflowManager.ROOT.removeProject(m_sandboxedWM.getID());
         super.tearDown();
-        FileUtil.deleteRecursively(m_workflowDir);
     }
 
 }

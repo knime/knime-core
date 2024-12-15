@@ -45,15 +45,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.monitor.ApplicationHealth;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
@@ -73,7 +74,7 @@ public class EnhAP23840_NodeStatsAndApplicationHealth extends WorkflowTestCase {
     private static final String BLOCK_LOCK_ID_2 = "AP-23840_Block_2";
     private static final String BLOCK_LOCK_ID_3 = "AP-23840_Block_3";
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreate_1 = baseID.createChild(1);
@@ -134,7 +135,7 @@ public class EnhAP23840_NodeStatsAndApplicationHealth extends WorkflowTestCase {
     	checkState(getManager(), EXECUTED);
     }
     
-	@After
+	@AfterEach
 	@Override
     public void tearDown() throws Exception {
     	super.tearDown();

@@ -77,19 +77,19 @@ public class BugWEBP824_IsResetable extends WorkflowTestCase {
 		assertTrue(metanode instanceof WorkflowManager);
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
 				() -> assertThat(metanode.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
-		assertTrue("workflow expected to be resetable if marked for exec", metanode.isResetable());
+		assertTrue(metanode.isResetable(), "workflow expected to be resetable if marked for exec");
 
 		NodeContainer component = wfm.getNodeContainer(wfm.getID().createChild(6));
 		assertTrue(component instanceof SubNodeContainer);
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
 				() -> assertThat(component.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
-		assertTrue("workflow expected to be resetable if marked for exec", component.isResetable());
+		assertTrue(component.isResetable(), "workflow expected to be resetable if marked for exec");
 
 		NodeContainer node = wfm.getNodeContainer(wfm.getID().createChild(4));
 		assertTrue(node instanceof NativeNodeContainer);
 		Awaitility.await().atMost(5, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(
 				() -> assertThat(node.getInternalState(), is(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC)));
-		assertTrue("workflow expected to be resetable if marked for exec", node.isResetable());
+		assertTrue(node.isResetable(), "workflow expected to be resetable if marked for exec");
 	}
 
 	@AfterEach

@@ -193,7 +193,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		WorkflowManager wfm = getManager();
 		NodeID modelwriter_13 = new NodeID(wfm.getID(), 13);
 		NativeNodeContainer oldNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_13);
-		assertTrue("node annotation expected to be the default one", oldNC.getNodeAnnotation().getData().isDefault());
+		assertTrue(oldNC.getNodeAnnotation().getData().isDefault(), "node annotation expected to be the default one");
 
 		// Add new port
 		ModifiableNodeCreationConfiguration creationConfig = oldNC.getNode().getCopyOfCreationConfig().get();
@@ -204,13 +204,13 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		// Check that connection remains
 		NativeNodeContainer newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_13);
 		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_13, 2), notNullValue());
-		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
+		assertTrue(newNC.getNodeAnnotation().getData().isDefault(), "node annotation expected to be the default one");
 
 		// Try undo
 		replaceRes.undo();
 		newNC = (NativeNodeContainer) wfm.getNodeContainer(modelwriter_13);
 		assertThat("connection is gone unexpectedly", wfm.getIncomingConnectionFor(modelwriter_13, 1), notNullValue());
-		assertTrue("node annotation expected to be the default one", newNC.getNodeAnnotation().getData().isDefault());
+		assertTrue(newNC.getNodeAnnotation().getData().isDefault(), "node annotation expected to be the default one");
 
 		waitAndCheckNodePortsChangedEventCounterIs(2);
 	}

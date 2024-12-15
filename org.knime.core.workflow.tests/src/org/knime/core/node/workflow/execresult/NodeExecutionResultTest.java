@@ -48,15 +48,15 @@
  */
 package org.knime.core.node.workflow.execresult;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -97,14 +97,15 @@ public class NodeExecutionResultTest {
             is(orig.needsResetAfterLoad()));
         assertThat("Nr port objects is equal", deserialized.getNrOfPortObjects(), is(orig.getNrOfPortObjects()));
         for (int i = 0; i < orig.getNrOfPortObjects(); i++) {
-            assertNull("port object is null", deserialized.getPortObject(i));
+        	assertNull(deserialized.getPortObject(i), "port object is null");
+            
         }
         for (int i = 0; i < orig.getNrOfPortObjects(); i++) {
-            assertNull("port object spec is null", deserialized.getPortObjectSpec(i));
+            assertNull(deserialized.getPortObjectSpec(i), "port object spec is null");
         }
 
         for (int i = 0; i < orig.getNrOfInternalHeldPortObjects(); i++) {
-            assertNull("internal held port object is null", deserialized.getInternalHeldPortObjects()[i]);
+            assertNull(deserialized.getInternalHeldPortObjects()[i], "internal held port object is null");
         }
 
         assertThat("Nr internal port objects is equal", deserialized.getNrOfInternalHeldPortObjects(),

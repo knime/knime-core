@@ -51,8 +51,8 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 
@@ -101,7 +101,7 @@ public class Bug6029_ExpandSubnode extends WorkflowTestCase {
         assertThat("Subnode must not longer exist", mgr.getNodeContainer(m_subnode8, SubNodeContainer.class, false),
             is(nullValue()));
         ConnectionContainer flowVarConn = findInConnection(m_javaSnippet_After_Expand_3, 0);
-        assertNotNull("didn't find connection after expand", flowVarConn);
+        assertNotNull(flowVarConn, "didn't find connection after expand");
         assertThat("Source should be string input node", flowVarConn.getSource(), is(m_stringInput5));
         executeAllAndWait();
 

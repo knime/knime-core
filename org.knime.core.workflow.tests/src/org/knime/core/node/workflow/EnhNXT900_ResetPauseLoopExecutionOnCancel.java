@@ -116,8 +116,8 @@ public class EnhNXT900_ResetPauseLoopExecutionOnCancel extends WorkflowTestCase 
 	}
 
 	private void checkIterationIndex(NodeContainer nc, int expectedIndex) {
-		assertEquals("Unexpected iteration index", expectedIndex,
-				nc.getFlowObjectStack().peek(FlowLoopContext.class).getIterationIndex());
+		assertEquals(expectedIndex, nc.getFlowObjectStack().peek(FlowLoopContext.class).getIterationIndex(),
+				"Unexpected iteration index");
 	}
 
 	private void checkStateOfAll(InternalNodeContainerState targetState) throws Exception {

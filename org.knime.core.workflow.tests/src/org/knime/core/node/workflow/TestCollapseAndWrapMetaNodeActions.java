@@ -96,16 +96,16 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
             new WorkflowAnnotationID[] {annotation}, "Test-Meta/Wrap Node");
         NodeID metaSubID = collapseResult.getCollapsedMetanodeID();
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
-        assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
-        assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+        assertFalse(mgr.containsNodeContainer(m_columnFilter_2), "Should have removed node: " + m_columnFilter_2);
+        assertTrue(mgr.getWorkflowAnnotations().isEmpty(), "No annotation expected");
 
         executeAllAndWait();
         checkState(mgr, EXECUTED);
         mgr.resetAndConfigureNode(metaSubID);
-        assertTrue("Should be able to undo collapse", collapseResult.canUndo());
+        assertTrue(collapseResult.canUndo(), "Should be able to undo collapse");
         collapseResult.undo();
-        assertTrue("Should have restored node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
-        assertFalse("Annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+        assertTrue(mgr.containsNodeContainer(m_columnFilter_2), "Should have restored node: " + m_columnFilter_2);
+        assertFalse(mgr.getWorkflowAnnotations().isEmpty(), "Annotation expected");
 
     }
 
@@ -125,8 +125,8 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         WorkflowManager metaNode = mgr.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         NodeID metaSubID = metaNode.getID();
-        assertFalse("Should have removed node: " + m_columnFilter_2, mgr.containsNodeContainer(m_columnFilter_2));
-        assertTrue("No annotation expected", mgr.getWorkflowAnnotations().isEmpty());
+        assertFalse(mgr.containsNodeContainer(m_columnFilter_2), "Should have removed node: " + m_columnFilter_2);
+        assertTrue(mgr.getWorkflowAnnotations().isEmpty(), "No annotation expected");
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
 
         executeAllAndWait();
@@ -140,7 +140,7 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         mgr.resetAndConfigureNode(metaSubID);
 
 
-        assertTrue("Should be undo-able", convertObject.canUndo());
+        assertTrue(convertObject.canUndo(), "Should be undo-able");
         convertObject.undo();
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
         executeAllAndWait();
@@ -151,8 +151,8 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
         mgr.addConnection(m_javaEdit_7, 1, metaSubID, 0); // no flow var ports at '0' for meta nodes
         mgr.addConnection(metaSubID, 0, m_tableView_6, 0); // no flow var ports at '0' for meta nodes
 
-        assertEquals("wrong number inputs", 3, mgr.getIncomingConnectionsFor(metaSubID).size());
-        assertEquals("wrong number outputs", 3, mgr.getOutgoingConnectionsFor(metaSubID).size());
+        assertEquals(3, mgr.getIncomingConnectionsFor(metaSubID).size(), "wrong number inputs");
+        assertEquals(3, mgr.getOutgoingConnectionsFor(metaSubID).size(), "wrong number outputs");
 
         executeAllAndWait();
         checkState(mgr, EXECUTED);
@@ -160,8 +160,8 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
 
         SubNodeToMetaNodeResult convertSubNodeToMetaNodeResult = mgr.convertSubNodeToMetaNode(metaSubID);
         mgr.getNodeContainer(metaSubID, WorkflowManager.class, true);
-        assertEquals("wrong number inputs", 2, mgr.getIncomingConnectionsFor(metaSubID).size());
-        assertEquals("wrong number outputs", 2, mgr.getOutgoingConnectionsFor(metaSubID).size());
+        assertEquals(2, mgr.getIncomingConnectionsFor(metaSubID).size(), "wrong number inputs");
+        assertEquals(2, mgr.getOutgoingConnectionsFor(metaSubID).size(), "wrong number outputs");
         executeAllAndWait();
         checkState(mgr, EXECUTED);
 

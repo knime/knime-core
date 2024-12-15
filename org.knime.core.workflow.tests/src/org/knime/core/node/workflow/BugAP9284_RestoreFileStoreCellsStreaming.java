@@ -57,6 +57,7 @@ import java.io.File;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -68,6 +69,7 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP9284_RestoreFileStoreCellsStreaming extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     private NodeID m_metanode_26;
@@ -86,7 +88,6 @@ public class BugAP9284_RestoreFileStoreCellsStreaming extends WorkflowTestCase {
 
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -130,7 +131,7 @@ public class BugAP9284_RestoreFileStoreCellsStreaming extends WorkflowTestCase {
     private void countFileStoreFiles() throws Exception {
         //make sure that all files stores are stored into the component output filestore folder
         File fileStoresDirectory = getFileStoresDirectory(m_componentOutput_26_0_19);
-        assertNotNull("no file store directory for component output", fileStoresDirectory);
+        assertNotNull(fileStoresDirectory, "no file store directory for component output");
         assertThat("unexpected number of files in component output filestore folder",
             countFilesInDirectory(fileStoresDirectory), is(16));
         //check that all the other nodes in a streamed component don't store any file stores

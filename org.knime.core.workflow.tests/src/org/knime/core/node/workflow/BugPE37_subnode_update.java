@@ -45,6 +45,7 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -112,20 +113,20 @@ public class BugPE37_subnode_update extends WorkflowTestCase {
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
-            org.junit.jupiter.api.Assertions.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
+            assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
         }
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
-            org.junit.jupiter.api.Assertions.assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
-            org.junit.jupiter.api.Assertions.assertThat("Update should be flagged", parent.hasUpdateableMetaNodeLink(id), is(true));
-            org.junit.jupiter.api.Assertions.assertThat("Can't update metanode link", parent.canUpdateMetaNodeLink(id), is(true));
+            assertThat("No update for " + tnc.getNameWithID(), parent.checkUpdateMetaNodeLink(id, lH), is(true));
+            assertThat("Update should be flagged", parent.hasUpdateableMetaNodeLink(id), is(true));
+            assertThat("Can't update metanode link", parent.canUpdateMetaNodeLink(id), is(true));
         }
         for (NodeID id : linkedMetaNodes) {
             NodeContainerTemplate tnc = (NodeContainerTemplate)manager.findNodeContainer(id);
             WorkflowManager parent = tnc.getParent();
             NodeContainerTemplateLinkUpdateResult updateRes = parent.updateMetaNodeLink(id, new ExecutionMonitor(), lH);
-            org.junit.jupiter.api.Assertions.assertThat("Not expected to have errors", updateRes.hasErrors(), is(false));
+            assertThat("Not expected to have errors", updateRes.hasErrors(), is(false));
         }
 
         executeAllAndWait();

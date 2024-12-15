@@ -107,7 +107,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(m.canRemoveNode(m_firstSplitter2));
         assertTrue(m.canSetJobManager(m_dataGen1));
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         assertTrue(m.canRemoveNode(m_firstSplitter2));
         assertTrue(m.canSetJobManager(m_dataGen1));
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         WorkflowManager m = getManager();
         m.shutdown();
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
     @Test
@@ -152,7 +152,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         WorkflowManager m = getManager();
         m.shutdown();
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
     @Test
@@ -186,7 +186,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
             m.cancelExecution(m.getNodeContainer(m_tableView98));
             m.cancelExecution(m.getNodeContainer(m_firstSplitter2));
             time = System.currentTimeMillis() - time;
-            assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+            assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
         } finally {
             execLock.unlock();
         }
@@ -208,7 +208,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
         checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
         checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
     /** {@inheritDoc} */

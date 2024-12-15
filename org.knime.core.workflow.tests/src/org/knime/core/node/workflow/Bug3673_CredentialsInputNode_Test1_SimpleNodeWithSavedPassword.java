@@ -89,7 +89,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
     @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_credentialsValidate_2, CONFIGURED);
-        assertFalse("Not expected to be dirty", getManager().isDirty());
+        assertFalse(getManager().isDirty(), "Not expected to be dirty");
         executeAndWait(m_credentialsValidate_2);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.EXECUTED);
         assertFalse(((NativeNodeContainer)findNodeContainer(m_credentialsInput_1)).isInactive());
@@ -115,7 +115,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         WorkflowManager metaNode = getManager().getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         getManager().convertMetaNodeToSubNode(metaNode.getID());
-        assertFalse("Expected to be removed", getManager().containsNodeContainer(m_credentialsInput_1));
+        assertFalse(getManager().containsNodeContainer(m_credentialsInput_1), "Expected to be removed");
 
         SubNodeContainer subNode = getManager().getNodeContainer(metaNode.getID(), SubNodeContainer.class, true);
         subNode.updateOutputConfigurationToIncludeAllFlowVariables();
@@ -123,7 +123,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         final int subNodeIDIndex = subnodeID.getIndex();
 
         ConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
-        assertEquals("Source should be subnode", subnodeID, findInConnection.getSource());
+        assertEquals(subnodeID, findInConnection.getSource(), "Source should be subnode");
 
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         executeAndWait(m_credentialsValidate_2);
@@ -160,7 +160,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         initFlow();
         checkState(m_credentialsInput_1, InternalNodeContainerState.EXECUTED);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.CONFIGURED);
-        assertFalse("Not expected to be dirty", getManager().isDirty());
+        assertFalse(getManager().isDirty(), "Not expected to be dirty");
         executeAndWait(m_credentialsValidate_2);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.EXECUTED);
     }
@@ -177,7 +177,7 @@ public class Bug3673_CredentialsInputNode_Test1_SimpleNodeWithSavedPassword exte
         closeWorkflow(); // don't save
         initFlow();
         checkState(m_credentialsInput_1, CONFIGURED);
-        assertFalse("Not expected to be dirty", getManager().isDirty());
+        assertFalse(getManager().isDirty(), "Not expected to be dirty");
         executeAllAndWait();
         assertTrue(((NativeNodeContainer)findNodeContainer(m_credentialsInput_1)).isInactive());
         checkState(m_credentialsValidate_2, EXECUTED);

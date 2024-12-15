@@ -93,7 +93,8 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		final var wkfDir = m_tempFolder.newFolder(getDefaultWorkflowDirectory().getName());
+		final var wkfDir = new File(m_tempFolder, getDefaultWorkflowDirectory().getName());
+		wkfDir.mkdir();
 		FileUtils.copyDirectory(getDefaultWorkflowDirectory(), wkfDir);
 
 		final NodeID id = loadAndSetWorkflow(wkfDir);
@@ -102,7 +103,7 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
 
 		final WorkflowManager manager = getManager();
 		final File tempLocation = getWorkflowTempLocation(manager);
-		assertEquals("File stores in temp before execution", 0, countFilesInDirectory(tempLocation, IS_TEMP_FILE));
+		assertEquals(0, countFilesInDirectory(tempLocation, IS_TEMP_FILE), "File stores in temp before execution");
 	}
 
 	@Test
@@ -129,7 +130,7 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
 	public void testExecuteAndResetAll() throws Exception {
 		final WorkflowManager manager = getManager();
 		final File tempLocation = getWorkflowTempLocation(manager);
-		assertEquals("File stores in temp before execution", 0, countFilesInDirectory(tempLocation, IS_TEMP_FILE));
+		assertEquals(0, countFilesInDirectory(tempLocation, IS_TEMP_FILE), "File stores in temp before execution");
 		executeAllAndWait();
 		checkState(manager, EXECUTED);
 		// when looking at the workflow you would think there are 22 file stores in the fully executed workflow
