@@ -45,10 +45,10 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test for https://knime-com.atlassian.net/browse/AP-13194
@@ -59,7 +59,7 @@ public class BugAP13194_MetanodeDisappearsWhenConvertingToComponent extends Work
 
     private NodeID m_metanode_3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_metanode_3 = new NodeID(baseID, 3);
@@ -72,7 +72,7 @@ public class BugAP13194_MetanodeDisappearsWhenConvertingToComponent extends Work
         WorkflowManager wfm = getManager();
 
         wfm.convertMetaNodeToSubNode(m_metanode_3);
-        assertTrue("node expected to be a component", wfm.getNodeContainer(m_metanode_3) instanceof SubNodeContainer);
+        assertTrue(wfm.getNodeContainer(m_metanode_3) instanceof SubNodeContainer, "node expected to be a component");
     }
 
 }

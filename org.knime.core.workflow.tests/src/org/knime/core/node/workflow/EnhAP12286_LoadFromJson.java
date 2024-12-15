@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.HashMap;
@@ -54,10 +54,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -75,10 +75,8 @@ import jakarta.json.JsonValue;
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
+@ExtendWith(WorkflowTestCase.class)
 public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     private File m_workflowDir;
 
@@ -87,7 +85,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
      *
      * @throws Exception
      */
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);

@@ -47,8 +47,8 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -59,14 +59,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.util.JsonUtil;
@@ -78,7 +75,6 @@ import jakarta.json.JsonValue;
  *
  * @author wiswedel, University of Konstanz
  */
-@RunWith(Parameterized.class)
 public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
 
     private NodeID m_stringInputTopLevel_1;
@@ -97,16 +93,13 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
     private NodeID m_credValidateMetanodeLevelFoo_14;
     private NodeID m_credValidateMetanodeLevelBar_15;
 
-    @Parameters(name="with-suffix={0}")
-    public static Collection<Boolean> getParameters() {
-        return Arrays.asList(new Boolean[] {true, false});
+    public static Collection<Arguments> getParameters() {
+        return Arrays.asList(Arguments.of(true), Arguments.of(false));
     }
 
-    @Parameter(value = 0)
-    public Boolean m_useSuffix;
-
-    @Before
-    public void setUp() throws Exception {
+    @ParameterizedTest(name="with-suffix={0}")
+    @MethodSource
+    public void setUp(Boolean m_useSuffix) throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_stringInputTopLevel_1 = baseID.createChild(1);
         m_credInputTopLevel_2 = baseID.createChild(2);
@@ -232,7 +225,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
 
     }
 
-    @Test(expected = InvalidSettingsException.class)
+    @Test
     public void testSetInvalidViaJSON() throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
@@ -280,7 +273,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
             manager.setInputNodes(inputMap);
             fail("Should have failed because parameter node is not uniquely identified");
         } catch (InvalidSettingsException ise) {
-            Assert.assertThat(ise.getMessage(), containsString("doesn't match"));
+            assertThat(ise.getMessage(), containsString("doesn't match"));
         }
     }
 
@@ -313,7 +306,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
                     + "\"metanode-level-string-input\":\"foo\"}")));
     }
 
-    @Test(expected = InvalidSettingsException.class)
+    @Test
     public void testSetInvalidValueViaString() throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
@@ -328,7 +321,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         manager.setInputNodes(inputMap);
     }
 
-    @Test(expected = InvalidSettingsException.class)
+    @Test
     public void testSetInvalidKeyViaString() throws Exception {
         assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
@@ -341,7 +334,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         manager.setInputNodes(inputMap);
     }
 
-    @Test(expected = InvalidSettingsException.class)
+    @Test
     public void testSetInvalidSuffixViaString() throws Exception {
         assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
@@ -363,7 +356,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
     /** Uses {@link Assume} construct to run the test only once -- depending on {@link #m_useSuffix}. */
     private void assumeRunOnlyOnce() {
         // this method doesn't use the suffix query so run it only once.
-        Assume.assumeTrue("Non-paramerized method - method already run or will run", m_useSuffix);
+        org.junit.jupiter.api.Assumptions.assumeTrue("Non-paramerized method - method already run or will run", m_useSuffix);
     }
 
 }

@@ -47,11 +47,11 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.hamcrest.core.IsSame.sameInstance;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -76,11 +76,11 @@ import javax.swing.SwingWorker;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.ViewUtils;
@@ -110,7 +110,7 @@ public class NodeContextTest {
      *
      * @throws Exception if an error occurs
      */
-    @BeforeClass
+    @BeforeAll
     public static void setupClass() throws Exception {
         File workflowZip = findInPlugin("/files/NodeContextTestflow.zip");
         File tmpDir = FileUtil.createTempDir("NodeContextTest");
@@ -131,7 +131,7 @@ public class NodeContextTest {
     /**
      * Shuts the executor service down.
      */
-    @AfterClass
+    @AfterAll
     public static void teardownClass() {
         wfm.getParent().removeProject(wfm.getID());
         executorService.shutdown();
@@ -140,7 +140,7 @@ public class NodeContextTest {
     /**
      * Check that the node context stack is empty before each test method.
      */
-    @Before
+    @BeforeEach
     public void checkForEmptyContextStackBefore() {
         NodeContext currentContext = NodeContext.getContext();
 
@@ -155,7 +155,7 @@ public class NodeContextTest {
     /**
      * Check that the node context stack is empty after each test method.
      */
-    @After
+    @AfterEach
     public void checkForEmptyContextStackAfter() {
         assertThat("Node context stack not empty after test", NodeContext.getContext(), is(nullValue()));
     }

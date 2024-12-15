@@ -47,10 +47,9 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * One subnode with variable-defining nodes that are exported to the outside. One branch can be switched inactive,
@@ -66,7 +65,7 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
     private NodeID m_javaEdit_out_8;
     private NodeID m_javaEdit_in_5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subNode6 = new NodeID(baseID, 6);
@@ -95,11 +94,11 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
         // until we know better the Subnode is not configurable if the input is not populated
         checkState(m_subNode6, InternalNodeContainerState.IDLE);
 
-        Assert.assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
-        Assert.assertEquals("outside-variable", getVariableValue("outside-variable"));
+        assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
+        assertEquals("outside-variable", getVariableValue("outside-variable"));
         // subnode not configured - no variables populated
-        Assert.assertEquals(null, getVariableValue("inside-variable-active"));
-        Assert.assertEquals(null, getVariableValue("inside-variable-inactive"));
+        assertEquals(null, getVariableValue("inside-variable-active"));
+        assertEquals(null, getVariableValue("inside-variable-inactive"));
 
     }
 
@@ -115,12 +114,12 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
         checkState(m_javaEdit_out_8, InternalNodeContainerState.CONFIGURED);
         checkState(m_subNode6, InternalNodeContainerState.CONFIGURED);
 
-        Assert.assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
+        assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
         // flow variables are not propagated during #configure of subnode
         // expected output is different once we fix that...
-        Assert.assertEquals("outside-variable", getVariableValue("outside-variable"));
-        Assert.assertEquals(null, getVariableValue("inside-variable-active"));
-        Assert.assertEquals(null, getVariableValue("inside-variable-inactive"));
+        assertEquals("outside-variable", getVariableValue("outside-variable"));
+        assertEquals(null, getVariableValue("inside-variable-active"));
+        assertEquals(null, getVariableValue("inside-variable-inactive"));
     }
 
     /** Fully execute workflow. It should populate variables and set the node at the first subnode output inactive.
@@ -129,14 +128,14 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
     public void testVariablesAfterFullExecute() throws Exception {
         executeAllAndWait();
 
-        Assert.assertTrue(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
+        assertTrue(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
         checkState(m_javaEdit_out_7, InternalNodeContainerState.EXECUTED);
         checkState(m_javaEdit_out_8, InternalNodeContainerState.EXECUTED);
         checkState(m_subNode6, InternalNodeContainerState.EXECUTED);
         // modifying node is now inactive - unmodified value is expected
-        Assert.assertEquals("outside-variable", getVariableValue("outside-variable"));
-        Assert.assertEquals("inside-variable-active", getVariableValue("inside-variable-active"));
-        Assert.assertEquals(null, getVariableValue("inside-variable-inactive"));
+        assertEquals("outside-variable", getVariableValue("outside-variable"));
+        assertEquals("inside-variable-active", getVariableValue("inside-variable-active"));
+        assertEquals(null, getVariableValue("inside-variable-inactive"));
     }
 
     /** Fully execute workflow, then re-wire to disable the inactive switch
@@ -150,14 +149,14 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
         checkState(m_subNode6, InternalNodeContainerState.CONFIGURED);
 
         executeAllAndWait();
-        Assert.assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
+        assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
         checkState(m_javaEdit_out_7, InternalNodeContainerState.EXECUTED);
         checkState(m_javaEdit_out_8, InternalNodeContainerState.EXECUTED);
         checkState(m_subNode6, InternalNodeContainerState.EXECUTED);
         // modifying node is now inactive - unmodified value is expected
-        Assert.assertEquals("outside-variable-modified", getVariableValue("outside-variable"));
-        Assert.assertEquals("inside-variable-active", getVariableValue("inside-variable-active"));
-        Assert.assertEquals("inside-variable-inactive", getVariableValue("inside-variable-inactive"));
+        assertEquals("outside-variable-modified", getVariableValue("outside-variable"));
+        assertEquals("inside-variable-active", getVariableValue("inside-variable-active"));
+        assertEquals("inside-variable-inactive", getVariableValue("inside-variable-inactive"));
     }
 
 //    /** Full execute of workflow, then reset start node. This should bring the workflow into the state
@@ -167,12 +166,12 @@ public class TestSubnode_VariableScopeDuringExecution extends WorkflowTestCase {
 //        executeAllAndWait();
 //        reset(m_javaEdit_out_1); // fall back to where it was after load
 //
-//        Assert.assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
+//        assertFalse(((NativeNodeContainer)findNodeContainer(m_javaEdit_out_8)).isInactive());
 //
 //        // this currently fails as a "reset" does not reset the flow variable stack.
-//        Assert.assertEquals("outside-variable", getVariableValue("outside-variable"));
-//        Assert.assertEquals(null, getVariableValue("inside-variable-active"));
-//        Assert.assertEquals(null, getVariableValue("inside-variable-inactive"));
+//        assertEquals("outside-variable", getVariableValue("outside-variable"));
+//        assertEquals(null, getVariableValue("inside-variable-active"));
+//        assertEquals(null, getVariableValue("inside-variable-inactive"));
 //    }
 
 }

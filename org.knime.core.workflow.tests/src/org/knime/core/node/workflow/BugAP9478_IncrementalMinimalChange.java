@@ -44,14 +44,14 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -71,7 +71,7 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
     private NodeID m_testFileStore_3;
     private NodeID m_testBlob_5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -110,7 +110,7 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
         closeWorkflow();
 
         initWorkflowFromTemp();
-        Assert.assertThat("Workflow dirty state", getManager().isDirty(), is(false));
+        assertThat("Workflow dirty state", getManager().isDirty(), is(false));
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_dataGenerator_1, m_createBlob_2, m_createFileStore_4);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_testFileStore_3, m_testBlob_5);
         executeAllAndWait();
@@ -127,7 +127,7 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
         closeWorkflow();
 
         initWorkflowFromTemp();
-        Assert.assertThat("Workflow dirty state", getManager().isDirty(), is(false));
+        assertThat("Workflow dirty state", getManager().isDirty(), is(false));
         findNodeContainer(m_dataGenerator_1).setDirty();
         findNodeContainer(m_createBlob_2).setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true); // this caused the NPE to be thrown
@@ -139,7 +139,7 @@ public class BugAP9478_IncrementalMinimalChange extends WorkflowTestCase {
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);

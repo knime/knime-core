@@ -52,8 +52,8 @@ import java.io.IOException;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
@@ -77,7 +77,7 @@ public class BugAP15980_ProblemSavingComponentProjectWithFlowVariables extends W
 	 * @throws Exception
 	 * @throws IOException
 	 */
-	@Before
+	@BeforeEach
 	public void setup() throws IOException, Exception {
 		m_componentDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_componentDir);

@@ -44,16 +44,16 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
@@ -74,7 +74,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
     private NodeID m_lastJoin97;
     private NodeID m_tableView98;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
@@ -213,7 +213,7 @@ public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();

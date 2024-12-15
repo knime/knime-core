@@ -45,14 +45,14 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -70,7 +70,7 @@ public class BugAP21580_LoadProjectNames extends WorkflowTestCase {
 
     private NodeID m_baseId;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_baseId = loadAndSetWorkflow();
     }

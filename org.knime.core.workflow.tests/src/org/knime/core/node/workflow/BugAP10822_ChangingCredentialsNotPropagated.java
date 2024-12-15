@@ -44,16 +44,17 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.util.Collection;
 
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** The test flow contains three pairs of string manipulation + credentials validate. There are also two workflow
  * credentials defined, which will be changed during test execution.
@@ -69,7 +70,7 @@ public class BugAP10822_ChangingCredentialsNotPropagated extends WorkflowTestCas
     private NodeID m_stringVar_5;
     private NodeID m_credentialsValidate_6;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID id = loadAndSetWorkflow();
         m_stringVar_1 = id.createChild(1);
@@ -84,10 +85,10 @@ public class BugAP10822_ChangingCredentialsNotPropagated extends WorkflowTestCas
     public void testStateAfterLoad() throws Exception {
         checkStateOfMany(IDLE, m_credentialsValidate_2, m_credentialsValidate_4, m_credentialsValidate_6);
         // saved CONFIGURED, loaded IDLE
-        assertThat("Workflow Dirty Flag after load", getManager().isDirty(), Matchers.is(true));
+        assertThat("Workflow Dirty Flag after load", getManager().isDirty(), is(true));
         Collection<String> credentialsList = getManager().getCredentialsStore().listNames();
         assertThat("List of workflow credentials after load", credentialsList,
-            Matchers.containsInAnyOrder("credentials", "credentials_removed"));
+            containsInAnyOrder("credentials", "credentials_removed"));
         // the other two credentials will be added later
     }
 

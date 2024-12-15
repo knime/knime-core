@@ -46,13 +46,13 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link NodeContainer#isResetable()}-method.
@@ -92,7 +92,7 @@ public class BugWEBP824_IsResetable extends WorkflowTestCase {
 		assertTrue("workflow expected to be resetable if marked for exec", node.isResetable());
 	}
 
-	@After
+	@AfterEach
 	public void cancelWorkflow() {
 		getManager().cancelExecution();
 	}

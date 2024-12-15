@@ -55,9 +55,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
@@ -80,7 +80,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
     private NodeID m_component2_block_7;
     private NodeID m_component2_varToTbl_4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_COMP1_BLOCK_FIRST, LockedMethod.EXECUTE, new ReentrantLock());
@@ -112,7 +112,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
         listOfNodesInSubNode1.remove(subNode1.getVirtualOutNodeID());
 		assertThat("Wrong content or wrong order", listOfNodesInSubNode1,
 				is(List.of(m_component1_block_2, m_component1_varToTbl_5)));
-        
+
 		var subNode2 = m.getNodeContainer(m_component2_5, SubNodeContainer.class, true);
 		var listOfNodesInSubNode2 = new ArrayList<>(subNode2.getWorkflowManager().getWorkflow().getNodeIDs());
 		listOfNodesInSubNode2.remove(subNode2.getVirtualInNodeID());
@@ -138,7 +138,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
         	checkState(m_component1_varToTbl_5, EXECUTED);
         	assertThat("Component resetable state when one is executed", m.canResetNode(m_component1_3), is(true));
         	assertThat("Workflow resetable state when all reset", component1Mgr.canResetAll(), is(true));
-        	
+
         	executeDontWait(m_component1_block_2);
         	waitWhile(m_component1_block_2, nc -> nc.getInternalState() != EXECUTING, -1);
         	assertThat("Component resetable state while executing", m.canResetNode(m_component1_3), is(false));
@@ -154,7 +154,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
         assertThat("Component resetable state after execution", m.canResetNode(m_component1_3), is(true));
         assertThat("Workflow restable state after execution", component1Mgr.canResetAll(), is(true));
     }
-    
+
     /** Tests the behavior when first an 'executed' node is returned when checking for reset. */
     @Test
     public void testCanResetComponent2() throws Exception {
@@ -172,7 +172,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
     		checkState(m_component2_varToTbl_4, EXECUTED);
     		assertThat("Component resetable state when one is executed", m.canResetNode(m_component2_5), is(true));
     		assertThat("Workflow resetable state when one is executed", component2Mgr.canResetAll(), is(true));
-    		
+
     		executeDontWait(m_component2_block_7);
         	waitWhile(m_component2_block_7, nc -> nc.getInternalState() != EXECUTING, -1);
     		assertThat("Component resetable state while executing", m.canResetNode(m_component2_5), is(false));
@@ -191,7 +191,7 @@ public class BugAP18248_indeterministicCanReset_inWFM extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_COMP1_BLOCK_FIRST, LockedMethod.EXECUTE);
         BlockingRepository.remove(LOCK_COMP2_BLOCK_LAST, LockedMethod.EXECUTE);

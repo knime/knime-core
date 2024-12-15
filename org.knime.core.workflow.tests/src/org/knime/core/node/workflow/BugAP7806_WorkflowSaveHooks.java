@@ -45,17 +45,18 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.openapi.OpenAPIDefinitionGenerator;
@@ -80,7 +81,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
 
     private NodeID m_jsonInput;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         TestWorkflowSaveHook.setEnabled(true);
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
@@ -102,12 +103,12 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
     /** Just load and save with basic checks. */
     @Test
     public void testHookUnmodified() throws Exception {
-        Assert.assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
+        assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
             m_testFile.isFile());
         getManager().setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        Assert.assertTrue("test file '" + m_testFile.getAbsolutePath() + "' supposed to exist", m_testFile.isFile());
-        Assert.assertThat("Wrong number in test file", readFileContent(), is(3));
+        assertTrue("test file '" + m_testFile.getAbsolutePath() + "' supposed to exist", m_testFile.isFile());
+        assertEquals("Wrong number in test file", 3, readFileContent());
     }
 
     /** Test multiple saves with modification in between. */
@@ -117,7 +118,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
         getManager().removeNode(m_jsonInput);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        Assert.assertThat("Wrong number in test file", readFileContent(), is(2));
+        assertEquals("Wrong number in test file", 2, readFileContent());
     }
 
     /** Test a broken contribution of the extension point. */
@@ -128,7 +129,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         getManager().removeNode(m_jsonInput);
         TestWorkflowSaveHook.setWillFail(true);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        Assert.assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
+        assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
             m_testFile.isFile());
     }
 
@@ -144,7 +145,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         TestWorkflowSaveHook.setEnabled(false);
@@ -185,7 +186,6 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
             }
         }
 
-        assertThat("Unexpected input parameters definition written", actualInputParameters,
-            is(expectedInputParameters));
+        assertEquals("Unexpected input parameters definition written", expectedInputParameters, actualInputParameters);
     }
 }

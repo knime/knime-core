@@ -52,9 +52,9 @@ import static org.hamcrest.Matchers.anyOf;
 
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** 
  * Tests unsetting the flow variable stack on nodes during reset.
@@ -69,14 +69,14 @@ public class BugAP21890_UnsetVariablesOnReset extends WorkflowTestCase {
     private NodeID m_columnFilter_3;
     private NodeID m_transpose_2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-    	NodeID workflowID = loadAndSetWorkflow();
-    	m_concatenate_4 = workflowID.createChild(4);
-    	m_columnFilter_3 = workflowID.createChild(3);
-    	m_transpose_2 = workflowID.createChild(2);
-    	m_comp_22 = workflowID.createChild(22);
-    	m_concatenateComp_22_21 = m_comp_22.createChild(0).createChild(21);
+        NodeID workflowID = loadAndSetWorkflow();
+        m_concatenate_4 = workflowID.createChild(4);
+        m_columnFilter_3 = workflowID.createChild(3);
+        m_transpose_2 = workflowID.createChild(2);
+        m_comp_22 = workflowID.createChild(22);
+        m_concatenateComp_22_21 = m_comp_22.createChild(0).createChild(21);
     }
 
     /** Basic test, then delete direct input connection. */
@@ -85,58 +85,53 @@ public class BugAP21890_UnsetVariablesOnReset extends WorkflowTestCase {
         assertThat("Unchanged input", extractVars(), hasItem("Var B"));
         executeAllAndWait(); // components only see vars after input is populated
         assertThat("Unchanged input", extractVarsComp(), hasItem("Var B"));
-        
+
         deleteConnection(m_concatenate_4, 1);
         // contains neither Var A nor Var B
         assertThat("Vars after deleting connection", extractVars(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
-        
+
         deleteConnection(m_comp_22, 1);
         // contains neither Var A nor Var B
         assertThat("Vars after deleting connection", extractVarsComp(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
-        
     }
 
     /** Delete some connection further upstream, not directly connected to the concatenate node. */
     @Test
     public void testUpstreamConnectionDeleted() throws Exception {
-    	executeAllAndWait();
-    	deleteConnection(m_columnFilter_3, 1);
-    	assertThat("Vars after connection delete", extractVars(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
-		assertThat("Vars after connection delete (comp)", extractVarsComp(),
-				not(anyOf(hasItem("Var A"), hasItem("Var B"))));
+        executeAllAndWait();
+        deleteConnection(m_columnFilter_3, 1);
+        assertThat("Vars after connection delete", extractVars(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
+        assertThat("Vars after connection delete (comp)", extractVarsComp(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
     }
-    
-    
+
     /** Reconnect to Transpose node (which only outputs spec after execution + has different variable. */
     @Test
-	public void testReconnectToTranspose() throws Exception {
-		deleteConnection(m_columnFilter_3, 1);
-		getManager().addConnection(m_transpose_2, 1, m_columnFilter_3, 1);
-		assertThat("Vars after connected to reset Transpose", extractVars(),
-				not(anyOf(hasItem("Var A"), hasItem("Var B"))));
-		assertThat("Vars after connected to reset Transpose", extractVarsComp(),
-				not(anyOf(hasItem("Var A"), hasItem("Var B"))));
-		// executing the transpose will make the variables available
-		executeAllAndWait();
-		assertThat("Vars after connected to reset Transpose", extractVars(), hasItems("Var A", "Var B"));
-		assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), hasItems("Var A", "Var B"));
+    public void testReconnectToTranspose() throws Exception {
+        deleteConnection(m_columnFilter_3, 1);
+        getManager().addConnection(m_transpose_2, 1, m_columnFilter_3, 1);
+        assertThat("Vars after connected to reset Transpose", extractVars(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
+        assertThat("Vars after connected to reset Transpose", extractVarsComp(), not(anyOf(hasItem("Var A"), hasItem("Var B"))));
+        // executing the transpose will make the variables available
+        executeAllAndWait();
+        assertThat("Vars after connected to reset Transpose", extractVars(), hasItems("Var A", "Var B"));
+        assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), hasItems("Var A", "Var B"));
 
-		deleteConnection(m_columnFilter_3, 0); // var connection to "Var B"
-		executeAllAndWait();
-		assertThat("Vars after connected to reset Transpose", extractVars(), hasItem("Var A"));
-		assertThat("Vars after connected to reset Transpose", extractVars(), not(hasItem("Var B")));
-		assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), hasItem("Var A"));
-		assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), not(hasItem("Var B")));
-	}
+        deleteConnection(m_columnFilter_3, 0); // var connection to "Var B"
+        executeAllAndWait();
+        assertThat("Vars after connected to reset Transpose", extractVars(), hasItem("Var A"));
+        assertThat("Vars after connected to reset Transpose", extractVars(), not(hasItem("Var B")));
+        assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), hasItem("Var A"));
+        assertThat("Vars after connected to reset Transpose (Comp)", extractVarsComp(), not(hasItem("Var B")));
+    }
 
-	private Set<String> extractVars() {
-		NativeNodeContainer nnc = getManager().getNodeContainer(m_concatenate_4, NativeNodeContainer.class, true);
-		return nnc.getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()).keySet();
-	}
+    private Set<String> extractVars() {
+        NativeNodeContainer nnc = getManager().getNodeContainer(m_concatenate_4, NativeNodeContainer.class, true);
+        return nnc.getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()).keySet();
+    }
 
-	private Set<String> extractVarsComp() {
-		NativeNodeContainer nnc = (NativeNodeContainer) findNodeContainer(m_concatenateComp_22_21);
-		return nnc.getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()).keySet();
-	}
+    private Set<String> extractVarsComp() {
+        NativeNodeContainer nnc = (NativeNodeContainer) findNodeContainer(m_concatenateComp_22_21);
+        return nnc.getFlowObjectStack().getAvailableFlowVariables(VariableType.getAllTypes()).keySet();
+    }
 
 }

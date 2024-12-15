@@ -48,11 +48,11 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.CoreConstants;
@@ -75,15 +75,15 @@ public class FlowVariableTest {
 		FlowVariable nullVar1 = new FlowVariable("some name", nullString);
 		FlowVariable nullVar2 = new FlowVariable("some name", nullString);
 
-		Assert.assertEquals(nullVar1, nullVar2);
-		Assert.assertNotEquals(var, nullVar1);
-		Assert.assertNotEquals(nullVar1, var);
+		Assertions.assertEquals(nullVar1, nullVar2);
+		Assertions.assertNotEquals(var, nullVar1);
+		Assertions.assertNotEquals(nullVar1, var);
 
-		Assert.assertEquals(nullVar1.getStringValue(), nullString);
-		Assert.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
-		Assert.assertEquals(nullVar1.getIntValue(), 0);
-		Assert.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
-		Assert.assertEquals(nullVar1.getValueAsString(), nullString);
+		Assertions.assertEquals(nullVar1.getStringValue(), nullString);
+		Assertions.assertEquals(nullVar1.getDoubleValue(), Double.NaN, 0d);
+		Assertions.assertEquals(nullVar1.getIntValue(), 0);
+		Assertions.assertEquals(nullVar1.getValue(StringType.INSTANCE), nullString);
+		Assertions.assertEquals(nullVar1.getValueAsString(), nullString);
 	}
 
 	@Test
@@ -95,13 +95,13 @@ public class FlowVariableTest {
 			assertEquals("Flow Variable Name after exraction", varName,
 					FlowVariable.extractIdentifierFromHidingFlowVariable(fv));
 		}
-		assertThrows("Null name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(null));
-		assertThrows("Empty name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""));
-		assertThrows("Blank name", IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""));
-		assertThrows("Reserved name", IllegalFlowVariableNameException.class,
-				() -> FlowVariable.newHidingVariable("knime f"));
+		assertThrows(IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(null), "Null name");
+		assertThrows(IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""), "Empty name");
+		assertThrows(IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""), "Blank name");
+		assertThrows(IllegalFlowVariableNameException.class,
+				() -> FlowVariable.newHidingVariable("knime f"), "Reserved name");
 	}
-	
+
 	/**
 	 * Test FlowVariable creation for system default credentials, ignores the
 	 * workflow but specifically checks AP-22551.

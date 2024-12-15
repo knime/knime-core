@@ -47,13 +47,9 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -70,10 +66,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
 import org.osgi.framework.Bundle;
@@ -94,7 +90,7 @@ public class BatchExecutorTestcase {
      *
      * @throws Exception if an error occurs
      */
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         standardTestWorkflowZip = findInPlugin("/files/BatchExecutorTestflow.zip");
         csvOut = File.createTempFile("BatchExecutorTest", ".csv");
@@ -106,7 +102,7 @@ public class BatchExecutorTestcase {
      *
      * @throws IOException if an I/O error occurs
      */
-    @Before
+    @BeforeEach
     public void beforeEachTest() throws IOException {
         csvOut.delete();
     }
@@ -114,12 +110,12 @@ public class BatchExecutorTestcase {
     /**
      * Executed after each test, checks that there are no open workflows dangling around.
      */
-    @After
+    @AfterEach
     public void checkDanglingWorkflows() {
         Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers().stream()
             .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
             .collect(Collectors.toList());
-        assertTrue(openWorkflows.size() + " dangling workflow(s) detected: " + openWorkflows, openWorkflows.isEmpty());
+        assertTrue(openWorkflows.isEmpty(), openWorkflows.size() + " dangling workflow(s) detected: " + openWorkflows);
     }
 
     /**
@@ -129,73 +125,45 @@ public class BatchExecutorTestcase {
      */
     @Test
     public void testArguments() throws Exception {
-        assertEquals("Non-zero return value for 0 arguments", 0, BatchExecutor.mainRun(new String[0]));
-        assertEquals("Wrong return value for unknown argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-XXXX123YYY"}));
+        assertEquals(0, BatchExecutor.mainRun(new String[0]), "Non-zero return value for 0 arguments");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-XXXX123YYY"}), "Wrong return value for unknown argument");
 
-        assertEquals("Wrong return value for correct masterkey", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-masterkey=key"}));
-        assertEquals("Wrong return value for empty masterkey", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-masterkey="}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-masterkey=key"}), "Wrong return value for correct masterkey");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-masterkey="}), "Wrong return value for empty masterkey");
 
-        assertEquals("Wrong return value for invalid credential argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-credential"}));
-        assertEquals("Wrong return value for invalid credential argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-credential="}));
-        assertEquals("Wrong return value for missing credential name", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-credential=;aaa"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-credential"}), "Wrong return value for invalid credential argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-credential="}), "Wrong return value for invalid credential argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-credential=;aaa"}), "Wrong return value for missing credential name");
 
-        assertEquals("Wrong return value for invalid preferences argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-preferences"}));
-        assertEquals("Wrong return value for missing preference file", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-preferences=/aaa/bbb/ccc"}));
-        assertEquals("Wrong return value for invalid preferences file", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-preferences=" + File.createTempFile("BatchExecutorTest", "prefs")}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-preferences"}), "Wrong return value for invalid preferences argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-preferences=/aaa/bbb/ccc"}), "Wrong return value for missing preference file");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-preferences=" + File.createTempFile("BatchExecutorTest", "prefs")}), "Wrong return value for invalid preferences file");
 
-        assertEquals("Wrong return value for invalid workflowFile argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowFile"}));
-        assertEquals("Wrong return value for non-existing workflowFile", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowFile=/aaa/bbb/ddd"}));
-        assertEquals("Wrong return value for directory used as workflowFile", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowFile=" + System.getProperty("user.home")}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowFile"}), "Wrong return value for invalid workflowFile argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowFile=/aaa/bbb/ddd"}), "Wrong return value for non-existing workflowFile");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowFile=" + System.getProperty("user.home")}), "Wrong return value for directory used as workflowFile");
 
-        assertEquals("Wrong return value for invalid workflowFile argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowDir"}));
-        assertEquals("Wrong return value for non-existing workflowDir", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowDir=/aaa/bbb/ddd"}));
-        assertEquals("Wrong return value for file used as workflowDir", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflowDir=" + standardTestWorkflowZip}));
-        assertEquals("Wrong return value for non-workflow directory", BatchExecutor.EXIT_ERR_LOAD,
-            BatchExecutor.mainRun(new String[]{"-workflowDir=" + System.getProperty("java.home")}));
-        assertEquals("Wrong return value for empty workflow directory", BatchExecutor.EXIT_ERR_LOAD,
-            BatchExecutor.mainRun(new String[]{"-workflowDir=" + FileUtil.createTempDir("BatchExecutorTest")}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowDir"}), "Wrong return value for invalid workflowFile argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowDir=/aaa/bbb/ddd"}), "Wrong return value for non-existing workflowDir");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflowDir=" + standardTestWorkflowZip}), "Wrong return value for file used as workflowDir");
+        assertEquals(BatchExecutor.EXIT_ERR_LOAD, BatchExecutor.mainRun(new String[]{"-workflowDir=" + System.getProperty("java.home")}), "Wrong return value for non-workflow directory");
+        assertEquals(BatchExecutor.EXIT_ERR_LOAD, BatchExecutor.mainRun(new String[]{"-workflowDir=" + FileUtil.createTempDir("BatchExecutorTest")}), "Wrong return value for empty workflow directory");
 
-        assertEquals("Wrong return value for invalid destFile argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-destFile"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-destFile"}), "Wrong return value for invalid destFile argument");
 
-        assertEquals("Wrong return value for invalid destDir argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-destDir"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-destDir"}), "Wrong return value for invalid destDir argument");
 
-        assertEquals("Wrong return value for invalid workflow.variable argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable"}));
-        assertEquals("Wrong return value for invalid workflow variable", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable=name"}));
-        assertEquals("Wrong return value for invalid workflow variable", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value"}));
-        assertEquals("Wrong return value for invalid workflow variable type", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,type"}));
-        assertEquals("Wrong return value for wrong workflow variable type", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,int"}));
-        assertEquals("Wrong return value for wrong workflow variable type", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,double"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable"}), "Wrong return value for invalid workflow.variable argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable=name"}), "Wrong return value for invalid workflow variable");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value"}), "Wrong return value for invalid workflow variable");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,type"}), "Wrong return value for invalid workflow variable type");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,int"}), "Wrong return value for wrong workflow variable type");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-workflow.variable=name,value,double"}), "Wrong return value for wrong workflow variable type");
 
-        assertEquals("Wrong return value for invalid option argument", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-option"}));
-        assertEquals("Wrong return value for invalid option", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-option=nodeId,name,value"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-option"}), "Wrong return value for invalid option argument");
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-option=nodeId,name,value"}), "Wrong return value for invalid option");
 
-        assertEquals("Wrong return value for missing input", BatchExecutor.EXIT_ERR_PRESTART,
-            BatchExecutor.mainRun(new String[]{"-nosave"}));
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, BatchExecutor.mainRun(new String[]{"-nosave"}), "Wrong return value for missing input");
     }
 
     /**
@@ -208,7 +176,7 @@ public class BatchExecutorTestcase {
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                 "-noexecute", "-nosave"});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
     }
 
     /**
@@ -223,12 +191,12 @@ public class BatchExecutorTestcase {
 
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.getAbsolutePath(), "-noexecute", "-nosave"});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
 
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.listFiles()[0].getAbsolutePath(),
                 "-noexecute", "-nosave"});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
     }
 
     /**
@@ -241,8 +209,8 @@ public class BatchExecutorTestcase {
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(1001, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
     }
 
     /**
@@ -258,15 +226,15 @@ public class BatchExecutorTestcase {
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.getAbsolutePath(), "-nosave",
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(1001, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
 
         csvOut.delete();
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.listFiles()[0].getAbsolutePath(), "-nosave",
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(1001, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
     }
 
     /**
@@ -281,27 +249,27 @@ public class BatchExecutorTestcase {
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-workflow.variable=maxRows," + maxRows + ",int"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", maxRows + 1, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(maxRows + 1, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
 
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-workflow.variable=minimumValue,0.5,double"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 439, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(439, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
 
         // unknown workflow variables only issue a warning but are ignored otherwise
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-workflow.variable=unknown,0.5,double"});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-workflow.variable=unknown,0.5,double", "-workflow.variable=unknown2,nix,String"});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
     }
 
     /**
@@ -315,8 +283,8 @@ public class BatchExecutorTestcase {
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-option=0/5,rowFilter/RowRangeStart,1000,int"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(csvOut));
+        assertEquals(0, ret, "Non-zero return value");
+        assertEquals(1, countWrittenLines(csvOut), "Wrong number of lines in written CSV file");
 
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
@@ -331,13 +299,13 @@ public class BatchExecutorTestcase {
                 "-option=0/5,rowFilter/IntCellValue,1000,IntCell",
                 "-option=0/5,rowFilter/LongCellValue,10000000000000000,LongCell",
                 "-option=0/99,nonexistingNode,1000,IntCell",});
-        assertEquals("Non-zero return value", 0, ret);
+        assertEquals(0, ret, "Non-zero return value");
 
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(), "-nosave",
                 "-reset", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-option=0/5,rowFilter/RowRangeStart,1000,unknownType"});
-        assertEquals("Wrong option type not reported", BatchExecutor.EXIT_ERR_PRESTART, ret);
+        assertEquals(BatchExecutor.EXIT_ERR_PRESTART, ret, "Wrong option type not reported");
     }
 
     /**
@@ -351,7 +319,7 @@ public class BatchExecutorTestcase {
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                 "-noexecute", "-nosave", "-preferences=" + prefs.getAbsolutePath()});
-        assertEquals("Loading preferences failed", 0, ret);
+        assertEquals(0, ret, "Loading preferences failed");
     }
 
     /**
@@ -365,13 +333,13 @@ public class BatchExecutorTestcase {
         int ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(), "-noexecute",
                 "-nosave", "-failonloaderror"});
-        assertEquals("Fail-on-load-error does not work", BatchExecutor.EXIT_ERR_LOAD, ret);
+        assertEquals(BatchExecutor.EXIT_ERR_LOAD, ret, "Fail-on-load-error does not work");
 
         testflowZip = findInPlugin("/files/BatchExecutorTestflowUnsupportedVersion.zip");
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(), "-noexecute",
                 "-nosave", "-failonloaderror"});
-        assertEquals("Unsupported workflow version not handled correctly", BatchExecutor.EXIT_ERR_LOAD, ret);
+        assertEquals(BatchExecutor.EXIT_ERR_LOAD, ret, "Unsupported workflow version not handled correctly");
     }
 
     /**
@@ -404,8 +372,8 @@ public class BatchExecutorTestcase {
         cancelFile.createNewFile();
 
         t.join(5000);
-        assertFalse("Workflow did not finish 5000ms after cancel request", t.isAlive());
-        assertEquals("Wrong return value for canceled execution", BatchExecutor.EXIT_ERR_EXECUTION, ret.intValue());
+        assertFalse(t.isAlive(), "Workflow did not finish 5000ms after cancel request");
+        assertEquals(BatchExecutor.EXIT_ERR_EXECUTION, ret.intValue(), "Wrong return value for canceled execution");
         if (exception.get() != null) {
             throw exception.get();
         }
@@ -426,14 +394,14 @@ public class BatchExecutorTestcase {
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-destFile=" + destFile.getAbsolutePath()});
-        assertEquals("Non-zero return value", 0, ret);
-        assertTrue("ZIP file is too small", destFile.length() > 0.9 * standardTestWorkflowZip.length());
+        assertEquals(0, ret, "Non-zero return value");
+        assertTrue(destFile.length() > 0.9 * standardTestWorkflowZip.length(), "ZIP file is too small");
 
         // check if it is really a zip file and the workflow is named correctly
         ZipFile zf = new ZipFile(destFile);
 
         String expectedWorkflowName = destFile.getName().replaceAll("\\.zip$", "");
-        assertThat("Workflow not named correctly", zf.getEntry(expectedWorkflowName), is(not(nullValue())));
+        assertThat(zf.getEntry(expectedWorkflowName), is(not(nullValue())), "Workflow not named correctly");
 
         // save in place
         FileUtil.copy(standardTestWorkflowZip, destFile);
@@ -442,11 +410,11 @@ public class BatchExecutorTestcase {
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + destFile.getAbsolutePath(),
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertTrue("ZIP file is too small", destFile.length() > 0.9 * standardTestWorkflowZip.length());
+        assertEquals(0, ret, "Non-zero return value");
+        assertTrue(destFile.length() > 0.9 * standardTestWorkflowZip.length(), "ZIP file is too small");
         // check if it is really a zip file
         new ZipFile(destFile);
-        assertTrue("Workflow not altered after in-place save", destFile.lastModified() > timestamp);
+        assertTrue(destFile.lastModified() > timestamp, "Workflow not altered after in-place save");
     }
 
     /**
@@ -462,9 +430,9 @@ public class BatchExecutorTestcase {
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                 "-destDir=" + destDir.getAbsolutePath()});
-        assertEquals("Non-zero return value", 0, ret);
-        assertTrue("Not enough file in destination directory", destDir.list().length > 5);
-        assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
+        assertEquals(0, ret, "Non-zero return value");
+        assertTrue(destDir.list().length > 5, "Not enough file in destination directory");
+        assertTrue(new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile(), "No workflow in destination directory");
 
         // save in place
         FileUtil.deleteRecursively(destDir);
@@ -477,10 +445,10 @@ public class BatchExecutorTestcase {
         ret =
             BatchExecutor.mainRun(new String[]{"-workflowDir=" + destDir.getAbsolutePath(),
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertTrue("Not enough file in workflow directory after save", destDir.list().length > 5);
-        assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
-        assertTrue("Workflow not altered after in-place save", workflowFile.lastModified() > timestamp);
+        assertEquals(0, ret, "Non-zero return value");
+        assertTrue(destDir.list().length > 5, "Not enough file in workflow directory after save");
+        assertTrue(new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile(), "No workflow in destination directory");
+        assertTrue(workflowFile.lastModified() > timestamp, "Workflow not altered after in-place save");
     }
 
     /**
@@ -499,8 +467,8 @@ public class BatchExecutorTestcase {
                 "-credential=database;thor;test", "-credential=nonExisting", "-credential=noUser;;password",
                 "-credential=noPassword;user",
                 "-workflow.variable=databaseUrl,jdbc:sqlite:" + database.getAbsolutePath() + ",String"});
-        assertEquals("Non-zero return value", 0, ret);
-        assertTrue("Database file not written", database.length() > 1000);
+        assertEquals(0, ret, "Non-zero return value");
+        assertTrue(database.length() > 1000, "Database file not written");
 
         // We cannot really test if credentials are indeed set without a much more complex setup. The SQLite driver
         // does not need credentials and currently there is no node besides database nodes that uses credentials.

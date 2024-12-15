@@ -51,7 +51,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests that the progress on connections is reset for all connections if a
