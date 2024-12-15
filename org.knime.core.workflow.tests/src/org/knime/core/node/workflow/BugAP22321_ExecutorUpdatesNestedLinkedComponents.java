@@ -1,8 +1,8 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -12,8 +12,8 @@ import java.net.URI;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Functions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
@@ -32,7 +32,7 @@ public class BugAP22321_ExecutorUpdatesNestedLinkedComponents extends WorkflowTe
     private File m_outerTemplateDir;
     private File m_innerTemplateDir;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_rootId = loadAndSetWorkflow();
         final var root = getDefaultWorkflowDirectory();

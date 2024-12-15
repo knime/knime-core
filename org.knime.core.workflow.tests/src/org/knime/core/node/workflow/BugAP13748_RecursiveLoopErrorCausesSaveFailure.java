@@ -50,10 +50,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import java.io.File;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -67,17 +66,17 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP13748_RecursiveLoopErrorCausesSaveFailure extends WorkflowTestCase {
 
-	@Rule
-	public TemporaryFolder m_folder = new TemporaryFolder();
-	
+	@TempDir
+	public File m_folder;
+
 	private NodeID m_recursiveLoopEnd_3;
 	private NodeID m_recursiveLoopEnd_8;
 	private NodeID m_recursiveLoopEnd_12;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		File defaultWorkflowDirectory = getDefaultWorkflowDirectory();
-		File workflowDir = m_folder.newFolder(defaultWorkflowDirectory.getName());
+		File workflowDir = new File(m_folder, defaultWorkflowDirectory.getName());
 		// copy the workflow because it gets saved as part of the test...
 		FileUtil.copyDir(defaultWorkflowDirectory, workflowDir);
 		loadWorkflowAndAssign(workflowDir);
@@ -113,7 +112,7 @@ public class BugAP13748_RecursiveLoopErrorCausesSaveFailure extends WorkflowTest
 				is(NodeMessage.Type.RESET));
 		assertThat("LoadResult has errors", loadResult.hasErrors(), is(false));
 		assertThat("LoadResult has warnings", loadResult.hasWarningEntries(), is(false));
-		
+
 	}
 
 	private WorkflowLoadResult loadWorkflowAndAssign(File workflowDir) throws Exception {
@@ -132,6 +131,6 @@ public class BugAP13748_RecursiveLoopErrorCausesSaveFailure extends WorkflowTest
 	private NodeID[] getAllNodes() {
 		return getManager().getNodeContainers().stream().map(NodeContainer::getID).toArray(NodeID[]::new);
 	}
-	
+
 
 }

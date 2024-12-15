@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -67,11 +67,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.rules.TestWatcher;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -95,6 +94,7 @@ import org.knime.core.util.Version;
  *
  * @author wiswedel, University of Konstanz
  */
+@ExtendWith(TestWatcher.class)
 public abstract class WorkflowTestCase {
 
     /** Names of workflow manager 'roots' that are used by some framework code, e.g. the parent object of all
@@ -110,7 +110,7 @@ public abstract class WorkflowTestCase {
     private WorkflowManager m_manager;
 
     private List<NodeID> m_loadedComponentNodeIDs = new ArrayList<>(0);
-    
+
 
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
@@ -192,7 +192,7 @@ public abstract class WorkflowTestCase {
         }
         return loadResult;
     }
-    
+
     protected MetaNodeLinkUpdateResult loadComponent(final File componentDir, final ExecutionMonitor exec,
             final WorkflowLoadHelper loadHelper) throws IOException, InvalidSettingsException,
             CanceledExecutionException, UnsupportedWorkflowVersionException {
@@ -286,7 +286,7 @@ public abstract class WorkflowTestCase {
                 WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
                 project = project.getProjectWFM();
                 dumpWorkflowToLog(project);
-                org.junit.Assert.fail(error);
+                fail(error);
             }
         }
     }
@@ -313,7 +313,7 @@ public abstract class WorkflowTestCase {
                 + " (dump follows)";
             m_logger.info("Test failed: " + error);
             dumpWorkflowToLog((WorkflowManager)nc);
-            Assert.fail(error);
+            fail(error);
         }
     }
 
@@ -353,7 +353,7 @@ public abstract class WorkflowTestCase {
                 SubNodeContainer subnode = (SubNodeContainer)currentParent;
                 NodeID expectedWFMID = prefixStack.pop();
                 final WorkflowManager innerWFM = subnode.getWorkflowManager();
-                Assert.assertEquals(innerWFM.getID(), expectedWFMID);
+                assertEquals(innerWFM.getID(), expectedWFMID);
                 currentParent = innerWFM;
             }
         }
@@ -400,7 +400,7 @@ public abstract class WorkflowTestCase {
     protected static int countFilesInDirectory(final File directory) {
         return countFilesInDirectory(directory, null);
     }
-    
+
     /** Recursively counts files in a dir adhering to the given predicte (may be null) */
     protected static int countFilesInDirectory(final File directory, final Predicate<File> matcherPredicate) {
         Predicate<File> predicate = matcherPredicate != null ? matcherPredicate : f -> true;
@@ -521,7 +521,7 @@ public abstract class WorkflowTestCase {
     protected void waitWhile(NodeID nodeID, final Predicate<NodeContainer> hold, int secondsToWaitAtMost) throws Exception {
         waitWhile(findNodeContainer(nodeID), hold, secondsToWaitAtMost);
     }
-    
+
     /**
      * Similar to {@link #waitWhile(NodeID, Predicate, int)}, except that the NodeContainer is passed as argument.
      */
@@ -568,10 +568,10 @@ public abstract class WorkflowTestCase {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         closeWorkflow();
-        
+
         // dispose loaded components
         for (NodeID id : m_loadedComponentNodeIDs) {
             WorkflowManager.ROOT.removeProject(id);
@@ -584,7 +584,7 @@ public abstract class WorkflowTestCase {
         assertTrue(newDanglingWorkflows.size() + " new dangling workflow(s) detected: " + newDanglingWorkflows,
             newDanglingWorkflows.isEmpty());
     }
-    
+
     private static ArrayList<NodeContainer> getDanglingWorkflows() {
         return WorkflowManager.ROOT.getNodeContainers().stream()
             .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
@@ -643,14 +643,14 @@ public abstract class WorkflowTestCase {
     }
 
     /** Called before any tests are run to enable sysout debug output, workaround for DEVOPS-2250. */
-    @BeforeClass
+    @BeforeAll
 	public static void beforeAllEnableSysoutLogger() {
         KNIMELogger.modifyAppenderLevelRange(NodeLogger.STDOUT_APPENDER, //
             (min, max) -> org.knime.core.util.Pair.create(LEVEL.DEBUG, LEVEL.FATAL));
 	}
 
     /** Called after all tests to disable sysout debug output, workaround for DEVOPS-2250. */
-	@AfterClass
+	@AfterAll
 	public static void afterAllDisableSysoutLogger() {
         NodeLoggerConfig.modifyAppenderLevelRange(NodeLogger.STDOUT_APPENDER, //
             (min, max) -> org.knime.core.util.Pair.create(LEVEL.FATAL, LEVEL.FATAL));
@@ -676,7 +676,7 @@ public abstract class WorkflowTestCase {
             m_triggeringExceptionClasses = triggeringExceptionClass;
         }
 
-        protected void failed(Throwable e, org.junit.runner.Description description) {
+        protected void failed(Throwable e, org.junit.jupiter.api.extension.ExtensionContext context) {
             boolean shouldLog = m_triggeringExceptionClasses.length == 0 ||
                     Arrays.stream(m_triggeringExceptionClasses).anyMatch(t -> t.isAssignableFrom(e.getClass()));
             if (shouldLog) {

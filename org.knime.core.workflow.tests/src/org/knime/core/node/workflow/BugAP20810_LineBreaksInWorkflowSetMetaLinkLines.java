@@ -44,16 +44,16 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeContainerMetadata.Link;
 
 /**
@@ -89,7 +89,7 @@ public class BugAP20810_LineBreaksInWorkflowSetMetaLinkLines extends WorkflowTes
 		assertEquals(List.of("r", "KNIME", "export", "rds", "graphic"), metadata.getTags());
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
     	closeWorkflow();
     }

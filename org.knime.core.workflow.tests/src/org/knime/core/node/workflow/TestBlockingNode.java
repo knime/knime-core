@@ -58,10 +58,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -84,7 +83,7 @@ public class TestBlockingNode extends WorkflowTestCase {
     private NodeID m_blockVariable_4;
     private NodeID m_mergeVariable_6;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -108,7 +107,7 @@ public class TestBlockingNode extends WorkflowTestCase {
         BlockingRepository.put(LOCK_VAR_NODE_NAME, LockedMethod.SAVE_INTERNALS, new ReentrantLock());
         return loadResult;
     }
-    
+
     /** Load workflow, expect all nodes to be 'yellow', then run to completion. */
     @Test
     public void testLoadRunAllGreen() throws Exception {
@@ -141,7 +140,7 @@ public class TestBlockingNode extends WorkflowTestCase {
         waitWhileInExecution();
         checkState(getManager(), EXECUTED);
     }
-    
+
     /** Check whether configuration can be paused by acquiring lock. */
     @Test
     public void testBlockConfigureTableNode() throws Exception {
@@ -158,7 +157,7 @@ public class TestBlockingNode extends WorkflowTestCase {
     		long timeoutMS = 200;
     		try {
     			addConnectionFuture.get(timeoutMS, TimeUnit.MILLISECONDS);
-    			Assert.fail("Adding a connection in a separate thread should not complete, #configure is locked.");
+    			org.junit.jupiter.api.Assertions.fail("Adding a connection in a separate thread should not complete, #configure is locked.");
     		} catch (TimeoutException e) {
     			// expected, adding a connection will configure the node but configure is blocked
     		}
@@ -169,8 +168,8 @@ public class TestBlockingNode extends WorkflowTestCase {
     	addConnectionFuture.get();
     	checkState(m_blockTable_3, CONFIGURED);
     }
-    
-    
+
+
     /** Check wheter execution can be paused by acquiring lock. */
     @Test
     public void testBlockConfigureVariableNode() throws Exception {
@@ -183,7 +182,7 @@ public class TestBlockingNode extends WorkflowTestCase {
     		long timeoutMS = 200;
     		try {
     			addConnectionFuture.get(timeoutMS, TimeUnit.MILLISECONDS);
-    			Assert.fail("Adding a connection in a separate thread should not complete, #configure is locked.");
+    			org.junit.jupiter.api.Assertions.fail("Adding a connection in a separate thread should not complete, #configure is locked.");
     		} catch (TimeoutException e) {
     			// expected, adding a connection will configure the node but configure is blocked
     		}
@@ -196,8 +195,8 @@ public class TestBlockingNode extends WorkflowTestCase {
     	ConnectionContainer toBlockVariableConnection = findInConnection(m_blockVariable_4, 1);
     	assertThat("Input connection to block variable node", toBlockVariableConnection, is(notNullValue()));
     }
-    
-    
+
+
 
     /** Check whether saving the workflow can be locked. */
 	@Test
@@ -222,7 +221,7 @@ public class TestBlockingNode extends WorkflowTestCase {
     		long timeoutMS = 500;
     		try {
     			saveFuture.get(timeoutMS, TimeUnit.MILLISECONDS);
-    			Assert.fail("Saving workflow asynchronously expected to not complete (node should be locked)");
+    			org.junit.jupiter.api.Assertions.fail("Saving workflow asynchronously expected to not complete (node should be locked)");
     		} catch (TimeoutException e) {
     			// expected, adding a connection will configure the node but configure is blocked
     		}
@@ -245,7 +244,7 @@ public class TestBlockingNode extends WorkflowTestCase {
 	}
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         BlockingRepository.removeAll(LOCK_TABLE_NODE_NAME);

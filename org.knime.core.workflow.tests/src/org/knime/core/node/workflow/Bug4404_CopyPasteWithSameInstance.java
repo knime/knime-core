@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeSettings;
 
 
@@ -59,7 +59,7 @@ public class Bug4404_CopyPasteWithSameInstance extends WorkflowTestCase {
     private NodeID m_javaSnippet200_7;
     private NodeID m_javaSnippet300_8;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_meta100_5 = new NodeID(baseID, 5);

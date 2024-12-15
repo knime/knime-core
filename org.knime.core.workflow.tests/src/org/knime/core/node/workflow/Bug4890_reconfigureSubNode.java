@@ -50,8 +50,8 @@ package org.knime.core.node.workflow;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
@@ -68,7 +68,7 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
     private NodeID m_diffChecker2;
     private NodeID m_diffChecker3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subNode = new NodeID(baseID, 16);

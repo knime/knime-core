@@ -49,9 +49,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
@@ -64,7 +64,7 @@ public class BugAP11943_SubnodeErrorMessages extends WorkflowTestCase {
     private NodeID m_subnode_8;
     private NodeID m_subnode_9;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenerator_1 = baseID.createChild(1);
@@ -143,7 +143,7 @@ public class BugAP11943_SubnodeErrorMessages extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }

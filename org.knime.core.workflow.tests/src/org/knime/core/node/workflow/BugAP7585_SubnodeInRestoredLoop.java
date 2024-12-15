@@ -51,9 +51,10 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.util.Arrays;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests execution of subnodes and nodes in subnodes that live in a loop that was loaded in a partially executed state.
@@ -69,7 +70,7 @@ public class BugAP7585_SubnodeInRestoredLoop extends WorkflowTestCase {
     private NodeID m_subnodeRowfilter_9_8;
     private NodeID m_loopEnd_10;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_chunkLoopStart_2 = baseID.createChild(2);
@@ -93,9 +94,9 @@ public class BugAP7585_SubnodeInRestoredLoop extends WorkflowTestCase {
             executeAndWait(id);
             checkState(id, CONFIGURED);
             NodeMessage nodeMessage = getManager().findNodeContainer(id).getNodeMessage();
-            Assert.assertThat("Expected error", nodeMessage.getMessageType(), is(NodeMessage.Type.ERROR));
-            Assert.assertThat("Expected error about restored loop",
-                nodeMessage.getMessage(), containsString("restored"));
+            assertEquals("Expected error", NodeMessage.Type.ERROR, nodeMessage.getMessageType());
+            assertTrue("Expected error about restored loop",
+                nodeMessage.getMessage().contains("restored"));
         }
     }
 
@@ -106,9 +107,9 @@ public class BugAP7585_SubnodeInRestoredLoop extends WorkflowTestCase {
         for (NodeID id: Arrays.asList(m_rowFilter_3, m_subnode_6, m_subnode_9)) {
             checkState(id, CONFIGURED);
             NodeMessage nodeMessage = getManager().findNodeContainer(id).getNodeMessage();
-            Assert.assertThat("Expected error", nodeMessage.getMessageType(), is(NodeMessage.Type.ERROR));
-            Assert.assertThat("Expected error about restored loop",
-                nodeMessage.getMessage(), containsString("restored"));
+            assertEquals("Expected error", NodeMessage.Type.ERROR, nodeMessage.getMessageType());
+            assertTrue("Expected error about restored loop",
+                nodeMessage.getMessage().contains("restored"));
         }
     }
 

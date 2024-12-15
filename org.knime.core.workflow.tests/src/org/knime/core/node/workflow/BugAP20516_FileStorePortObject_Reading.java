@@ -47,7 +47,7 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
@@ -61,10 +61,9 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests https://knime-com.atlassian.net/browse/AP-20516: 
@@ -73,12 +72,12 @@ import org.junit.rules.TemporaryFolder;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { // NOSONAR
-	
+
     private static final Predicate<File> IS_TEMP_FILE = File::isFile;
-    
-    @Rule
-    public TemporaryFolder m_tempFolder = new TemporaryFolder();
-    
+
+    @TempDir
+    public File m_tempFolder;
+
     /** Matches names of non-table files, e.g. 
      * <pre>/tmp/knime_bugAP20516_File_17805/fs-Count_5-6-58195/000/000/0_0_first.bin</pre>
      */
@@ -88,15 +87,15 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
     		return !name.startsWith("knime_container");
     	}
     };
-    
+
     private NodeID m_createFS_4;
     private NodeID m_modelWriter_5;
-    
-	@Before
+
+	@BeforeEach
 	public void setUp() throws Exception {
 		final var wkfDir = m_tempFolder.newFolder(getDefaultWorkflowDirectory().getName());
 		FileUtils.copyDirectory(getDefaultWorkflowDirectory(), wkfDir);
-		
+
 		final NodeID id = loadAndSetWorkflow(wkfDir);
 		m_createFS_4 = id.createChild(4);
 		m_modelWriter_5 = id.createChild(5);
@@ -125,7 +124,7 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
 				FileUtils.listFiles(tempLocation, FS_FILE_FILTER, DirectoryFileFilter.DIRECTORY),
 				Matchers.hasSize(/* from source node */ 2));
 	}
-	
+
 	@Test
 	public void testExecuteAndResetAll() throws Exception {
 		final WorkflowManager manager = getManager();
@@ -159,5 +158,5 @@ public class BugAP20516_FileStorePortObject_Reading extends WorkflowTestCase { /
 	private static File getWorkflowTempLocation(final WorkflowManager manager) {
 		return manager.getContextV2().getExecutorInfo().getTempFolder().toFile();
 	}
-	
+
 }

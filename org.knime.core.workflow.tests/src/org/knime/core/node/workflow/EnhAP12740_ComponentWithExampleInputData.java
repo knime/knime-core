@@ -44,19 +44,17 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
@@ -84,7 +82,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
      *
      * @throws Exception
      */
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -128,7 +126,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
                         + wfm.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR),
                 componentProject.getVirtualOutNode().getInternalState(),
                 is(InternalNodeContainerState.EXECUTED)));
-        
+
         /* save and open without example input data */
         component.saveAsTemplate(componentDir, new ExecutionMonitor());
         loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
@@ -244,7 +242,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
         assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
     }
-    
+
     /**
      * Tests global actions on a component project workflow.
      * 
@@ -263,7 +261,7 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
 
         // bug NXT-355: NPE when calling wfm.canCancelAll()
         assertFalse(componentProject.getWorkflowManager().canCancelAll());
-        
+
         // enh NXT-359: can-reset-all introduced on workflow level
         assertFalse(componentProject.getWorkflowManager().canResetAll());
     }

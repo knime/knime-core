@@ -1,4 +1,4 @@
-///*
+MISSING///*
 // * ------------------------------------------------------------------------
 // *  Copyright by KNIME AG, Zurich, Switzerland
 // *  Website: http://www.knime.com; Email: contact@knime.com
@@ -47,9 +47,9 @@
 //import static org.hamcrest.CoreMatchers.is;
 //import static org.hamcrest.MatcherAssert.assertThat;
 //import static org.hamcrest.Matchers.containsString;
-//import static org.junit.Assert.assertFalse;
-//import static org.junit.Assert.assertNull;
-//import static org.junit.Assert.assertTrue;
+//import static org.junit.jupiter.api.Assertions.assertFalse;
+//import static org.junit.jupiter.api.Assertions.assertNull;
+//import static org.junit.jupiter.api.Assertions.assertTrue;
 //import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 //import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTINGREMOTELY;
 //import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -58,13 +58,12 @@
 //import java.io.File;
 //import java.util.concurrent.locks.ReentrantLock;
 //
-//import org.junit.After;
-//import org.junit.Before;
-//import org.junit.Rule;
-//import org.junit.Test;
-//import org.junit.rules.TestRule;
-//import org.junit.rules.Timeout;
-//import org.junit.runners.model.TestTimedOutException;
+//import org.junit.jupiter.api.AfterEach;
+//import org.junit.jupiter.api.BeforeEach;
+//import org.junit.jupiter.api.Test;
+//import org.junit.jupiter.api.extension.ExtendWith;
+//import org.junit.jupiter.api.Timeout;
+//import org.junit.jupiter.api.Assertions;
 //import org.knime.core.node.ExecutionMonitor;
 //import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 //import org.knime.core.util.FileUtil;
@@ -78,17 +77,14 @@
 //
 //    private static final String LOCK_ID = "bug_ap_5712";
 //
-//	@Rule
-//	public Timeout m_globalTimeout = Timeout.seconds(5);
-//	
-//	@Rule(order = Integer.MIN_VALUE)
-//	public TestRule m_dumpCallStackOnErrorRule = new DumpCallStackOnErrorRule(TestTimedOutException.class);
-//	
+//    @Timeout(5)
+//    private static final ReentrantLock m_globalTimeout = new ReentrantLock();
+//    
 //    private File m_workflowDir;
 //    private NodeID m_tableView_4;
 //    private NodeID m_streamSubnode_5;
 //
-//    @Before
+//    @BeforeEach
 //    public void setUp() throws Exception {
 //        BlockingRepository.put(LOCK_ID, new ReentrantLock());
 //        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
@@ -168,11 +164,11 @@
 //
 //    /** {@inheritDoc} */
 //    @Override
-//    @After
+//    @AfterEach
 //    public void tearDown() throws Exception {
 //        super.tearDown();
 //        BlockingRepository.remove(LOCK_ID);
 //        FileUtil.deleteRecursively(m_workflowDir);
 //    }
 //
-//}
+//

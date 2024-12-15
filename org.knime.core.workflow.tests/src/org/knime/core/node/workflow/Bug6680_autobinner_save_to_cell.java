@@ -46,9 +46,9 @@ package org.knime.core.node.workflow;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -64,7 +64,7 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
     private File m_workflowTempDir;
 
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File workflowDirSVN = getDefaultWorkflowDirectory();
         m_workflowTempDir = FileUtil.createTempDir(getClass().getSimpleName());
@@ -101,9 +101,8 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowTempDir);
     }
-}

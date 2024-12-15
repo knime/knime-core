@@ -48,16 +48,16 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.wizard.page.WizardPage;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -78,7 +78,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     private NodeID m_intInputInNoClusterSubnode;
     private NodeID m_stringInputInLabelClustersSubnode;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_filterSubnode = new NodeID(baseID, 101);

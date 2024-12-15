@@ -44,14 +44,14 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests https://knime-com.atlassian.net/browse/AP-17468: 
@@ -60,11 +60,11 @@ import org.junit.Test;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public class BugAP17468_LoopEndCleanUpAfterFailure extends WorkflowTestCase { // NOSONAR
-	
+
     /** A temp file is a data temp file if its name starts with that. If that name ever changes this test will fail. */
     private static final Predicate<File> IS_TEMP_FILE = f -> f.getName().startsWith("knime_container");
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		loadAndSetWorkflow();
 	}

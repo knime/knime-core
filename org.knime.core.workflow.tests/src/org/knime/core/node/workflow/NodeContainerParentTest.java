@@ -57,8 +57,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -123,7 +123,7 @@ public class NodeContainerParentTest {
         checkGetProjectWorkflow(nnc, componentProjectWfm);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         WorkflowManager.ROOT.removeProject(m_projectId);
         for (NodeID id : m_loadedComponentNodeIDs) {

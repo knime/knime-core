@@ -48,11 +48,11 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -66,7 +66,7 @@ public class Bug5207_BundleVersionInWorkflow extends WorkflowTestCase {
     private NodeID m_tableCreator1;
     private NodeID m_columnFilter2;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreator1 = new NodeID(baseID, 1);

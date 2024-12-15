@@ -48,10 +48,10 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
@@ -85,7 +85,7 @@ public class TestSubnode_ErrorMessages extends WorkflowTestCase {
      *
      * @throws Exception - If something goes wrong while loading the workflow
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_oneUnconnectedOutputPort = new NodeID(baseID, 7);

@@ -44,12 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.Pair;
 
@@ -66,7 +66,7 @@ public class Bug5936_FileStoreDocumentVectorIssue extends WorkflowTestCase {
     private NodeID m_docVector_3;
     private NodeID m_tagger_4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableReader_1 = new NodeID(baseID, 1);

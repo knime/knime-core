@@ -46,10 +46,10 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -57,10 +57,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.assertThrows;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.DialogNode;
@@ -81,9 +80,6 @@ import jakarta.json.JsonValue;
  */
 public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
     private File m_workflowDir;
 
     private NodeID m_stringConfiguration_1;
@@ -95,7 +91,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
      *
      * @throws Exception
      */
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -183,9 +179,10 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 		configuration.put("number-input-2",
 				JsonUtil.getProvider().createObjectBuilder().add("double", -1.0).build().get("double"));
 
-        exception.expect(InvalidSettingsException.class);
-        exception.expectMessage("The set double -1.0 is smaller than the allowed minimum of 0.0");
-        getManager().setConfigurationNodes(configuration);
+        InvalidSettingsException exception = assertThrows(InvalidSettingsException.class, () -> {
+            getManager().setConfigurationNodes(configuration);
+        });
+        assertThat(exception.getMessage(), containsString("The set double -1.0 is smaller than the allowed minimum of 0.0"));
     }
 
     /**
@@ -200,9 +197,10 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 		configuration.put("number-input",
 				JsonUtil.getProvider().createObjectBuilder().add("double", 3.14).build().get("double"));
 
-        exception.expect(InvalidSettingsException.class);
-        exception.expectMessage("Parameter name \"number-input\" doesn't match any node in the workflow");
-        getManager().setConfigurationNodes(configuration);
+        InvalidSettingsException exception = assertThrows(InvalidSettingsException.class, () -> {
+            getManager().setConfigurationNodes(configuration);
+        });
+        assertThat(exception.getMessage(), containsString("Parameter name \"number-input\" doesn't match any node in the workflow"));
     }
 
 	/**

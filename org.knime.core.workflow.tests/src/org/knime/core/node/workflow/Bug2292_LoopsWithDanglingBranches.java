@@ -44,13 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * bug 2292: Loop restart with dangling branches flaky.
@@ -64,7 +64,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
     private NodeID m_javaSnippet13;
     private NodeID m_loopEnd12;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_javaSnippet7 = new NodeID(baseID, 7);
@@ -106,7 +106,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }

@@ -56,13 +56,14 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+
+import java.nio.file.Path;
 
 /**
  * Loads a workflow, whereby the workflow folder is slightly corrupted: a node folder is renamed (case change).
@@ -71,14 +72,13 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
  */
 public final class BugAP23528_WorkflowLoad_FolderNames_CaseIgnorant extends WorkflowTestCase {
 
-	@Rule
-	public TemporaryFolder m_tempFolder = new TemporaryFolder();
+	@TempDir
+	public Path m_tempFolder;
 	private File m_copiedWorkflowFolder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-    	m_copiedWorkflowFolder = m_tempFolder.newFolder(
-    			BugAP23528_WorkflowLoad_FolderNames_CaseIgnorant.class.getSimpleName());
+    	m_copiedWorkflowFolder = m_tempFolder.toFile();
     	FileUtils.copyDirectory(getDefaultWorkflowDirectory(), m_copiedWorkflowFolder);
     }
 
@@ -95,5 +95,5 @@ public final class BugAP23528_WorkflowLoad_FolderNames_CaseIgnorant extends Work
     	checkStateOfMany(EXECUTED, tableCreator_1, diffChecker_4);
     	checkState(getManager(), EXECUTED);
     }
-    
+
 }

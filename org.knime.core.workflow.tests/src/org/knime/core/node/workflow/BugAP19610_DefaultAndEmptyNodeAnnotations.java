@@ -1,10 +1,10 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
 /**
@@ -25,7 +25,7 @@ public class BugAP19610_DefaultAndEmptyNodeAnnotations extends WorkflowTestCase 
      */
     private NodeID m_without, m_withNonDefault, m_withDefault;
 
-    @Before
+    @BeforeEach
     public void beforeEach() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_wfm = getManager();

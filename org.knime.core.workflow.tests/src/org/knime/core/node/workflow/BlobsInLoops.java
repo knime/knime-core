@@ -47,12 +47,11 @@ package org.knime.core.node.workflow;
 import java.io.File;
 
 import org.hamcrest.core.IsNull;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -75,16 +74,17 @@ public class BlobsInLoops extends WorkflowTestCase {
     private NodeID m_loopEnd14;
     private NodeID m_verify15;
 
-    @Rule
-    public TemporaryFolder m_tempFolder = new TemporaryFolder();
+    @TempDir
+    public File m_tempFolder;
     private File m_workflowDirTemp;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
         // will save the workflow in one of the test ...don't write SVN folder
-        m_workflowDirTemp = m_tempFolder.newFolder("workflowCopy");
-        File dataFileTemp = m_tempFolder.newFile("test.table"); // a .table file written by the workflow
+        m_workflowDirTemp = new File(m_tempFolder, "workflowCopy");
+        m_workflowDirTemp.mkdir();
+        File dataFileTemp = new File(m_tempFolder, "test.table"); // a .table file written by the workflow
         System.setProperty(SYS_PROP_TMP_PATH, dataFileTemp.getAbsolutePath());
         FileUtil.copyDir(workflowDir, m_workflowDirTemp);
         init();
@@ -117,7 +117,7 @@ public class BlobsInLoops extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_create1, m_source3);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         closeWorkflow();
-        Assert.assertThat("Workflow is null", getManager(), IsNull.nullValue());
+        Assertions.assertThat(getManager()).as("Workflow is null").isNull();
         init();
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_create1, m_source3);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_verify2, m_tableReader5, m_verify6);
@@ -132,7 +132,7 @@ public class BlobsInLoops extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_loopEnd14, m_verify15);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         closeWorkflow();
-        Assert.assertThat("Workflow is null", getManager(), IsNull.nullValue());
+        Assertions.assertThat(getManager()).as("Workflow is null").isNull();
         init();
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_loopEnd14, m_verify15);
         reset(m_verify15);
@@ -141,7 +141,7 @@ public class BlobsInLoops extends WorkflowTestCase {
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         System.clearProperty(SYS_PROP_TMP_PATH);

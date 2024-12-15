@@ -44,13 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Problems with nested scope nodes and exceptions while dragging connection.
  * 6374: nested scopes of different type with wrong wiring can result in NPE
@@ -65,7 +65,7 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
     private NodeID m_catchErrors_5;
 
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_varToTableCol_7 = new NodeID(baseID, 7);

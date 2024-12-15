@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,9 +53,9 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
@@ -83,7 +83,7 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
     private static ThreadLocal<LoadNodeState> LOAD_NODE_STATE_THREAD_LOCAL = new ThreadLocal<>();
     private File m_workflowDirectory;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDirectory = FileUtil.createTempDir(getClass().getSimpleName());
         NODE_PROGRESS_THREAD_LOCAL.set(new DefaultNodeProgressMonitor());
@@ -123,7 +123,7 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDirectory);

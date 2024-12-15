@@ -1,11 +1,11 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -32,7 +32,7 @@ public class BugAP18224_UpdateInnerComponentsFails1 extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		final var workspaceDir = getDefaultWorkflowDirectory();
 		var baseId = loadAndSetWorkflowInWorkspace(new File(workspaceDir, "mainWorkflow"), workspaceDir);
@@ -47,11 +47,11 @@ public class BugAP18224_UpdateInnerComponentsFails1 extends WorkflowTestCase {
 		checkState(m_tableDiff, InternalNodeContainerState.CONFIGURED); // fails
 		var loadHelper = new WorkflowLoadHelper(true, getManager().getContextV2());
 
-		assertTrue("Expected meta node update available",
-				getManager().checkUpdateMetaNodeLink(m_olderVersionComponent, loadHelper));
+		assertTrue(getManager().checkUpdateMetaNodeLink(m_olderVersionComponent, loadHelper),
+				"Expected meta node update available");
 		getManager().updateMetaNodeLink(m_olderVersionComponent, new ExecutionMonitor(), loadHelper);
-		assertFalse("Expected no meta node update to be available",
-				getManager().checkUpdateMetaNodeLink(m_newerVersionComponent, loadHelper));
+		assertFalse(getManager().checkUpdateMetaNodeLink(m_newerVersionComponent, loadHelper),
+				"Expected no meta node update to be available");
 
 		executeAndWait(m_tableDiff);
 		checkState(m_tableDiff, InternalNodeContainerState.EXECUTED); // runs successful

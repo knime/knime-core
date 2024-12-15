@@ -44,14 +44,14 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.NoSuchElementException;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
 /**
  *
@@ -66,7 +66,7 @@ public class Trycatch extends WorkflowTestCase {
     private NodeID m_endloop;
     private NodeID m_finalnode;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_try = new NodeID(baseID, 10);
@@ -77,31 +77,29 @@ public class Trycatch extends WorkflowTestCase {
         m_finalnode = new NodeID(baseID, 7);
     }
 
-    @Test(expected=NoSuchElementException.class)
+    @Test
     public void testExecuted() throws Exception {
-    	executeAllAndWait();
-    	// check node states - inactive interna/active end.
-        checkState(m_try, InternalNodeContainerState.EXECUTED);
-        checkState(m_catch, InternalNodeContainerState.EXECUTED);
-        checkState(m_if, InternalNodeContainerState.EXECUTED);
-        assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_if))).isInactive());
-        checkState(m_endif, InternalNodeContainerState.EXECUTED);
-        assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endif))).isInactive());
-        checkState(m_endloop, InternalNodeContainerState.EXECUTED);
-        assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endloop))).isInactive());
-        checkState(m_catch, InternalNodeContainerState.EXECUTED);
-        assertFalse(((SingleNodeContainer)(getManager().getNodeContainer(m_catch))).isInactive());
-        // check variable in scope and hiding outside
-        NativeNodeContainer endifNNC = (NativeNodeContainer)(getManager().getNodeContainer(m_endif));
-        try {
-        	endifNNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
-        } catch (NoSuchElementException nsee) {
-        	Assert.fail("Variable does not exist but should!");
-        }
+        Assertions.assertThrows(NoSuchElementException.class, () -> {
+            executeAllAndWait();
+            // check node states - inactive interna/active end.
+            checkState(m_try, InternalNodeContainerState.EXECUTED);
+            checkState(m_catch, InternalNodeContainerState.EXECUTED);
+            checkState(m_if, InternalNodeContainerState.EXECUTED);
+            assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_if))).isInactive());
+            checkState(m_endif, InternalNodeContainerState.EXECUTED);
+            assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endif))).isInactive());
+            checkState(m_endloop, InternalNodeContainerState.EXECUTED);
+            assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endloop))).isInactive());
+            checkState(m_catch, InternalNodeContainerState.EXECUTED);
+            assertFalse(((SingleNodeContainer)(getManager().getNodeContainer(m_catch))).isInactive());
+            // check variable in scope and hiding outside
+            NativeNodeContainer endifNNC = (NativeNodeContainer)(getManager().getNodeContainer(m_endif));
+            endifNNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
+        });
         SingleNodeContainer finalnodeSNC = (SingleNodeContainer)(getManager().getNodeContainer(m_finalnode));
         // expected to fail
         finalnodeSNC.getOutgoingFlowObjectStack().peekFlowVariable("innerScopeVariable", FlowVariable.Type.STRING);
-        Assert.fail("Variable exists but shouldn't!");
+        Assertions.fail("Variable exists but shouldn't!");
     }
 
 }

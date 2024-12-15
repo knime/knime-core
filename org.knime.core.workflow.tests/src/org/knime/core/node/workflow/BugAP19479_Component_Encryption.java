@@ -1,11 +1,11 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.storage.clipboard.SystemClipboardFormat;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -50,7 +50,7 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 
 	private WorkflowAnnotationID m_sourceAnnotationID;
 
-	@Before
+	@BeforeEach
 	public void beforeEach() throws Exception {
 		NodeID baseID = loadAndSetWorkflow();
 		m_wfm = getManager();
@@ -200,5 +200,5 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 		mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
 		return mapper;
 	}
-	
+
 }

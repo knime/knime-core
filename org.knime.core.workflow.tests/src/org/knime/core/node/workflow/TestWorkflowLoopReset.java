@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeSettings;
 
 /**
@@ -63,7 +63,7 @@ public class TestWorkflowLoopReset extends WorkflowTestCase {
     private NodeID m_javaEditInMetaThroughNode8_7;
     private NodeID m_javaEditInMetaNewSourceNode8_8;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreateNode1 = new NodeID(baseID, 1);

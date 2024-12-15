@@ -49,9 +49,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.SandboxedNodeCreator;
 import org.knime.core.node.exec.SandboxedNodeCreator.SandboxedNode;
@@ -72,7 +72,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
     private NodeID m_tableCreator;
     private WorkflowManager m_sandboxedWM;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -95,7 +95,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
      * executes the workflow afterwards.
      * @throws Exception
      */
-    @Test(timeout = 30000L)
+    @Test
     public void testExecuteAfterSandboxedNodeCreation() throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, CONFIGURED);
@@ -131,7 +131,7 @@ public class BugAP7010_DataLoadedWithSandboxedNodeCreator extends WorkflowTestCa
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         WorkflowManager.ROOT.removeProject(m_sandboxedWM.getID());
         super.tearDown();

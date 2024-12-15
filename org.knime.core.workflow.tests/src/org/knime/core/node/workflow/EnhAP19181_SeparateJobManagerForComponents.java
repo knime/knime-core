@@ -1,16 +1,16 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.RETURNS_DEFAULTS;
 import static org.mockito.Mockito.RETURNS_MOCKS;
 
 import org.hamcrest.core.IsNull;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.exec.AbstractThreadNodeExecutionJobManager;
 import org.knime.core.node.exec.ThreadComponentExecutionJobManager;
 import org.knime.core.node.exec.ThreadComponentExecutionJobManagerFactory;
@@ -35,7 +35,7 @@ public class EnhAP19181_SeparateJobManagerForComponents extends WorkflowTestCase
 	 * 
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void beforeEach() throws Exception {
 		NodeID baseID = loadAndSetWorkflow();
 		m_wfm = getManager();

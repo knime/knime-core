@@ -50,9 +50,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * AP-18594: Marking for execution would takes hours before succeeding in case
@@ -68,7 +68,7 @@ public class BugAP18594_MetaNodes_slowDown_ExecutionOfWFM extends WorkflowTestCa
     private NodeID m_cache_40;
     private NodeID m_dataGenerator_32_7;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         var baseID = loadAndSetWorkflow();
         m_dataGenerator_1 = baseID.createChild(1);
@@ -101,7 +101,7 @@ public class BugAP18594_MetaNodes_slowDown_ExecutionOfWFM extends WorkflowTestCa
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }

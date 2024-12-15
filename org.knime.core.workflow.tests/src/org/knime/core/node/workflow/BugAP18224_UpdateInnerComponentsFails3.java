@@ -1,11 +1,11 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -25,7 +25,7 @@ public class BugAP18224_UpdateInnerComponentsFails3 extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		final var workspaceDir = getDefaultWorkflowDirectory();
 		var baseId = loadAndSetWorkflowInWorkspace(new File(workspaceDir, "mainWorkflow"), workspaceDir);
@@ -35,12 +35,12 @@ public class BugAP18224_UpdateInnerComponentsFails3 extends WorkflowTestCase {
 	@Test
 	public void testUpdatingInnerAndOuter() throws Exception {
 		var loadHelper = new WorkflowLoadHelper(true, getManager().getContextV2());
-		
+
 		assertTrue("Expected meta node update available",
 				getManager().checkUpdateMetaNodeLink(m_outerComponent, loadHelper));
 		// updating this without the AP-18224 fix would throw an exception
 		getManager().updateMetaNodeLink(m_outerComponent, new ExecutionMonitor(), loadHelper);
-		
+
 		executeAndWait(m_outerComponent);
 		checkState(m_outerComponent, InternalNodeContainerState.EXECUTED); // runs successful
 	}

@@ -53,7 +53,7 @@ import static org.hamcrest.Matchers.nullValue;
 
 import java.util.Set;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.missing.MissingNodeModel;
 
@@ -65,7 +65,7 @@ import org.knime.core.node.missing.MissingNodeModel;
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
 public class BugAP21738_DynamicNodeMissingAfterLoad extends WorkflowTestCase {
-	
+
 	@Test
 	public void testLoad() throws Exception {
 		final var result = loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor());

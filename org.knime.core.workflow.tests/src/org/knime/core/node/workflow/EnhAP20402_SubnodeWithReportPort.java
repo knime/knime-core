@@ -52,7 +52,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
-import static org.junit.Assume.assumeThat;
+import static org.junit.jupiter.api.Assumptions.assumeThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.util.Optional;
@@ -60,8 +60,8 @@ import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
@@ -82,10 +82,10 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
     private NodeID m_cache_2;
     private NodeID m_tableCreator_7;
     private NodeID m_reportStart_6;
-    
-    @Before
+
+    @BeforeEach
     public void setUp() throws Exception {
-    	assumeThat("Disabled on Mac due to DEVOPS-2105", Platform.getOS(), not(equalTo(Platform.OS_MACOSX)));
+        assumeThat("Disabled on Mac due to DEVOPS-2105", Platform.getOS(), not(equalTo(Platform.OS_MACOSX)));
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
@@ -98,96 +98,96 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 
     @Test
     public void testRegularExecute() throws Exception {
-    	executeAndWait(m_cache_2);
-    	checkState(m_cache_2, EXECUTED);
-    	checkState(m_subnodeOut_4_8, EXECUTED);
-    	final var cacheInConnBefore = findInConnection(m_cache_2, 1);
-    	final var subNodeInConnBefore = findInConnection(m_subnode_4, 1);
-    	
-    	final var snc = getManager().getNodeContainer(m_subnode_4, SubNodeContainer.class, true);
-    	assertThat("has no report config", snc.getReportConfiguration().isEmpty(), is(true));
-    	assertThat("some other port is not report", snc.isReportPort(1, false), is(false));
-    	assertThat("last port is report", snc.isReportPort(2, false), is(false));
-    	
-    	final var reportConfig = ReportConfiguration.INSTANCE;
-    	
-    	// add report, check connections are retained    	
-    	getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig);
-    	checkState(m_subnode_4, InternalNodeContainerState.IDLE); // new unconnected input port
-    	
-    	// downstream nodes are reset (AP-20600)
-    	checkState(m_subnodeOut_4_8, InternalNodeContainerState.IDLE);
-    	checkState(m_cache_2, InternalNodeContainerState.IDLE);
+        executeAndWait(m_cache_2);
+        checkState(m_cache_2, EXECUTED);
+        checkState(m_subnodeOut_4_8, EXECUTED);
+        final var cacheInConnBefore = findInConnection(m_cache_2, 1);
+        final var subNodeInConnBefore = findInConnection(m_subnode_4, 1);
 
-    	final var cacheInConnAfter = findInConnection(m_cache_2, 1);
-    	assertThat("Same connection to cache node", cacheInConnAfter, sameInstance(cacheInConnBefore));
-    	snc.getWorkflowManager().getNodeContainer(m_subnodeOut_4_8, NativeNodeContainer.class, true); // still present
-    	
-    	final var subNodeInConnAfter = findInConnection(m_subnode_4, 1);
-    	assertThat("Same connection to cache node", subNodeInConnAfter, sameInstance(subNodeInConnBefore));
-    	
-    	assertThat("Connection 1 within subnode is present", findInConnection(m_subnodeOut_4_8, 1), is(notNullValue()));
-    	assertThat("Connection 2 within subnode is present", findInConnection(m_subnodeOut_4_8, 2), is(notNullValue()));
+        final var snc = getManager().getNodeContainer(m_subnode_4, SubNodeContainer.class, true);
+        assertThat("has no report config", snc.getReportConfiguration().isEmpty(), is(true));
+        assertThat("some other port is not report", snc.isReportPort(1, false), is(false));
+        assertThat("last port is report", snc.isReportPort(2, false), is(false));
 
-    	// ports on subnode - output
-    	assertThat("Number outputs on SNC after report adding", snc.getNrOutPorts(), is(4));
-		assertThat("last port is report", snc.getOutputType(3).getPortObjectClass(),
-				typeCompatibleWith(IReportPortObject.class));
-		assertThat("some other port is not report", snc.isReportPort(2, false), is(false));
-		assertThat("last port is report", snc.isReportPort(3, false), is(true));
-		
-		// ports on subnode - input
-		assertThat("Number inputs on SNC after report adding", snc.getNrInPorts(), is(3));
-		assertThat("last input port is report", snc.getInPort(2).getPortType().getPortObjectClass(), 
-				typeCompatibleWith(IReportPortObject.class));
-		
-		getManager().addConnection(m_reportStart_6, 1, m_subnode_4, 2);
-		executeAndWait(m_tableCreator_7, m_reportStart_6);
-		checkState(m_subnode_4, InternalNodeContainerState.CONFIGURED);
-		executeAllAndWait();
-		checkState(m_subnode_4, InternalNodeContainerState.EXECUTED);
-		
-		// copy paste (via persistor)
-		final var copyContent = WorkflowCopyContent.builder().setNodeIDs(m_subnode_4).build();
-		final NodeID copiedSNCID = getManager().copyFromAndPasteHere(getManager(), copyContent).getNodeIDs()[0];
-		final SubNodeContainer copiedSNC = getManager().getNodeContainer(copiedSNCID, SubNodeContainer.class, true);
-		validateCopiedSNC(copiedSNC);
-		
-		// copy paste (via WorkflowDef)
-		final var clipboardDef = getManager().copyToDef(copyContent, PasswordRedactor.unsafe());
-		final NodeID copiedSNCID_Def = getManager().paste(clipboardDef).getNodeIDs()[0];
-		final SubNodeContainer copiedSNC_Ddef = 
-				getManager().getNodeContainer(copiedSNCID_Def, SubNodeContainer.class, true);
-		validateCopiedSNC(copiedSNC_Ddef);
-		
-		getManager().addConnection(m_subnode_4, 3, m_modelWriter_5, 1);
-		
-		// now remove one of the other ports and expect report/model connection is kept
-		MetaPortInfo[] portInfos = IntStream.range(0, 2).mapToObj(i -> MetaPortInfo.builder().setNewIndex(i)
-				.setOldIndex(i).setPortType(snc.getOutputType(i)).setIsConnected(true).build())
-				.toArray(MetaPortInfo[]::new);
-		snc.getWorkflowManager().removeConnection(findInConnection(m_subnodeOut_4_8, 2));
-		getManager().changeSubNodeOutputPorts(m_subnode_4, portInfos);
-		
-		assertThat("Number outputs after report added and other port deleted", snc.getNrOutPorts(), is(3));
-		assertThat("last port is report", snc.getOutputType(2).getPortObjectClass(),
-				typeCompatibleWith(IReportPortObject.class));
-		
-		assertThat("Connection 1 within subnode is present", findInConnection(snc.getVirtualOutNodeID(), 1),
-				is(notNullValue()));
-		
-		final var modelConnection = findInConnection(m_modelWriter_5, 1);
-		assertThat("model connection is present", modelConnection, is(notNullValue()));
-		assertThat("model connection goes to report port", modelConnection.getSourcePort(), is(2));
+        final var reportConfig = ReportConfiguration.INSTANCE;
+
+        // add report, check connections are retained    
+        getManager().changeSubNodeReportOutput(m_subnode_4, reportConfig);
+        checkState(m_subnode_4, InternalNodeContainerState.IDLE); // new unconnected input port
+
+        // downstream nodes are reset (AP-20600)
+        checkState(m_subnodeOut_4_8, InternalNodeContainerState.IDLE);
+        checkState(m_cache_2, InternalNodeContainerState.IDLE);
+
+        final var cacheInConnAfter = findInConnection(m_cache_2, 1);
+        assertThat("Same connection to cache node", cacheInConnAfter, sameInstance(cacheInConnBefore));
+        snc.getWorkflowManager().getNodeContainer(m_subnodeOut_4_8, NativeNodeContainer.class, true); // still present
+
+        final var subNodeInConnAfter = findInConnection(m_subnode_4, 1);
+        assertThat("Same connection to cache node", subNodeInConnAfter, sameInstance(subNodeInConnBefore));
+
+        assertThat("Connection 1 within subnode is present", findInConnection(m_subnodeOut_4_8, 1), is(notNullValue()));
+        assertThat("Connection 2 within subnode is present", findInConnection(m_subnodeOut_4_8, 2), is(notNullValue()));
+
+        // ports on subnode - output
+        assertThat("Number outputs on SNC after report adding", snc.getNrOutPorts(), is(4));
+        assertThat("last port is report", snc.getOutputType(3).getPortObjectClass(),
+                typeCompatibleWith(IReportPortObject.class));
+        assertThat("some other port is not report", snc.isReportPort(2, false), is(false));
+        assertThat("last port is report", snc.isReportPort(3, false), is(true));
+
+        // ports on subnode - input
+        assertThat("Number inputs on SNC after report adding", snc.getNrInPorts(), is(3));
+        assertThat("last input port is report", snc.getInPort(2).getPortType().getPortObjectClass(), 
+                typeCompatibleWith(IReportPortObject.class));
+
+        getManager().addConnection(m_reportStart_6, 1, m_subnode_4, 2);
+        executeAndWait(m_tableCreator_7, m_reportStart_6);
+        checkState(m_subnode_4, InternalNodeContainerState.CONFIGURED);
+        executeAllAndWait();
+        checkState(m_subnode_4, InternalNodeContainerState.EXECUTED);
+
+        // copy paste (via persistor)
+        final var copyContent = WorkflowCopyContent.builder().setNodeIDs(m_subnode_4).build();
+        final NodeID copiedSNCID = getManager().copyFromAndPasteHere(getManager(), copyContent).getNodeIDs()[0];
+        final SubNodeContainer copiedSNC = getManager().getNodeContainer(copiedSNCID, SubNodeContainer.class, true);
+        validateCopiedSNC(copiedSNC);
+
+        // copy paste (via WorkflowDef)
+        final var clipboardDef = getManager().copyToDef(copyContent, PasswordRedactor.unsafe());
+        final NodeID copiedSNCID_Def = getManager().paste(clipboardDef).getNodeIDs()[0];
+        final SubNodeContainer copiedSNC_Ddef = 
+                getManager().getNodeContainer(copiedSNCID_Def, SubNodeContainer.class, true);
+        validateCopiedSNC(copiedSNC_Ddef);
+
+        getManager().addConnection(m_subnode_4, 3, m_modelWriter_5, 1);
+
+        // now remove one of the other ports and expect report/model connection is kept
+        MetaPortInfo[] portInfos = IntStream.range(0, 2).mapToObj(i -> MetaPortInfo.builder().setNewIndex(i)
+                .setOldIndex(i).setPortType(snc.getOutputType(i)).setIsConnected(true).build())
+                .toArray(MetaPortInfo[]::new);
+        snc.getWorkflowManager().removeConnection(findInConnection(m_subnodeOut_4_8, 2));
+        getManager().changeSubNodeOutputPorts(m_subnode_4, portInfos);
+
+        assertThat("Number outputs after report added and other port deleted", snc.getNrOutPorts(), is(3));
+        assertThat("last port is report", snc.getOutputType(2).getPortObjectClass(),
+                typeCompatibleWith(IReportPortObject.class));
+
+        assertThat("Connection 1 within subnode is present", findInConnection(snc.getVirtualOutNodeID(), 1),
+                is(notNullValue()));
+
+        final var modelConnection = findInConnection(m_modelWriter_5, 1);
+        assertThat("model connection is present", modelConnection, is(notNullValue()));
+        assertThat("model connection goes to report port", modelConnection.getSourcePort(), is(2));
     }
 
-	private static void validateCopiedSNC(final SubNodeContainer copiedSNC) {
-		assertThat("Number outputs on SNC after copying", copiedSNC.getNrOutPorts(), is(4));
-		assertThat("last port is report", copiedSNC.getOutputType(3).getPortObjectClass(),
-				typeCompatibleWith(IReportPortObject.class));
-		assertThat("Number inputs on SNC after copying", copiedSNC.getNrInPorts(), is(3));
-		assertThat("last input port is report", copiedSNC.getInPort(2).getPortType().getPortObjectClass(), 
-				typeCompatibleWith(IReportPortObject.class));
-	}
+    private static void validateCopiedSNC(final SubNodeContainer copiedSNC) {
+        assertThat("Number outputs on SNC after copying", copiedSNC.getNrOutPorts(), is(4));
+        assertThat("last port is report", copiedSNC.getOutputType(3).getPortObjectClass(),
+                typeCompatibleWith(IReportPortObject.class));
+        assertThat("Number inputs on SNC after copying", copiedSNC.getNrInPorts(), is(3));
+        assertThat("last input port is report", copiedSNC.getInPort(2).getPortType().getPortObjectClass(), 
+                typeCompatibleWith(IReportPortObject.class));
+    }
 
 }

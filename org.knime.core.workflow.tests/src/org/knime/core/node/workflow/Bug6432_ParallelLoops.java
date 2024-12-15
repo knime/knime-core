@@ -44,13 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -60,7 +60,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 public class Bug6432_ParallelLoops extends WorkflowTestCase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         loadAndSetWorkflow();
     }

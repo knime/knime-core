@@ -45,7 +45,7 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -53,8 +53,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import java.util.Arrays;
 
 import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests AP-11261: (API) Add hook to workflow loading routine to populate "knime.system.credentials"
@@ -127,7 +127,7 @@ public class BugAP11261_CredentialsDefaultHook extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         CredentialsStore.setKNIMESystemDefault(null, null);
         super.tearDown();

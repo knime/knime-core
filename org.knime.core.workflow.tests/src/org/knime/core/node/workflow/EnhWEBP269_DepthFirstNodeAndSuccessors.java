@@ -46,7 +46,7 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,8 +54,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the
@@ -65,7 +65,7 @@ import org.junit.Test;
  */
 public class EnhWEBP269_DepthFirstNodeAndSuccessors extends WorkflowTestCase {
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         loadAndSetWorkflow();
     }

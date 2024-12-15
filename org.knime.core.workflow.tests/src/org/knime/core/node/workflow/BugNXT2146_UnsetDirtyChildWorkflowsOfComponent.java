@@ -53,8 +53,8 @@ import static org.mockito.Mockito.verify;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowEvent.Type;
@@ -66,11 +66,11 @@ import org.knime.core.util.FileUtil;
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTestCase {
-	
+
 	private SubNodeContainer m_componentProject;
 	private WorkflowLoadHelper m_loadHelper;
-	
-	@Before
+
+	@BeforeEach
 	public void loadComponent() throws Exception {
 		var componentDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), componentDir);
@@ -111,7 +111,7 @@ public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTest
 			verify(nestedComponentWorkflowListener).workflowChanged(argThat(e -> Type.WORKFLOW_CLEAN == e.getType()));
 		});
 	}
-	
+
 	/**
 	 * General test to save and load a component project in place (i.e. using
 	 * {@link SubNodeContainer#saveTemplate(ExecutionMonitor)}).
@@ -125,9 +125,9 @@ public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTest
 						NodeIDSuffix.fromString("0:6").prependParent(m_componentProject.getID()) },
 				new WorkflowAnnotationID[0], "metanode");
 		assertThat(wfm.getNodeContainers().size(), is(3));
-		
+
 		m_componentProject.saveTemplate(new ExecutionMonitor());
-		
+
 		var reloadedComponentProject = (SubNodeContainer) loadComponent(
 				m_componentProject.getNodeContainerDirectory().getFile(), new ExecutionMonitor(), m_loadHelper)
 				.getLoadedInstance();

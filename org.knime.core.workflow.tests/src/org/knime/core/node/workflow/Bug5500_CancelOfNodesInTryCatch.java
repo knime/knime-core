@@ -44,12 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Bug 5500: Cancelled R snippet in Try-catch produces an invalid state
  * http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5500
@@ -65,7 +65,7 @@ public class Bug5500_CancelOfNodesInTryCatch extends WorkflowTestCase {
     private NodeID m_javaSnippet_10;
     private NodeID m_failBranch_BigDataGenerator_12;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tryStart_8 = new NodeID(baseID, 8);

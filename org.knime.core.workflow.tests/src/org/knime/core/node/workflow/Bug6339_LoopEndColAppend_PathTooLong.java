@@ -43,16 +43,16 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.util.FileUtil;
 
@@ -68,7 +68,7 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
     private NodeID m_javaSnippet_7;
     private File m_tmpWorkflowDir;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_tmpWorkflowDir = FileUtil.createTempDir(getClass().getSimpleName() + "-tempTestInstance");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_tmpWorkflowDir);
@@ -110,7 +110,7 @@ public class Bug6339_LoopEndColAppend_PathTooLong extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         if (!FileUtil.deleteRecursively(m_tmpWorkflowDir)) {

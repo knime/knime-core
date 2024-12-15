@@ -46,7 +46,7 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
@@ -57,11 +57,10 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.NameFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -81,15 +80,15 @@ public class BugAP19046_BlobDuplicatesInNewTableReader extends WorkflowTestCase 
     private NodeID m_createBlob_707;
     private NodeID m_verifyBlob_717;
     private NodeID m_tableReader_715;
-    
-    @Rule
-    public TemporaryFolder m_tempFolder = new TemporaryFolder();
+
+    @TempDir
+    public File m_tempFolder;
 	private File m_workflowDir;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     	// will write to the folder, hence copy first
-    	m_workflowDir = m_tempFolder.newFolder(getClass().getSimpleName());
+    	m_workflowDir = new File(m_tempFolder, getClass().getSimpleName());
     	FileUtils.copyDirectory(getDefaultWorkflowDirectory(), m_workflowDir);
     	initWorkflowFromTemp();
     }
@@ -133,7 +132,7 @@ public class BugAP19046_BlobDuplicatesInNewTableReader extends WorkflowTestCase 
 	private long countFilesInTempFolder() throws IOException {
 		return PathUtils.countFiles(m_workflowDir.toPath().resolve("data/temp-folder"), PathFilters.acceptAll);
 	}
-	
+
 	/**
 	 * After execution, look at the folder of the "Table Reader" node, find it's
 	 * 'data.zip', count the blob files in it.
@@ -157,7 +156,7 @@ public class BugAP19046_BlobDuplicatesInNewTableReader extends WorkflowTestCase 
 	}
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);

@@ -49,9 +49,10 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * NXT-1927: Execute button is above the table
@@ -63,7 +64,7 @@ public class BugNXT1927_WorkflowManagerCanExecuteWhenNodeIsExecuted extends Work
 
     private NodeID m_columnFilter7;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID id = loadAndSetWorkflow();
         m_columnFilter7 = id.createChild(7);
@@ -74,12 +75,12 @@ public class BugNXT1927_WorkflowManagerCanExecuteWhenNodeIsExecuted extends Work
     public void testCanExecuteWhenNodeIsExecuted() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(m_columnFilter7, CONFIGURED);
-        Assert.assertThat("'canExecuteNode(columnFilter)' after load",
-        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7), is(true));
+        assertTrue("'canExecuteNode(columnFilter)' after load",
+        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7));
         executeAndWait(m_columnFilter7);
         checkState(m_columnFilter7, EXECUTED);
-        Assert.assertThat("'canExecuteNode(columnFilter)' after execution",
-        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7), is(false));
+        assertFalse("'canExecuteNode(columnFilter)' after execution",
+        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7));
     }
 
 }

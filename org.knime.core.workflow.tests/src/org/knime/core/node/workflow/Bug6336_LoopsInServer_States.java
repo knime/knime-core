@@ -44,19 +44,19 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 
@@ -72,7 +72,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     private NodeID m_loopStart3;
     private NodeID m_loopEnd4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenerator1 = new NodeID(baseID, 1);
@@ -92,7 +92,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     /** Loads workflow and collapses almost all nodes, then executes - expects certain event count. */
     @Test
     public void testExecuteAfterCollapse() throws Exception {
-        Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
+        Assumptions.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
         WorkflowManager metaNode = collapseToMetaNode(manager);
@@ -108,7 +108,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
     /** Collapse to meta node, then copy and connect to its original instance, then exec all. */
     @Test
     public void testExecuteAfterCollapseAndClone() throws Exception {
-        Assume.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
+        Assumptions.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
         WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();

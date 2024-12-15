@@ -45,15 +45,15 @@
 package org.knime.core.node.workflow;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
 /**
@@ -93,7 +93,7 @@ public class BugWEBP477_PagesInLoops extends WorkflowTestCase {
 		assertTrue("Node execution not finished, yet", nc4.getNodeContainerState().isExecuted());
 	}
 
-	@After
+	@AfterEach
 	public void cancelExecution() {
 		m_wfm.cancelExecution();
 	}

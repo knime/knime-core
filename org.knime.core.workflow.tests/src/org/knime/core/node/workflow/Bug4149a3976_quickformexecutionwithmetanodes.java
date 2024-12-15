@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
@@ -59,7 +59,7 @@ public class Bug4149a3976_quickformexecutionwithmetanodes extends WorkflowTestCa
     private NodeID m_end2;
     private NodeID m_end3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_end1 = new NodeID(baseID, 12);
@@ -78,7 +78,7 @@ public class Bug4149a3976_quickformexecutionwithmetanodes extends WorkflowTestCa
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
     }

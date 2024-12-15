@@ -44,15 +44,15 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests correct estimation of successors in progress of nodes contained in a
@@ -78,7 +78,7 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 	private NodeID m_colfilter_20_7_6;
 	private NodeID m_colfilter_20_8_6;
 
-	@Before
+	@BeforeEach
 	public void setupAndExecute() throws Exception {
 		NodeID wfId = loadAndSetWorkflow();
 		m_wfm = getManager();
@@ -118,13 +118,13 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 
 		assertFalse(m_component_10.canResetNode(m_datagen_10_0_1));
 		assertFalse(m_component_10.canResetNode(m_datagen_10_0_5));
-		
+
 		// bug AP-14915
 		assertFalse(m_wfm.findNodeContainer(m_colfilter_15_8_6).getParent().canResetNode(m_colfilter_15_8_6));
 		assertTrue(m_wfm.findNodeContainer(m_colfilter_15_7_6).getParent().canResetNode(m_colfilter_15_7_6));
 		assertFalse(m_wfm.findNodeContainer(m_colfilter_20_8_6).getParent().canResetNode(m_colfilter_20_8_6));
 		assertTrue(m_wfm.findNodeContainer(m_colfilter_20_7_6).getParent().canResetNode(m_colfilter_20_7_6));
-		
+
 	}
 
 	@Test
@@ -138,15 +138,15 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 				.canRemoveConnection(m_component_10.getOutgoingConnectionsFor(m_datagen_10_0_1, 1).iterator().next()));
 		assertFalse(m_component_10
 				.canRemoveConnection(m_component_10.getOutgoingConnectionsFor(m_datagen_10_0_5, 1).iterator().next()));
-		
+
 		// remove a connection where possible
 		m_metanode_8.removeConnection(m_metanode_8.getOutgoingConnectionsFor(m_datagen_8_5, 1).iterator().next());
-		
+
 		// check can add connection
 		assertTrue(m_metanode_8.canAddConnection(m_datagen_8_5, 1, m_colfilter_8_6, 1));
 	}
 
-	@After
+	@AfterEach
 	public void cancelWorkflow() {
 		m_wfm.cancelExecution();
 	}

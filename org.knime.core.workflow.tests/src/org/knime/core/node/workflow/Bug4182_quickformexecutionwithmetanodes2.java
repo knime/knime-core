@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
@@ -56,7 +56,7 @@ public class Bug4182_quickformexecutionwithmetanodes2 extends WorkflowTestCase {
 
     private NodeID m_tableViewEnd;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableViewEnd = new NodeID(baseID, 5);
@@ -65,9 +65,9 @@ public class Bug4182_quickformexecutionwithmetanodes2 extends WorkflowTestCase {
     @Test
     public void testExecuteFlow() throws Exception {
         checkState(m_tableViewEnd, InternalNodeContainerState.CONFIGURED);
-    	getManager().stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
-    	waitWhileInExecution();
-    	checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
+        getManager().stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
+        waitWhileInExecution();
+        checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
     }
 
 }

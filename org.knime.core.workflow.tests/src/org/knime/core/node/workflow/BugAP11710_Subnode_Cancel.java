@@ -51,12 +51,12 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** A simple test using a subnode where the subnode is executing (blocked) and then canceled. The bug would then
  * potentially result in a connected downstream node to remain in a weird (executing state) as the post-execute action
@@ -73,7 +73,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
     private NodeID m_varToTableRow_3;
     private NodeID m_blocking_4_5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
@@ -103,12 +103,12 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
             NodeContainer blockingNode = findNodeContainer(m_blocking_4_5);
             waitWhile(m_blocking_4_5, nc -> !nc.getInternalState().equals(EXECUTING), -1);
             InternalNodeContainerState subnodeState = subnode.getInternalState();
-            Assert.assertThat("subnode in some executing state: " + subnodeState,
-                subnodeState.isExecutionInProgress(), is(true));
+            assertTrue("subnode in some executing state: " + subnodeState,
+                subnodeState.isExecutionInProgress());
             checkState(m_varToTableRow_3, InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
             m.cancelExecution(subnode);
-            Assert.assertThat("subnode in some executing state: " + subnodeState,
-                subnodeState.isExecutionInProgress(), is(true));
+            assertTrue("subnode in some executing state: " + subnodeState,
+                subnodeState.isExecutionInProgress());
         } finally {
             execLock.unlock();
         }
@@ -120,7 +120,7 @@ public class BugAP11710_Subnode_Cancel extends WorkflowTestCase {
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID, LockedMethod.EXECUTE);
         super.tearDown();

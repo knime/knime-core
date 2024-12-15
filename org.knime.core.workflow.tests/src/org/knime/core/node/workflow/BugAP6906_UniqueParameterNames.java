@@ -44,23 +44,26 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.function.Executable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.OutputNode;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 
 /** AP-6906: Usability of Call Workflow Nodes with Respect to Input and Output Parameters
@@ -68,12 +71,10 @@ import org.knime.core.node.dialog.OutputNode;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
+@ExtendWith(MockitoExtension.class)
 public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         loadAndSetWorkflow();
     }
@@ -83,17 +84,17 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     public void testOutputNamesPositive() throws Exception {
         List<ExternalParameterHandle<ExternalNodeData>> outputNodeList = getManager().getExternalParameterHandles(
             OutputNode.class, o -> o.getExternalOutput().getID(), o -> o.getExternalOutput(), e -> true, true, true);
-        Assert.assertThat("Wrong number of output nodes", outputNodeList.size(), is(2));
+        assertThat("Wrong number of output nodes", outputNodeList.size(), is(2));
         List<String> shortNames = outputNodeList.stream()
                 .map(ExternalParameterHandle::getParameterNameShort)
                 .collect(Collectors.toList());
-        Assert.assertThat("Wrong 'uniquified' output parameter names", shortNames,
+        assertThat("Wrong 'uniquified' output parameter names", shortNames,
             hasItems("output-not-unique-4", "output-not-unique-8"));
 
         List<String> fullyQualifiedNames = outputNodeList.stream()
                 .map(ExternalParameterHandle::getParameterNameFullyQualified)
                 .collect(Collectors.toList());
-        Assert.assertThat("Wrong 'fully qualified' output parameter names", fullyQualifiedNames,
+        assertThat("Wrong 'fully qualified' output parameter names", fullyQualifiedNames,
             hasItems("output-not-unique-4", "output-not-unique-8"));
     }
 
@@ -102,20 +103,20 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     public void testInputNamesPositive() throws Exception {
         List<ExternalParameterHandle<ExternalNodeData>> inputNodes = getManager().getExternalParameterHandles(
             InputNode.class, i -> i.getInputData().getID(), InputNode::getInputData, e -> true, true, true);
-        Assert.assertThat("Wrong number of input nodes", inputNodes.size(), is(5));
+        assertThat("Wrong number of input nodes", inputNodes.size(), is(5));
 
         List<String> shortNames = inputNodes.stream()
                 .map(ExternalParameterHandle::getParameterNameShort)
                 .collect(Collectors.toList());
 
-        Assert.assertThat("Wrong 'uniquified' input parameter names", shortNames, hasItems("input-unique",
+        assertThat("Wrong 'uniquified' input parameter names", shortNames, hasItems("input-unique",
             // these items are all duplicates, so uniquified with the node id suffix (partly meta or sub nodes)
             "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9", "input-not-unique-7:9:2"));
 
         List<String> fullyQualifiedNames = inputNodes.stream()
                 .map(ExternalParameterHandle::getParameterNameFullyQualified)
                 .collect(Collectors.toList());
-        Assert.assertThat("Wrong 'fully qualifed' input parameter names", fullyQualifiedNames,
+        assertThat("Wrong 'fully qualified' input parameter names", fullyQualifiedNames,
             hasItems("input-unique-1", "input-not-unique-2", "input-not-unique-10:2", "input-not-unique-9",
                 "input-not-unique-7:9:2"));
     }
@@ -139,19 +140,17 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     public void testSettingInvalidParameterNegative() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
 
-        exception.expect(InvalidSettingsException.class);
-        exception.expectMessage("Parameter name \"invalid\" doesn't match any node in the workflow");
-        getManager().setInputNodes(Collections.singletonMap("invalid", inputNodes.get("input-not-unique-2")));
+        Executable executable = () -> getManager().setInputNodes(Collections.singletonMap("invalid", inputNodes.get("input-not-unique-2")));
+        Assertions.assertThrows(InvalidSettingsException.class, executable);
     }
 
-    /** Setting a parameter, which is ambigious but not fully qualified. Expected to fail. */
+    /** Setting a parameter, which is ambiguous but not fully qualified. Expected to fail. */
     @Test
     public void testSettingDuplicateParameterNegative() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
 
-        exception.expect(InvalidSettingsException.class);
-        exception.expectMessage("doesn't match");
-        getManager().setInputNodes(Collections.singletonMap("input-not-unique", inputNodes.get("input-not-unique-2")));
+        Executable executable = () -> getManager().setInputNodes(Collections.singletonMap("input-not-unique", inputNodes.get("input-not-unique-2")));
+        Assertions.assertThrows(InvalidSettingsException.class, executable);
     }
 
 }

@@ -49,9 +49,9 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -67,12 +67,12 @@ public class BugAP15885_WrongMessageOnLoadPasswords extends WorkflowTestCase {
     private File m_workflowDir;
     private WorkflowManager m_tempWfm;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
     }
-    
+
     /** Load the workflow, expect it to load without problems and to be clean (= not dirty). */
     @Test
     public void testLoadThenSaveAndLoad() throws Exception {
@@ -80,20 +80,20 @@ public class BugAP15885_WrongMessageOnLoadPasswords extends WorkflowTestCase {
 		WorkflowLoadResult loadResult = loadWorkflow(m_workflowDir, new ExecutionMonitor());
 		m_tempWfm = loadResult.getWorkflowManager();
 		assertThat("Load Type Error (" + loadResult.toString() + ")", loadResult.getType(), is(LoadResultEntryType.Ok));
-		
+
 		// mark it dirty, save, load it again
 		m_tempWfm.getNodeContainers().forEach(NodeContainer::setDirty);
 		m_tempWfm.save(m_workflowDir, new ExecutionMonitor(), true);
 		m_tempWfm.getParent().removeProject(m_tempWfm.getID());
-		
+
 		loadResult = loadWorkflow(m_workflowDir, new ExecutionMonitor());
 		m_tempWfm = loadResult.getWorkflowManager();
 		assertThat("Load Type Error (" + loadResult.toString() + ")", loadResult.getType(), is(LoadResultEntryType.Ok));
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     	if (m_tempWfm != null) {
     		WorkflowManager.ROOT.removeProject(m_tempWfm.getID());

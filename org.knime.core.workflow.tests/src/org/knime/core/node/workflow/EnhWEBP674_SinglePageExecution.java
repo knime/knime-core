@@ -46,8 +46,8 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.BugWEBP803_OnlyResetNodesToBeReexecuted.createNodeID;
 
 import java.util.Collections;
@@ -56,9 +56,9 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.wizard.page.WizardPage;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 
@@ -73,7 +73,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	private SubNodeContainer m_page1;
 	private SubNodeContainer m_page2;
 
-	@Before
+	@BeforeEach
 	public void loadWorklfowAndExecuteToFirstPage() throws Exception {
 		loadAndSetWorkflow();
 		WorkflowManager wfm = getManager();
@@ -215,7 +215,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 	}
 
 	@Override
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		getManager().cancelExecution();
 		super.tearDown();

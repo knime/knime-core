@@ -44,11 +44,11 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -73,7 +73,7 @@ public class BugAP19479_Component_Encryption_Cipher47 extends WorkflowTestCase {
         final NodeID lockedID = wfm.getID().createChild(2);
         final var locked = wfm.getNodeContainer(lockedID);
         assertTrue("Locked component should exist.", locked instanceof SubNodeContainer);
-        
+
         final NodeID innerID = lockedID.createChild(0).createChild(1);
         final var inner = ((SubNodeContainer) locked).getWorkflowManager().getNodeContainer(innerID);
         assertTrue("Inner node should be loadable.", inner instanceof NativeNodeContainer);

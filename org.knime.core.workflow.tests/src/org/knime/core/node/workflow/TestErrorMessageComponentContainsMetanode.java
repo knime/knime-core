@@ -45,10 +45,10 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Checks for correct error message if component contains a metanode.
@@ -59,7 +59,7 @@ public class TestErrorMessageComponentContainsMetanode extends WorkflowTestCase 
 
     private NodeID m_component_793;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_component_793 = new NodeID(baseID, 793);

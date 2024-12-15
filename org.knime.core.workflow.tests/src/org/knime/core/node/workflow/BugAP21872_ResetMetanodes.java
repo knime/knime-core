@@ -1,7 +1,7 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class BugAP21872_ResetMetanodes extends WorkflowTestCase {
 
@@ -15,7 +15,7 @@ public class BugAP21872_ResetMetanodes extends WorkflowTestCase {
 
     private NodeID m_baseId;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_baseId = loadAndSetWorkflow();
         m_sourceNode = new NodeID(m_baseId, 1);

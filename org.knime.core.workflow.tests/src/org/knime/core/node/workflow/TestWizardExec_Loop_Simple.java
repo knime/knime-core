@@ -44,15 +44,15 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.function.Predicate;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.wizard.page.WizardPage;
@@ -75,7 +75,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
     private NodeID m_qfBooleanIn_Subnode15_04;
     private NodeID m_qfIntIn_Subnode14_09;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_tableCreateNode1 = new NodeID(baseID, 1);

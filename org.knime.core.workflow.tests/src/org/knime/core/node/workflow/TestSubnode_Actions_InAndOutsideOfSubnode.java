@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
@@ -56,9 +56,9 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGUR
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
@@ -83,7 +83,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     private NodeID m_dataGenInner_12_14;
     private NodeID m_blockInner_12_10;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // the id is used here and in the workflow (part of the settings)
         BlockingRepository.put(INNER_LOCK_ID, LockedMethod.EXECUTE, new ReentrantLock());
@@ -189,7 +189,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         time = System.currentTimeMillis() - time;
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
-    
+
 	/**
 	 * Tests the {@link WorkflowManager#canResetAll()} and
 	 * {@link WorkflowManager#canCancelAll()}, especially for a component's
@@ -208,7 +208,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
 
     /** {@inheritDoc} */
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         BlockingRepository.remove(INNER_LOCK_ID, LockedMethod.EXECUTE);
         BlockingRepository.remove(OUTER_LOCK_ID, LockedMethod.EXECUTE);

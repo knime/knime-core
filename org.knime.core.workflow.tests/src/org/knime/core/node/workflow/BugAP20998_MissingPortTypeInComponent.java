@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 
@@ -63,12 +63,12 @@ public class BugAP20998_MissingPortTypeInComponent extends WorkflowTestCase {
 	public void testLoadWorkflow() throws Exception {
 		final var result = loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor());
 
-		assertTrue("Since the port type is invalid, there should be some errors.", result.hasErrors());
-		assertTrue("These errors should explain what the problem is (there's no class for the portobject)",
-				result.getFilteredError("", LoadResultEntryType.Error)
-						.contains("can't load class \"this.portobject.doesnt.Exist\""));
-		assertTrue("However, none of the nodes (including Component Input/Output) should be missing.",
-				result.getMissingNodes().isEmpty());
+		assertTrue(result.hasErrors(), "Since the port type is invalid, there should be some errors.");
+		assertTrue(result.getFilteredError("", LoadResultEntryType.Error)
+					.contains("can't load class \"this.portobject.doesnt.Exist\""),
+				"These errors should explain what the problem is (there's no class for the portobject)");
+		assertTrue(result.getMissingNodes().isEmpty(),
+				"However, none of the nodes (including Component Input/Output) should be missing.");
 
 		setManager(result.getWorkflowManager()); // so that it can be cleaned up by parent class
 	}
