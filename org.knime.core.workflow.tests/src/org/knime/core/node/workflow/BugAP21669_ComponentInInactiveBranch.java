@@ -1,12 +1,12 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  */
@@ -20,7 +20,7 @@ public class BugAP21669_ComponentInInactiveBranch extends WorkflowTestCase {
 	private NodeID m_fileReader_7_9; 
 	private NodeID m_failInExecution_7_12;
 	private NodeID m_branchInverter_7_6;
-	
+
 	// inner most component
 	private NodeID m_innerComponentID_7_10_7;
 	private NodeID m_fileReader_7_10_7_4; 
@@ -30,7 +30,7 @@ public class BugAP21669_ComponentInInactiveBranch extends WorkflowTestCase {
 	 * 
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		final NodeID workflowID = loadAndSetWorkflow();
 		m_branchInverter_2 = workflowID.createChild(2);
@@ -55,22 +55,22 @@ public class BugAP21669_ComponentInInactiveBranch extends WorkflowTestCase {
 			checkState(id, IDLE);
 		}
 		checkStateOfMany(IDLE, downstreamNodeIDs); // all component nodes idle
-		
+
 		executeAndWait(m_branchInverter_2); 
 		// output is populated but inactive - configure storm is propagated downstream 
 		checkStateOfMany(CONFIGURED, downstreamNodeIDs);
-		
+
 		for (NodeID id : downstreamNodeIDs) {
 			assertThat(String.format("Node %s is inactive", id), findNodeContainer(id).isInactive());
 		}
-		
+
 		executeAllAndWait();
 		checkStateOfMany(EXECUTED, downstreamNodeIDs); // all component nodes executed
-		
+
 		for (NodeID id : downstreamNodeIDs) {
 			assertThat(String.format("Node %s is inactive", id), findNodeContainer(id).isInactive());
 		}
-		
-		
+
+
 	}
 }

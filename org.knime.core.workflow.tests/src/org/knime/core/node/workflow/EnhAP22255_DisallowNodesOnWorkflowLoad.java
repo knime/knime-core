@@ -57,10 +57,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.customization.APCustomization;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
@@ -83,6 +83,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  * 
  * @author Bernd Wiswedel
  */
+@ExtendWith(TempDir.class)
 public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 
 	private static final String DISALLOWED_NODES_CUSTOMIZATION_YML = """
@@ -99,26 +100,25 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 	          isRegex: false
 	  """;
 
-	@Rule
-    public TemporaryFolder m_tempFolder = new TemporaryFolder();
-	
+	@TempDir
+    public File m_tempFolder;
+
 	private File m_tempWorkflowDir;
 	private ServiceRegistration<APCustomizationProviderService> m_temporaryCustomizationServiceRegistration;
-	
+
 	private NodeID m_tableCreator_3;
 	private NodeID m_concatenate_2;
 	private NodeID m_normalizer_4;
 	private NodeID m_normalizerApply_8;
 	private NodeID m_diffChecker_9;
-	
-	@Before
+
+	@BeforeEach
 	public void setUp() throws Exception {
-		m_tempWorkflowDir = m_tempFolder.newFolder(EnhAP22255_DisallowNodesOnWorkflowLoad.class.getSimpleName());
+		m_tempWorkflowDir = new File(m_tempFolder, EnhAP22255_DisallowNodesOnWorkflowLoad.class.getSimpleName());
 		final var defaultWorkflowDirectory = getDefaultWorkflowDirectory();
-		m_tempWorkflowDir = new File(m_tempFolder.getRoot(), defaultWorkflowDirectory.getName());
 		FileUtils.copyDirectory(defaultWorkflowDirectory, m_tempWorkflowDir);
 	}
-	
+
 	@Override
 	protected NodeID loadAndSetWorkflow() throws Exception {
 		final var workflowID = loadAndSetWorkflow(m_tempWorkflowDir);
@@ -139,7 +139,7 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		executeAllAndWait();
 		checkState(getManager(), EXECUTED);
 	}
-	
+
 	/** Load workflow, expect missing nodes to be inserted, can't execute the missing nodes. */
 	@Test
 	public void testWithTemporaryCustomization() throws Exception {
@@ -156,22 +156,22 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
         checkStateOfMany(IDLE, m_concatenate_2, m_normalizer_4);
         checkState(getManager(), IDLE);
 	}
-	
+
 	/** Load workflow, expect missing nodes to be inserted, save & load, should still be missing. */
 	@Test
 	public void testWithTemporaryCustomizationThenSaveAndLoad() throws Exception {
 		applyCustomization();
-		
+
 		loadAndSetWorkflow();
-		
+
 		executeAllAndWait();
 		checkState(m_tableCreator_3, EXECUTED);
 		assertConcatenateNodeIsMissing();
-		
+
 		getManager().save(m_tempWorkflowDir, new ExecutionMonitor(), true);
 		closeWorkflow();
 		loadAndSetWorkflow();
-		
+
 		assertConcatenateNodeIsMissing();
 		assertNormalizerNodeIsMissing();
 	}
@@ -190,7 +190,7 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 
 		applyCustomization();
 		loadAndSetWorkflow();
-		
+
 		checkState(getManager(), EXECUTED);
 
 		assertConcatenateNodeIsMissing();
@@ -198,18 +198,18 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 
 		assertNormalizerNodeIsMissing();
 		checkState(m_normalizer_4, EXECUTED);
-		
+
 		reset(m_normalizerApply_8);
 		executeAllAndWait();
 		checkState(m_normalizerApply_8, EXECUTED);
 		checkState(m_diffChecker_9, EXECUTED);
-		
+
 		reset(m_normalizer_4);
 		executeAllAndWait();
 		checkState(m_normalizer_4, IDLE);
 		checkState(getManager(), IDLE);
 	}
-	
+
 	/**
 	 * Most complex: save fully executed workflow, load with customization applied, mark all dirty, save and reopen
 	 * without customization - expecting fully executed workflow, which can be reset and executed.  
@@ -222,17 +222,17 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		checkState(getManager(), EXECUTED);
 		getManager().save(m_tempWorkflowDir, new ExecutionMonitor(), true);
 		closeWorkflow();
-		
+
 		applyCustomization();
 		loadAndSetWorkflow();
-		
+
 		checkState(getManager(), EXECUTED);
 		for (NodeContainer nc : getManager().getNodeContainers()) {
 			nc.setDirty();
 		}
 		getManager().save(m_tempWorkflowDir, new ExecutionMonitor(), true);
 		closeWorkflow();
-		
+
 		unsetCustomization();
 		loadAndSetWorkflow();
 		checkState(getManager(), EXECUTED);
@@ -241,7 +241,7 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		executeAllAndWait();
 		checkState(getManager(), EXECUTED);
 	}
-	
+
 	@Override
 	public void tearDown() throws Exception {
 		unsetCustomization();
@@ -258,7 +258,7 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		assertThat("Missing node placeholder for concatenate node has data output", nnc.getOutputType(1),
 				is(BufferedDataTable.TYPE));
 	}
-	
+
 	private void assertNormalizerNodeIsMissing() {
 		final WorkflowManager wfm = getManager();
 		final NativeNodeContainer nnc = wfm.getNodeContainer(m_normalizer_4, NativeNodeContainer.class, true);
@@ -270,15 +270,15 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		assertThat("Missing node placeholder for concatenate node has data output", nnc.getOutputType(2).getName(),
 				containsString("Normalizer"));
 	}
-	
-	
+
+
 	/** Applies a customization that forbids the use of both the Concatenate and Normalizer Node. */
 	private void applyCustomization() throws JsonProcessingException, JsonMappingException {
 		// Register the test-specific customization service
 	    final var context = FrameworkUtil.getBundle(CorePlugin.class).getBundleContext();
 	    final Dictionary<String, Object> properties = new Hashtable<>();
         properties.put(Constants.SERVICE_RANKING, Integer.MAX_VALUE);  // Use the highest possible ranking
-        
+
 		final APCustomization tempCustomization = new ObjectMapper(new YAMLFactory())
 				.readValue(DISALLOWED_NODES_CUSTOMIZATION_YML, APCustomization.class);
 
@@ -296,5 +296,5 @@ public class EnhAP22255_DisallowNodesOnWorkflowLoad extends WorkflowTestCase {
 		}
 	}
 
-	
+
 }

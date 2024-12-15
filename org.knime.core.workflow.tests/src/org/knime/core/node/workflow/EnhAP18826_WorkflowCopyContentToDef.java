@@ -50,14 +50,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.def.ConnectionDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.def.WorkflowDef;
@@ -87,18 +87,18 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 	private NodeID m_joinerID, m_writerID;
 
 	private WorkflowAnnotationID m_sourceAnnotationID;
-	
-	@Before
+
+	@BeforeEach
 	public void beforeEach() throws Exception {
 		NodeID baseID = loadAndSetWorkflow();
 		m_wfm = getManager();
 		m_joinerID = new NodeID(baseID, 3);
 		m_writerID = new NodeID(baseID, 5);
-		
+
 		// only one annotation in the workflow
 		m_sourceAnnotationID = m_wfm.getWorkflowAnnotationIDs().iterator().next();
 	}
-	
+
 	/**
 	 * Test copying the joiner node (#3) without dangling connections.
 	 */
@@ -108,12 +108,12 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setNodeIDs(m_joinerID)//
 			.setIncludeInOutConnections(false)//
 			.build();
-		
+
 		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
-		
+
 		// copied one node
 		assertThat(workflow.getNodes().size(), is(1));
-		
+
 		// joiner with id = 3
 		NativeNodeDef joinerNode = (NativeNodeDef) workflow.getNodes().get("3");
 		assertThat(joinerNode.getNodeName(), is("Joiner"));
@@ -122,8 +122,8 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		// and no connections
 		assertThat(workflow.getConnections().size(), is(0));
 	}	
-		
-	
+
+
 	/**
 	 * Test copying the joiner node (#3) with connections to non-included nodes.
 	 */
@@ -133,17 +133,17 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setNodeIDs(m_joinerID)//
 			.setIncludeInOutConnections(true)//
 			.build();
-		
+
 		var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// and four connections
 		assertThat(workflow.getConnections().size(), is(4));
-		
+
 		// somehow doesn't match
 		final DefaultConnectionDef conn23 = new ConnectionDefBuilder().setDeletable(true).setSourceID(2).setSourcePort(1).setDestID(3).setDestPort(2).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
 		assertThat(workflow.getConnections(), hasItem(conn23));
 	}
-	
+
 	/**
 	 * Test copying the joiner node and one downstream table writer (ID 5).
 	 */
@@ -153,17 +153,17 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 			.setNodeIDs(m_joinerID, m_writerID)//
 			.setIncludeInOutConnections(false)//
 			.build();
-		
+
 		final var workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
 
 		// both nodes
 		assertThat(workflow.getNodes().size(), is(2)); 
-		
+
 		// only one connection
 		final DefaultConnectionDef conn35 = new ConnectionDefBuilder().setDeletable(true).setSourceID(3).setSourcePort(3).setDestID(5).setDestPort(1).setUiSettings(new ConnectionUISettingsDefBuilder().build()).build();
 		assertThat(workflow.getConnections(), contains(conn35));
 	}
-	
+
 	/**
 	 * Test copying the joiner node (#3) and one downstream table writer (ID 5) with connections to non-included nodes.
 	 * This yields the same set of connections (all) as when only copying the joiner with dangling connections.
@@ -174,12 +174,12 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 				.setNodeIDs(m_joinerID)//
 				.setIncludeInOutConnections(true)//
 				.build();
-		
+
 		final WorkflowCopyContent twoWithDanglingSpec = WorkflowCopyContent.builder()//
 				.setNodeIDs(m_joinerID, m_writerID)//
 				.setIncludeInOutConnections(true)//
 				.build();
-		
+
 		var joinerWithDangling = m_wfm.copyToDef(joinerWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
 		var twoWithDangling = m_wfm.copyToDef(twoWithDanglingSpec, PasswordRedactor.asNull()).getPayload();
 
@@ -187,16 +187,16 @@ public class EnhAP18826_WorkflowCopyContentToDef extends WorkflowTestCase { //NO
 		final List<ConnectionDef> connections2 = twoWithDangling.getConnections();
 		assertTrue(connections1.containsAll(connections2) && connections2.containsAll(connections1));
 	}
-	
+
 	@Test
 	public void copyAnnotation() throws JsonProcessingException {
 		final WorkflowCopyContent spec = WorkflowCopyContent.builder()//
 			.setAnnotationIDs(m_sourceAnnotationID)
 			.build();
-		
+
 		WorkflowDef workflow = m_wfm.copyToDef(spec, PasswordRedactor.asNull()).getPayload();
-		
+
 		assertEquals("Source", workflow.getAnnotations().values().stream().findAny().get().getText());
 	}
-	
+
 }

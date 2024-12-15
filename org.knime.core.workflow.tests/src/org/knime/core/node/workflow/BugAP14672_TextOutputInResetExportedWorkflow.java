@@ -49,9 +49,9 @@ import static org.hamcrest.CoreMatchers.is;
 import java.io.File;
 
 import org.hamcrest.MatcherAssert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -71,7 +71,7 @@ public class BugAP14672_TextOutputInResetExportedWorkflow extends WorkflowTestCa
 	private NodeID m_dataGen_2;
 	private NodeID m_varToTable_3;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
@@ -99,7 +99,7 @@ public class BugAP14672_TextOutputInResetExportedWorkflow extends WorkflowTestCa
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);

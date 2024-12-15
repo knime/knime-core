@@ -44,8 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -59,7 +59,7 @@ public class Bug4409_inactiveInnerLoop extends WorkflowTestCase {
     private NodeID m_innerLoopEnd_780;
     private NodeID m_innerJavaSnippet_782;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_outerLoopStart_137 = new NodeID(baseID, 137);

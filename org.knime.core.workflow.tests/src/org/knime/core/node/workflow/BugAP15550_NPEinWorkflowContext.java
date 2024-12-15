@@ -1,8 +1,8 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObjectSpec;
@@ -12,7 +12,7 @@ import org.knime.core.util.FileUtil;
 
 import java.io.File;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class BugAP15550_NPEinWorkflowContext extends WorkflowTestCase {
 
@@ -20,14 +20,14 @@ public class BugAP15550_NPEinWorkflowContext extends WorkflowTestCase {
 
     private static boolean m_accessContextFailed = false;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow(getDefaultWorkflowDirectory());
         m_metaNode = new NodeID(baseID, 2);
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         m_accessContextFailed = false;
@@ -80,4 +80,3 @@ public class BugAP15550_NPEinWorkflowContext extends WorkflowTestCase {
         }
     }
 
-}

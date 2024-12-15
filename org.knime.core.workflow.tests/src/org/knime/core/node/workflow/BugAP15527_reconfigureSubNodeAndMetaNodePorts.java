@@ -52,8 +52,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import java.util.concurrent.TimeUnit;
 
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.port.MetaPortInfo;
 
 /**
@@ -69,7 +69,7 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     private NodeID m_subNodeTest_9;
     private NodeID m_subNodeTest_12;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subNodeGenerate_5 = baseID.createChild(5);
@@ -79,7 +79,7 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
         m_subNodeTest_9 = baseID.createChild(9);
         m_subNodeTest_12 = baseID.createChild(12);
     }
-    
+
     /**
      * Just run workflow unmodified. Baseline test.
      */
@@ -88,7 +88,7 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     	executeAllAndWait();
     	assertAllExecuted();
     }
-    
+
     /**
      * Swap connections on Node 5, then execute all and expect it to be green.
      */
@@ -136,7 +136,7 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
         executeAllAndWait();
         assertAllExecuted();
     }
-    
+
     /**
      * Swap connections on Node 9 and 12, then execute all and expect it to be green.
      */
@@ -165,7 +165,7 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
         executeAllAndWait();
         assertAllExecuted();
     }
-    
+
     /**
      * Swap connections on Node 10 and 11, then execute all and expect it to be green.
      */
@@ -193,11 +193,11 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
 				.getNodeContainers()) {
 			checkState(nc, InternalNodeContainerState.CONFIGURED);
 		}
-		
+
         executeAllAndWait();
         assertAllExecuted();
     }
-    
+
     private void assertAllExecuted() throws Exception {
     	checkState(m_subNodeGenerate_5, EXECUTED);
     	checkState(m_metaNodeGenerate_6, EXECUTED);
@@ -206,5 +206,5 @@ public class BugAP15527_reconfigureSubNodeAndMetaNodePorts extends WorkflowTestC
     	checkState(m_subNodeTest_9, EXECUTED);
     	checkState(m_subNodeTest_12, EXECUTED);
     }
-    
+
 }

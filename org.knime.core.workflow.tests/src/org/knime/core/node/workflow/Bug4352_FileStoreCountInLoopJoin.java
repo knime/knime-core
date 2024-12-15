@@ -44,13 +44,13 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.File;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -63,7 +63,7 @@ public class Bug4352_FileStoreCountInLoopJoin extends WorkflowTestCase {
     private NodeID m_createFS7;
     private NodeID m_loopStart6;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // will save the workflow in one of the test ...don't write SVN folder
         NodeID baseID = loadAndSetWorkflow();

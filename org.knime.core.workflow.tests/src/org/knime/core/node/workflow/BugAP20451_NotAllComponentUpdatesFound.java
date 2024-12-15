@@ -1,4 +1,4 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import java.io.File;
@@ -13,9 +13,9 @@ import static org.mockito.Mockito.when;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.pathresolve.URIToFileResolve;
@@ -47,7 +47,7 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
      * 
      * @throws Exception
      */
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         // setup resolve mock to mock remote template
         URIToFileResolve resolveMock = Mockito.mock(URIToFileResolve.class);
@@ -89,7 +89,7 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
                 m_upToDateComponent, UpdateStatus.UpToDate));
     }
 
-    @After
+    @AfterEach
     public void resetURIToFileResolveService() {
         URIToFileResolveTestUtil.replaceURIToFileResolveService(m_origResolveService);
     }
@@ -132,5 +132,5 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
         map.put(key2, value2);
         return map;
     }
-    
+
 }

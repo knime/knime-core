@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -57,8 +57,8 @@ import java.io.File;
 import java.util.Hashtable;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.pathresolve.URIToFileResolve;
@@ -124,7 +124,7 @@ public class EnhAP11813_EfficientTemplateUpdateCheck extends WorkflowTestCase {
 
     }
 
-	@After
+	@AfterEach
 	public void setOriginalURIToFileResolve() {
 		URIToFileResolveTestUtil.replaceURIToFileResolveService(m_resolveOrg);
 	}

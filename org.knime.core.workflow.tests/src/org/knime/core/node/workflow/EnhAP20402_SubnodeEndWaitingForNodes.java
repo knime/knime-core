@@ -53,8 +53,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.testing.node.blocking.BlockingRepository;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
@@ -72,10 +72,10 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
     private NodeID m_chunkend_7_4;
     private NodeID m_block_7_6;
     private NodeID m_output_7_8;
-    
+
     private static final String BLOCK_LOCK_ID = "enh-20402-lock";
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_7 = baseID.createChild(7);
@@ -94,7 +94,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
     	checkState(getManager(), EXECUTED);
     	checkStateOfMany(EXECUTED, m_subnode_7, m_output_7_8);
     }
-    
+
     @Test
     public void testWorkflowModificationAfterExecute_NodeAdded() throws Exception {
     	final var subnodeWFM = removeFailNodeAndExecute();
@@ -120,7 +120,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
 		assertThat("Fail message on subnode output", outNodeMessage,
 				containsString("Contains one node with execution failure (Fail in execution #2)"));
     }
-    
+
     /** Simulates execute on subnode itself. Blocks execution, asserts state of output node. */
     @Test
     public void testBlockWhileExecuting_TriggeredFromOutside() throws Exception {
@@ -157,7 +157,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
     	checkStateOfMany(EXECUTED, m_block_7_6, m_subnode_7, m_output_7_8);
     	checkState(getManager(), EXECUTED);
     }
-    
+
     /**
      * Test nodes added while in execution (should fail entire execution).
      */
@@ -192,7 +192,7 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
 		final var outNodeMessage = subnodeWFM.getNodeContainer(m_output_7_8).getNodeMessage().toStringWithDetails();
 		assertThat("Fail message on subnode", outNodeMessage, containsString("were not executed"));
     }
-    
+
     /**
      * Test nodes added while in execution (should fail entire execution).
      */
@@ -223,12 +223,12 @@ public class EnhAP20402_SubnodeEndWaitingForNodes extends WorkflowTestCase {
     	waitWhileInExecution();
     	checkStateOfMany(EXECUTED, pastedNodeID, m_subnode_7, m_output_7_8, m_block_7_6);
     }
-    
+
 	private WorkflowManager getSubnodeWFM() {
 		final var subnode = getManager().getNodeContainer(m_subnode_7, SubNodeContainer.class, true);
     	return subnode.getWorkflowManager();
 	}
-    
+
     /** Remove "Fail in Execution" node, run the entire rest (all executed afterwards), return the inner WFM. */
 	private WorkflowManager removeFailNodeAndExecute() throws Exception {
 		final var subnodeWFM = getSubnodeWFM();

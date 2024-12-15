@@ -44,12 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /** Bug 6734: New Quickforms shouldn't be visible in meta node dialog
  * https://bugs.knime.org/show_bug.cgi?id=6734
@@ -61,7 +61,7 @@ public class Bug6734_metaNodeWithQuickforms extends WorkflowTestCase {
     private NodeID m_metaNodeWithNewQF_6;
     private NodeID m_subNodeWithNewQF_8;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_metaNodeWithNewQF_6 = new NodeID(baseID, 6);

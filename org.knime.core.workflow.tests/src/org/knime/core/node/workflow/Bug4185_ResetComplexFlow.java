@@ -48,8 +48,8 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 /**
  *
  * @author wiswedel, University of Konstanz
@@ -60,7 +60,7 @@ public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
     private NodeID m_javaEditEnd;
     private NodeID m_metaMiddle;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_javaEditStart = new NodeID(baseID, 610);

@@ -48,14 +48,14 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.NodeLoggerConfig;
@@ -72,7 +72,7 @@ public final class EnhAP22429_WorkflowLoggingTest extends WorkflowTestCase {
 
     private static final String LOGGER_NAME = EnhAP22429_WorkflowLoggingTest.class.getName();
 
-    @Before
+    @BeforeEach
     public void clearLog() throws Exception {
         final var log = getWorkflowLog();
         Files.deleteIfExists(log);
@@ -84,7 +84,7 @@ public final class EnhAP22429_WorkflowLoggingTest extends WorkflowTestCase {
         logger.debug("GLOBAL message before workflow loading");
 
         final var workflowLogFile = getWorkflowLog();
-        assertFalse("No workflow logfile should exist yet", Files.exists(workflowLogFile));
+        assertFalse(Files.exists(workflowLogFile), "No workflow logfile should exist yet");
 
         final var baseID = loadAndSetWorkflow();
         // the workflow contains a Java Snippet node that prints a single debug log statement
@@ -97,11 +97,10 @@ public final class EnhAP22429_WorkflowLoggingTest extends WorkflowTestCase {
         executeAllAndWait();
         checkState(javaSnippetNode, InternalNodeContainerState.EXECUTED);
 
-        assertTrue("Workflow logfile should now exist", Files.exists(workflowLogFile));
-        assertTrue("Logfile should now contain some content", Files.lines(workflowLogFile).count() > 0);
+        assertTrue(Files.exists(workflowLogFile), "Workflow logfile should now exist");
+        assertTrue(Files.lines(workflowLogFile).count() > 0, "Logfile should now contain some content");
         // check for specific log message emitted from JavaSnippet node
-        assertTrue("DEBUG message from JavaSnippet is present", 
-            Files.lines(workflowLogFile).anyMatch(logLine -> logLine.contains("DEBUG message from JavaSnippet")));
+        assertTrue(Files.lines(workflowLogFile).anyMatch(logLine -> logLine.contains("DEBUG message from JavaSnippet")), "DEBUG message from JavaSnippet is present");
     }
 
     private final Path getWorkflowLog() throws Exception {

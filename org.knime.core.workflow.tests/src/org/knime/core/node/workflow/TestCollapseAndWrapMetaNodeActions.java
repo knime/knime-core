@@ -47,13 +47,13 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.MetaNodeToSubNodeResult;
 import org.knime.core.node.workflow.action.SubNodeToMetaNodeResult;
@@ -71,7 +71,7 @@ public class TestCollapseAndWrapMetaNodeActions extends WorkflowTestCase {
     private NodeID m_javaEdit_7;
     private NodeID m_tableView_6;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_columnFilter_2 = new NodeID(baseID, 2);

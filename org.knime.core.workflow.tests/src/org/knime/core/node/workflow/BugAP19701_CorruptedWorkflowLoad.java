@@ -45,15 +45,15 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.hamcrest.MatcherAssert;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.Node;
 
 /**
@@ -79,15 +79,15 @@ public class BugAP19701_CorruptedWorkflowLoad extends WorkflowTestCase {
     		}
     	}
     }
-    
+
     /** Loads workflow and executes as is - expects certain event count. */
     @Test
     public void testLoadworkflow() throws Exception {
         loadAndSetWorkflow();
         MatcherAssert.assertThat("Workflow dirty state", getManager().isDirty(), is(true));
     }
-    
-    @After
+
+    @AfterEach
     public void after() throws Exception {
     	closeWorkflow();
     }

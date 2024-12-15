@@ -1,10 +1,10 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.def.WorkflowDef;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -21,7 +21,7 @@ public class EnhAP18825_WorkflowPasteFromDef extends WorkflowTestCase {
 
 	private WorkflowAnnotationID m_sourceAnnotationID;
 
-	@Before
+	@BeforeEach
 	public void beforeEach() throws Exception {
 		NodeID baseID = loadAndSetWorkflow();
 		m_wfm = getManager();

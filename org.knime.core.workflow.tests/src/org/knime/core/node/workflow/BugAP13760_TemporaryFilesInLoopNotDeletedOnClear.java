@@ -1,17 +1,16 @@
-package org.knime.core.node.workflow;
+MISSINGpackage org.knime.core.node.workflow;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.Arrays;
 
-import org.junit.Test;
-
 public class BugAP13760_TemporaryFilesInLoopNotDeletedOnClear extends WorkflowTestCase {
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		loadAndSetWorkflow();
 	}
@@ -23,8 +22,8 @@ public class BugAP13760_TemporaryFilesInLoopNotDeletedOnClear extends WorkflowTe
 		manager.getParent().resetAndConfigureNode(getManager().getID());
 		final File tempDir = manager.getContext().getTempLocation();
 		Thread.sleep(100); // give the file-in-background-deletion some time to do its work
-		assertEquals(String.format("Files remaining in workflow temp directory after clear: %s.",
-				Arrays.toString(tempDir.list())), 0, countFilesInDirectory(tempDir));
+		assertEquals(0, countFilesInDirectory(tempDir), String.format("Files remaining in workflow temp directory after clear: %s.",
+				Arrays.toString(tempDir.list())));
 	}
 
 }

@@ -44,15 +44,15 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -75,7 +75,7 @@ public class BugAP14611_EnsureWorkflowContextInComponentProject extends Workflow
 	 *
 	 * @throws Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);

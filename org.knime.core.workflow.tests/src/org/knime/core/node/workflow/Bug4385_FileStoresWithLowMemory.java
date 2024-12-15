@@ -44,10 +44,10 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.data.util.memory.MemoryAlertSystem;
 
 /**
@@ -60,7 +60,7 @@ public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
     private NodeID m_testAfterLoop2;
     private NodeID m_testSingle8;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_dataGenStart1 = new NodeID(baseID, 1);

@@ -49,9 +49,11 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * AP-13217: Workflow containing idle Component claims to be not executable although it is
@@ -65,7 +67,7 @@ public class BugAP13217_WorkflowManagerStateWhenComponentIsIdle extends Workflow
     private NodeID m_dataGenerator_5_1;
     private NodeID m_componentInput_5_4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         NodeID id = loadAndSetWorkflow();
         m_component5 = id.createChild(5);
@@ -80,7 +82,7 @@ public class BugAP13217_WorkflowManagerStateWhenComponentIsIdle extends Workflow
         checkState(manager, IDLE);
         checkState(m_component5, IDLE);
         checkState(m_dataGenerator_5_1, CONFIGURED);
-        Assert.assertThat("'canExecuteNode(Project-wfm)' after load",
+        assertThat("'canExecuteNode(Project-wfm)' after load",
             manager.getParent().canExecuteNode(manager.getID()), is(true));
         executeAllAndWait();
         checkState(manager, EXECUTED);
@@ -99,7 +101,7 @@ public class BugAP13217_WorkflowManagerStateWhenComponentIsIdle extends Workflow
         executeAndWait(m_componentInput_5_4);
         checkState(manager, IDLE);
         checkState(m_component5, IDLE);
-        Assert.assertThat("'canExecuteNode(Project-wfm)' after removing source node",
+        assertThat("'canExecuteNode(Project-wfm)' after removing source node",
             manager.getParent().canExecuteNode(manager.getID()), is(false));
         executeAllAndWait();
         checkState(manager, IDLE);

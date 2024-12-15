@@ -57,10 +57,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.customization.APCustomization;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
@@ -82,6 +82,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  * 
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
+@ExtendWith(TemporaryFolder.class)
 public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase {
 
 	private static final String DISALLOWED_PASSWORD_SAVING_YML = """
@@ -90,8 +91,8 @@ public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase 
 		      disablePasswordSaving: true
 		  """;
 
-	@Rule
-	public TemporaryFolder m_tempFolder = new TemporaryFolder();
+	@TempDir
+	public File m_tempFolder;
 
 	private File m_tempWorkflowDir;
 	private ServiceRegistration<APCustomizationProviderService> m_temporaryCustomizationServiceRegistration;
@@ -99,11 +100,10 @@ public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase 
 	private NodeID m_credentialsConfiguration_1;
 	private NodeID m_credentialsValidate_2;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
-		m_tempWorkflowDir = m_tempFolder.newFolder(BugAP22549_WeakEncryptedPasswordsNotSaved.class.getSimpleName());
+		m_tempWorkflowDir = new File(m_tempFolder, BugAP22549_WeakEncryptedPasswordsNotSaved.class.getSimpleName());
 		final var defaultWorkflowDirectory = getDefaultWorkflowDirectory();
-		m_tempWorkflowDir = new File(m_tempFolder.getRoot(), defaultWorkflowDirectory.getName());
 		FileUtils.copyDirectory(defaultWorkflowDirectory, m_tempWorkflowDir);
 	}
 
@@ -133,11 +133,11 @@ public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase 
 
 		executeAllAndWait();
 		checkState(getManager(), EXECUTED);
-		
+
 		reset(m_credentialsConfiguration_1);
 		getManager().save(m_tempWorkflowDir, new ExecutionMonitor(), true);
 		closeWorkflow();
-		
+
 		loadAndSetWorkflow();
 		checkState(m_credentialsConfiguration_1, CONFIGURED);
 
