@@ -125,7 +125,7 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
         final Thread displayThread = currentDisplay.getThread();
         final Thread currentThread = Thread.currentThread();
         // reset and save are getting called from UI thread - replicate it here.
-        assertTrue("Not executing in display thread: " + currentThread, currentThread == displayThread);
+        assertTrue(currentThread == displayThread, "Not executing in display thread: " + currentThread);
 
         final WorkflowManager workflowManager = getManager();
         executeAllAndWait();

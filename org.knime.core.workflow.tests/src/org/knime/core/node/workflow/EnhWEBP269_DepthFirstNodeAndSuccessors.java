@@ -44,9 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.Collection;

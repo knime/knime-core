@@ -106,3 +106,4 @@ public class Bug6680_autobinner_save_to_cell extends WorkflowTestCase {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowTempDir);
     }
+}

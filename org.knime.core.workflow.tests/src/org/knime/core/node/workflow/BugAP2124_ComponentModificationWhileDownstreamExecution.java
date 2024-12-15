@@ -154,12 +154,12 @@ public class BugAP2124_ComponentModificationWhileDownstreamExecution extends Wor
 					WorkflowCopyContent.builder().setNodeIDs(m_variableEdit_11_0_9_7_0_6).build(),
 					PasswordRedactor.asNull());
 
-			assertThrows("Workflow manipuation not allowed", IllegalStateException.class,
-					() -> innerMostComponentWFM.paste(def));
-			assertFalse("cannot remove connection",
-					innerMostComponentWFM.canRemoveConnection(findInConnection(m_blockInner_11_0_9_7_0_5, 1)));
-			assertFalse("cannot add connection", innerMostComponentWFM.canAddConnection(m_blockInner_11_0_9_7_0_5, 0,
-					m_variableEdit_11_0_9_7_0_6, 0));
+			assertThrows(IllegalStateException.class, () -> innerMostComponentWFM.paste(def),
+					"Workflow manipuation not allowed");
+			assertFalse(innerMostComponentWFM.canRemoveConnection(findInConnection(m_blockInner_11_0_9_7_0_5, 1)),
+					"cannot remove connection");
+			assertFalse(innerMostComponentWFM.canAddConnection(m_blockInner_11_0_9_7_0_5, 0,
+					m_variableEdit_11_0_9_7_0_6, 0), "cannot add connection");
 			assertThat("not resetable", !innerMostComponentWFM.canResetNode(m_variableEdit_11_0_9_7_0_6));
     	} finally {
     		m_outComponentLock.unlock();

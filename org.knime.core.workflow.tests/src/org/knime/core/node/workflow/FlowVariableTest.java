@@ -91,9 +91,9 @@ public class FlowVariableTest {
 		String[] varNames = new String[] { "abc", "ab\\c", "ab(c", "ab)c", "(", ")", "#`^" };
 		for (String varName : varNames) {
 			FlowVariable fv = FlowVariable.newHidingVariable(varName);
-			assertEquals("Flow var type", Scope.Hide, fv.getScope());
-			assertEquals("Flow Variable Name after exraction", varName,
-					FlowVariable.extractIdentifierFromHidingFlowVariable(fv));
+			assertEquals(Scope.Hide, fv.getScope(), "Flow var type");
+			assertEquals(varName, FlowVariable.extractIdentifierFromHidingFlowVariable(fv),
+					"Flow Variable Name after extraction");
 		}
 		assertThrows(IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(null), "Null name");
 		assertThrows(IllegalArgumentException.class, () -> FlowVariable.newHidingVariable(""), "Empty name");

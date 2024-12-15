@@ -100,8 +100,8 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
 
     @Test
     public void testNoUpdateAfterLoad() throws Exception {
-        assertTrue("expected update to be available",
-            getManager().checkUpdateMetaNodeLink(m_metaUpdateTwoChildren_6, createTemplateLoadHelper()));
+        assertTrue(getManager().checkUpdateMetaNodeLink(m_metaUpdateTwoChildren_6, createTemplateLoadHelper()),
+            "expected update to be available");
         executeAllAndWait();
         checkStateOfMany(InternalNodeContainerState.EXECUTED,
             m_tableDiff_BeforeUpdate_11, m_tableDiff_BeforeUpdate_13, m_tableDiff_BeforeUpdate_15,
@@ -139,8 +139,8 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
         checkState(m_tableDiff_BeforeUpdate_11, InternalNodeContainerState.EXECUTED);
         executeAndWait(m_tableDiff_AfterUpdate_28);
         checkState(m_tableDiff_AfterUpdate_28, InternalNodeContainerState.CONFIGURED); // failed
-        assertTrue("Expected meta node update available",
-            getManager().checkUpdateMetaNodeLink(m_metaDifferentDefault_7, createTemplateLoadHelper()));
+        assertTrue(getManager().checkUpdateMetaNodeLink(m_metaDifferentDefault_7, createTemplateLoadHelper()),
+            "Expected meta node update available");
         getManager().updateMetaNodeLink(m_metaDifferentDefault_7, new ExecutionMonitor(), createTemplateLoadHelper());
         checkState(m_tableDiff_BeforeUpdate_11, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_tableDiff_BeforeUpdate_11);
@@ -155,8 +155,8 @@ public class TestRecursiveMetaNodeUpdate extends WorkflowTestCase {
         checkState(m_tableDiff_BeforeUpdate_15, InternalNodeContainerState.EXECUTED);
         executeAndWait(m_tableDiff_AfterUpdate_22);
         checkState(m_tableDiff_AfterUpdate_22, InternalNodeContainerState.CONFIGURED); // failed
-        assertTrue("Expected meta node update available",
-            getManager().checkUpdateMetaNodeLink(m_metaUpdateOnlyInChild_5, createTemplateLoadHelper()));
+        assertTrue(getManager().checkUpdateMetaNodeLink(m_metaUpdateOnlyInChild_5, createTemplateLoadHelper()),
+            "Expected meta node update available");
         getManager().updateMetaNodeLink(m_metaUpdateOnlyInChild_5, new ExecutionMonitor(), createTemplateLoadHelper());
         checkState(m_tableDiff_BeforeUpdate_15, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_tableDiff_BeforeUpdate_15);

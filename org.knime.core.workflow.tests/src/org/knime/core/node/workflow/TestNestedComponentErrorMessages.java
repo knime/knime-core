@@ -51,9 +51,9 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -65,6 +65,7 @@ import org.knime.core.util.FileUtil;
  */
 public class TestNestedComponentErrorMessages extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     private NodeID m_component_19;
@@ -92,7 +93,6 @@ public class TestNestedComponentErrorMessages extends WorkflowTestCase {
      */
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }

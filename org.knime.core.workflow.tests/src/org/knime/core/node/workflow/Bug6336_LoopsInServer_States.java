@@ -54,8 +54,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
@@ -91,8 +91,8 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
 
     /** Loads workflow and collapses almost all nodes, then executes - expects certain event count. */
     @Test
+    @Disabled("Disabled - occassionally failing, see AP-5572")
     public void testExecuteAfterCollapse() throws Exception {
-        Assumptions.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         checkState(manager, InternalNodeContainerState.IDLE);
         WorkflowManager metaNode = collapseToMetaNode(manager);
@@ -107,8 +107,8 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
 
     /** Collapse to meta node, then copy and connect to its original instance, then exec all. */
     @Test
+    @Disabled("Disabled - occassionally failing, see AP-5572")
     public void testExecuteAfterCollapseAndClone() throws Exception {
-        Assumptions.assumeTrue("Disabled - occassionally failing, see AP-5572", false);
         final WorkflowManager manager = getManager();
         WorkflowManager metaNode = collapseToMetaNode(manager);
         WorkflowCopyContent.Builder copyContent = WorkflowCopyContent.builder();
@@ -135,7 +135,7 @@ public class Bug6336_LoopsInServer_States extends WorkflowTestCase {
         WorkflowManager metaNode = manager.getNodeContainer(
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
         // remaining: data gen, table view, and new meta node
-        assertEquals("Node count after collapse incorrect", 3, manager.getWorkflow().getNrNodes());
+        assertEquals(3, manager.getWorkflow().getNrNodes(), "Node count after collapse incorrect");
         assertTrue(manager.containsNodeContainer(m_dataGenerator1));
         assertTrue(manager.containsNodeContainer(m_tableView12));
         assertFalse(manager.containsNodeContainer(m_loopStart3));

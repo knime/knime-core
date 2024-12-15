@@ -46,12 +46,12 @@
  */
 package org.knime.core.node.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -69,7 +69,7 @@ public class EnhAP23790_UpdatesOfMetanodeLinksToComponentLinks extends WorkflowT
 	private NodeID m_componentDiffChecker_12;
 	private NodeID m_componentDiffChecker_15;
 	
-	@Before
+	@BeforeEach
 	public void beforeEach() throws Exception {
 		NodeID baseID = loadAndSetWorkflow();
 		m_variableCreator_4 = baseID.createChild(4);

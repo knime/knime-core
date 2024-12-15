@@ -96,7 +96,7 @@ public class TestSubnode_CopyPasteWithDialogValues extends WorkflowTestCase {
         final NativeNodeContainer nnc = (NativeNodeContainer)getManager().getNodeContainer(m_tableView13);
         BufferedDataTable table = ((BufferedDataTableHolder)nnc.getNodeModel()).getInternalTables()[0];
         assertNotNull(table);
-        assertEquals("unexpected row count", 1, table.getRowCount());
+        assertEquals(1, table.getRowCount(), "unexpected row count");
         DataRow r = table.iterator().next();
         assertEquals(r.getCell(0), new StringCell(email));
         assertEquals(r.getCell(1), new IntCell(integer));

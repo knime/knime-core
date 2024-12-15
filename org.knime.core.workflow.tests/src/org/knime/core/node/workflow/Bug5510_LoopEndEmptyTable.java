@@ -96,8 +96,8 @@ public class Bug5510_LoopEndEmptyTable extends WorkflowTestCase {
         for (NodeID id : Arrays.asList(m_loopEnd_Single_3, m_loopEnd_Double_8)) {
             NodeMessage nodeMessage = mgr.getNodeContainer(id).getNodeMessage();
             assertEquals(NodeMessage.Type.WARNING, nodeMessage.getMessageType());
-            assertTrue(String.format("Message for node %s expected to contain word 'empty': \"%s\"",
-                id.toString(), nodeMessage.getMessage()), nodeMessage.getMessage().contains("empty"));
+            assertTrue(nodeMessage.getMessage().contains("empty"), String.format("Message for node %s expected to contain word 'empty': \"%s\"",
+				    id.toString(), nodeMessage.getMessage()));
         }
         mgr.save(m_workflowDirTemp, new ExecutionMonitor(), true);
         mgr.save(m_workflowDirTemp, new ExecutionMonitor(), true);
