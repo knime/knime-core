@@ -69,14 +69,14 @@ public class BugAP19479_Component_Encryption_Cipher47 extends WorkflowTestCase {
         final var wfm = result.getWorkflowManager();
         setManager(wfm);
 
-        assertFalse("Loading should not produce errors.", result.hasErrors());
+        assertFalse(result.hasErrors(), "Loading should not produce errors.");
         final NodeID lockedID = wfm.getID().createChild(2);
         final var locked = wfm.getNodeContainer(lockedID);
-        assertTrue("Locked component should exist.", locked instanceof SubNodeContainer);
+        assertTrue(locked instanceof SubNodeContainer, "Locked component should exist.");
 
         final NodeID innerID = lockedID.createChild(0).createChild(1);
         final var inner = ((SubNodeContainer) locked).getWorkflowManager().getNodeContainer(innerID);
-        assertTrue("Inner node should be loadable.", inner instanceof NativeNodeContainer);
+        assertTrue(inner instanceof NativeNodeContainer, "Inner node should be loadable.");
         assertEquals("Table Creator", inner.getName());
     }
 

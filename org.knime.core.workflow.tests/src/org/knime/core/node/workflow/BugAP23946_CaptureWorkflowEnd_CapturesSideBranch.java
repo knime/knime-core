@@ -2,8 +2,8 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.HashMap;
@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -29,7 +29,7 @@ public class BugAP23946_CaptureWorkflowEnd_CapturesSideBranch extends WorkflowTe
     private NodeID m_captureWorkflowEnd_11;
     private NodeID m_RowFilter_4;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         m_testCaseDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtils.copyDirectoryToDirectory(getDefaultWorkflowDirectory(), m_testCaseDir);
@@ -89,15 +89,15 @@ public class BugAP23946_CaptureWorkflowEnd_CapturesSideBranch extends WorkflowTe
         NodeID generatedWorkflowServiceOutput_6 = generatedManager.getID().createChild(6);
         Set<ConnectionContainer> incomingConnectionsForRowFilter = generatedManager
                 .getIncomingConnectionsFor(generatedRowFilter_4);
-        assertTrue("Expected Row Filter to have input connection in generated workflow",
-                !incomingConnectionsForRowFilter.isEmpty());
+        assertTrue(!incomingConnectionsForRowFilter.isEmpty(), 
+        		"Expected Row Filter to have input connection in generated workflow");
         assertThat("Unexpected Row Filter predecessor",
                 incomingConnectionsForRowFilter.stream().findFirst().get().getSource(),
                 is(generatedWorkflowServiceInput_5));
         Set<ConnectionContainer> outgoingConnectionsForRowFilter = generatedManager
                 .getOutgoingConnectionsFor(generatedRowFilter_4);
-        assertTrue("Expected Row Filter to have input connection in generated workflow",
-                !outgoingConnectionsForRowFilter.isEmpty());
+        assertTrue(!outgoingConnectionsForRowFilter.isEmpty(), 
+        		"Expected Row Filter to have input connection in generated workflow");
         assertThat("Unexpected Row Filter successor",
                 outgoingConnectionsForRowFilter.stream().findFirst().get().getDest(),
                 is(generatedWorkflowServiceOutput_6));
@@ -106,7 +106,7 @@ public class BugAP23946_CaptureWorkflowEnd_CapturesSideBranch extends WorkflowTe
     }
 
     @Override
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         super.tearDown();
         FileUtil.deleteRecursively(m_testCaseDir);

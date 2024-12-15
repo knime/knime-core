@@ -102,12 +102,12 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
     @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
-        assertTrue("should have new wizard execution", WebResourceController.hasWizardExecution(wfm));
+        assertTrue(WebResourceController.hasWizardExecution(wfm), "should have new wizard execution");
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
 
         waitWhile(wfm, new WizardHold(), -1);
-        assertTrue("should have steps", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps");
         checkState(m_subnodeFirstPage_6, EXECUTED);
         checkState(m_subnodeSecondPage_7, CONFIGURED_MARKEDFOREXEC);
         checkState(m_javaEdit_3, CONFIGURED_MARKEDFOREXEC);
@@ -124,7 +124,7 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         checkStateOfMany(EXECUTED, m_subnodeFirstPage_6, m_subnodeSecondPage_7, m_javaEdit_3);
         checkStateOfMany(CONFIGURED_MARKEDFOREXEC, m_metaNode_8, m_javaEdit_InMetaNode_8_4);
         checkStateOfMany(UNCONFIGURED_MARKEDFOREXEC, m_subnodeThirdPage_9);
-        assertTrue("should have steps (2nd page)", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps (2nd page)");
         currentWizardPage = wizardController.getCurrentWizardPage(); // inside loop 1st time
 //        assertEquals(m_subnodeSecondPage_7.toString(), currentWizardPage.getPageNodeID());
 
@@ -132,13 +132,13 @@ public class Bug6713_newWizardContainingOldMetanode extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeThirdPage_9, EXECUTED);
         checkState(wfm, EXECUTED);
-        assertTrue("should have steps (3rd/last page)", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps (3rd/last page)");
         currentWizardPage = wizardController.getCurrentWizardPage(); // inside loop 2nd time
 //        assertEquals(m_subnodeSecondPage_7.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(), -1);
-        assertFalse("should have no more pages", wizardController.hasCurrentWizardPage());
+        assertFalse(wizardController.hasCurrentWizardPage(), "should have no more pages");
         checkState(wfm, EXECUTED);
     }
 

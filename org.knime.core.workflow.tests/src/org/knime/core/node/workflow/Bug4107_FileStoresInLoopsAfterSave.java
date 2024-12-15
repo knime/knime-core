@@ -121,7 +121,7 @@ public class Bug4107_FileStoresInLoopsAfterSave extends WorkflowTestCase {
         reset(m_testFileStore_19);
         executeAllAndWait();
         NodeMessage nodeMessage = m.getNodeContainer(m_testFileStore_19).getNodeMessage();
-        assertEquals("Unexpected message: " + nodeMessage, NodeMessage.Type.RESET, nodeMessage.getMessageType());
+        assertEquals(NodeMessage.Type.RESET, nodeMessage.getMessageType(), "Unexpected message: " + nodeMessage);
         checkState(m, EXECUTED);
     }
 

@@ -86,7 +86,7 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
         checkState(m_loopEnd_10, CONFIGURED);
         NodeMessage msg = manager.getNodeContainer(m_loopEnd_10).getNodeMessage();
         assertNotNull(msg);
-        assertEquals("Not an error message on loop end", NodeMessage.Type.ERROR,  msg.getMessageType());
+        assertEquals(NodeMessage.Type.ERROR, msg.getMessageType(),  "Not an error message on loop end");
     }
 
     /** Partially execute, then add connection. This used to cause errors. */
@@ -103,7 +103,7 @@ public class Bug6374_NPE_when_connecting_outside_Scope extends WorkflowTestCase 
         checkState(m_loopEnd_10, CONFIGURED);
         NodeMessage msg = manager.getNodeContainer(m_loopEnd_10).getNodeMessage();
         assertNotNull(msg);
-        assertEquals("Not an error message on loop end", NodeMessage.Type.ERROR,  msg.getMessageType());
+        assertEquals(NodeMessage.Type.ERROR, msg.getMessageType(),  "Not an error message on loop end");
     }
 
 }

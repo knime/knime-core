@@ -96,19 +96,19 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         checkState(wfm, InternalNodeContainerState.EXECUTED);
         final SubNodeContainer inactiveNode = wfm.getNodeContainer(
             m_subnodeInLOOPQueryIntInactive17, SubNodeContainer.class, true);
-        assertTrue("Node not inactive but should", inactiveNode.getOutputObject(1) instanceof InactiveBranchPortObject);
+        assertTrue(inactiveNode.getOutputObject(1) instanceof InactiveBranchPortObject, "Node not inactive but should");
     }
 
     @Test
     public void testWizardStepThrough() throws Exception {
         final WorkflowManager wfm = getManager();
-        assertTrue("should have new wizard execution", WebResourceController.hasWizardExecution(wfm));
+        assertTrue(WebResourceController.hasWizardExecution(wfm), "should have new wizard execution");
         checkState(m_tableCreateNode1, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
 
         waitWhile(wfm, new WizardHold(), -1);
-        assertTrue("should have steps", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps");
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         WizardPage currentWizardPage = wizardController.getCurrentWizardPage(); // outside loop
         // TODO: load something real
@@ -123,7 +123,7 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
             InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED);
-        assertTrue("should have steps (loop iteration 0)", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps (loop iteration 0)");
         currentWizardPage = wizardController.getCurrentWizardPage(); // inside loop 1st time
 //        assertEquals(m_subnodeInLOOPQueryInt14.toString(), currentWizardPage.getPageNodeID());
 
@@ -131,42 +131,42 @@ public class TestWizardExec_Loop_Simple extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED);
         checkState(m_loopEnd11, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-        assertTrue("should have steps (loop iteration 1)", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps (loop iteration 1)");
         currentWizardPage = wizardController.getCurrentWizardPage(); // inside loop 2nd time
 //        assertEquals(m_subnodeInLOOPQueryInt14.toString(), currentWizardPage.getPageNodeID());
 
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(), -1);
-        assertFalse("should have no more pages", wizardController.hasCurrentWizardPage());
+        assertFalse(wizardController.hasCurrentWizardPage(), "should have no more pages");
         checkState(wfm, InternalNodeContainerState.EXECUTED);
 
         NodeSettings settings = new NodeSettings("test");
         wizardController.save(settings);
         int[] prompted = settings.getIntArray("promptedSubnodeIDs");
-        assertTrue("should have saved prompted node ids (15) to settings", Arrays.equals(new int[]{15}, prompted));
+        assertTrue(Arrays.equals(new int[]{15}, prompted), "should have saved prompted node ids (15) to settings");
     }
 
     @Test
     public void testWizardStepHalfWayThrougAndBack() throws Exception {
         final WorkflowManager wfm = getManager();
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
-        assertFalse("should have no previous steps", wizardController.hasPreviousWizardPage());
+        assertFalse(wizardController.hasPreviousWizardPage(), "should have no previous steps");
         wizardController.stepFirst();
 
         waitWhile(wfm, new WizardHold(), -1);
-        assertFalse("should have no previous steps", wizardController.hasPreviousWizardPage());
+        assertFalse(wizardController.hasPreviousWizardPage(), "should have no previous steps");
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         wizardController.getCurrentWizardPage(); // outside loop
 
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(), -1);
         checkState(m_subnodeInLOOPQueryInt14, InternalNodeContainerState.EXECUTED);
-        assertTrue("should have previous steps", wizardController.hasPreviousWizardPage());
+        assertTrue(wizardController.hasPreviousWizardPage(), "should have previous steps");
 
         wizardController.stepBack();
         checkState(m_subnodeQueryStringBool15, InternalNodeContainerState.EXECUTED);
         checkState(wfm, InternalNodeContainerState.IDLE);
-        assertTrue("should have no next steps", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have no next steps");
         wizardController.getCurrentWizardPage(); // outside loop QF
 
         wizardController.stepNext();

@@ -76,7 +76,7 @@ public class BugAP17468_LoopEndCleanUpAfterFailure extends WorkflowTestCase { //
 		manager.getParent().resetAndConfigureNode(getManager().getID());
 		final File tempDir = manager.getContext().getTempLocation();
 		Thread.sleep(100); // give the file-in-background-deletion some time to do its work
-		assertEquals(String.format("Container files remaining in workflow temp directory after clear: %s.",
-				Arrays.toString(tempDir.list())), 0, countFilesInDirectory(tempDir, IS_TEMP_FILE));
+		assertEquals(0, countFilesInDirectory(tempDir, IS_TEMP_FILE), String.format("Container files remaining in workflow temp directory after clear: %s.",
+						Arrays.toString(tempDir.list())));
 	}
 }

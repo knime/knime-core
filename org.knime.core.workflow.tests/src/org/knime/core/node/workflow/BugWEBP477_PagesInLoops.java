@@ -87,10 +87,10 @@ public class BugWEBP477_PagesInLoops extends WorkflowTestCase {
 		await().atMost(2, TimeUnit.SECONDS).pollInterval(10, TimeUnit.MILLISECONDS).untilAsserted(() -> {
 			assertTrue(wec.hasCurrentWizardPage());
 		});
-		assertTrue("Node execution not finished, yet", nc1.getNodeContainerState().isExecuted());
-		assertTrue("Node execution not finished, yet", nc2.getNodeContainerState().isExecuted());
-		assertTrue("Node execution not finished, yet", nc3.getNodeContainerState().isExecuted());
-		assertTrue("Node execution not finished, yet", nc4.getNodeContainerState().isExecuted());
+		assertTrue(nc1.getNodeContainerState().isExecuted(), "Node execution not finished, yet");
+		assertTrue(nc2.getNodeContainerState().isExecuted(), "Node execution not finished, yet");
+		assertTrue(nc3.getNodeContainerState().isExecuted(), "Node execution not finished, yet");
+		assertTrue(nc4.getNodeContainerState().isExecuted(), "Node execution not finished, yet");
 	}
 
 	@AfterEach

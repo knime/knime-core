@@ -79,15 +79,15 @@ public class Bug6734_metaNodeWithQuickforms extends WorkflowTestCase {
         WorkflowManager mgr = getManager();
         WorkflowManager metanode5 = mgr.getNodeContainer(m_metaNodeWithQF_5, WorkflowManager.class, true);
         MetaNodeDialogPane dialog5 = (MetaNodeDialogPane)metanode5.getDialogPaneWithSettings();
-        assertEquals("Unexpected dialog node count", 1, dialog5.getNodes().size());
+        assertEquals(1, dialog5.getNodes().size(), "Unexpected dialog node count");
 
         WorkflowManager metanode6 = mgr.getNodeContainer(m_metaNodeWithNewQF_6, WorkflowManager.class, true);
         MetaNodeDialogPane dialog6 = (MetaNodeDialogPane)metanode6.getDialogPaneWithSettings();
-        assertEquals("Unexpected dialog node count", 0, dialog6.getNodes().size());
+        assertEquals(0, dialog6.getNodes().size(), "Unexpected dialog node count");
 
         SubNodeContainer subnode8 = mgr.getNodeContainer(m_subNodeWithNewQF_8, SubNodeContainer.class, true);
         MetaNodeDialogPane dialog8 = (MetaNodeDialogPane)subnode8.getDialogPaneWithSettings();
-        assertEquals("Unexpected dialog node count", 1, dialog8.getNodes().size());
+        assertEquals(1, dialog8.getNodes().size(), "Unexpected dialog node count");
     }
 
 }

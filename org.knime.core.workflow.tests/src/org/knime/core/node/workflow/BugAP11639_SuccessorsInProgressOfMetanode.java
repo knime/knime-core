@@ -103,11 +103,11 @@ public class BugAP11639_SuccessorsInProgressOfMetanode extends WorkflowTestCase 
 	@Test
 	public void testSuccessorsInProgressOfMetanode() throws Exception {
 		try (WorkflowLock lock = m_wfm.lock()) {
-			assertTrue("successors in progress expected", m_metanode_8.hasSuccessorInProgress(m_datagen_8_1));
-			assertFalse("no successors in progress expected", m_metanode_8.hasSuccessorInProgress(m_datagen_8_5));
+			assertTrue(m_metanode_8.hasSuccessorInProgress(m_datagen_8_1), "successors in progress expected");
+			assertFalse(m_metanode_8.hasSuccessorInProgress(m_datagen_8_5), "no successors in progress expected");
 
-			assertFalse("successors in progress expected", m_component_10.hasSuccessorInProgress(m_datagen_10_0_1));
-			assertFalse("successors in progress expected", m_component_10.hasSuccessorInProgress(m_datagen_10_0_5));
+			assertFalse(m_component_10.hasSuccessorInProgress(m_datagen_10_0_1), "successors in progress expected");
+			assertFalse(m_component_10.hasSuccessorInProgress(m_datagen_10_0_5), "successors in progress expected");
 		}
 	}
 

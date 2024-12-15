@@ -57,7 +57,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
@@ -82,23 +82,43 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         SubnodeInSubnode
     }
 
-    public static TestModifications[] createParameters() {
-        return TestModifications.values();
-    }
+    private File m_workflowDir;
+    private NodeID m_dataGen_1;
+    private NodeID m_testFileStore_10;
+    private NodeID m_subnode_5;
+    private NodeID m_loopStart_3;
+    private NodeID m_loopEnd_6;
+    
+    @BeforeEach
+	public void setUp() throws Exception {
+	    m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
+	    FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
+	    initWorkflowFromTemp();
+	}
 
-    @ParameterizedTest(name="{0}")
-    @MethodSource("createParameters")
-    public void test(TestModifications m_testModification) throws Exception {
+	private void initWorkflowFromTemp() throws Exception {
+	    // will save the workflow in one of the test ...don't write SVN folder
+	    NodeID baseID = loadAndSetWorkflow(m_workflowDir);
+	    m_dataGen_1 = new NodeID(baseID, 1);
+	    m_subnode_5 = new NodeID(baseID, 5);
+	    m_loopStart_3 = new NodeID(baseID, 3);
+	    m_loopEnd_6 = new NodeID(baseID, 6);
+	    m_testFileStore_10 = new NodeID(baseID, 10);
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = TestModifications.class)
+    public void test(TestModifications testModification) throws Exception {
         WorkflowManager manager = getManager();
         checkState(manager, IDLE);
-        tweakWorkflow(manager);
+        tweakWorkflow(manager, testModification);
         checkState(m_dataGen_1, CONFIGURED);
         assertEquals(0, getWriteFileStoreHandlers().size());
         executeAllAndWait();
         checkState(manager, EXECUTED);
         // the file store handlers: data gen, loop start, test file store (loop nodes don't register)
-        assertEquals("File stores: " + String.join("\n", getWriteFileStoreHandlers().stream().map(
-            f -> f.toString()).collect(Collectors.toList())), 3, getWriteFileStoreHandlers().size());
+        assertEquals(3, getWriteFileStoreHandlers().size(), "File stores: " + String.join("\n", getWriteFileStoreHandlers().stream().map(
+			    f -> f.toString()).collect(Collectors.toList())));
         checkCountFileStores();
         manager.save(m_workflowDir, new ExecutionMonitor(), true);
         reset(m_dataGen_1);
@@ -113,26 +133,9 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         checkState(manager, EXECUTED);
     }
 
-    @BeforeEach
-    public void setUp() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
-        FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
-        initWorkflowFromTemp();
-    }
-
-    private void initWorkflowFromTemp() throws Exception {
-        // will save the workflow in one of the test ...don't write SVN folder
-        NodeID baseID = loadAndSetWorkflow(m_workflowDir);
-        m_dataGen_1 = new NodeID(baseID, 1);
-        m_subnode_5 = new NodeID(baseID, 5);
-        m_loopStart_3 = new NodeID(baseID, 3);
-        m_loopEnd_6 = new NodeID(baseID, 6);
-        m_testFileStore_10 = new NodeID(baseID, 10);
-    }
-
-    private void tweakWorkflow(final WorkflowManager manager) {
+    private void tweakWorkflow(final WorkflowManager manager, TestModifications testModification) {
         SubNodeContainer subnode = manager.getNodeContainer(m_subnode_5, SubNodeContainer.class, true);
-        switch (m_testModification) {
+        switch (testModification) {
             case WithStreaming:
                 break;
             case Plain:
@@ -146,7 +149,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
                     i -> innerWFM.getID().createChild(i)).toArray(NodeID[]::new);
                 CollapseIntoMetaNodeResult collapse = innerWFM.collapseIntoMetaNode(
                     innerNodes, new WorkflowAnnotationID[0], "yet another level");
-                if (m_testModification.equals(TestModifications.SubnodeInSubnode)) {
+                if (testModification.equals(TestModifications.SubnodeInSubnode)) {
                     NodeID metaNodeID = collapse.getCollapsedMetanodeID();
                     innerWFM.convertMetaNodeToSubNode(metaNodeID);
                 }
@@ -162,7 +165,7 @@ public class BugAP5667_FileStoresInSubnode extends WorkflowTestCase {
         checkState(m_subnode_5, InternalNodeContainerState.EXECUTED);
         File startFSDir = getFileStoresDirectory(m_loopStart_3);
         // it's 5 + 1 - 5 because each iteration keeps one file; 1 because the output of the last iteration is kept
-        assertEquals("Unexpected number of physical file store files", 5 + 1, countFilesInDirectory(startFSDir));
+        assertEquals(5 + 1, countFilesInDirectory(startFSDir), "Unexpected number of physical file store files");
 
         // there should be other nodes having a file store w/ directory
         for (SingleNodeContainer snc : iterateSNCs(getManager(), true)) {

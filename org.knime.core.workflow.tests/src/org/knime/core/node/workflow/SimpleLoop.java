@@ -88,17 +88,17 @@ public class SimpleLoop extends WorkflowTestCase {
         int inCount = counterNodes.get(m_counterInLoop).getCounter();
 
         checkState(m_counterInLoop, InternalNodeContainerState.EXECUTED);
-        assertEquals("Expected 10 executions of node in loop", 10, inCount);
+        assertEquals(10, inCount, "Expected 10 executions of node in loop");
 
         int outCount = counterNodes.get(m_counterOutSourceLoop).getCounter();
         checkState(m_counterOutSourceLoop, InternalNodeContainerState.EXECUTED);
         assertEquals(
-                "Expected one execution of source nodes in loop", 1, outCount);
+                1, outCount, "Expected one execution of source nodes in loop");
 
         int outCountSink = counterNodes.get(m_counterOutSinkLoop).getCounter();
         checkState(m_counterOutSinkLoop, InternalNodeContainerState.EXECUTED);
-        assertEquals("Expected 10 executions of sink nodes in loop",
-                10, outCountSink);
+        assertEquals(10,
+                outCountSink, "Expected 10 executions of sink nodes in loop");
 
         executeAndWait(m_tblView);
         checkState(m_tblView, InternalNodeContainerState.EXECUTED);

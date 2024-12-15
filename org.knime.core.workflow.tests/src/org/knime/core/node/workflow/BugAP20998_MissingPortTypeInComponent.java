@@ -72,4 +72,5 @@ public class BugAP20998_MissingPortTypeInComponent extends WorkflowTestCase {
 
 		setManager(result.getWorkflowManager()); // so that it can be cleaned up by parent class
 	}
+	
 }

@@ -45,17 +45,17 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
 
 import org.eclipse.core.runtime.Platform;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -69,9 +69,9 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
     private NodeID m_tableCreate_1;
-    private NodeID m_outerLoopEnd_3;
     private NodeID m_testFileStore_804;
     private NodeID m_testFileStore_813;
 
@@ -79,8 +79,7 @@ public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
     public void setUp() throws Exception {
         // on my (BW) laptop (T470p) this runs in 17s ... but I am forseeing much larger runtimes on test instances
         // running win or mac; given that the bug was in pure Java code I find that an acceptable filter
-        Assumptions.assumeThat("Not run on all systems due to runtime", Platform.getOS(), is(Platform.OS_LINUX));
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
+        Assumptions.assumeTrue(Platform.OS_LINUX.equals(Platform.getOS()), "Not run on all systems due to runtime");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -91,7 +90,6 @@ public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
         setManager(loadResult.getWorkflowManager());
         NodeID baseID = getManager().getID();
         m_tableCreate_1 = baseID.createChild(1);
-        m_outerLoopEnd_3 = baseID.createChild(3);
         m_testFileStore_804 = baseID.createChild(804);
         m_testFileStore_813 = baseID.createChild(813);
         return loadResult;
@@ -116,16 +114,6 @@ public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
         executeAndWait(m_testFileStore_804, m_testFileStore_813);
         checkStateOfMany(EXECUTED, m_testFileStore_804, m_testFileStore_813);
         checkState(manager, EXECUTED);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    @AfterEach
-    public void tearDown() throws Exception {
-        super.tearDown();
-        if (m_workflowDir != null) {
-            FileUtil.deleteRecursively(m_workflowDir);
-        }
     }
 
 }

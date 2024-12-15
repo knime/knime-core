@@ -46,10 +46,12 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -63,37 +65,46 @@ import org.knime.core.util.Version;
  *
  * @author wiswedel, KNIME AG
  */
-public class BugAP7982_FutureKNIMEVersion_FutureVersion extends WorkflowTestCase {
+public final class BugAP7982_FutureKNIMEVersion extends WorkflowTestCase {
+	
+	private enum FutureDetails {
+		FUTURE_NO_NIGHTLY(false, "FutureVersion"),
+		FUTURE_NIGHTLY(true, "FutureVersionNightly");
 
-    private final boolean m_isExpectNightly;
+		private final boolean m_isNightly;
+		private final String m_flowSuffix;
 
-    public BugAP7982_FutureKNIMEVersion_FutureVersion() {
-        this(false);
-    }
-
-    BugAP7982_FutureKNIMEVersion_FutureVersion(final boolean isExpectNightly) {
-        m_isExpectNightly = isExpectNightly;
-    }
-
+		FutureDetails(boolean isNightly, String flowSuffix) {
+			m_isNightly = isNightly;
+			m_flowSuffix = flowSuffix;
+		}
+		@Override
+		public String toString() {
+			return Boolean.toString(m_isNightly);
+		}
+	}
+	
     /** Load workflow, expect no errors. */
-    @Test
-    public void loadWorkflowTry() throws Exception {
-        WorkflowLoadResult loadWorkflow = loadWorkflow(true);
+    @ParameterizedTest(name = "Nightly: {0}")
+    @EnumSource(FutureDetails.class)
+    public void loadWorkflowTry(final FutureDetails details) throws Exception {
+        WorkflowLoadResult loadWorkflow = loadWorkflow(true, details);
         setManager(loadWorkflow.getWorkflowManager());
         assertThat("Expected to loaded without errors", loadWorkflow.getType(), is(LoadResultEntryType.Ok));
         assertThat("Workflow version incorrect", getManager().getLoadVersion(), is(LoadVersion.FUTURE));
     }
 
     /** Load workflow, expect no errors. */
-    @Test
-    public void loadWorkflowFail() throws Exception {
-        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(UnsupportedWorkflowVersionException.class, () -> {
-            loadWorkflow(false);
-        });
+    @ParameterizedTest(name = "Nightly: {0}")
+    @EnumSource(value = FutureDetails.class)
+    public void loadWorkflowFail(FutureDetails details) throws Exception {
+        assertThrows(UnsupportedWorkflowVersionException.class, () -> loadWorkflow(false, details));
     }
 
-    private WorkflowLoadResult loadWorkflow(final boolean tryToLoadInsteadOfFail) throws Exception {
-        File wkfDir = getDefaultWorkflowDirectory();
+	private WorkflowLoadResult loadWorkflow(final boolean tryToLoadInsteadOfFail, final FutureDetails futureDetails)
+			throws Exception {
+		String folderName = getNameOfWorkflowDirectory().concat("_" + futureDetails.m_flowSuffix);
+		File wkfDir = getWorkflowDirectory(folderName);
         final WorkflowContextV2 workflowContext = WorkflowContextV2.forTemporaryWorkflow(wkfDir.toPath(), null);
         WorkflowLoadResult loadWorkflow = loadWorkflow(wkfDir, new ExecutionMonitor(),
         		new WorkflowLoadHelper(workflowContext, DataContainerSettings.getDefault()) {
@@ -102,7 +113,7 @@ public class BugAP7982_FutureKNIMEVersion_FutureVersion extends WorkflowTestCase
                 final LoadVersion workflowKNIMEVersion, final Version createdByKNIMEVersion,
                 final boolean isNightlyBuild) {
                 assertThat("Unexpected KNIME version in file", workflowKNIMEVersion, is(LoadVersion.FUTURE));
-                assertThat("Nightly flag wrong", isNightlyBuild, is(m_isExpectNightly));
+                assertThat("Nightly flag wrong", isNightlyBuild, is(futureDetails.m_isNightly));
                 if (tryToLoadInsteadOfFail) {
                     return UnknownKNIMEVersionLoadPolicy.Try;
                 } else {

@@ -50,13 +50,13 @@ package org.knime.core.util;
 
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHook;
 
@@ -93,7 +93,7 @@ public final class TestWorkflowSaveHook extends WorkflowSaveHook {
     @Override
     public void onSave(final WorkflowManager workflow,
         final boolean isSaveData, final File metadataFolder) throws IOException {
-        Assert.assertThat("Shouldn't be run", isEnabled, is(true));
+        assertThat("Shouldn't be run", isEnabled, is(true));
         if (willFail) {
             throw new IOException(FORCE_FAIL_ERROR);
         }

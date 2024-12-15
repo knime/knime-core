@@ -1,4 +1,4 @@
-MISSING///*
+///*
 // * ------------------------------------------------------------------------
 // *  Copyright by KNIME AG, Zurich, Switzerland
 // *  Website: http://www.knime.com; Email: contact@knime.com

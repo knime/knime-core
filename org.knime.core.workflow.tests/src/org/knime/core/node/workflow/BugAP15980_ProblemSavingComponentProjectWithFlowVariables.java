@@ -54,6 +54,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
@@ -67,6 +68,7 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP15980_ProblemSavingComponentProjectWithFlowVariables extends WorkflowTestCase {
 
+	@TempDir
 	private File m_componentDir;
 	private SubNodeContainer m_componentProject;
 	private NodeID m_node_1230;
@@ -79,7 +81,6 @@ public class BugAP15980_ProblemSavingComponentProjectWithFlowVariables extends W
 	 */
 	@BeforeEach
 	public void setup() throws IOException, Exception {
-		m_componentDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_componentDir);
 		initComponentFromTemp();
 	}

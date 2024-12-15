@@ -90,7 +90,7 @@ public class Bug2292_LoopsWithDanglingBranches extends WorkflowTestCase {
         checkState(m_loopEnd4, EXECUTED);
         // this used to be configured before 3.0 - fixed as part of the bug fix
         NodeContainerState jsState = getManager().getNodeContainer(m_javaSnippet7).getNodeContainerState();
-        assertTrue("Not executing, nor executed: " + jsState, jsState.isExecutionInProgress() || jsState.isExecuted());
+        assertTrue(jsState.isExecutionInProgress() || jsState.isExecuted(), "Not executing, nor executed: " + jsState);
         waitWhileInExecution();
         checkState(m_javaSnippet7, EXECUTED);
     }

@@ -53,17 +53,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.function.Executable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
 import org.knime.core.node.dialog.OutputNode;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 
 /** AP-6906: Usability of Call Workflow Nodes with Respect to Input and Output Parameters
@@ -71,7 +68,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
-@ExtendWith(MockitoExtension.class)
 public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
 
     @BeforeEach
@@ -132,7 +128,8 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     @Test
     public void testSettingNonUniqueInputNodePositive() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
-        getManager().setInputNodes(Collections.singletonMap("input-not-unique-9", inputNodes.get("input-not-unique-9")));
+		getManager()
+				.setInputNodes(Collections.singletonMap("input-not-unique-9", inputNodes.get("input-not-unique-9")));
     }
 
     /** Setting a parameter, which isn't defined in the workflow. Expected to fail. */
@@ -140,8 +137,9 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     public void testSettingInvalidParameterNegative() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
 
-        Executable executable = () -> getManager().setInputNodes(Collections.singletonMap("invalid", inputNodes.get("input-not-unique-2")));
-        Assertions.assertThrows(InvalidSettingsException.class, executable);
+		Executable executable = () -> getManager()
+				.setInputNodes(Collections.singletonMap("invalid", inputNodes.get("input-not-unique-2")));
+		Assertions.assertThrows(InvalidSettingsException.class, executable);
     }
 
     /** Setting a parameter, which is ambiguous but not fully qualified. Expected to fail. */
@@ -149,7 +147,8 @@ public class BugAP6906_UniqueParameterNames extends WorkflowTestCase {
     public void testSettingDuplicateParameterNegative() throws Exception {
         Map<String, ExternalNodeData> inputNodes = getManager().getInputNodes();
 
-        Executable executable = () -> getManager().setInputNodes(Collections.singletonMap("input-not-unique", inputNodes.get("input-not-unique-2")));
+		Executable executable = () -> getManager()
+				.setInputNodes(Collections.singletonMap("input-not-unique", inputNodes.get("input-not-unique-2")));
         Assertions.assertThrows(InvalidSettingsException.class, executable);
     }
 

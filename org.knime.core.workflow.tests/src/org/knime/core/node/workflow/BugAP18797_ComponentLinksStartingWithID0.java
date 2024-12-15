@@ -50,6 +50,8 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,9 +78,6 @@ public class BugAP18797_ComponentLinksStartingWithID0 extends WorkflowTestCase {
 
     private NodeID m_component_2;
 
-    @TempDir
-    public File m_tempFolder;
-
     @BeforeEach
     public void setUp() throws Exception {
         var baseID = loadAndSetWorkflow();
@@ -87,13 +86,13 @@ public class BugAP18797_ComponentLinksStartingWithID0 extends WorkflowTestCase {
 
     /** Find component, save into temp folder, instantiate fresh and check IDs. */
     @Test
-    public void test_shareComponent_thenInstantiate() throws Exception {
+    public void test_shareComponent_thenInstantiate(@TempDir Path tempFolderRoot) throws Exception {
         var mgr = getManager();
         assertThat("Number nodes in loaded workflow", mgr.getNodeContainers().size(), is(1));
         var subNode = mgr.getNodeContainer(m_component_2, SubNodeContainer.class, true);
 
         /* Save existing component to a template */
-        var tempFolder = m_tempFolder.newFolder(subNode.getName());
+        var tempFolder = Files.createDirectory(tempFolderRoot.resolve(subNode.getName())).toFile();
         subNode.saveAsTemplate(tempFolder, new ExecutionMonitor());
 
         /* Load from template location, expect ID = 1 (this is the change in AP-18797) */

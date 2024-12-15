@@ -54,6 +54,7 @@ import java.io.File;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
@@ -66,6 +67,7 @@ import org.knime.core.util.FileUtil;
  */
 public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 
+	@TempDir
 	private File m_workflowDir;
 
 	private NodeID m_subNode1; // saved component with empty layout
@@ -78,7 +80,6 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 */
 	@BeforeEach
 	public void setup() throws Exception {
-		m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
 		initWorkflowFromTemp();
 	}
@@ -119,10 +120,10 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer container2 = (SubNodeContainer) findNodeContainer(m_subNode2);
 		assertNotNull(container1);
 		assertNotNull(container2);
-		assertTrue("Problem detecting saved, empty layouts",
-				container1.getSubnodeLayoutStringProvider().isEmptyLayout());
-		assertFalse("Problem detecting saved layouts", container2.getSubnodeLayoutStringProvider().isEmptyLayout());
-		assertFalse("Missing layout version caused dirty workflow", wfm.isDirty());
+		assertTrue(container1.getSubnodeLayoutStringProvider().isEmptyLayout(),
+				"Problem detecting saved, empty layouts");
+		assertFalse(container2.getSubnodeLayoutStringProvider().isEmptyLayout(), "Problem detecting saved layouts");
+		assertFalse(wfm.isDirty(), "Missing layout version caused dirty workflow");
 	}
 
 	/**
@@ -139,8 +140,8 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer newComponent = SubNodeContainer.newSubNodeContainerFromMetaNodeContent(wfm, m_subNodeNew,
 				container1.getWorkflowManager(), "Test_Node");
 		assertNotNull(newComponent);
-		assertTrue("Problem creating new component layouts layouts", newComponent.getSubnodeLayoutStringProvider()
-				.checkOriginalContains("{\"parentLayoutLegacyMode\":false}"));
+		assertTrue(newComponent.getSubnodeLayoutStringProvider()
+				.checkOriginalContains("{\"parentLayoutLegacyMode\":false}"), "Problem creating new component layouts layouts");
 	}
 
 	/**
@@ -159,7 +160,6 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 	 *
 	 * @throws Exception
 	 */
-	@Test
 	public void testSaveAndLoadLayoutVersion() throws Exception {
 		WorkflowManager wfm = getManager();
 		wfm.save(m_workflowDir, new ExecutionMonitor(), true);
@@ -171,9 +171,9 @@ public class BugWEBP409_AddDefaultLayout extends WorkflowTestCase {
 		SubNodeContainer container2 = (SubNodeContainer) findNodeContainer(m_subNode2);
 		assertNotNull(container1);
 		assertNotNull(container2);
-		assertTrue("Problem detecting saved, empty layouts",
-				container1.getSubnodeLayoutStringProvider().isEmptyLayout());
-		assertFalse("Problem detecting saved layouts", container2.getSubnodeLayoutStringProvider().isEmptyLayout());
-		assertFalse("Missing layout version caused dirty workflow", wfm.isDirty());
+		assertTrue(container1.getSubnodeLayoutStringProvider().isEmptyLayout(),
+				"Problem detecting saved, empty layouts");
+		assertFalse(container2.getSubnodeLayoutStringProvider().isEmptyLayout(), "Problem detecting saved layouts");
+		assertFalse(wfm.isDirty(), "Missing layout version caused dirty workflow");
 	}
 }

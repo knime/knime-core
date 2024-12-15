@@ -131,9 +131,9 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
         checkState(m_loopStartOuter15, InternalNodeContainerState.CONFIGURED);
 
         System.gc(); // we have seen problems on windows where the folder still exists, hopefully this will help
-        assertFalse("Directory must have been deleted: " + startFSDir.getAbsolutePath()
-                + " found " + (startFSDir.exists() ? countFilesInDirectory(startFSDir) : "-1")
-                + " files", startFSDir.exists());
+        assertFalse(startFSDir.exists(), "Directory must have been deleted: " + startFSDir.getAbsolutePath()
+				        + " found " + (startFSDir.exists() ? countFilesInDirectory(startFSDir) : "-1")
+				        + " files");
     }
 
     @Test

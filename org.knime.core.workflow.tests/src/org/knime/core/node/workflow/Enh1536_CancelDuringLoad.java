@@ -97,8 +97,8 @@ public class Enh1536_CancelDuringLoad extends WorkflowTestCase {
         wm.addConnection(sourceNode, 1, cancelOnLoadNode, 1);
         wm.addConnection(cancelOnLoadNode, 1, checkLoadInternalNotCalledNode, 1);
         wm.executeAllAndWaitUntilDone();
-        assertEquals(wm.printNodeSummary(wm.getID(), 0),
-            InternalNodeContainerState.EXECUTED, wm.getInternalState());
+        assertEquals(InternalNodeContainerState.EXECUTED,
+            wm.getInternalState(), wm.printNodeSummary(wm.getID(), 0));
         wm.save(m_workflowDirectory, new ExecutionMonitor(), true);
         WorkflowManager.ROOT.removeNode(wm.getID());
     }

@@ -44,26 +44,24 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.util.JsonUtil;
@@ -93,13 +91,8 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
     private NodeID m_credValidateMetanodeLevelFoo_14;
     private NodeID m_credValidateMetanodeLevelBar_15;
 
-    public static Collection<Arguments> getParameters() {
-        return Arrays.asList(Arguments.of(true), Arguments.of(false));
-    }
-
-    @ParameterizedTest(name="with-suffix={0}")
-    @MethodSource
-    public void setUp(Boolean m_useSuffix) throws Exception {
+    @BeforeEach
+    public void setUp() throws Exception {
         NodeID baseID = loadAndSetWorkflow();
         m_stringInputTopLevel_1 = baseID.createChild(1);
         m_credInputTopLevel_2 = baseID.createChild(2);
@@ -122,7 +115,6 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
 
     @Test
     public void testPlainExecAll() throws Exception {
-        assumeRunOnlyOnce();
         checkStateOfMany(CONFIGURED, m_stringInputTopLevel_1, m_stringInputMetanodeLevel_21_10, m_credInputTopLevel_2,
             m_credInputMetanodeLevel_21_11, m_jsonOutputTopLevel_7, m_jsonOutputMetanodeLevel_21_16);
         executeAllAndWait();
@@ -133,7 +125,6 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
 
     @Test
     public void testListExternalDataNodes() throws Exception {
-        assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
         executeAllAndWait();
         Map<String, ExternalNodeData> inputNodes = manager.getInputNodes();
@@ -173,8 +164,9 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         assertThat(outputDataMetanodeLevel.getJSONValue(), is(toJson("{\"metanode-level-string-input\":\"foo\"}")));
     }
 
-    @Test
-    public void testSetInputNodesViaJSON() throws Exception {
+    @ParameterizedTest(name="with-suffix={0}")
+    @ValueSource(booleans = {true, false})
+    public void testSetInputNodesViaJSON(final boolean useSuffix) throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
@@ -183,7 +175,7 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         final String toplevelCredsInputKey;
         final String metanodelevelStringInputKey;
         final String metanodelevelCredsInputKey;
-        if (m_useSuffix) {
+        if (useSuffix) {
             toplevelStringInputKey = "top-level-string-input-1";
             toplevelCredsInputKey = "top-level-credentials-input-2";
             metanodelevelStringInputKey = "metanode-level-string-input-21:10";
@@ -225,26 +217,26 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
 
     }
 
-    @Test
-    public void testSetInvalidViaJSON() throws Exception {
+    @ParameterizedTest(name="with-suffix={0}")
+    @ValueSource(booleans = {true, false})
+    public void testSetInvalidViaJSON(final boolean useSuffix) throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
         Map<String, ExternalNodeData> inputMap = new HashMap<>();
-        final String stringInputKey = m_useSuffix ? "top-level-string-input-1" : "top-level-string-input";
-        final String credsInputKey = m_useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
+        final String stringInputKey = useSuffix ? "top-level-string-input-1" : "top-level-string-input";
+        final String credsInputKey = useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
 
         inputMap.put(stringInputKey, ExternalNodeData.builder(stringInputKey)
             .jsonValue(toJson("{\"string\":\"valid\"}")).build());
         inputMap.put(credsInputKey, ExternalNodeData.builder(credsInputKey).
             jsonValue(toJson("{\"username\":\"bar-login\", \"password\":\"bar-password\"}")).build());
 
-        manager.setInputNodes(inputMap);
+        assertThrows(InvalidSettingsException.class, () -> manager.setInputNodes(inputMap));
     }
 
     @Test
     public void testSetInputNodesViaString() throws Exception {
-        assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
         NodeContainer nc = manager.findNodeContainer(m_stringInputMetanodeLevel_21_10);
         WorkflowCopyContent c = WorkflowCopyContent.builder().setNodeID(m_stringInputMetanodeLevel_21_10, 1234, null).build();
@@ -277,14 +269,15 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         }
     }
 
-    @Test
-    public void testAmbigiousParameterName() throws Exception {
+    @ParameterizedTest(name="with-suffix={0}")
+    @ValueSource(booleans = {true, false})
+    public void testAmbigiousParameterName(final boolean useSuffix) throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
         Map<String, ExternalNodeData> inputMap = new HashMap<>();
-        final String stringInputKey = m_useSuffix ? "top-level-string-input-1" : "top-level-string-input";
-        final String credsInputKey = m_useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
+        final String stringInputKey = useSuffix ? "top-level-string-input-1" : "top-level-string-input";
+        final String credsInputKey = useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
 
         inputMap.put(stringInputKey, ExternalNodeData.builder(stringInputKey).stringValue("bar").build());
         inputMap.put(credsInputKey, ExternalNodeData.builder(credsInputKey).stringValue("bar-login:bar-password").build());
@@ -306,24 +299,24 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
                     + "\"metanode-level-string-input\":\"foo\"}")));
     }
 
-    @Test
-    public void testSetInvalidValueViaString() throws Exception {
+    @ParameterizedTest(name="with-suffix={0}")
+    @ValueSource(booleans = {true, false})
+    public void testSetInvalidValueViaString(final boolean useSuffix) throws Exception {
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
         Map<String, ExternalNodeData> inputMap = new HashMap<>();
-        final String stringInputKey = m_useSuffix ? "top-level-string-input-1" : "top-level-string-input";
-        final String credsInputKey = m_useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
+        final String stringInputKey = useSuffix ? "top-level-string-input-1" : "top-level-string-input";
+        final String credsInputKey = useSuffix ? "top-level-credentials-input-2" : "top-level-credentials-input";
 
         inputMap.put(stringInputKey, ExternalNodeData.builder(stringInputKey).stringValue("invalid").build());
         inputMap.put(credsInputKey, ExternalNodeData.builder(credsInputKey).stringValue("bar-login:bar-password").build());
 
-        manager.setInputNodes(inputMap);
+        assertThrows(InvalidSettingsException.class, () -> manager.setInputNodes(inputMap));
     }
 
     @Test
     public void testSetInvalidKeyViaString() throws Exception {
-        assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
@@ -331,12 +324,11 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         inputMap.put("invalid-level-string-input-1",
             ExternalNodeData.builder("invalid-level-string-input").stringValue("foo").build());
 
-        manager.setInputNodes(inputMap);
+        assertThrows(InvalidSettingsException.class, () -> manager.setInputNodes(inputMap));
     }
 
     @Test
     public void testSetInvalidSuffixViaString() throws Exception {
-        assumeRunOnlyOnce();
         WorkflowManager manager = getManager();
         executeAllAndWait(); // should work either way - executed or not
 
@@ -344,19 +336,13 @@ public class TestSRV559_RecursiveInputNodesViaREST extends WorkflowTestCase {
         inputMap.put("top-level-string-input-3",
             ExternalNodeData.builder("invalid-level-string-input").stringValue("foo").build());
 
-        manager.setInputNodes(inputMap);
+        assertThrows(InvalidSettingsException.class, () -> manager.setInputNodes(inputMap));
     }
 
     private static JsonValue toJson(final String s) {
         try (JsonReader r = JsonUtil.getProvider().createReader(new StringReader(s))) {
             return r.read();
         }
-    }
-
-    /** Uses {@link Assume} construct to run the test only once -- depending on {@link #m_useSuffix}. */
-    private void assumeRunOnlyOnce() {
-        // this method doesn't use the suffix query so run it only once.
-        org.junit.jupiter.api.Assumptions.assumeTrue("Non-paramerized method - method already run or will run", m_useSuffix);
     }
 
 }

@@ -44,6 +44,7 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -67,10 +68,11 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestWatcher;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
@@ -78,14 +80,14 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLoggerConfig;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.NodeLoggerConfig;
 import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.Version;
@@ -94,7 +96,6 @@ import org.knime.core.util.Version;
  *
  * @author wiswedel, University of Konstanz
  */
-@ExtendWith(TestWatcher.class)
 public abstract class WorkflowTestCase {
 
     /** Names of workflow manager 'roots' that are used by some framework code, e.g. the parent object of all
@@ -211,10 +212,18 @@ public abstract class WorkflowTestCase {
      * @throws Exception
      * @throws IOException */
     protected File getDefaultWorkflowDirectory() throws Exception {
-        String classSimpleName = getClass().getSimpleName();
-        classSimpleName = classSimpleName.substring(0, 1).toLowerCase() + classSimpleName.substring(1);
-        return getWorkflowDirectory(classSimpleName);
+        String wkfDirName = getNameOfWorkflowDirectory();
+        return getWorkflowDirectory(wkfDirName);
     }
+
+	/**
+	 * Name of directory containing the workflow, defaults to the current's class simple name with first letter in
+	 * lower case.
+	 * @return workflow directory name
+	 */
+	protected String getNameOfWorkflowDirectory() {
+		return StringUtils.uncapitalize(getClass().getSimpleName());
+	}
 
     protected File getWorkflowDirectory(final String pathRelativeToTestClass) throws Exception {
         ClassLoader l = getClass().getClassLoader();
@@ -581,10 +590,10 @@ public abstract class WorkflowTestCase {
         final List<NodeContainer> newDanglingWorkflows = getDanglingWorkflows();
         newDanglingWorkflows.removeAll(DANGLING_WORKFLOWS);
         DANGLING_WORKFLOWS = getDanglingWorkflows();
-        assertTrue(newDanglingWorkflows.size() + " new dangling workflow(s) detected: " + newDanglingWorkflows,
-            newDanglingWorkflows.isEmpty());
+        assertTrue(newDanglingWorkflows.isEmpty(),
+            newDanglingWorkflows.size() + " new dangling workflow(s) detected: " + newDanglingWorkflows);
     }
-
+    
     private static ArrayList<NodeContainer> getDanglingWorkflows() {
         return WorkflowManager.ROOT.getNodeContainers().stream()
             .filter(nc -> !StringUtils.containsAny(nc.getName(), WorkflowTestCase.KNOWN_CHILD_WFM_NAME_SUBSTRINGS))
@@ -667,7 +676,7 @@ public abstract class WorkflowTestCase {
      * public TestRule m_dumpCallStackOnErrorRule = new DumpCallStackOnErrorRule(TestTimedOutException.class);
      * </pre>
      */
-    protected final class DumpCallStackOnErrorRule extends TestWatcher {
+    protected final class DumpCallStackOnErrorRule implements TestWatcher {
 
         private Class<? extends Throwable>[] m_triggeringExceptionClasses;
 
@@ -675,8 +684,9 @@ public abstract class WorkflowTestCase {
         DumpCallStackOnErrorRule(final Class<? extends Throwable>... triggeringExceptionClass) {
             m_triggeringExceptionClasses = triggeringExceptionClass;
         }
-
-        protected void failed(Throwable e, org.junit.jupiter.api.extension.ExtensionContext context) {
+        
+        @Override
+        public void testFailed(ExtensionContext context, Throwable e) {
             boolean shouldLog = m_triggeringExceptionClasses.length == 0 ||
                     Arrays.stream(m_triggeringExceptionClasses).anyMatch(t -> t.isAssignableFrom(e.getClass()));
             if (shouldLog) {

@@ -44,11 +44,12 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
@@ -59,7 +60,7 @@ import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.assertThrows;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.dialog.DialogNode;
@@ -80,6 +81,7 @@ import jakarta.json.JsonValue;
  */
 public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     private NodeID m_stringConfiguration_1;
@@ -93,7 +95,6 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
      */
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -114,7 +115,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
      */
     @Test
     public void testSaveWorkflowConfigurationInArtifactsFolder() throws Exception {
-        assertFalse("no artifacts folder expected", getArtifactsDirectory(m_workflowDir).exists());
+        assertFalse(getArtifactsDirectory(m_workflowDir).exists(), "no artifacts folder expected");
 
         //modify the workflow
         executeAllAndWait();
@@ -125,7 +126,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
         //check for expected artifacts
         File artifactsDirectory = getArtifactsDirectory(m_workflowDir);
         File workflowConfig = new File(artifactsDirectory, "workflow-configuration.json");
-        assertTrue("'workflow-configuration.json' missing", workflowConfig.exists());
+        assertTrue(workflowConfig.exists(), "'workflow-configuration.json' missing");
 
         //test few random samples of the file content
         String workflowConfigContent = FileUtils.readFileToString(workflowConfig, StandardCharsets.UTF_8);
@@ -216,7 +217,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 		checkState(m_stringConfiguration_1, InternalNodeContainerState.EXECUTED);
 
 		Map<String, DialogNode> configurationNodes = getManager().getConfigurationNodes(true);
-		assertEquals("unexptected number of config nodes", configurationNodes.size(), 10);
+		assertEquals(configurationNodes.size(), 10, "unexptected number of config nodes");
 
 		Map<String, String> configuration = new HashMap<>();
 		configuration.put("string-input", "new_config");
@@ -225,7 +226,7 @@ public class EnhAP12286_ExternalConfiguration extends WorkflowTestCase {
 		checkState(m_doubleConfiguration_2, InternalNodeContainerState.EXECUTED);
 		FlowObjectStack outgoingFlowObjectStack = ((NativeNodeContainer) getManager()
 				.getNodeContainer(m_stringConfiguration_1)).getOutgoingFlowObjectStack();
-		assertEquals("flow variable hasn't been set",
-				outgoingFlowObjectStack.getAvailableFlowVariables().get("string-input").getStringValue(), "new_config");
+		assertEquals(outgoingFlowObjectStack.getAvailableFlowVariables().get("string-input").getStringValue(),
+				"new_config", "flow variable hasn't been set");
 	}
 }

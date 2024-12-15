@@ -103,12 +103,12 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
     /** Just load and save with basic checks. */
     @Test
     public void testHookUnmodified() throws Exception {
-        assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
-            m_testFile.isFile());
+        assertFalse(m_testFile.isFile(),
+            "test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist");
         getManager().setDirty();
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        assertTrue("test file '" + m_testFile.getAbsolutePath() + "' supposed to exist", m_testFile.isFile());
-        assertEquals("Wrong number in test file", 3, readFileContent());
+        assertTrue(m_testFile.isFile(), "test file '" + m_testFile.getAbsolutePath() + "' supposed to exist");
+        assertEquals(3, readFileContent(), "Wrong number in test file");
     }
 
     /** Test multiple saves with modification in between. */
@@ -118,7 +118,7 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
         getManager().removeNode(m_jsonInput);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        assertEquals("Wrong number in test file", 2, readFileContent());
+        assertEquals(2, readFileContent(), "Wrong number in test file");
     }
 
     /** Test a broken contribution of the extension point. */
@@ -129,8 +129,8 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
         getManager().removeNode(m_jsonInput);
         TestWorkflowSaveHook.setWillFail(true);
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
-        assertFalse("test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist",
-            m_testFile.isFile());
+        assertFalse(m_testFile.isFile(),
+            "test file '" + m_testFile.getAbsolutePath() + "' not supposed to exist");
     }
 
     /** Read the file content and return the number contained in the file. */
@@ -186,6 +186,6 @@ public class BugAP7806_WorkflowSaveHooks extends WorkflowTestCase {
             }
         }
 
-        assertEquals("Unexpected input parameters definition written", expectedInputParameters, actualInputParameters);
+        assertEquals(expectedInputParameters, actualInputParameters, "Unexpected input parameters definition written");
     }
 }

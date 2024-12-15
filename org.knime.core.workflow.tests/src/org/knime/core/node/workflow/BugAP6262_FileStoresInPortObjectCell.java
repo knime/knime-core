@@ -103,7 +103,7 @@ public class BugAP6262_FileStoresInPortObjectCell extends WorkflowTestCase {
         assertNull(getManager());
         WorkflowLoadResult loadResult = initWorkflowFromTemp();
         manager = getManager();
-        assertFalse("should not have errors", loadResult.hasErrors());
+        assertFalse(loadResult.hasErrors(), "should not have errors");
         checkState(manager, EXECUTED);
         reset(m_predictorLoopStart_11);
         checkState(manager, IDLE);
@@ -118,4 +118,4 @@ public class BugAP6262_FileStoresInPortObjectCell extends WorkflowTestCase {
         super.tearDown();
         FileUtil.deleteRecursively(m_workflowDir);
     }
-
+}

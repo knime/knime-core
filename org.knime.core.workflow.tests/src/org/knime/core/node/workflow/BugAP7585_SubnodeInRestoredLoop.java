@@ -94,9 +94,9 @@ public class BugAP7585_SubnodeInRestoredLoop extends WorkflowTestCase {
             executeAndWait(id);
             checkState(id, CONFIGURED);
             NodeMessage nodeMessage = getManager().findNodeContainer(id).getNodeMessage();
-            assertEquals("Expected error", NodeMessage.Type.ERROR, nodeMessage.getMessageType());
-            assertTrue("Expected error about restored loop",
-                nodeMessage.getMessage().contains("restored"));
+            assertEquals(NodeMessage.Type.ERROR, nodeMessage.getMessageType(), "Expected error");
+            assertTrue(nodeMessage.getMessage().contains("restored"),
+                "Expected error about restored loop");
         }
     }
 
@@ -107,9 +107,9 @@ public class BugAP7585_SubnodeInRestoredLoop extends WorkflowTestCase {
         for (NodeID id: Arrays.asList(m_rowFilter_3, m_subnode_6, m_subnode_9)) {
             checkState(id, CONFIGURED);
             NodeMessage nodeMessage = getManager().findNodeContainer(id).getNodeMessage();
-            assertEquals("Expected error", NodeMessage.Type.ERROR, nodeMessage.getMessageType());
-            assertTrue("Expected error about restored loop",
-                nodeMessage.getMessage().contains("restored"));
+            assertEquals(NodeMessage.Type.ERROR, nodeMessage.getMessageType(), "Expected error");
+            assertTrue(nodeMessage.getMessage().contains("restored"),
+                "Expected error about restored loop");
         }
     }
 

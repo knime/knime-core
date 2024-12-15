@@ -1,4 +1,49 @@
-MISSINGpackage org.knime.core.node.workflow;
+/*
+ * ------------------------------------------------------------------------
+ *  Copyright by KNIME AG, Zurich, Switzerland
+ *  Website: http://www.knime.com; Email: contact@knime.com
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME AG herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
+ *
+ */
+package org.knime.core.node.workflow;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -79,9 +124,9 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 
 		// should not contain, e.g., node settings in plain text
 		assertFalse(
+				toCopy.contains("secret"),
 				"System clipboard representation is unsafe. Must not contain the plain text string \"secret\" but is "
-						+ toCopy,
-				toCopy.contains("secret"));
+						+ toCopy);
 	}
 
 	/**
@@ -105,12 +150,12 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 
 		// make sure everything is still intact after one roundtrip
 		assertEquals(
-				"System clipboard representation is broken. Deserialized payload identifier must be equal to serialized content.",
-				defClipboardContent.getPayloadIdentifier(), deserialized.getPayloadIdentifier());
+				defClipboardContent.getPayloadIdentifier(),
+				deserialized.getPayloadIdentifier(), "System clipboard representation is broken. Deserialized payload identifier must be equal to serialized content.");
 
 		assertEquals(
-				"System clipboard representation is broken. Deserialized version must be equal to serialized content.",
-				defClipboardContent.getVersion(), deserialized.getVersion());
+				defClipboardContent.getVersion(),
+				deserialized.getVersion(), "System clipboard representation is broken. Deserialized version must be equal to serialized content.");
 
 		// payload comparison via representation. Equals as in defClipboardContent.equals(deserialized) currently does
 		// not work because for instance the MetanodeToDefAdapter contained in defClipboardContent does not override 
@@ -123,12 +168,12 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 				.writeValueAsString(deserialized.getPayload());
 
 		assertEquals(
-				"System clipboard representation is broken. Deserialized payload must be equal to serialized content.",
-				expectedRepresentation, actualRepresentation);
+				expectedRepresentation,
+				actualRepresentation, "System clipboard representation is broken. Deserialized payload must be equal to serialized content.");
 
 		assertEquals(
-				"System clipboard representation is broken. Deserialized payload must be equal to serialized content.",
-				expectedRepresentation, actualRepresentation);
+				expectedRepresentation,
+				actualRepresentation, "System clipboard representation is broken. Deserialized payload must be equal to serialized content.");
 	}
 
 	/**
@@ -143,10 +188,10 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 		var pastedLockedMetanode = ((WorkflowManager) pastedMetanode).getNodeContainer(pastedMetanodeId.createChild(3));
 		// hashed password is still the same (to make sure the cipher is still intact)
 		assertEquals(
-				"Locked metanode seems to have been unlocked during copy and paste operation. "
-						+ "The cipher was broken through alteration of the password digest.",
 				"C3499C2729730A7F807EFB8676A92DCB6F8A3F8F",
-				((WorkflowManager) pastedLockedMetanode).getWorkflowCipher().toDef().getPasswordDigest());
+				((WorkflowManager) pastedLockedMetanode).getWorkflowCipher().toDef().getPasswordDigest(),
+				"Locked metanode seems to have been unlocked during copy and paste operation. "
+						+ "The cipher was broken through alteration of the password digest.");
 	}
 
 	/**
@@ -162,14 +207,14 @@ public class BugAP19479_Component_Encryption extends WorkflowTestCase {
 				.getNodeContainer(pastedComponentId.createChild(0).createChild(3));
 		// by (confusing) convention, the locked component does not define the cipher
 		// itself, but a null cipher...
-		assertTrue("Pasted locked component should not have a cipher (its contained workflow should).",
-				pastedLockedComponent.getWorkflowCipher().isNullCipher());
+		assertTrue(pastedLockedComponent.getWorkflowCipher().isNullCipher(),
+				"Pasted locked component should not have a cipher (its contained workflow should).");
 		// ...and the workflow manager in the locked component defines the cipher
 		assertEquals(
-				"Locked component seems to have been unlocked during copy and paste operation. "
-						+ "The cipher was broken through alteration of the password digest.",
 				"C3499C2729730A7F807EFB8676A92DCB6F8A3F8F",
-				pastedLockedComponent.getWorkflowManager().getWorkflowCipher().toDef().getPasswordDigest());
+				pastedLockedComponent.getWorkflowManager().getWorkflowCipher().toDef().getPasswordDigest(),
+				"Locked component seems to have been unlocked during copy and paste operation. "
+						+ "The cipher was broken through alteration of the password digest.");
 	}
 
 	/**

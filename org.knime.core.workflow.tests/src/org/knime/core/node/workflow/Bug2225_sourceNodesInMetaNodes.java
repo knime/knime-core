@@ -109,4 +109,4 @@ public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
     public void tearDown() throws Exception {
         super.tearDown();
     }
-
+}

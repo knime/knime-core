@@ -141,8 +141,8 @@ public class BugAP19046_BlobDuplicatesInNewTableReader extends WorkflowTestCase 
 		var iterator = FileUtils.iterateFiles(containingFolder, new NameFileFilter(fileName),
 				TrueFileFilter.TRUE);
 		try {
-			assertTrue(String.format("Folder \"%s\" contains no file '%s'", containingFolder, fileName),
-					iterator.hasNext());
+			assertTrue(iterator.hasNext(),
+					String.format("Folder \"%s\" contains no file '%s'", containingFolder, fileName));
 			File dataZip = iterator.next();
 			try (ZipFile zipFile = new ZipFile(dataZip)) {
 				return zipFile.stream().filter(entry -> !entry.isDirectory())

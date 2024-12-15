@@ -73,8 +73,8 @@ public class Bug4385_FileStoresWithLowMemory extends WorkflowTestCase {
         checkState(InternalNodeContainerState.CONFIGURED);
         executeAllAndWait();
         for (NodeContainer nc : getManager().getNodeContainers()) {
-            assertEquals("Node " + nc.getNameWithID() + ": " + nc.getNodeMessage(),
-                NodeMessage.Type.RESET, nc.getNodeMessage().getMessageType());
+            assertEquals(NodeMessage.Type.RESET,
+                nc.getNodeMessage().getMessageType(), "Node " + nc.getNameWithID() + ": " + nc.getNodeMessage());
         }
         MemoryAlertSystem.getInstance().sendMemoryAlert();
         checkState(InternalNodeContainerState.EXECUTED);

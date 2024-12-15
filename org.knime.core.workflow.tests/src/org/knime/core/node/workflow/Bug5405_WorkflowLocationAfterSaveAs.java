@@ -47,14 +47,14 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.util.Map;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.data.container.BufferedContainerTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
-import org.knime.core.util.FileUtil;
 
 /**
  * Tests Save As.
@@ -92,15 +92,13 @@ public class Bug5405_WorkflowLocationAfterSaveAs extends WorkflowTestCase {
 
     /** Loads the workflow, saves it to new location, then executes. */
     @Test
-    public void testExecAfterSaveAs() throws Exception {
+    public void testExecAfterSaveAs(@TempDir File saveAsFolder) throws Exception {
         WorkflowManager manager = getManager();
         ContainerTable fileReaderTable = getExecuteFileReaderTable();
         // tables are not extracted to workflow temp space after load (lazy init)
         Assertions.assertFalse(((BufferedContainerTable)fileReaderTable).isOpen());
         Assertions.assertNotNull(manager.getContext());
         Assertions.assertEquals(manager.getNodeContainerDirectory().getFile(), manager.getContext().getCurrentLocation());
-        File saveAsFolder = FileUtil.createTempDir(getClass().getName());
-        saveAsFolder.delete();
 
         final var oldContext = manager.getContextV2();
         final var oldExecutorInfo = oldContext.getExecutorInfo();

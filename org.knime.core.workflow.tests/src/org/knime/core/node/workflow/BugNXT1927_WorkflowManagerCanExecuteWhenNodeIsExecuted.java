@@ -75,12 +75,12 @@ public class BugNXT1927_WorkflowManagerCanExecuteWhenNodeIsExecuted extends Work
     public void testCanExecuteWhenNodeIsExecuted() throws Exception {
         final WorkflowManager manager = getManager();
         checkState(m_columnFilter7, CONFIGURED);
-        assertTrue("'canExecuteNode(columnFilter)' after load",
-        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7));
+        assertTrue(findParent(m_columnFilter7).canExecuteNode(m_columnFilter7),
+        		"'canExecuteNode(columnFilter)' after load");
         executeAndWait(m_columnFilter7);
         checkState(m_columnFilter7, EXECUTED);
-        assertFalse("'canExecuteNode(columnFilter)' after execution",
-        		findParent(m_columnFilter7).canExecuteNode(m_columnFilter7));
+        assertFalse(findParent(m_columnFilter7).canExecuteNode(m_columnFilter7),
+        		"'canExecuteNode(columnFilter)' after execution");
     }
 
 }

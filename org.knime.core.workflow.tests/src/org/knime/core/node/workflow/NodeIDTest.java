@@ -48,10 +48,10 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThat;
 
 import java.io.IOException;
 
@@ -131,7 +131,7 @@ public class NodeIDTest {
         String serialized = mapper.writeValueAsString(id);
         NodeID deserialized = mapper.readValue(serialized, NodeID.class);
         assertThat("JSON deserialization returns equal NodeID", deserialized, is(id));
-        assertFalse("JSON deserialization does not return identical NodeID", id == deserialized);
+        assertFalse(id == deserialized, "JSON deserialization does not return identical NodeID");
     }
 
 }

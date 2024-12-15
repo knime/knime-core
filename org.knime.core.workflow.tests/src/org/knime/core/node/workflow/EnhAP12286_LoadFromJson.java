@@ -56,8 +56,7 @@ import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -75,9 +74,9 @@ import jakarta.json.JsonValue;
  *
  * @author Moritz Heine, KNIME GmbH, Konstanz, Germany
  */
-@ExtendWith(WorkflowTestCase.class)
 public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     /**
@@ -87,7 +86,6 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
      */
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -122,7 +120,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
         //... and save
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);
 
-        assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
+        assertTrue(actualWorkflowConfig.exists(), "'workflow-configuration.json' missing");
         JsonObject actualConfigContent = null;
 
 		try (final JsonReader reader = JsonUtil.getProvider()
@@ -135,7 +133,7 @@ public class EnhAP12286_LoadFromJson extends WorkflowTestCase {
         expectedWorkflowConfig = new File(m_workflowDir, "/Data/workflow-configuration-representation.json");
         actualWorkflowConfig = new File(artifactsDirectory, "workflow-configuration-representation.json");
 
-        assertTrue("'workflow-configuration.json' missing", actualWorkflowConfig.exists());
+        assertTrue(actualWorkflowConfig.exists(), "'workflow-configuration.json' missing");
 
 		try (final JsonReader reader = JsonUtil.getProvider()
 				.createReader(FileUtils.openInputStream(expectedWorkflowConfig))) {

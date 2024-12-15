@@ -102,12 +102,12 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     public void testWizardStepThroughWithSeveralLoopIterations() throws Exception {
         final int numLoops = 3;
         final WorkflowManager wfm = getManager();
-        assertTrue("Should have new wizard execution", WebResourceController.hasWizardExecution(wfm));
+        assertTrue(WebResourceController.hasWizardExecution(wfm), "Should have new wizard execution");
         checkState(m_filterSubnode, InternalNodeContainerState.CONFIGURED);
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
         wizardController.stepFirst();
         waitWhile(wfm, new WizardHold(), -1);
-        assertTrue("Should have steps", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "Should have steps");
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
         WizardPage currentWizardPage = wizardController.getCurrentWizardPage();
         //don't load anything here, just execute to next subnode (all columns included)
@@ -120,7 +120,7 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         String intInputID = m_noClustersSubnode.getIndex() + ":0:" + m_intInputInNoClusterSubnode.getIndex();
         valueMap.put(intInputID, "{\"integer\":" + numLoops + "}");
         Map<String, ValidationError> errorMap = wizardController.loadValuesIntoCurrentPage(valueMap);
-        assertEquals("Loading number of clusters should not have caused errors", 0, errorMap.size());
+        assertEquals(0, errorMap.size(), "Loading number of clusters should not have caused errors");
 
         //looping over clusters
         for (int curLoop = 1; curLoop <= numLoops; curLoop++) {
@@ -130,13 +130,13 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
             checkState(m_labelClustersSubnode, InternalNodeContainerState.EXECUTED);
             checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
             currentWizardPage = wizardController.getCurrentWizardPage();
-            assertEquals("Labeling page should have 3 components", 3, currentWizardPage.getPageMap().size());
-            assertNotNull("Labeling page should contain string input", currentWizardPage.getPageMap().get(NodeIDSuffix.fromString(stringInputID)));
+            assertEquals(3, currentWizardPage.getPageMap().size(), "Labeling page should have 3 components");
+            assertNotNull(currentWizardPage.getPageMap().get(NodeIDSuffix.fromString(stringInputID)), "Labeling page should contain string input");
             valueMap.clear();
             //label for cluster
             valueMap.put(stringInputID, "{\"string\":\"Cluster " + curLoop + "\"}");
             errorMap = wizardController.loadValuesIntoCurrentPage(valueMap);
-            assertEquals("Loading cluster label should not have caused errors", 0, errorMap.size());
+            assertEquals(0, errorMap.size(), "Loading cluster label should not have caused errors");
         }
 
         //display result of labeling
@@ -144,12 +144,12 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         waitWhile(wfm, new WizardHold(), -1);
         checkState(m_showClustersSubnode, InternalNodeContainerState.EXECUTED);
         currentWizardPage = wizardController.getCurrentWizardPage();
-        assertEquals("Result page should have 2 components", 2, currentWizardPage.getPageMap().size());
+        assertEquals(2, currentWizardPage.getPageMap().size(), "Result page should have 2 components");
 
         //finish execute
         wizardController.stepNext();
         waitWhile(wfm, new WizardHold(), -1);
-        assertFalse("Should have no more pages", wizardController.hasCurrentWizardPage());
+        assertFalse(wizardController.hasCurrentWizardPage(), "Should have no more pages");
         checkState(wfm, InternalNodeContainerState.EXECUTED);
     }
 
@@ -157,10 +157,10 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
     public void testWizardStepBackInsideLoop() throws Exception {
         final WorkflowManager wfm = getManager();
         WizardExecutionController wizardController = wfm.getWizardExecutionController();
-        assertFalse("Should have no previous steps", wizardController.hasPreviousWizardPage());
+        assertFalse(wizardController.hasPreviousWizardPage(), "Should have no previous steps");
         wizardController.stepFirst();
         waitWhile(wfm, new WizardHold(), -1);
-        assertTrue("should have steps", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "should have steps");
         checkState(m_colFilterInFilterSubnode, InternalNodeContainerState.EXECUTED);
 
         //standard no of clusters (5)
@@ -179,12 +179,12 @@ public class TestWizardExec_LoadValuesInSubnode extends WorkflowTestCase {
         checkState(m_loopEndNode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
 
         //step back from inside loop
-        assertTrue("Should have previous steps", wizardController.hasPreviousWizardPage());
+        assertTrue(wizardController.hasPreviousWizardPage(), "Should have previous steps");
         wizardController.stepBack();
         checkState(m_noClustersSubnode, InternalNodeContainerState.EXECUTED);
         //checkState(m_labelClustersSubnode, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
         checkState(wfm, InternalNodeContainerState.IDLE);
-        assertTrue("Should have page to prompt", wizardController.hasCurrentWizardPage());
+        assertTrue(wizardController.hasCurrentWizardPage(), "Should have page to prompt");
 
         //execute all
 

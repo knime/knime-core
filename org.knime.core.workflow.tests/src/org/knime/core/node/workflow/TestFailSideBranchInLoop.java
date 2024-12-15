@@ -45,8 +45,8 @@
 package org.knime.core.node.workflow;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
 
 /**
  *
@@ -69,8 +69,8 @@ public class TestFailSideBranchInLoop extends WorkflowTestCase {
     }
 
     @Test
+    @Disabled("Disabled - outstanding hidden problems")
     public void bug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
-        Assumptions.assumeTrue("Disabled - outstanding hidden problems", false);
         checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
         checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);
