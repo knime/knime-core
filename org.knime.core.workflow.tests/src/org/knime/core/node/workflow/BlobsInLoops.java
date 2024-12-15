@@ -44,11 +44,11 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.io.File;
 
-import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -117,7 +117,7 @@ public class BlobsInLoops extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_create1, m_source3);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         closeWorkflow();
-        Assertions.assertThat(getManager()).as("Workflow is null").isNull();
+        assertNull(getManager(), "Workflow is null");
         init();
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_create1, m_source3);
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_verify2, m_tableReader5, m_verify6);
@@ -132,7 +132,7 @@ public class BlobsInLoops extends WorkflowTestCase {
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_loopEnd14, m_verify15);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         closeWorkflow();
-        Assertions.assertThat(getManager()).as("Workflow is null").isNull();
+        assertNull(getManager(), "Workflow is null");
         init();
         checkStateOfMany(InternalNodeContainerState.EXECUTED, m_loopEnd14, m_verify15);
         reset(m_verify15);

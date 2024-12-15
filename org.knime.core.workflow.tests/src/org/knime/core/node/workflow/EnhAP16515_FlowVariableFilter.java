@@ -50,12 +50,9 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.util.LinkedHashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -83,7 +80,7 @@ public class EnhAP16515_FlowVariableFilter extends WorkflowTestCase {
 
     @BeforeEach
     public void setUp() throws Exception {
-    	File wfDir = m_tempFolder.newFolder(getClass().getSimpleName());
+    	File wfDir = new File(m_tempFolder, getClass().getSimpleName());
     	FileUtils.copyDirectory(getDefaultWorkflowDirectory(), wfDir);
     	loadAndSetWorkflow(wfDir);
     }

@@ -100,9 +100,9 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     @Test
     public void testExecuteFlow() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
         checkState(m_credentialsValidate_2, CONFIGURED);
-        assertFalse("Not expected to be dirty", getManager().isDirty());
+        assertFalse(getManager().isDirty(), "Not expected to be dirty");
 
         executeAndWait(m_credentialsValidate_2);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.EXECUTED);
@@ -113,12 +113,12 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     public void testExecuteWrongPassword() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-wrong-password"));
         checkState(m_credentialsValidate_2, IDLE);
-        assertTrue("Expected to be dirty", getManager().isDirty()); // dirty because of CONFIGURED -> IDLE
+        assertTrue(getManager().isDirty(), "Expected to be dirty"); // dirty because of CONFIGURED -> IDLE
 
         executeAndWait(m_credentialsValidate_2);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.IDLE);
         assertFalse(((NativeNodeContainer)findNodeContainer(m_credentialsInput_1)).isInactive());
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
     }
 
     @Test
@@ -139,17 +139,17 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         checkState(m_credentialsInput_1, InternalNodeContainerState.EXECUTED);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.CONFIGURED);
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
 
         closeWorkflow();
 
         loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         // input node is executed - so no prompt expected
-        assertFalse("Password prompted but shouldn't", loadHelper.hasBeenPrompted());
+        assertFalse(loadHelper.hasBeenPrompted(), "Password prompted but shouldn't");
 
         checkState(m_credentialsInput_1, InternalNodeContainerState.EXECUTED);
         checkState(m_credentialsValidate_2, InternalNodeContainerState.IDLE);
-        assertTrue("Expected to be dirty", getManager().isDirty()); // because 2nd validator is now idle
+        assertTrue(getManager().isDirty(), "Expected to be dirty"); // because 2nd validator is now idle
 
         executeAndWait(m_credentialsValidate_2, m_credentialsValidate_4);
         // expected to fail - null password
@@ -160,15 +160,15 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     @Test
     public void testLoadWhileInactive() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
         getManager().addConnection(m_activeBranchInverter_3, 1, m_credentialsInput_1, 0);
         executeAndWait(m_activeBranchInverter_3); // must be executed to make downstream flow inactive
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
 
         closeWorkflow(); // don't save
         loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
-        assertFalse("Not expected to be dirty", getManager().isDirty());
-        assertFalse("password prompted although inactive", loadHelper.hasBeenPrompted());
+        assertFalse(getManager().isDirty(), "Not expected to be dirty");
+        assertFalse(loadHelper.hasBeenPrompted(), "password prompted although inactive");
 
         checkState(m_credentialsInput_1, CONFIGURED);
         executeAllAndWait();
@@ -178,7 +178,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
     @Test
     public void testCollapseToSubnodeThenSaveLoad() throws Exception {
         TestWorkflowLoadHelper loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
 
         /* Collapse into subnode - make sure it's there */
         CollapseIntoMetaNodeResult collapseResult = getManager().collapseIntoMetaNode(new NodeID[] {m_credentialsInput_1},
@@ -187,7 +187,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
             collapseResult.getCollapsedMetanodeID(), WorkflowManager.class, true);
 
         getManager().convertMetaNodeToSubNode(metaNode.getID());
-        assertFalse("Expected to be removed", getManager().containsNodeContainer(m_credentialsInput_1));
+        assertFalse(getManager().containsNodeContainer(m_credentialsInput_1), "Expected to be removed");
 
         SubNodeContainer subNode = getManager().getNodeContainer(metaNode.getID(), SubNodeContainer.class, true);
         subNode.updateOutputConfigurationToIncludeAllFlowVariables();
@@ -195,7 +195,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         final int subNodeIDIndex = subnodeID.getIndex();
 
         ConnectionContainer findInConnection = findInConnection(m_credentialsValidate_2, 1);
-        assertEquals("Source should be subnode", subnodeID, findInConnection.getSource());
+        assertEquals(subnodeID, findInConnection.getSource(), "Source should be subnode");
 
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
         executeAndWait(m_credentialsValidate_2);
@@ -206,7 +206,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         loadHelper = initFlow(new TestWorkflowLoadHelper("some-wrong-password"));
         subnodeID = getManager().getID().createChild(subNodeIDIndex);
         checkState(subnodeID, CONFIGURED);
-        assertTrue("No password prompted", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "No password prompted");
 
         getManager().save(m_workflowDirTemp, new ExecutionMonitor(), true);
 
@@ -217,10 +217,10 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
 
         /* Load: subnode contained but not executed - prompt expected, enter correct password */
         loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
-        assertFalse("Expected to be removed", getManager().containsNodeContainer(m_credentialsInput_1));
+        assertFalse(getManager().containsNodeContainer(m_credentialsInput_1), "Expected to be removed");
         subnodeID = getManager().getID().createChild(subNodeIDIndex);
         checkState(subnodeID, CONFIGURED);
-        assertTrue("password prompt not expected", loadHelper.hasBeenPrompted());
+        assertTrue(loadHelper.hasBeenPrompted(), "password prompt not expected");
 
         executeAndWait(subnodeID);
         checkState(subnodeID, EXECUTED);
@@ -234,7 +234,7 @@ public class Bug3673_CredentialsInputNode_Test2_SimpleNodeWithNoSavedPassword ex
         loadHelper = initFlow(new TestWorkflowLoadHelper("some-fixed-password"));
         subnodeID = getManager().getID().createChild(subNodeIDIndex);
         checkState(subnodeID, EXECUTED);
-        assertFalse("password prompt not expected", loadHelper.hasBeenPrompted());
+        assertFalse(loadHelper.hasBeenPrompted(), "password prompt not expected");
 
         executeAndWait(m_credentialsValidate_2);
         checkState(m_credentialsValidate_2, IDLE);

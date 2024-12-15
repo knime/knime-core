@@ -44,22 +44,22 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.ComponentMetadata.ComponentNodeType;
-import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
@@ -71,6 +71,7 @@ import org.knime.core.util.LoadVersion;
  */
 public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     private NodeID m_component_4;
@@ -82,7 +83,6 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
      */
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -104,14 +104,14 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
     public void testLoadSaveAndReloadComponentMetadata() throws Exception {
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_4);
         ComponentMetadata metadata = component.getMetadata();
-        assertTrue("unexpected load version", getManager().getLoadVersion().isOlderThan(LoadVersion.V4010));
+        assertTrue(getManager().getLoadVersion().isOlderThan(LoadVersion.V4010), "unexpected load version");
         assertThat("unexpected metadata", metadata.getDescription().get(), containsString("original"));
         assertThat("unexpected metadata", metadata.getInPortNames().get()[0], containsString("original"));
         assertThat("unexpected metadata", metadata.getOutPortNames().get()[0], containsString("original"));
         assertThat("unexpected metadata", metadata.getInPortDescriptions().get()[0], containsString("original"));
         assertThat("unexpected metadata", metadata.getOutPortDescriptions().get()[0], containsString("original"));
-        assertFalse("unexpected metadata", metadata.getIcon().isPresent());
-        assertFalse("unexpected metadata", metadata.getNodeType().isPresent());
+        assertFalse(metadata.getIcon().isPresent(), "unexpected metadata");
+        assertFalse(metadata.getNodeType().isPresent(), "unexpected metadata");
 
         //set new metadata
         component.setMetadata(createComponentMetadata());
@@ -156,7 +156,7 @@ public class EnhAP13038_ComponentMetadata extends WorkflowTestCase {
      */
     @Test
     public void testAddRemovePorts() throws Exception {
-        assertTrue("unexpected load version", getManager().getLoadVersion().isOlderThan(LoadVersion.V4010));
+        assertTrue(getManager().getLoadVersion().isOlderThan(LoadVersion.V4010), "unexpected load version");
         testAddRemovePortsInternal();
 
         getManager().save(m_workflowDir, new ExecutionMonitor(), true);

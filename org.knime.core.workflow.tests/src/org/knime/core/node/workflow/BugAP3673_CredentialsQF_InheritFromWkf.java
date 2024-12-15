@@ -44,12 +44,9 @@
  */
 package org.knime.core.node.workflow;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThat;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
@@ -74,9 +71,9 @@ public class BugAP3673_CredentialsQF_InheritFromWkf extends WorkflowTestCase {
         final TestWorkflowLoadHelper lH = new TestWorkflowLoadHelper("some-fixed-password");
         WorkflowLoadResult loadWorkflow = loadWorkflow(getDefaultWorkflowDirectory(), new ExecutionMonitor(), lH);
         setManager(loadWorkflow.getWorkflowManager());
-        assertThat("Invalid prompt count - only workflow variables are expected to be prompted", lH.getPromptCount(),
-            is(1));
-        executeAllAndWait();
+		assertThat("Invalid prompt count - only workflow variables are expected to be prompted", lH.getPromptCount(),
+				is(1));
+	    executeAllAndWait();
         checkState(getManager(), InternalNodeContainerState.EXECUTED);
     }
 

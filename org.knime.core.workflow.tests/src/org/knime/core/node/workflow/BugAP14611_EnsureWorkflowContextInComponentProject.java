@@ -53,6 +53,7 @@ import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -66,6 +67,7 @@ import org.knime.core.util.FileUtil;
  */
 public class BugAP14611_EnsureWorkflowContextInComponentProject extends WorkflowTestCase {
 
+	@TempDir
 	private File m_workflowDir;
 
 	private NodeID m_component_2;
@@ -77,7 +79,6 @@ public class BugAP14611_EnsureWorkflowContextInComponentProject extends Workflow
 	 */
 	@BeforeEach
 	public void setup() throws Exception {
-		m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
 		initWorkflowFromTemp();
 	}
@@ -97,13 +98,12 @@ public class BugAP14611_EnsureWorkflowContextInComponentProject extends Workflow
 	 * @throws Exception
 	 */
 	@Test
-	public void testWorkflowContextOfComponentProject() throws Exception {
+	public void testWorkflowContextOfComponentProject(@TempDir File componentDir) throws Exception {
 		SubNodeContainer component = (SubNodeContainer) getManager().getNodeContainer(m_component_2);
-		assertNull("embedded components aren't expected to provide a workflow context",
-				component.getWorkflowManager().getContext());
+		assertNull(component.getWorkflowManager().getContext(),
+				"embedded components aren't expected to provide a workflow context");
 
 		/* save component */
-		File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
 		component.saveAsTemplate(componentDir, new ExecutionMonitor());
 
 		/* save and open without example input data */
@@ -114,7 +114,7 @@ public class BugAP14611_EnsureWorkflowContextInComponentProject extends Workflow
 
 		/* check workflow context */
 		WorkflowContextV2 context = componentProject.getWorkflowManager().getContextV2();
-		assertNotNull("workflow context expected to be available for component project", context);
+		assertNotNull(context, "workflow context expected to be available for component project");
 	}
 
 }

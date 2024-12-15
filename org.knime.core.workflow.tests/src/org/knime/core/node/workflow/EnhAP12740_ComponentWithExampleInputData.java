@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
@@ -73,6 +74,7 @@ import org.knime.core.util.FileUtil;
  */
 public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
 
+	@TempDir
     private File m_workflowDir;
 
     private NodeID m_component_10;
@@ -84,7 +86,6 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
      */
     @BeforeEach
     public void setup() throws Exception {
-        m_workflowDir = FileUtil.createTempDir(getClass().getSimpleName());
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
@@ -197,28 +198,28 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
         /* the actual tests */
-        assertFalse("changes tracker should not be initialised", componentProject.getChangesTracker().isPresent());
+        assertFalse(componentProject.getChangesTracker().isPresent(), "changes tracker should not be initialised");
         componentProject.initChangesTracker();
         WorkflowManager wfm = componentProject.getWorkflowManager();
 
         //execute node
         wfm.executeAllAndWaitUntilDone();
-        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
-        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertFalse(componentProject.getTrackedChanges().get().hasOtherChanges(), "no other changes expected");
+        assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //reset node
         wfm.resetAndConfigureNode(componentProject.getVirtualOutNodeID());
-        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
-        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertFalse(componentProject.getTrackedChanges().get().hasOtherChanges(), "no other changes expected");
+        assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //save
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //should reset the changes tracker
-        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertFalse(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "no node state changes expected");
 
         //reset all
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.resetAndConfigureAll();
-        assertFalse("no other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertFalse(componentProject.getTrackedChanges().get().hasOtherChanges(), "no other changes expected");
 
         NodeID stringManipulation_9 = new NodeID(wfm.getID(), 9);
         //change node settings
@@ -226,21 +227,21 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         NodeSettings settings = new NodeSettings("settings");
         wfm.getNodeContainer(stringManipulation_9).saveSettings(settings);
         wfm.loadNodeSettings(stringManipulation_9, settings);
-        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
-        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertTrue(componentProject.getTrackedChanges().get().hasOtherChanges(), "other changes expected");
+        assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //delete connection
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.removeConnection(wfm.getConnection(new ConnectionID(stringManipulation_9, 1)));
-        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
+        assertTrue(componentProject.getTrackedChanges().get().hasOtherChanges(), "other changes expected");
         //node state changes expected to IDLE
-        assertTrue("node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //delete node
         componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.removeNode(stringManipulation_9);
-        assertTrue("other changes expected", componentProject.getTrackedChanges().get().hasOtherChanges());
-        assertFalse("no node state changes expected", componentProject.getTrackedChanges().get().hasNodeStateChanges());
+        assertTrue(componentProject.getTrackedChanges().get().hasOtherChanges(), "other changes expected");
+        assertFalse(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "no node state changes expected");
     }
 
     /**

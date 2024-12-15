@@ -50,7 +50,7 @@ package org.knime.core.node.workflow.execresult;
 
 import java.io.IOException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

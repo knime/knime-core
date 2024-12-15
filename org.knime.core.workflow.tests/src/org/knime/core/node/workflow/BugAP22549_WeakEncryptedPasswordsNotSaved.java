@@ -47,7 +47,6 @@ package org.knime.core.node.workflow;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isA;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
@@ -57,17 +56,15 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.customization.APCustomization;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.internal.CorePlugin;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.missing.MissingNodeFactory;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
@@ -82,7 +79,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  * 
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-@ExtendWith(TemporaryFolder.class)
 public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase {
 
 	private static final String DISALLOWED_PASSWORD_SAVING_YML = """
@@ -149,6 +145,7 @@ public class BugAP22549_WeakEncryptedPasswordsNotSaved extends WorkflowTestCase 
 		assertThat("Node message after load", validateNodeMessage.getMessage(), containsString("password"));
 	}
 
+	@AfterEach
 	@Override
 	public void tearDown() throws Exception {
 		unsetCustomization();

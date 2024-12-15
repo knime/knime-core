@@ -55,6 +55,7 @@ import java.io.File;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowEvent.Type;
@@ -71,8 +72,7 @@ public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTest
 	private WorkflowLoadHelper m_loadHelper;
 
 	@BeforeEach
-	public void loadComponent() throws Exception {
-		var componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+	public void loadComponent(@TempDir File componentDir) throws Exception {
 		FileUtil.copyDir(getDefaultWorkflowDirectory(), componentDir);
 		m_loadHelper = new WorkflowLoadHelper(true, true,
 				WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));

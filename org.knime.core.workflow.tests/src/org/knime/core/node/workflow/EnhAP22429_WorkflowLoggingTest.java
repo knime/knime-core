@@ -58,9 +58,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.core.node.NodeLoggerConfig;
-import org.knime.core.node.logging.KNIMELogger;
-import org.knime.core.util.Pair;
 
 
 /**

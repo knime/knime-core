@@ -135,7 +135,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         try {
             m.executeUpToHere(m_tableView7);
             InternalNodeContainerState subnodeNodeState = findNodeContainer(m_subnode12).getInternalState();
-            assertTrue("should be in-execution: " + subnodeNodeState, subnodeNodeState.isExecutionInProgress());
+            assertTrue(subnodeNodeState.isExecutionInProgress(), "should be in-execution: " + subnodeNodeState);
 
             final SubNodeContainer subNC = m.getNodeContainer(m_subnode12, SubNodeContainer.class, true);
 
@@ -146,7 +146,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
             checkState(m_tableView7, CONFIGURED_MARKEDFOREXEC, UNCONFIGURED_MARKEDFOREXEC);
 
             InternalNodeContainerState blockerNodeState = findNodeContainer(m_blockInner_12_10).getInternalState();
-            assertTrue("should be in-execution: " + blockerNodeState, blockerNodeState.isExecutionInProgress());
+            assertTrue(blockerNodeState.isExecutionInProgress(), "should be in-execution: " + blockerNodeState);
 
             innerLock.unlock();
             waitWhileNodeInExecution(m_subnode12);
@@ -187,7 +187,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         WorkflowManager m = getManager();
         m.shutdown();
         time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+        assertTrue(time <= MAX_TIME_MS, String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS));
     }
 
 	/**

@@ -218,4 +218,4 @@ public class Simplechainofnodes extends WorkflowTestCase {
         checkState(m_tblView, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_tblView));
     }
-
+}
