@@ -58,7 +58,6 @@ import org.knime.core.node.FluentNodeAPI;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Version;
-import org.knime.core.webui.node.impl.ExternalResource;
 import org.knime.node.DefaultModel.RequireModelSettings;
 import org.knime.node.DefaultView.RequireViewSettings;
 
