@@ -76,7 +76,7 @@ public class MyNodeFactory extends DefaultNodeFactory {
     // * (streaming and view)
     // * deprecation
     // * hidden
-    private static DefaultNode NODE = DefaultNode //
+    private static DefaultNode NODE = DefaultNode.create() //
         .name("My Node") //
         .icon("icon.png") //
         .shortDescription("foo") //
@@ -89,8 +89,10 @@ public class MyNodeFactory extends DefaultNodeFactory {
             .execute((i, o) -> {
             }) //
         ) //
-        .view(b -> b //
+        .view(v -> v //
             .settingsClass(MyViewSettings.class) //
+            .description("blub") //
+            .page((vi, p) -> p.fromString(() -> "test").relativePath("index.html")) //
         ) //
         .keywords("k1", "k2") //
         .nodeType(NodeType.Learner) //

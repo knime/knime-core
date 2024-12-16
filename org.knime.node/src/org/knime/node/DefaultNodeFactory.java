@@ -86,8 +86,7 @@ import org.knime.core.webui.node.dialog.NodeDialogFactory;
 import org.knime.core.webui.node.dialog.SettingsType;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeDialog;
 import org.knime.core.webui.node.dialog.defaultdialog.DefaultNodeSettings;
-import org.knime.core.webui.node.impl.ExternalResource;
-import org.knime.core.webui.node.impl.PortDescription;
+import org.knime.core.webui.node.impl.OptionsAdder;
 import org.knime.core.webui.node.view.NodeView;
 import org.knime.core.webui.node.view.NodeViewFactory;
 import org.knime.core.webui.page.Page;
@@ -103,7 +102,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * quasi final
+ * TODO doc
+ *
+ * TODO make sure it's quasi final
  */
 public abstract class DefaultNodeFactory extends ConfigurableNodeFactory<NodeModel>
     implements NodeDialogFactory, NodeViewFactory<NodeModel> {
