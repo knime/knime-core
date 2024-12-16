@@ -44,51 +44,46 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 18, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts.events;
+package org.knime.core.workbench.mountpoint.contribution;
 
-import java.util.EventObject;
+import java.io.IOException;
 
-import org.knime.core.workbench.mounts.WorkbenchMountPoint;
-import org.knime.core.workbench.mounts.WorkbenchMountTable;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
+import org.osgi.service.prefs.Preferences;
 
 /**
- * Event object for mount point changes.
- *
- * @author wiswedel
+ * No-op settings handler
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("serial")
-public class MountPointEvent extends EventObject {
+public class NoopMountPointSettingsHandler
+    implements WorkbenchMountPointSettingsHandler<NoopMountPointSettings> {
 
-    private final WorkbenchMountPoint m_mountPoint;
-
-    /**
-     * Constructs a new MountPointEvent.
-     *
-     * @param mountPoint mount point associated with this event
-     */
-    public MountPointEvent(final WorkbenchMountPoint mountPoint) {
-        super(WorkbenchMountTable.class);
-        m_mountPoint = mountPoint;
-    }
-
-    @SuppressWarnings("unchecked")
     @Override
-    public Class<WorkbenchMountTable> getSource() {
-        return (Class<WorkbenchMountTable>)super.getSource();
+    public NoopMountPointSettings fromStorage(final Storage storage) throws IOException {
+        return NoopMountPointSettings.INSTANCE;
     }
 
-    /**
-     * Returns the ID of the mount point associated with this event.
-     *
-     * @return the mount point ID
-     */
-    public String getMountPointID() {
-        return m_mountPoint.getMountID();
+    @Override
+    public Storage toStorage(final NoopMountPointSettings settings) throws IOException {
+        return WorkbenchMountPointSettingsHandler.EMPTY_STORAGE;
     }
 
-    public WorkbenchMountPoint getMountPoint() {
-        return m_mountPoint;
+    @Override
+    public void saveStateToPreferenceNode(final IEclipsePreferences node,
+        final NoopMountPointSettings settings) {
+        // no-op
+    }
+
+    @Override
+    public NoopMountPointSettings loadStateFromPreferenceNode(final Preferences node) {
+        return NoopMountPointSettings.INSTANCE;
+    }
+
+    @Override
+    public String asLabel(final NoopMountPointSettings settings) {
+        return "";
     }
 }

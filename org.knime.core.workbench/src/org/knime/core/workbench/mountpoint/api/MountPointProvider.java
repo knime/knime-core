@@ -42,16 +42,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
- *   Oct 30, 2024 (wiswedel): created
+ *   Oct 24, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mounts;
+package org.knime.core.workbench.mountpoint.api;
 
-/**
- * 
- * @author wiswedel
- */
-public interface WorkbenchMountPointSettings {
-
+/** Concrete providers, e.g. old explorer mount points or "modern UI" space providers will implement this. */
+public interface MountPointProvider {
+    void dispose();
 }

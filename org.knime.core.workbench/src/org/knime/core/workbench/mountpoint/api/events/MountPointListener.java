@@ -44,60 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 29, 2024 (wiswedel): created
+ *   Oct 18, 2024 (wiswedel): created
  */
-package org.knime.core.workbench;
+package org.knime.core.workbench.mountpoint.api.events;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import java.util.EventListener;
 
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-public final class WorkbenchActivator implements BundleActivator {
-
-    private static WorkbenchActivator instance;
-
-    private Map<String, WorkbenchMountPointDefinition<?>> m_mountPointDefinitionMap;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        instance = this;
-        m_mountPointDefinitionMap = WorkbenchMountPointDefinition.collectDefinitions();
-    }
-
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        m_mountPointDefinitionMap = null;
-        instance = null;
-    }
-
-    public Collection<WorkbenchMountPointDefinition<?>> getMountPointDefinitions() {
-        return m_mountPointDefinitionMap.values();
-    }
+/**
+ * Listener interface for mount point events.
+ */
+public interface MountPointListener extends EventListener {
+    /**
+     * Called when a mount point is added.
+     *
+     * @param event the event object containing details about the mount point addition
+     */
+    void mountPointAdded(MountPointEvent event);
 
     /**
-     * @return mount point definition for a type registered in an extension point
+     * Called when a mount point is removed.
+     *
+     * @param event the event object containing details about the mount point removal
      */
-    @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> Optional<WorkbenchMountPointDefinition<S>>
-        getMountPointDefinition(final String typeIdentifier) {
-        return Optional.ofNullable((WorkbenchMountPointDefinition<S>)m_mountPointDefinitionMap.get(typeIdentifier));
-    }
-
-    @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> WorkbenchMountPointDefinition<S>
-    getMountPointDefinitionOrFail(final String typeIdentifier) {
-        return (WorkbenchMountPointDefinition<S>)getMountPointDefinition(typeIdentifier)
-            .orElseThrow(() -> new IllegalStateException(
-                String.format("No mount point definition found for \"%s\"", typeIdentifier)));
-    }
-
-    public static WorkbenchActivator getInstance() {
-        return instance;
-    }
-
+    void mountPointRemoved(MountPointEvent event);
 }
