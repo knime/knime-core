@@ -983,9 +983,10 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     /**
+     * @since 5.5
      * @return the status of this node
      */
-    InternalNodeContainerState getInternalState() {
+    public InternalNodeContainerState getInternalState() {
         return m_state;
     }
 
