@@ -9777,9 +9777,10 @@ public final class WorkflowManager extends NodeContainer
      * @return the state.
      * @see NodeContainer#getInternalState()
      * @see WorkflowLock#getWFMInternalState()
+     * @since 5.5
      */
     @Override
-    InternalNodeContainerState getInternalState() {
+    public InternalNodeContainerState getInternalState() {
         try (WorkflowLock lock = lock()) {
             return lock.getWFMInternalState();
         }

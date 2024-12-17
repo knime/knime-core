@@ -51,8 +51,9 @@ import org.knime.core.node.workflow.NodeContainer.State;
 /** (Package scope) implementation of {@link NodeContainerState}.
  *
  * @author Bernd Wiswedel, Michael Berthold, KNIME AG, Zurich, Switzerland
+ * @since 5.5
  */
-enum InternalNodeContainerState implements NodeContainerState {
+public enum InternalNodeContainerState implements NodeContainerState {
 
     IDLE,
     CONFIGURED,
