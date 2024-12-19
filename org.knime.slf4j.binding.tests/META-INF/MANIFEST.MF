@@ -4,7 +4,7 @@ Bundle-Name: Unit-Tests for org.knime.slf4j.binding.tests
 Bundle-SymbolicName: org.knime.slf4j.binding.tests;singleton:=true
 Bundle-Version: 5.5.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Require-Bundle: org.knime.core;bundle-version="[5.4.0,6.0.0)",
+Require-Bundle: org.knime.core;bundle-version="[5.5.0,6.0.0)",
  slf4j.api;bundle-version="[2.0.0,3.0.0)",
  org.junit;bundle-version="[4.13.0,5.0.0)",
  org.apache.log4j;bundle-version="[1.2.21,2.0.0)",
