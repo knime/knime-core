@@ -74,7 +74,7 @@ public final class NodeFuncApi implements ApiDefinition {
     final ArgumentDefinition[] m_arguments;
 
     private static final Pattern VALID_NAME_PATTERN =
-            Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$"); //NOSONAR
+            Pattern.compile("^[a-zA-Z0-9_]+$"); //NOSONAR
 
     private NodeFuncApi(final Builder builder) {
         m_name = builder.m_name;
