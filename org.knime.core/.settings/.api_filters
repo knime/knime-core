@@ -410,6 +410,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/util/memory/ExternalProcessMemoryWatchdog.java" type="org.knime.core.data.util.memory.ExternalProcessMemoryWatchdog">
+        <filter comment="backports from future version" id="1109393411">
+            <message_arguments>
+                <message_argument value="5.3.2"/>
+                <message_argument value="org.knime.core.data.util.memory.ExternalProcessMemoryWatchdog"/>
+            </message_arguments>
+        </filter>
         <filter id="1109393411">
             <message_arguments>
                 <message_argument value="5.3.3"/>
@@ -440,12 +446,6 @@
                 <message_argument value="org.knime.core_5.3.3"/>
             </message_arguments>
         </filter>
-        <filter id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
-                <message_argument value="org.knime.core_5.3.3"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/NodeSpec.java" type="org.knime.core.node.extension.NodeSpec">
         <filter comment="refactoring of internal API as part of NXT-2570" id="338722907">
@@ -461,6 +461,15 @@
                 <message_argument value="5.3"/>
                 <message_argument value="5.4"/>
                 <message_argument value="withOptionalBooleanArgument(String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/report/ReportConfiguration.java" type="org.knime.core.node.port.report.ReportConfiguration">
+        <filter comment="backports from future version" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.4"/>
+                <message_argument value="5.3"/>
+                <message_argument value="getReportGenerationTimeout()"/>
             </message_arguments>
         </filter>
     </resource>
