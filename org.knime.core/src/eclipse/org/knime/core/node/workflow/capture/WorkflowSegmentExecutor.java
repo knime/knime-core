@@ -111,6 +111,17 @@ public final class WorkflowSegmentExecutor {
 
     private NodeID m_virtualEndID;
 
+    private final boolean m_executeAllNodes;
+
+    /**
+     * @see #WorkflowSegmentExecutor(WorkflowSegment, String, NodeContainer, boolean, boolean, Consumer)
+     */
+    public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
+        final boolean debug, final Consumer<String> warningConsumer) throws KNIMEException {
+        // executeAll option was newly introduced, using old behavior here
+        this(ws, workflowName, hostNode, debug, false, warningConsumer);
+    }
+
     /**
      * @param ws the workflow segment to execute
      * @param workflowName the name of the metanode to be created (which will only be visible if 'debug' is
@@ -119,11 +130,14 @@ public final class WorkflowSegmentExecutor {
      *            and receives the output data, supplies the file store, etc.)
      * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
      *            debugging purposes), if <code>false</code> it's hidden
+     * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior),
+     *            previously and if <code>false</code> only the output nodes would be executed
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
      * @throws KNIMEException If the workflow can't be instantiated from the segment.
+     * @since 5.3.4 (AP-18631)
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
-        final boolean debug, final Consumer<String> warningConsumer) throws KNIMEException {
+        final boolean debug, final boolean executeAll, final Consumer<String> warningConsumer) throws KNIMEException {
         m_hostNode = (NativeNodeContainer)hostNode;
         m_wfm = hostNode.getParent().createAndAddSubWorkflow(new PortType[0], new PortType[0],
             (debug ? "Debug: " : "") + workflowName);
@@ -132,6 +146,7 @@ public final class WorkflowSegmentExecutor {
         if (!debug) {
             m_wfm.hideInUI();
         }
+        m_executeAllNodes = executeAll;
 
         // position
         NodeUIInformation startUIPlain = hostNode.getUIInformation();
@@ -230,7 +245,7 @@ public final class WorkflowSegmentExecutor {
     private void executeAndWait(final ExecutionContext exec, final AtomicReference<Exception> exception) {
         // code copied from SubNodeContainer#executeWorkflowAndWait
         final Runnable inBackgroundRunner = () -> {
-            m_wfm.executeUpToHere(m_virtualEndID);
+            executeThisSegmentWithoutWaiting();
             try {
                 waitWhileInExecution(m_wfm, exec);
             } catch (InterruptedException | CanceledExecutionException e) { // NOSONAR
@@ -238,7 +253,7 @@ public final class WorkflowSegmentExecutor {
                 Thread.currentThread().interrupt();
             }
         };
-        final ThreadPool currentPool = ThreadPool.currentPool();
+        final var currentPool = ThreadPool.currentPool();
         if (currentPool != null) {
             // ordinary workflow execution
             try {
@@ -255,6 +270,14 @@ public final class WorkflowSegmentExecutor {
         } else {
             // streaming execution
             inBackgroundRunner.run();
+        }
+    }
+
+    private void executeThisSegmentWithoutWaiting() {
+        if (m_executeAllNodes) {
+            m_wfm.executeAll();
+        } else {
+            m_wfm.executeUpToHere(m_virtualEndID);
         }
     }
 
