@@ -3,7 +3,7 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter id="933232702">
             <message_arguments>
-                <message_argument value="5.3.3"/>
+                <message_argument value="5.3.4"/>
                 <message_argument value="org.apache.xmlbeans5"/>
             </message_arguments>
         </filter>
@@ -443,7 +443,7 @@
         <filter comment="Removed internal class KNIMELogMessage, which was marked with '@noreference'" id="338886760">
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeLogger.KNIMELogMessage"/>
-                <message_argument value="org.knime.core_5.3.3"/>
+                <message_argument value="org.knime.core_5.3.4"/>
             </message_arguments>
         </filter>
     </resource>
