@@ -182,7 +182,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     private Map<Integer, Integer> mapPorts(final PortsConfiguration otherConfig,
         final Function<PortsConfiguration, PortType[]> portAccess,
         final Function<PortsConfiguration, Map<String, int[]>> locAccess) {
-        if (!isComplatible(otherConfig)) {
+        if (!isCompatible(otherConfig)) {
             throw new IllegalArgumentException("The port configurations are incompatible");
         }
         final int offset = 1;
@@ -217,7 +217,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     /**
      * @param otherConfig
      */
-    private boolean isComplatible(final PortsConfiguration otherConfig) {
+    private boolean isCompatible(final PortsConfiguration otherConfig) {
         return getPortGroupNames().equals(otherConfig.getPortGroupNames());
     }
 

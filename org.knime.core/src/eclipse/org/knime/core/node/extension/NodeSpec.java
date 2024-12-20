@@ -129,7 +129,9 @@ public record NodeSpec(Factory factory, NodeType type, Ports ports, Metadata met
 
         final var fact = NodeSpec.Factory.of(factory);
         // NXT-2233 harden against buggy node descriptions
-        final var ports = tryEval(() -> Ports.of(node, factory), new Ports(List.of(), List.of(), List.of(), List.of()),
+        Supplier<Ports> p = () -> Ports.of(node, factory);
+//        Supplier<Ports> p = () -> new Ports(List.of(), List.of(), List.of(), List.of());
+        final var ports = tryEval(p, new Ports(List.of(), List.of(), List.of(), List.of()),
             factory, "Node has erroneous port information");
         final var nodeType = tryEval(factory::getType, NodeType.Other, factory, "Node has erroneous node type");
         final var fallbackVendor = new VendorDefBuilder().build();
