@@ -55,8 +55,17 @@ package org.knime.core.node.func;
  */
 final class DefaultPortDefinition extends AbstractApiDefinition implements PortDefinition {
 
-    public DefaultPortDefinition(final String name, final String description) {
+    private final String m_portType;
+
+    public DefaultPortDefinition(final String name, final String type, final String description) {
         super(name, description);
+        m_portType = type;
     }
+
+    @Override
+    public String getPortType() {
+        return m_portType;
+    }
+
 
 }

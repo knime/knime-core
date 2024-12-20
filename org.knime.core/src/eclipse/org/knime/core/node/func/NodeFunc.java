@@ -98,4 +98,11 @@ public interface NodeFunc {
      */
     String getNodeFactoryClassName();
 
+    /**
+     * @return JSON string of additional settings for the NodeFactory or null if there are none
+     */
+    default String getAdditionalFactorySettings() {
+        return null;
+    }
+
 }

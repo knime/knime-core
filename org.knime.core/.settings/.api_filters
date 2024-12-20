@@ -425,6 +425,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/func/PortDefinition.java" type="org.knime.core.node.func.PortDefinition">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.func.PortDefinition"/>
+                <message_argument value="TABLE"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/report/IReportPortObject.java" type="org.knime.core.node.port.report.IReportPortObject$ReportFragment">
         <filter id="338722907">
             <message_arguments>

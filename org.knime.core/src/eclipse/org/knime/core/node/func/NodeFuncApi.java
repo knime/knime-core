@@ -50,6 +50,7 @@ package org.knime.core.node.func;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.func.ArgumentDefinition.PrimitiveArgumentType;
@@ -144,11 +145,12 @@ public final class NodeFuncApi implements ApiDefinition {
             m_name = name;
         }
 
-        private static void checkName(final String name) {
+        private static String checkName(final String name) {
             CheckUtils.checkArgumentNotNull(name, "Name must not be null.");
             if (!VALID_NAME_PATTERN.matcher(name).matches()) {
                 throw new IllegalArgumentException("The given name '%s' is not valid.".formatted(name));
             }
+            return name;
         }
 
         /**
@@ -167,9 +169,38 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this Builder
          */
         public Builder withInputTable(final String name, final String description) {
-            checkName(name);
-            m_inputs.add(new DefaultPortDefinition(name, description));
+            return with(createPortDefinition(name, PortDefinition.TABLE, description), m_inputs::add);
+        }
+
+        /**
+         * @param name of the port
+         * @param type of the port
+         * @param description of the port
+         * @return this Builder
+         * @since 5.5
+         */
+        public Builder withInputPort(final String name, final String type, final String description) {
+            return with(createPortDefinition(name, type, description), m_inputs::add);
+        }
+
+        /**
+         * @param name of the port
+         * @param type of the port
+         * @param description of the port
+         * @return this Builder
+         * @since 5.5
+         */
+        public Builder withOutputPort(final String name, final String type, final String description) {
+            return with(createPortDefinition(name, type, description), m_outputs::add);
+        }
+
+        private <T> Builder with(final T obj, final Consumer<T> consumer) {
+            consumer.accept(obj);
             return this;
+        }
+
+        private static PortDefinition createPortDefinition(final String name, final String type, final String description) {
+            return new DefaultPortDefinition(checkName(name), type, description);
         }
 
         /**
@@ -178,17 +209,15 @@ public final class NodeFuncApi implements ApiDefinition {
          * @return this Builder
          */
         public Builder withOutputTable(final String name, final String description) {
-            checkName(name);
-            m_outputs.add(new DefaultPortDefinition(name, description));
-            return this;
+            return with(createPortDefinition(name, PortDefinition.TABLE, description), m_outputs::add);
         }
 
         private Builder withArgument(final String name, final String description, final ArgumentType type,
             final boolean isOptional) {
-            checkName(name);
-            m_arguments.add(new DefaultArgumentDefinition(name, description, type, isOptional));
+            m_arguments.add(new DefaultArgumentDefinition(checkName(name), description, type, isOptional));
             return this;
         }
+
 
         /**
          * Adds a new argument to the NodeFunc API.

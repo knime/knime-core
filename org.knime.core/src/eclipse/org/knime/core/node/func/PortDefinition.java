@@ -55,4 +55,17 @@ package org.knime.core.node.func;
  */
 public interface PortDefinition extends ApiDefinition {
 
+    /**
+     * @since 5.5
+     */
+    static final String TABLE = "table";
+
+    /**
+     * @return string representation of the port type
+     * @since 5.5
+     */
+    default String getPortType() {
+        return TABLE;
+    }
+
 }
