@@ -58,7 +58,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.customization.ui.actions.MenuEntry;
-import org.knime.core.util.User;
 import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -106,7 +105,7 @@ public final class UICustomization {
                     String.format("Invalid \"%s\": \"%s\"", "welcomeAPEndpointURL", welcomeAPEndpointURL), mfe);
             }
         }
-        m_welcomeAPEndpointURL = welcomeAPEndpointURL;
+        m_welcomeAPEndpointURL = hideWelcomeAPTiles ? null : welcomeAPEndpointURL;
     }
 
     /**
@@ -133,18 +132,17 @@ public final class UICustomization {
      */
     public Optional<String> getWelcomeAPEndpointURL(final Supplier<String> userSupplier) {
         if (m_welcomeAPEndpointURL == null) {
-            Optional.empty();
+            return Optional.empty();
         } else {
             return Optional.of(replaceUserFieldInEndpointURLIfPresent(m_welcomeAPEndpointURL, userSupplier));
         }
-        return Optional.of(m_welcomeAPEndpointURL);
     }
 
     /**
      * For user-defined endpoints, replace the placeholder "{user}" with the actual user name. In most cases (99.9%+)
      * this method does nothing as the default endpoint in the public KNIME distribution is used (see
      * {@link #KNIME_COM_ENDPOINT}). Custom Business-Hubs might deliver AP customizations with custom endpoints having
-     * place holders for the user name. The user name is determined by {@link User#getUsername()}.
+     * place holders for the user name.
      *
      * @return The modified endpoint URL in case it contains the placeholder "{user}". Otherwise the input is returned.
      */
