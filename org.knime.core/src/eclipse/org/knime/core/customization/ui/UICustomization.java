@@ -73,30 +73,17 @@ public final class UICustomization {
      * @noreference This field is not intended to be referenced by clients. */
     public static final UICustomization DEFAULT = new UICustomization();
 
+    private static final String USER_PLACEHOLDER = "{user}";
+
     private final List<MenuEntry> m_menuEntries;
 
-    private final WelcomeAPEndPointURLType m_welcomeAPEndpointURLType;
+    private final boolean m_hideWelcomeAPTiles;
 
     private final String m_welcomeAPEndpointURL;
 
-    /**
-     * The type of the welcomeAP endpoint URL.
-     *
-     * @since 5.5
-     */
-    public enum WelcomeAPEndPointURLType {
-        /** Default (KNIME hosted) endpoint. */
-        @SuppressWarnings("hiding") // UICustomization.DEFAULT
-        DEFAULT,
-        /** Custom endpoint, typically defined via business hub. */
-        CUSTOM,
-        /** No endpoint (= no title data on home/welcome page).*/
-        NONE
-    }
-
     private UICustomization() {
         m_menuEntries = List.of();
-        m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.DEFAULT;
+        m_hideWelcomeAPTiles = false;
         m_welcomeAPEndpointURL = null;
     }
 
@@ -106,23 +93,16 @@ public final class UICustomization {
         @JsonProperty("hideWelcomeAPTiles") final boolean hideWelcomeAPTiles, // added in 5.5 (and 5.4.1)
         @JsonProperty("welcomeAPEndpointURL") final String welcomeAPEndpointURL) throws IOException {
         m_menuEntries = Objects.requireNonNullElse(menuEntries, List.of());
-        if (hideWelcomeAPTiles) {
-            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.NONE;
-            m_welcomeAPEndpointURL = null;
-        } else if (welcomeAPEndpointURL == null) {
-            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.DEFAULT;
-            m_welcomeAPEndpointURL = null;
-        } else {
-            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.CUSTOM;
+        m_hideWelcomeAPTiles = hideWelcomeAPTiles;
+        if (welcomeAPEndpointURL != null) {
             try {
                 new URL(welcomeAPEndpointURL);
             } catch (MalformedURLException mfe) {
-                throw new IOException(String.format("Invalid \"%s\": \"%s\"", "welcomeAPEndpointURL",
-                    welcomeAPEndpointURL), mfe);
+                throw new IOException(
+                    String.format("Invalid \"%s\": \"%s\"", "welcomeAPEndpointURL", welcomeAPEndpointURL), mfe);
             }
-
-            m_welcomeAPEndpointURL = welcomeAPEndpointURL;
         }
+        m_welcomeAPEndpointURL = welcomeAPEndpointURL;
     }
 
     /**
@@ -133,11 +113,11 @@ public final class UICustomization {
     }
 
     /**
-     * @return the welcomeAPEndpointURLType
+     * @return whether to hide the 'welcome-AP-tile(s)' or not
      * @since 5.5
      */
-    public WelcomeAPEndPointURLType getWelcomeAPEndpointURLType() {
-        return m_welcomeAPEndpointURLType;
+    public boolean isHideWelcomeAPTiles() {
+        return m_hideWelcomeAPTiles;
     }
 
     /**
@@ -150,7 +130,7 @@ public final class UICustomization {
 
     @Override
     public String toString() {
-        return String.format("UI{menuEntries=%s, welcomeAPEndpointURLType=%s, welcomeAPEndpointURL=%s}", m_menuEntries,
-            m_welcomeAPEndpointURLType, m_welcomeAPEndpointURL);
+        return String.format("UI{menuEntries=%s, hideWelcomeAPTiles=%s, welcomeAPEndpointURL=%s}", m_menuEntries,
+            m_hideWelcomeAPTiles, m_welcomeAPEndpointURL);
     }
 }
