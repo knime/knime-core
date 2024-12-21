@@ -54,8 +54,12 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.customization.ui.actions.MenuEntry;
+import org.knime.core.util.User;
+import org.knime.core.node.util.CheckUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -121,11 +125,37 @@ public final class UICustomization {
     }
 
     /**
+     * @param userSupplier a user-supplier to replace the placeholder "{user}" in the endpoint URL - only called if
+     *            there is a "{user}"-placeholder
      * @return the welcomeAPEndpointURL
      * @since 5.5
+     * @throws IllegalArgumentException if the URL contains the placeholder "{user}" but no user name is given
      */
-    public Optional<String> getWelcomeAPEndpointURL() {
+    public Optional<String> getWelcomeAPEndpointURL(final Supplier<String> userSupplier) {
+        if (m_welcomeAPEndpointURL == null) {
+            Optional.empty();
+        } else {
+            return Optional.of(replaceUserFieldInEndpointURLIfPresent(m_welcomeAPEndpointURL, userSupplier));
+        }
         return Optional.of(m_welcomeAPEndpointURL);
+    }
+
+    /**
+     * For user-defined endpoints, replace the placeholder "{user}" with the actual user name. In most cases (99.9%+)
+     * this method does nothing as the default endpoint in the public KNIME distribution is used (see
+     * {@link #KNIME_COM_ENDPOINT}). Custom Business-Hubs might deliver AP customizations with custom endpoints having
+     * place holders for the user name. The user name is determined by {@link User#getUsername()}.
+     *
+     * @return The modified endpoint URL in case it contains the placeholder "{user}". Otherwise the input is returned.
+     */
+    private static String replaceUserFieldInEndpointURLIfPresent(final String rawEndpointURLAsString,
+        final Supplier<String> userSupplier) {
+        if (rawEndpointURLAsString.contains(USER_PLACEHOLDER)) {
+            var user = CheckUtils.checkArgumentNotNull(userSupplier.get(),
+                "No 'user' parameter given, but required to resolve the URL template: \"%s\"", rawEndpointURLAsString);
+            return StringUtils.replace(rawEndpointURLAsString, USER_PLACEHOLDER, user);
+        }
+        return rawEndpointURLAsString;
     }
 
     @Override
