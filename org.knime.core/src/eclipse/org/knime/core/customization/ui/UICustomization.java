@@ -105,7 +105,7 @@ public final class UICustomization {
     UICustomization(@JsonProperty("menuEntries") final List<MenuEntry> menuEntries, //
         @JsonProperty("hideWelcomeAPTiles") final boolean hideWelcomeAPTiles, // added in 5.5 (and 5.4.1)
         @JsonProperty("welcomeAPEndpointURL") final String welcomeAPEndpointURL) throws IOException {
-        m_menuEntries = CheckUtils.checkArgumentNotNull(menuEntries, "MenuEntries cannot be null");
+        m_menuEntries = Objects.requireNonNullElse(menuEntries, List.of());
         if (hideWelcomeAPTiles) {
             m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.NONE;
             m_welcomeAPEndpointURL = null;
