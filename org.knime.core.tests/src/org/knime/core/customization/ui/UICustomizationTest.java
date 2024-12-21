@@ -96,7 +96,6 @@ public class UICustomizationTest {
         WelcomeAPEndPointURLType welcomeAPEndpointURLType = uiCustomization.getWelcomeAPEndpointURLType();
         assertEquals(UICustomization.WelcomeAPEndPointURLType.CUSTOM, welcomeAPEndpointURLType);
         assertEquals("https://hub.company.com/some-custom-endpoint", welcomeAPEndpointURL.get());
-
     }
 
     @Test
@@ -117,10 +116,9 @@ public class UICustomizationTest {
 
     @Test
     void testEmptyDeserialization2() throws Exception {
-        // is an empty string a yaml? -> it's a valid stream but contains no document
-        // https://stackoverflow.com/questions/62458683/is-an-empty-string-a-valid-yaml-document
         String ymlInput = """
-                welcomeAPEndpointURL: null
+                hideWelcomeAPTiles: "true"
+                welcomeAPEndpointURL: http://foo.bar/endpoint # this will be ignored / null
                 """;
 
         UICustomization uiCustomization = mapper.readValue(ymlInput, UICustomization.class);

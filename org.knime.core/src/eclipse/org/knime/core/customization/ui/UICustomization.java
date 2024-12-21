@@ -48,13 +48,17 @@
  */
 package org.knime.core.customization.ui;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.knime.core.customization.ui.actions.MenuEntry;
-import org.knime.core.node.util.CheckUtils;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Represents the UI customization settings that include a list of menu entries.
@@ -63,13 +67,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * @noreference This class is not intended to be referenced by clients.
  * @author Bernd Wiswedel
  */
-@JsonDeserialize(using = UICustomizationDeserializer.class)
 public final class UICustomization {
 
     /** No customization, no additional entries in the menu etc.
      * @noreference This field is not intended to be referenced by clients. */
-    public static final UICustomization DEFAULT =
-        new UICustomization(List.of(), WelcomeAPEndPointURLType.DEFAULT, null);
+    public static final UICustomization DEFAULT = new UICustomization();
 
     private final List<MenuEntry> m_menuEntries;
 
@@ -92,12 +94,35 @@ public final class UICustomization {
         NONE
     }
 
-    // not a @JsonCreator (done via custom deserializer)
-    UICustomization(final List<MenuEntry> menuEntries, final WelcomeAPEndPointURLType urlType,
-        final String welcomeAPEndpointURL) {
+    private UICustomization() {
+        m_menuEntries = List.of();
+        m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.DEFAULT;
+        m_welcomeAPEndpointURL = null;
+    }
+
+    @SuppressWarnings("unused") // URL constructor
+    @JsonCreator
+    UICustomization(@JsonProperty("menuEntries") final List<MenuEntry> menuEntries, //
+        @JsonProperty("hideWelcomeAPTiles") final boolean hideWelcomeAPTiles, // added in 5.5 (and 5.4.1)
+        @JsonProperty("welcomeAPEndpointURL") final String welcomeAPEndpointURL) throws IOException {
         m_menuEntries = CheckUtils.checkArgumentNotNull(menuEntries, "MenuEntries cannot be null");
-        m_welcomeAPEndpointURLType = CheckUtils.checkArgumentNotNull(urlType, "URL type cannot be null");
-        m_welcomeAPEndpointURL = welcomeAPEndpointURL;
+        if (hideWelcomeAPTiles) {
+            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.NONE;
+            m_welcomeAPEndpointURL = null;
+        } else if (welcomeAPEndpointURL == null) {
+            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.DEFAULT;
+            m_welcomeAPEndpointURL = null;
+        } else {
+            m_welcomeAPEndpointURLType = WelcomeAPEndPointURLType.CUSTOM;
+            try {
+                new URL(welcomeAPEndpointURL);
+            } catch (MalformedURLException mfe) {
+                throw new IOException(String.format("Invalid \"%s\": \"%s\"", "welcomeAPEndpointURL",
+                    welcomeAPEndpointURL), mfe);
+            }
+
+            m_welcomeAPEndpointURL = welcomeAPEndpointURL;
+        }
     }
 
     /**
