@@ -48,6 +48,7 @@
  */
 package org.knime.core.customization.ui;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -57,7 +58,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.knime.core.customization.ui.UICustomization.WelcomeAPEndPointURLType;
 import org.knime.core.customization.ui.actions.MenuEntry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -77,7 +77,7 @@ public class UICustomizationTest {
                 menuEntries:
                   - name: "Company Help Portal"
                     link: "https://help.company.com/knime"
-                welcomeAPEndpointURL: "https://hub.company.com/some-custom-endpoint"
+                welcomeAPEndpointURL: "https://hub.company.com/some-custom-endpoint?user={user}"
                 """;
 
         UICustomization uiCustomization = mapper.readValue(ymlInput, UICustomization.class);
@@ -92,10 +92,9 @@ public class UICustomizationTest {
         assertEquals("https://help.company.com/knime", entry.getLink());
         assertNotNull(uiCustomization.toString());
 
-        Optional<String> welcomeAPEndpointURL = uiCustomization.getWelcomeAPEndpointURL();
-        WelcomeAPEndPointURLType welcomeAPEndpointURLType = uiCustomization.getWelcomeAPEndpointURLType();
-        assertEquals(UICustomization.WelcomeAPEndPointURLType.CUSTOM, welcomeAPEndpointURLType);
-        assertEquals("https://hub.company.com/some-custom-endpoint", welcomeAPEndpointURL.get());
+        assertThat(uiCustomization.isHideWelcomeAPTiles()).isFalse();
+        Optional<String> welcomeAPEndpointURL = uiCustomization.getWelcomeAPEndpointURL(() -> "blub");
+        assertThat(welcomeAPEndpointURL.get()).isEqualTo("https://hub.company.com/some-custom-endpoint?user=blub");
     }
 
     @Test
@@ -111,7 +110,8 @@ public class UICustomizationTest {
         assertNotNull(menuEntries);
         assertEquals(0, menuEntries.size());
 
-        assertEquals(UICustomization.WelcomeAPEndPointURLType.DEFAULT, uiCustomization.getWelcomeAPEndpointURLType());
+        assertThat(uiCustomization.isHideWelcomeAPTiles()).isFalse();
+        assertThat(uiCustomization.getWelcomeAPEndpointURL(() -> "")).isEmpty();
     }
 
     @Test
@@ -128,7 +128,8 @@ public class UICustomizationTest {
         assertNotNull(menuEntries);
         assertEquals(0, menuEntries.size());
 
-        assertEquals(UICustomization.WelcomeAPEndPointURLType.NONE, uiCustomization.getWelcomeAPEndpointURLType());
+        assertThat(uiCustomization.isHideWelcomeAPTiles()).isTrue();
+        assertThat(uiCustomization.getWelcomeAPEndpointURL(() -> "")).isEmpty();
     }
 
     @Test
