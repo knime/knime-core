@@ -16,6 +16,22 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/customization/ui/UICustomization.java" type="org.knime.core.customization.ui.UICustomization">
+        <filter comment="NXT-3047 - backported change" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="5.4"/>
+                <message_argument value="getWelcomeAPEndpointURL(Supplier&lt;String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="NXT-3047 - backported change" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="5.4"/>
+                <message_argument value="isHideWelcomeAPTiles()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/TableBackend.java" type="org.knime.core.data.TableBackend">
         <filter comment="`TableBackend` is not meant to be implemented by anyone but us" id="403804204">
             <message_arguments>
