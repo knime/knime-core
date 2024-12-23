@@ -79,6 +79,7 @@ import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ConfigurationAreaChecker;
 import org.knime.core.internal.KNIMEPath;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.ThreadPool;
 import org.knime.core.util.auth.SuppressingAuthenticator;
 import org.knime.core.util.proxy.URLConnectionFactory;
@@ -134,6 +135,14 @@ public final class KNIMEConstants {
      * changed in the preference pages and is by default the same as the java.io.tmpdir
      */
     public static final String PROPERTY_TEMP_DIR = "knime.tmpdir";
+
+    /**
+     * Java property name to specify the minimum free disc space in MB that needs to be available to create new
+     * tempfiles. See {@link FileUtil#createTempFile(String, String, File, boolean)}.
+     *
+     * @since 5.5
+     */
+    public static final String PROPERTY_TEMP_DIR_MIN_SPACE_MB = "knime.tmpdir.minspace";
 
     /**
      * Java property to disable the nonsequential handling of rows for KNIME tables. By default, each table container
@@ -198,7 +207,9 @@ public final class KNIMEConstants {
      * available, no further table files &amp; blobs will be created (resulting in an exception). Default is
      * {@value org.knime.core.data.container.Buffer#DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB} MB.
      * @since 2.8
+     * @deprecated Use {@link #PROPERTY_TEMP_DIR_MIN_SPACE_MB} instead.
      */
+    @Deprecated(since = "5.5")
     public static final String PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = "org.knime.container.minspace.temp";
 
     /**

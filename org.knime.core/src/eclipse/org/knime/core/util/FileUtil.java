@@ -979,6 +979,43 @@ public final class FileUtil {
         }
     }
 
+    private static final long MIN_FREE_DISK_SPACE_MB;
+    static {
+        long minFreeDiskSpaceMB = 100; // default value
+        final var prop = System.getProperty(KNIMEConstants.PROPERTY_TEMP_DIR_MIN_SPACE_MB);
+        if (prop != null) {
+            try {
+                minFreeDiskSpaceMB = Long.parseLong(prop.strip());
+            } catch (final NumberFormatException e) {
+                LOGGER.error("Invalid value for property \"" + KNIMEConstants.PROPERTY_TEMP_DIR_MIN_SPACE_MB
+                    + "\". Using default value of " + minFreeDiskSpaceMB + "MB.", e);
+            }
+        }
+        MIN_FREE_DISK_SPACE_MB = minFreeDiskSpaceMB;
+    }
+
+    /**
+     * This method checks whether on the partition of the specified file enough disk space is available.
+     * "Enough" is defined by the property {@link KNIMEConstants#PROPERTY_TEMP_DIR_MIN_SPACE_MB}, which defaults to 100MB.
+     *
+     * @param file The file that is used to determine the partition
+     * @throws IOException if the partition for the file is too low on available disk space
+     * @since 5.5
+     */
+    public static void checkFreeSpace(final File file) throws IOException {
+        final var minSpace = MIN_FREE_DISK_SPACE_MB * (1024L * 1024L);
+        final var freeSpace = file.getUsableSpace(); // tempFile is never null
+        if (freeSpace < minSpace) {
+            final var path = file.getAbsolutePath();
+            throw new IOException("""
+                    Cannot create temporary file "%s", because the partition of the file is too low on free disk space.
+                    At least %dMB are required, but only %dMB are available.
+                    You can tweak the limit by changing the "%s" java property.""".formatted(//
+                path, //
+                MIN_FREE_DISK_SPACE_MB, freeSpace / (1024 * 1024), //
+                KNIMEConstants.PROPERTY_TEMP_DIR_MIN_SPACE_MB));
+        }
+    }
 
     /**
      * Creates a temp file in the temp directory associated with the flow/node.
@@ -988,14 +1025,24 @@ public final class FileUtil {
      * @param rootDir the directory in which the file should be created
      * @param deleteOnExit if <code>true</code>, the file is deleted when the JVM shuts down
      * @return see {@link File#createTempFile(String, String)}
+     * @throws IOException if the partition for the temp file is too low on available disk space
      * @throws IOException see {@link File#createTempFile(String, String)}
      * @since 2.9
      */
     public static File createTempFile(final String prefix, final String suffix, final File rootDir,
             final boolean deleteOnExit) throws IOException {
-        File tmpFile = File.createTempFile(prefix, suffix, rootDir);
-        TEMP_FILES.put(tmpFile, deleteOnExit);
-        return tmpFile;
+        final var tempFile = File.createTempFile(prefix, suffix, rootDir);
+
+        try {
+            checkFreeSpace(tempFile);
+        } catch (final IOException e) {
+            tempFile.delete(); // NOSONAR this should always succeed, since we just created the file
+            throw e;
+        }
+
+        // File was created successfully
+        TEMP_FILES.put(tempFile, deleteOnExit);
+        return tempFile;
     }
 
     /**
@@ -1005,7 +1052,7 @@ public final class FileUtil {
      * @param suffix see {@link File#createTempFile(String, String)}
      * @param deleteOnExit if true, the file is deleted when the JVM shuts down.
      * @return see {@link File#createTempFile(String, String)}
-     * @throws IOException see {@link File#createTempFile(String, String)}
+     * @throws IOException see {@link #createTempFile(String, String, File, boolean)}
      * @since 2.8
      */
     public static File createTempFile(final String prefix, final String suffix, final boolean deleteOnExit)
@@ -1020,7 +1067,7 @@ public final class FileUtil {
      * @param prefix see {@link #createTempFile(String, String)}
      * @param suffix see {@link #createTempFile(String, String)}
      * @return the created temp file
-     * @throws IOException see {@link #createTempFile(String, String)}
+     * @throws IOException see {@link #createTempFile(String, String, File, boolean)}
      * @since 2.8
      */
     public static File createTempFile(final String prefix, final String suffix) throws IOException {

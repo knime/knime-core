@@ -162,39 +162,14 @@ public class Buffer implements KNIMEStreamConstants {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Buffer.class);
 
-    /**
-     * Default minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
-     *
-     * @since 2.8
-     */
-    private static final int DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = 100;
-
-    /**
-     * Minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
-     *
-     * @since 2.8
-     */
-    private static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
-
     static {
-        // initialize the min free disc in temp
-        int minFreeDiscSpaceMB = DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
-        String minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
+        // Deprecated as part of AP-23742, now uses FileUtil#checkFreeSpace instead
+        final var minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
         if (minFree != null) {
-            String s = minFree.trim();
-            try {
-                int newSize = Integer.parseInt(s);
-                if (newSize < 0) {
-                    throw new NumberFormatException("minFreeDiscSpace < 0" + newSize);
-                }
-                minFreeDiscSpaceMB = newSize;
-                LOGGER.debug("Setting min free disc space to " + minFreeDiscSpaceMB + "MB");
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property \"" + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB
-                    + "\", using default (" + DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB)", e);
-            }
+            LOGGER.warn("System property \"%s\" is deprecated. Please use \"%s\" instead.".formatted(
+                KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB,
+                KNIMEConstants.PROPERTY_TEMP_DIR_MIN_SPACE_MB));
         }
-        MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = minFreeDiscSpaceMB;
     }
 
     /**
@@ -2055,22 +2030,15 @@ public class Buffer implements KNIMEStreamConstants {
      * system resources to perform operation" error.
      *
      * @param file The existing file
-     * @throws IOException If there is not enough space left on the partition of the temp folder
+     * @throws IOException If there is not enough space left on the partition of the temp folder, see
+     *             {@link FileUtil#checkFreeSpace(File)}.
      */
     static void onFileCreated(final File file) throws IOException {
         int count = FILES_CREATED_COUNTER.incrementAndGet();
-        long freeSpace = file.exists() ? file.getUsableSpace() : Long.MAX_VALUE;
-        long minSpace = MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
-        if (freeSpace < minSpace) {
-            throw new IOException("The partition of the temp file \"" + file.getAbsolutePath()
-                + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
-                + MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
-                + " You can tweak the limit by changing the \""
-                + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
-        }
+        FileUtil.checkFreeSpace(file); // throws if not enough space
         if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0 && !DISCOURAGE_GC) {
             LOGGER.debug("created " + count + " files, performing garbage collection to release handles");
-            System.gc();
+            System.gc(); // NOSONAR: We want to call GC here and now.
         }
     }
 
