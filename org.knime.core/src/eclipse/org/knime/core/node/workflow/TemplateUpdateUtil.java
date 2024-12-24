@@ -54,11 +54,13 @@ import java.net.URI;
 import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.commons.httpclient.URIException;
@@ -464,6 +466,40 @@ public final class TemplateUpdateUtil {
             throw new IOException("Unable to read template: \"" + erroneousNode + "\"");
         }
         return totalStatus == UpdateStatus.HasUpdate;
+    }
+
+    /**
+     * Shifts all input connections to a metanode one down so that, after update, they are correctly linked to a
+     * component's input ports.
+     * @param inConns The original connections
+     * @return A new copy with adjusted ports.
+     */
+    static Set<ConnectionContainer> shiftInputsOneDown(final Set<ConnectionContainer> inConns) {
+        final LinkedHashSet<ConnectionContainer> shiftedConnections = new LinkedHashSet<>();
+        for (ConnectionContainer conn : inConns) {
+            shiftedConnections.add(new ConnectionContainer( //
+                conn.getSource(), conn.getSourcePort(), //
+                conn.getDest(), conn.getDestPort() + 1, //
+                conn.getType(), conn.isFlowVariablePortConnection()));
+        }
+        return shiftedConnections;
+    }
+
+    /**
+     * Shifts all output connections from a metanode one down so that, after update, they are correctly linked from a
+     * component's output ports.
+     * @param outConns The original connections
+     * @return A new copy with adjusted ports.
+     */
+    static Set<ConnectionContainer> shiftOutputsOneDown(final Set<ConnectionContainer> outConns) {
+        final LinkedHashSet<ConnectionContainer> shiftedConnections = new LinkedHashSet<>();
+        for (ConnectionContainer conn : outConns) {
+            shiftedConnections.add(new ConnectionContainer( //
+                conn.getSource(), conn.getSourcePort() + 1, //
+                conn.getDest(), conn.getDestPort(), //
+                conn.getType(), conn.isFlowVariablePortConnection()));
+        }
+        return shiftedConnections;
     }
 
     /**

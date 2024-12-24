@@ -7910,6 +7910,12 @@ public final class WorkflowManager extends NodeContainer
                 loadRes.addError(error);
             }
 
+            if (oldLinkMN instanceof WorkflowManager && newLinkMN instanceof SubNodeContainer) {
+                // migrating from metanode to component -> adjust ports (AP-23790)
+                inConns = TemplateUpdateUtil.shiftInputsOneDown(inConns);
+                outConns = TemplateUpdateUtil.shiftOutputsOneDown(outConns);
+            }
+
             for (ConnectionContainer cc : inConns) {
                 NodeID s = cc.getSource();
                 int sourcePort = cc.getSourcePort();
