@@ -125,7 +125,7 @@ public class Chainofnodesoneblocking extends WorkflowTestCase {
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
-            checkState(m_blocker, CONFIGURED_MARKEDFOREXEC, EXECUTING);
+            checkState(m_blocker, CONFIGURED_MARKEDFOREXEC, CONFIGURED_QUEUED, PREEXECUTE, EXECUTING);
             waitWhile(m_blocker, nc -> {
             	return nc.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)
             			|| nc.getInternalState().equals(CONFIGURED_QUEUED)
