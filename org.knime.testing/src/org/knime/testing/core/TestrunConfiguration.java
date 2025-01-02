@@ -80,7 +80,7 @@ public class TestrunConfiguration {
 
     private boolean m_checkLogMessages = true;
 
-    private boolean m_loadSaveLoad = true;
+    private boolean m_loadSaveLoad;
 
     private File m_saveLocation;
 
