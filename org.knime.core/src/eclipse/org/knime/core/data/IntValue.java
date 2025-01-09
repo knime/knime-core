@@ -104,7 +104,7 @@ public interface IntValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Number (integer)";
+            return "Number (Integer)";
         }
 
         /**

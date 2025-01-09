@@ -84,7 +84,7 @@ public final class DurationUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Duration";
+        return "Duration (Time-based)";
     }
 
     @Override

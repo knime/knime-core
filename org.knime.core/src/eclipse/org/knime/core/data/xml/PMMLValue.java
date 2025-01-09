@@ -103,7 +103,7 @@ public interface PMMLValue extends XMLValue<Document> {
          */
         @Override
         public String getName() {
-            return "PMML";
+            return "Model (PMML)";
         }
     }
 

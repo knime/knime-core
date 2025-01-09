@@ -241,7 +241,7 @@ public interface BitVectorValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Bit vector";
+            return "Bit Vector";
         }
     }
 }

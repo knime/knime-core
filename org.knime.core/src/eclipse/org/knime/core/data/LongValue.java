@@ -103,7 +103,7 @@ public interface LongValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Number (long)";
+            return "Number (Long Integer)";
         }
 
         /**

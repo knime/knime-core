@@ -75,7 +75,7 @@ public final class PeriodUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Period";
+        return "Duration (Date-based)";
     }
 
     @Override

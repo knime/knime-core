@@ -301,7 +301,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     }
 
     /**
-     * Returns a name for the data value this utility factory is responsible for.
+     * Returns a name for the data value this utility factory is responsible for. This name may change at any time and
+     * should not be used for any kind of type identification.
      *
      * @return a (short) name
      */

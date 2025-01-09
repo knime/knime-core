@@ -1379,9 +1379,10 @@ public final class DataType {
 
 
     /**
-     * Returns a human-readable name for this data type.
+     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
+     * type of identification. Use {@link #getCellClass()} or similar instead.
      *
-     * @return the data types' name
+     * @return a human-readable name for this data type or the cell class name if not available
      * @since 3.0
      */
     public String getName() {

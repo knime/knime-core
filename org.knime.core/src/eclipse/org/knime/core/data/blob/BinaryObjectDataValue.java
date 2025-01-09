@@ -119,7 +119,7 @@ public interface BinaryObjectDataValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Binary object";
+            return "Binary Object";
         }
     }
 

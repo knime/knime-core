@@ -117,7 +117,7 @@ public interface PNGImageValue extends ImageValue {
          */
         @Override
         public String getName() {
-            return "PNG Image";
+            return "Image (PNG)";
         }
 
         /**

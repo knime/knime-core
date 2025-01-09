@@ -84,7 +84,7 @@ public final class LocalDateUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Local Date";
+        return "Date";
     }
 
     @Override
