@@ -236,6 +236,20 @@ public final class TypeBoundExtendablePortGroup implements ExtendablePortGroup {
         return m_configuredTypes.remove(m_configuredTypes.size() - 1);
     }
 
+    @Override
+    public PortType removePort(final int portIndex) throws IndexOutOfBoundsException, UnsupportedOperationException {
+        if (portIndex < m_fixedPortNumber) {
+            throw new UnsupportedOperationException(
+                "Port at index %s cannot be removed. Index is within fixed port types. ".formatted(portIndex));
+        }
+        var totalNumberOfPorts = m_configuredTypes.size() + m_fixedPortNumber;
+        if (portIndex >= totalNumberOfPorts) {
+            throw new IndexOutOfBoundsException("Port at index %s cannot be removed. There are only %s ports in total."
+                .formatted(portIndex, totalNumberOfPorts));
+        }
+        return m_configuredTypes.remove(portIndex - m_fixedPortNumber);
+    }
+
     void setLookupTable(final Map<String, PortGroupConfiguration> lookupTable) {
         m_lookupTable = lookupTable;
     }
