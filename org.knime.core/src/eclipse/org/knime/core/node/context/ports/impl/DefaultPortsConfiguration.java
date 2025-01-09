@@ -91,11 +91,11 @@ class DefaultPortsConfiguration implements PortsConfiguration {
         return getPorts(PortGroupConfiguration::definesOutputPorts, PortGroupConfiguration::getOutputPorts);
     }
 
-    private PortType[] getPorts(final Predicate<PortGroupConfiguration> pred,
-        final Function<PortGroupConfiguration, PortType[]> f) {
+    private PortType[] getPorts(final Predicate<PortGroupConfiguration> portGroupFilter,
+        final Function<PortGroupConfiguration, PortType[]> getPortsInGroup) {
         return m_portGroups.values().stream()//
-            .filter(pred)//
-            .map(f)//
+            .filter(portGroupFilter)//
+            .map(getPortsInGroup)//
             .flatMap(Stream::of)//
             .toArray(PortType[]::new);
     }
@@ -116,20 +116,23 @@ class DefaultPortsConfiguration implements PortsConfiguration {
 
     }
 
-    private Map<String, int[]> getPortLocation(final Predicate<PortGroupConfiguration> pred,
-        final Function<PortGroupConfiguration, Integer> f) {
-        final Map<String, int[]> portLoc = new LinkedHashMap<>();
-        final AtomicInteger pos = new AtomicInteger();
+    @SuppressWarnings("java:S4276") // more specialised functional interface possible
+    private Map<String, int[]> getPortLocation(final Predicate<PortGroupConfiguration> selectPortConfig,
+        final Function<PortGroupConfiguration, Integer> getNrPorts) {
+        final Map<String, int[]> portLocation = new LinkedHashMap<>();
+        final var position = new AtomicInteger();
         m_portGroups.entrySet().stream()//
-            .filter(entry -> pred.test(entry.getValue()))//
+            .filter(entry -> selectPortConfig.test(entry.getValue()))//
             .forEachOrdered(entry -> {
-                final int pLength = f.apply(entry.getValue());
-                if (pLength != 0) {
-                    portLoc.put(entry.getKey(), IntStream.range(pos.get() + 0, pos.get() + pLength).toArray());
+                var portGroupId = entry.getKey();
+                var portGroupConfig = entry.getValue();
+                final int nrPortsInGroup = getNrPorts.apply(portGroupConfig);
+                if (nrPortsInGroup != 0) {
+                    portLocation.put(portGroupId, IntStream.range(position.get() + 0, position.get() + nrPortsInGroup).toArray());
                 }
-                pos.addAndGet(pLength);
+                position.addAndGet(nrPortsInGroup);
             });//
-        return portLoc;
+        return portLocation;
     }
 
 }

@@ -48,7 +48,11 @@
  */
 package org.knime.core.node.workflow.action;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.IntStream;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
@@ -61,6 +65,7 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 
 /**
  * Result of the replace node operation, e.g.,
@@ -89,7 +94,49 @@ public final class ReplaceNodeResult {
     private final NodeAnnotation m_originalNodeAnnotation;
 
     /**
-     * New instance.
+     * Port mapping of the original operation. Only given for case of "custom" port mapping
+     */
+    private final Pair<Map<Integer, Integer>, Map<Integer, Integer>> m_portMappings;
+
+    /**
+     * New ReplaceNodeResult instance as result of a port removal operation
+     * Used to store all information required to undo the port removal
+     *
+     * @param wfm the host workflow manager
+     * @param replacedNodeID the id of the newly created node
+     * @param removedConnections the connections that couldn't be restored after the replacement
+     * @param originalNodeCreationConfig the original creation config of the old node (for the undo)
+     * @param originalNodeFactory factory of the deleted node; or {@code null} if the old node is of the same type as
+     *            the new one (i.e. replacement happened in order to change the port configuration)
+     * @param originalNodeSettings the settings of the deleted node
+     * @param originalNodeAnnotation the original node annotation of the deleted node; won't be restored, if
+     *            {@code null}
+     * @param portMappings mapping old port indices to new ones on port removal, used to reconnect after port removal
+     * @since 5.5
+     */
+    public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID, //NOSONAR
+        final List<ConnectionContainer> removedConnections,
+        final ModifiableNodeCreationConfiguration originalNodeCreationConfig, final NodeFactory<?> originalNodeFactory,
+        final NodeSettings originalNodeSettings, final NodeAnnotation originalNodeAnnotation,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portMappings) {
+        CheckUtils.checkNotNull(wfm);
+        CheckUtils.checkNotNull(replacedNodeID);
+        CheckUtils.checkNotNull(removedConnections);
+        CheckUtils.checkNotNull(removedConnections);
+        CheckUtils.checkNotNull(originalNodeSettings);
+        m_wfm = wfm;
+        m_replacedNodeID = replacedNodeID;
+        m_removedConnections = removedConnections;
+        m_nodeCreationConfig = originalNodeCreationConfig;
+        m_originalNodeFactory = originalNodeFactory;
+        m_originalNodeSettings = originalNodeSettings;
+        m_originalNodeAnnotation = originalNodeAnnotation;
+        m_portMappings = portMappings;
+    }
+
+    /**
+     * New ReplaceNodeResult for any operation resulting in replacement of a node except port removal
+     * Mainly used to store information required to undo the replace node operation
      *
      * @param wfm the host workflow manager
      * @param replacedNodeID the id of the newly created node
@@ -105,18 +152,8 @@ public final class ReplaceNodeResult {
         final List<ConnectionContainer> removedConnections,
         final ModifiableNodeCreationConfiguration originalNodeCreationConfig, final NodeFactory<?> originalNodeFactory,
         final NodeSettings originalNodeSettings, final NodeAnnotation originalNodeAnnotation) {
-        CheckUtils.checkNotNull(wfm);
-        CheckUtils.checkNotNull(replacedNodeID);
-        CheckUtils.checkNotNull(removedConnections);
-        CheckUtils.checkNotNull(removedConnections);
-        CheckUtils.checkNotNull(originalNodeSettings);
-        m_wfm = wfm;
-        m_replacedNodeID = replacedNodeID;
-        m_removedConnections = removedConnections;
-        m_nodeCreationConfig = originalNodeCreationConfig;
-        m_originalNodeFactory = originalNodeFactory;
-        m_originalNodeSettings = originalNodeSettings;
-        m_originalNodeAnnotation = originalNodeAnnotation;
+        this(wfm, replacedNodeID, removedConnections, originalNodeCreationConfig, originalNodeFactory,
+            originalNodeSettings, originalNodeAnnotation, null);
     }
 
     /**
@@ -130,7 +167,9 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false);
+        var portChange = Optional.ofNullable(m_portMappings);
+        var portMappings = portChange.isPresent() ? getPortMappingsForPortRemovalUndo() : null;
+        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false, portMappings);
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
             .forEach(c -> {
@@ -150,4 +189,81 @@ public final class ReplaceNodeResult {
         }
     }
 
+    /*
+     * map current port indices (after removal) to new indices (after removal undo)
+     */
+    private Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortMappingsForPortRemovalUndo() {
+        return new Pair<>(
+                getUndoPortMapping(m_portMappings.getFirst()).toMap(),
+                getUndoPortMapping(m_portMappings.getSecond()).toMap()
+        );
+    }
+
+    private static PortMapping getUndoPortMapping(final Map<Integer, Integer> originalMapping) {
+        var removedPort = false;
+        var incomingPortIndex = -1;
+        //check if an input port has previously been removed by finding value -1
+        for (var entry : originalMapping.entrySet()) {
+            if (entry.getValue().equals(-1)) {
+                removedPort = true;
+                incomingPortIndex = entry.getKey();
+            }
+        }
+        var mapping = PortMapping.identity(originalMapping.size());
+        if (removedPort) {
+            mapping.reAddIndex(incomingPortIndex);
+        }
+        return mapping;
+    }
+
+
+    /**
+     * Maps ports on the replaced node to ports on the replacing node for recreating connections.
+     * Counts across all ports, including implicit flow variable port if present
+     */
+    public static class PortMapping {
+
+        private final HashMap<Integer, Integer> m_map = new HashMap<>();
+
+        /**
+         * Obtain an identity mapping
+         * @param totalNumberOfPorts The total number of ports, including implicit flow variable port at native nodes.
+         * @return An identity mapping
+         */
+        public static PortMapping identity(final int totalNumberOfPorts) {
+            var portMapping = new PortMapping();
+            IntStream.range(0, totalNumberOfPorts).forEach(i -> portMapping.m_map.put(i, i));
+            return portMapping;
+        }
+
+        /**
+         * Set an index to removed (map to {@code -1}) and shift all succeeding indices.
+         * @param indexToRemove The index to set to removed
+         * @return the modified mapping
+         */
+        public PortMapping removeIndex(final int indexToRemove) {
+            m_map.put(indexToRemove, -1);
+            IntStream.range(indexToRemove + 1, m_map.size()).forEach(i -> m_map.put(i, i - 1));
+            return this;
+        }
+
+        /**
+         * Re-add a previously removed index. This is different from adding a new port.
+         * @param indexToAdd The index to re-add
+         * @return the modified mapping
+         */
+        PortMapping reAddIndex(final int indexToAdd) {
+            m_map.put(indexToAdd, indexToAdd);
+            IntStream.range(indexToAdd + 1, m_map.size()).forEach(i -> m_map.put(i, i + 1));
+            return this;
+        }
+
+        /**
+         * Obtain the mapping
+         * @return -
+         */
+        public Map<Integer, Integer> toMap() {
+            return m_map;
+        }
+    }
 }

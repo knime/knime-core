@@ -52,7 +52,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
@@ -95,6 +94,8 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     }
 
     /**
+     * Constructor.
+     * 
      * @param portGroups the port groups
      * @param nonInteractivePortGroups the identifiers (keys in portGroups map) of port groups that shall not be
      *            modifiable via the user interface. If null, all port groups are interactive. Null values are ignored.
@@ -111,14 +112,14 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     public ModifiablePortsConfiguration copy() {
         final Map<String, PortGroupConfiguration> map = m_portGroups.entrySet().stream()//
             .collect(Collectors.toMap(//
-                e -> e.getKey(), //
+                Map.Entry::getKey, //
                 e -> e.getValue().copy(), //
                 (u, v) -> {
                     throw new IllegalStateException(String.format("Duplicate key %s", u));
                 }, //
                 LinkedHashMap::new));
         map.values().stream()//
-            .filter(v -> v instanceof TypeBoundExtendablePortGroup)//
+            .filter(TypeBoundExtendablePortGroup.class::isInstance)//
             .map(v -> (TypeBoundExtendablePortGroup)v)//
             .forEach(v -> v.setLookupTable(map));
         return new DefaultModifiablePortsConfiguration(map, Set.copyOf(m_nonInteractivePortGroups));
@@ -131,7 +132,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
 
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        for (Entry<String, PortGroupConfiguration> entry : m_portGroups.entrySet()) {
+        for (var entry : m_portGroups.entrySet()) {
             if (settings.containsKey(entry.getKey())) {
                 entry.getValue().loadSettingsFrom(settings.getNodeSettings(entry.getKey()));
             }
@@ -179,36 +180,51 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
         return mapPorts(otherConfig, PortsConfiguration::getOutputPorts, PortsConfiguration::getOutputPortLocation);
     }
 
+    /**
+     * Map ports from this node to another node
+     * 
+     * @param otherConfig configuration of the other node
+     * @param portAccess Obtain list of ports, see {@link PortsConfiguration#getInputPorts()}
+     * @param locAccess Obtain list of port locations, see {@link PortsConfiguration#getInputPortLocation()}
+     * @return Either identity, last port "removed" (i.e. mapped to -1) or entire port groups "removed". Indices are
+     *         counting across the total number of ports, including the implicit flow variable port, if present.
+     */
+    @SuppressWarnings("java:S134") // deep nesting -- accepted, this is legacy code
     private Map<Integer, Integer> mapPorts(final PortsConfiguration otherConfig,
         final Function<PortsConfiguration, PortType[]> portAccess,
         final Function<PortsConfiguration, Map<String, int[]>> locAccess) {
-        if (!isComplatible(otherConfig)) {
+        if (!isCompatible(otherConfig)) {
             throw new IllegalArgumentException("The port configurations are incompatible");
         }
-        final int offset = 1;
-        final HashMap<Integer, Integer> portMapping = new HashMap<>();
-        final PortType[] ports = portAccess.apply(this);
-        final PortType[] otherPorts = portAccess.apply(otherConfig);
-        final Map<String, int[]> otherPortLoc = locAccess.apply(otherConfig);
-        for (Entry<String, int[]> entry : locAccess.apply(this).entrySet()) {
-            if (otherPortLoc.containsKey(entry.getKey())) {
-                final int[] portGrpLoc = entry.getValue();
-                final int[] otherPortGrpLoc = otherPortLoc.get(entry.getKey());
-                final int otherPortGrpLocLength = otherPortGrpLoc.length;
-                for (int i = 0; i < portGrpLoc.length; i++) {
-                    // we don't supported changing of ports within a group
-                    if (i < otherPortGrpLocLength && ports[portGrpLoc[i]].equals(otherPorts[otherPortGrpLoc[i]])) {
-                        portMapping.put(portGrpLoc[i] + offset, otherPortGrpLoc[i] + offset);
-                    } else {
-                        portMapping.put(portGrpLoc[i] + offset, -1);
+        final var offset = 1; // to work around flow variable port
+        final var portMapping = new HashMap<Integer, Integer>();
+        final var ports = portAccess.apply(this);
+        final var otherPorts = portAccess.apply(otherConfig);
+        final var otherPortGroups = locAccess.apply(otherConfig);
+        for (var portGroup : locAccess.apply(this).entrySet()) { // for each port group
+            final var portGroupId = portGroup.getKey();
+            final var portGroupLocations = portGroup.getValue(); // range of indices belonging to that port group
+            if (!otherPortGroups.containsKey(portGroupId)) {
+                // port group id/name no longer present in other -> set all indices as removed
+                Arrays.stream(portGroupLocations).forEach(idx -> portMapping.put(idx + offset, -1));
+            } else {
+                final var otherPortGrpLoc = otherPortGroups.get(portGroupId);
+                final var otherPortGrpLocLength = otherPortGrpLoc.length;
+                for (var i = 0; i < portGroupLocations.length; i++) {
+                    // this assumes only the last port in a group can be removed
+                    if (i < otherPortGrpLocLength
+                        && ports[portGroupLocations[i]].equals(otherPorts[otherPortGrpLoc[i]])) {
+                        // identity
+                        portMapping.put(portGroupLocations[i] + offset, otherPortGrpLoc[i] + offset);
+                    } else { // i >= otherPortGrpLocLength, i.e. port has been removed in other
+                        // has been removed
+                        portMapping.put(portGroupLocations[i] + offset, -1);
                     }
                 }
-            } else {
-                Arrays.stream(entry.getValue()).forEach(idx -> portMapping.put(idx + offset, -1));
             }
         }
 
-        // add additional entry for flow variable connections
+        // add additional entry for flow variable port (always implicitly present on native nodes).
         portMapping.put(0, 0);
 
         return portMapping;
@@ -217,7 +233,7 @@ public final class DefaultModifiablePortsConfiguration extends DefaultPortsConfi
     /**
      * @param otherConfig
      */
-    private boolean isComplatible(final PortsConfiguration otherConfig) {
+    private boolean isCompatible(final PortsConfiguration otherConfig) {
         return getPortGroupNames().equals(otherConfig.getPortGroupNames());
     }
 

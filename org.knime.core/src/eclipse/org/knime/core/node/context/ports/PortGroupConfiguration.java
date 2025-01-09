@@ -62,43 +62,43 @@ import org.knime.core.node.port.PortType;
 public interface PortGroupConfiguration extends DeepCopy<PortGroupConfiguration>, NodeSettingsPersistable {
 
     /** The unsupported input operation exception. */
-    public static final UnsupportedOperationException UNSUPPORTED_INPUT_OPERATION =
+    UnsupportedOperationException UNSUPPORTED_INPUT_OPERATION =
         new UnsupportedOperationException("This port group does not specify input ports.");
 
     /** The unsupported output operation exception. */
-    public static final UnsupportedOperationException UNSUPPORTED_OUTPUT_OPERATION =
+    UnsupportedOperationException UNSUPPORTED_OUTPUT_OPERATION =
         new UnsupportedOperationException("This port group does not specify output ports.");
 
     /**
      * Returns the configured input port types. Cannot return null.
      *
-     * @return the configured input port types
+     * @return An array containing a {@link PortType} instance for each input port in this group.
      * @throws UnsupportedOperationException If this configuration does not {@link #definesInputPorts() define input
      *             ports}
      */
-    public PortType[] getInputPorts();
+    PortType[] getInputPorts();
 
     /**
      * Returns the configured input port types. Cannot return null.
      *
-     * @return the configured output port types
+     * @return An array containing a {@link PortType} instance for each output port in this group.
      * @throws UnsupportedOperationException If this configuration does not {@link #definesOutputPorts() define output
      *             ports}
      */
-    public PortType[] getOutputPorts();
+    PortType[] getOutputPorts();
 
     /**
      * Flag indicating whether this port group configuration defines input ports, or not.
      *
      * @return {@code true} if this port group represents configurable input ports, {@code false} otherwise
      */
-    public boolean definesInputPorts();
+    boolean definesInputPorts();
 
     /**
      * Flag indicating whether this port group configuration defines output ports, or not.
      *
      * @return {@code true} if this port group represents configurable output ports, {@code false} otherwise
      */
-    public boolean definesOutputPorts();
+    boolean definesOutputPorts();
 
 }
