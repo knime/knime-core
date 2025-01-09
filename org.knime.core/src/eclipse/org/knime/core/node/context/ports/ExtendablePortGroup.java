@@ -61,7 +61,7 @@ import org.knime.core.node.port.PortType;
 public interface ExtendablePortGroup extends ConfigurablePortGroup {
 
     @Override
-    default public PortType[] getInputPorts() {
+    default PortType[] getInputPorts() {
         if (definesInputPorts()) {
             return ArrayUtils.addAll(getFixedPorts(), getConfiguredPorts());
         }
@@ -69,7 +69,7 @@ public interface ExtendablePortGroup extends ConfigurablePortGroup {
     }
 
     @Override
-    default public PortType[] getOutputPorts() {
+    default PortType[] getOutputPorts() {
         if (definesOutputPorts()) {
             return ArrayUtils.addAll(getFixedPorts(), getConfiguredPorts());
         }
@@ -81,41 +81,49 @@ public interface ExtendablePortGroup extends ConfigurablePortGroup {
      *
      * @return the fixed ports
      */
-    public PortType[] getFixedPorts();
+    PortType[] getFixedPorts();
 
     /**
      * Returns the configured ports.
      *
      * @return the configured ports
      */
-    public PortType[] getConfiguredPorts();
+    PortType[] getConfiguredPorts();
 
     /**
      * Defines wether or not additional ports can be added.
      *
      * @return {@code true} if more ports can be added, {@code false} otherwise
      */
-    public boolean canAddPort();
+    boolean canAddPort();
 
     /**
      * Returns flag indicating whether or not additional ports have been configured.
      *
      * @return {@code true} if additional ports have been added, {@code false} otherwise
      */
-    public boolean hasConfiguredPorts();
+    boolean hasConfiguredPorts();
 
     /**
      * Adds an port to the configured ports.
      *
      * @param pType the port to be added
      */
-    public void addPort(final PortType pType);
+    void addPort(final PortType pType);
 
     /**
      * Removes the last port from the configured ports list.
      *
      * @return the last element from this list
      */
-    public PortType removeLastPort();
+    PortType removeLastPort();
+
+    /**
+     * Removes the port at a specified index.
+     * @param portIndex The index <i>within the group</i> to remove.
+     *
+     * @return the port type that was removed
+     */
+    PortType removePort(int portIndex);
 
 }
