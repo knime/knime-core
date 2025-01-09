@@ -118,4 +118,14 @@ public interface ExtendablePortGroup extends ConfigurablePortGroup {
      */
     public PortType removeLastPort();
 
+    /**
+     * Removes the port at a specified index.
+     * @param portIndex The index of the port to remove
+     *
+     * @return the port type that was removed
+     * @throws IndexOutOfBoundsException if the index is larger than the configured ports list
+     * @throws UnsupportedOperationException if the port cannot be removed
+     */
+    PortType removePort(int portIndex) throws IndexOutOfBoundsException, UnsupportedOperationException;
+
 }
