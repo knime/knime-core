@@ -185,6 +185,20 @@ public final class DefaultExtendablePortGroup implements ExtendablePortGroup {
     }
 
     @Override
+    public PortType removePort(final int portIndex) throws IndexOutOfBoundsException, UnsupportedOperationException {
+        if (portIndex < m_fixedTypes.length) {
+            throw new UnsupportedOperationException(
+                "Port at index %s cannot be removed. Index is within fixed port types. ".formatted(portIndex));
+        }
+        var totalNumberOfPorts = m_configuredTypes.size() + m_fixedTypes.length;
+        if (portIndex >= totalNumberOfPorts) {
+            throw new IndexOutOfBoundsException("Port at index %s cannot be removed. There are only %s ports in total."
+                .formatted(portIndex, totalNumberOfPorts));
+        }
+        return m_configuredTypes.remove(portIndex - m_fixedTypes.length);
+    }
+
+    @Override
     public PortType[] getSupportedPortTypes() {
         return m_supportedTypes;
     }
