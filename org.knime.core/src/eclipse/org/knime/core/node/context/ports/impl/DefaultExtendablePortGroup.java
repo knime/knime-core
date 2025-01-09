@@ -58,6 +58,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ports.ExtendablePortGroup;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Implementation of an extendable port group.
@@ -182,6 +183,17 @@ public final class DefaultExtendablePortGroup implements ExtendablePortGroup {
     @Override
     public PortType removeLastPort() {
         return m_configuredTypes.remove(m_configuredTypes.size() - 1);
+    }
+
+    @Override
+    public PortType removePort(final int portIndex) {
+        CheckUtils.checkArgument(portIndex >= m_fixedTypes.length,
+            "Port at index %s cannot be removed. Index is within fixed port types. ".formatted(portIndex));
+        var totalNumberOfPorts = m_configuredTypes.size() + m_fixedTypes.length;
+        CheckUtils.checkArgument(portIndex < totalNumberOfPorts,
+            "Port at index %s cannot be removed. There are only %s ports in total.".formatted(portIndex,
+                totalNumberOfPorts));
+        return m_configuredTypes.remove(portIndex - m_fixedTypes.length);
     }
 
     @Override
