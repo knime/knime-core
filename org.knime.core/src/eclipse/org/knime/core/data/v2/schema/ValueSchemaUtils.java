@@ -107,7 +107,7 @@ public final class ValueSchemaUtils {
      * @return the value schema
      * @since 4.5
      */
-    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>[] valueFactories) {
+    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
         return new DefaultValueSchema(spec, valueFactories);
     }
 
