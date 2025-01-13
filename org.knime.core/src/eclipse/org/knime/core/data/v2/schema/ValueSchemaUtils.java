@@ -287,6 +287,33 @@ public final class ValueSchemaUtils {
     }
 
     /**
+     * Assign the specified column names to the specified columns.
+     *
+     * @param schema input schema
+     * @param columnIndices columns to rename (note that indices are including RowKey at 0)
+     * @param columnNames new names to assign
+     * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with renamed columns.
+     * @since 5.5
+     */
+    public static ValueSchema renameColumns(final ValueSchema schema, final int[] columnIndices,
+        final String[] columnNames) {
+        var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
+        Arrays.setAll(valueFactories, schema::getValueFactory);
+
+        final DataTableSpec sourceSpec = schema.getSourceSpec();
+        var colSpecs = new DataColumnSpec[sourceSpec.getNumColumns()];
+        Arrays.setAll(colSpecs, sourceSpec::getColumnSpec);
+        for (int i = 0; i < columnIndices.length; ++i) {
+            final int columnIndex = columnIndices[i];
+            DataColumnSpecCreator creator = new DataColumnSpecCreator(colSpecs[columnIndex - 1]);
+            creator.setName(columnNames[i]);
+            colSpecs[columnIndex - 1] = creator.createSpec();
+        }
+        var spec = new DataTableSpec(colSpecs);
+        return create(spec, valueFactories);
+    }
+
+    /**
      * Create a new {@code ValueSchema} comprising only the specified columns. The {@code columnIndices} are including
      * RowID, that is, RowID columns has index 0.
      *
