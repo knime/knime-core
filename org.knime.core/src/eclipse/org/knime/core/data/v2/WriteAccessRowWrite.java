@@ -76,7 +76,7 @@ public final class WriteAccessRowWrite implements RowWrite {
      */
     public WriteAccessRowWrite(final ValueSchema schema, final WriteAccessRow writeAccess) {
         m_accesses = writeAccess;
-        m_values = new WriteValue<?>[schema.numFactories()];
+        m_values = new WriteValue<?>[schema.numColumns()];
         Arrays.setAll(m_values, i -> schema.getValueFactory(i).createWriteValue(m_accesses.getWriteAccess(i)));
         m_rowKeyValue = (RowKeyWriteValue)m_values[0];
     }

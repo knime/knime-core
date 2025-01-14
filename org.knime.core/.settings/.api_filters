@@ -135,4 +135,80 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
+        <filter comment="AP-23831" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getColumn(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getDataColumnSpec(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831: moved to DataTableValueSchema" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getSourceSpec()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831: removed as redundant to numColumns" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="numFactories()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="create(DataTableSpec, RowKeyType, IWriteFileStoreHandler)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="create(DataTableSpec, ValueFactory&lt;?,?&gt;[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="load(ColumnarSchema, ValueSchemaLoadContext)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="renameToRandomColumnNames(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="save(ValueSchema, NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="storesDataCellSerializersSeparately(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="updateDataTableSpec(ValueSchema, DataTableSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="updateDataTableSpec(ValueSchema, Map&lt;Integer,DataColumnDomain&gt;, Map&lt;Integer,DataColumnMetaData[]&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

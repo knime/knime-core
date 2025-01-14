@@ -77,7 +77,7 @@ public class ReadAccessRowRead implements RowRead {
      */
     public ReadAccessRowRead(final ValueSchema schema, final ReadAccessRow readAccessRow) {
         m_accesses = readAccessRow;
-        m_values = new ReadValue[schema.numFactories()];
+        m_values = new ReadValue[schema.numColumns()];
         Arrays.setAll(m_values, i -> {
             // NB: some ReadAccesses might be null, if the ReadAccessRow is from a Cursor with a ColumnSelection
             var access = m_accesses.getAccess(i);

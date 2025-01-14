@@ -56,7 +56,7 @@ import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler
 import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowRead;
 import org.knime.core.data.v2.RowWriteCursor;
-import org.knime.core.data.v2.schema.ValueSchemaUtils;
+import org.knime.core.data.v2.schema.DataTableValueSchemaUtils;
 import org.knime.core.node.BufferedDataTable;
 
 /**
@@ -101,7 +101,7 @@ public abstract class RowOutput extends PortOutput {
         private boolean m_closed;
 
         public FallbackWriteCursor(final DataTableSpec spec) {
-            final var schema = ValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
+            final var schema = DataTableValueSchemaUtils.create(spec, RowKeyType.CUSTOM,
                 new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID()));
         }
 
