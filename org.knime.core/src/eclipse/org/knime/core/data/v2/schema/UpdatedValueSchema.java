@@ -48,95 +48,26 @@
  */
 package org.knime.core.data.v2.schema;
 
-import java.util.Iterator;
-import java.util.stream.Stream;
+import java.util.Arrays;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
 
 /**
  * {@link ValueSchema} that is based on another schema, but has an updated {@link DataTableSpec}.
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
-// TODO (TP) remove this class in favour of always using DefaultValueSchema?
-final class UpdatedValueSchema implements ValueSchema {
+// TODO (TP) remove this class
+final class UpdatedValueSchema {
 
-    private final DataTableSpec m_updatedSpec;
-
-    private final ValueSchema m_delegate;
-
-    UpdatedValueSchema(final DataTableSpec spec, final ValueSchema delegate) {
-        m_updatedSpec = spec;
-        m_delegate = delegate;
-    }
-
-    ValueSchema getDelegate() {
-        return m_delegate;
-    }
-
-    // -------- ValueSchema --------
-
-    @Override
-    public DataTableSpec getSourceSpec() {
-        return m_updatedSpec;
-    }
-
-    // TODO (TP) Revise (didn't think a lot about implementing this, because maybe we'll remove this class anyway)
-    @Override
-    public DataColumnSpec getDataColumnSpec(final int index) {
-        return index == 0 ? null : m_updatedSpec.getColumnSpec(index - 1);
-    }
-
-    @Override
-    public int numFactories() {
-        return m_delegate.numFactories();
-    }
-
-    @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return m_delegate.getValueFactory(index);
-    }
-
-    // -------- ColumnarSchema --------
-
-    @Override
-    public DataSpec getSpec(final int index) {
-        return m_delegate.getSpec(index);
-    }
-
-    @Override
-    public DataTraits getTraits(final int index) {
-        return m_delegate.getTraits(index);
-    }
-
-    @Override
-    public Iterator<DataSpec> iterator() {
-        return m_delegate.iterator();
-    }
-
-    @Override
-    public int hashCode() {
-        return m_delegate.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return m_delegate.toString();
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        return m_delegate.equals(obj);
-    }
-
-    @Override
-    public Stream<DataSpec> specStream() {
-        return m_delegate.specStream();
+    static ValueSchema updateValueSchema(final DataTableSpec spec, final ValueSchema delegate) {
+        final ValueFactory<?, ?>[] factories = new ValueFactory[delegate.numFactories()];
+        Arrays.setAll(factories, delegate::getValueFactory);
+        if (delegate instanceof SerializerFactoryValueSchema s) {
+            return new SerializerFactoryValueSchema(spec, factories, s.getFactoryMapping(), s.getSerializerFactory());
+        } else {
+            return new DefaultValueSchema(spec, factories);
+        }
     }
 }

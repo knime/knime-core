@@ -118,9 +118,7 @@ public final class ValueSchemaUtils {
      * @param settings the settings to save the ValueSchema to.
      */
     public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
-        if (schema instanceof UpdatedValueSchema s) {
-            save(s.getDelegate(), settings);
-        } else if (schema instanceof SerializerFactoryValueSchema) {
+        if (schema instanceof SerializerFactoryValueSchema) {
             SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
         } else if (schema instanceof DefaultValueSchema) {
             // nothing to save
@@ -181,9 +179,7 @@ public final class ValueSchemaUtils {
      * @return true if the schema was created before KNIME AP 4.5.0
      */
     public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
-        if (schema instanceof UpdatedValueSchema s) {
-            return storesDataCellSerializersSeparately(s.getDelegate());
-        } else if (schema instanceof SerializerFactoryValueSchema) {
+        if (schema instanceof SerializerFactoryValueSchema) {
             return true;
         } else if (schema instanceof DefaultValueSchema) {
             return false;
@@ -226,7 +222,7 @@ public final class ValueSchemaUtils {
             }
         }
         final var sourceName = schema.getSourceSpec().getName();
-        return new UpdatedValueSchema(new DataTableSpec(sourceName, result), schema);
+        return UpdatedValueSchema.updateValueSchema(new DataTableSpec(sourceName, result), schema);
     }
 
     /**
@@ -237,7 +233,7 @@ public final class ValueSchemaUtils {
      * @return the schema with the updated spec
      */
     public static final ValueSchema updateDataTableSpec(final ValueSchema schema, final DataTableSpec spec) {
-        return new UpdatedValueSchema(spec, schema);
+        return UpdatedValueSchema.updateValueSchema(spec, schema);
     }
 
     /**
