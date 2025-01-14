@@ -321,73 +321,78 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/data/v2/RowContainer.java" type="org.knime.core.data.v2.RowContainer">
-        <filter comment="AP-21999: All RowContainer implementation know the schema, this method just exposed it. This is needed for the RowContainer::createRowBuffer method" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.RowContainer"/>
-                <message_argument value="getSchema()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/v2/RowWriteCursor.java" type="org.knime.core.data.v2.RowWriteCursor">
-        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
-                <message_argument value="commit(RowRead)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
-                <message_argument value="canForward()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="AP-21999: RowWrite forward() has been replaced with commit(RowRead). canForward() removed because it always returned true anyway" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.RowWriteCursor"/>
-                <message_argument value="forward()"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
+        <filter comment="AP-23831" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
-                <message_argument value="java.lang.Iterable"/>
-                <message_argument value="iterator()"/>
+                <message_argument value="getColumn(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
+        <filter comment="AP-23831" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
-                <message_argument value="org.knime.core.table.schema.ColumnarSchema"/>
-                <message_argument value="getSpec(int)"/>
+                <message_argument value="getDataColumnSpec(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831: moved to DataTableValueSchema" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getSourceSpec()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831: removed as redundant to numColumns" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="numFactories()"/>
             </message_arguments>
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+        <filter comment="AP-23831" id="338792546">
             <message_arguments>
-                <message_argument value="hasRowID(ValueSchema)"/>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="create(DataTableSpec, RowKeyType, IWriteFileStoreHandler)"/>
             </message_arguments>
         </filter>
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+        <filter comment="AP-23831" id="338792546">
             <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="create(DataTableSpec, ValueFactory&lt;?,?&gt;[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="load(ColumnarSchema, ValueSchemaLoadContext)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
                 <message_argument value="renameToRandomColumnNames(ValueSchema)"/>
             </message_arguments>
         </filter>
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+        <filter comment="AP-23831" id="338792546">
             <message_arguments>
-                <message_argument value="selectColumns(ValueSchema, int[])"/>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="save(ValueSchema, NodeSettingsWO)"/>
             </message_arguments>
         </filter>
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+        <filter comment="AP-23831" id="338792546">
             <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="storesDataCellSerializersSeparately(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
                 <message_argument value="updateDataTableSpec(ValueSchema, DataTableSpec)"/>
             </message_arguments>
         </filter>
-        <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
+        <filter comment="AP-23831" id="338792546">
             <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
                 <message_argument value="updateDataTableSpec(ValueSchema, Map&lt;Integer,DataColumnDomain&gt;, Map&lt;Integer,DataColumnMetaData[]&gt;)"/>
             </message_arguments>
         </filter>
