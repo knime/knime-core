@@ -48,6 +48,7 @@
  */
 package org.knime.core.data.v2.schema;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
@@ -70,6 +71,16 @@ public interface ValueSchema extends ColumnarSchema {
      * @return the underlying {@link DataTableSpec}.
      */
     DataTableSpec getSourceSpec();
+
+
+    /**
+     * TODO (TP) javadoc
+     *
+     * @param index colunm index (rowkey is 0)
+     * @return
+     * @since 5.5
+     */
+    DataColumnSpec getDataColumnSpec(int index);
 
     /**
      * Returns the number of {@link ValueFactory factories} this schema holds. Includes the {@link RowKeyValueFactory}.

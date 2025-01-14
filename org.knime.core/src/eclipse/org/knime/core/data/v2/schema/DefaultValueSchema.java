@@ -53,6 +53,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
@@ -73,6 +74,8 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
 
     private final DataTableSpec m_sourceSpec;
 
+    private final DataColumnSpec[] m_columnSpecs;
+
     private final ValueFactory<?, ?>[] m_factories;
 
     private final DataSpec[] m_specs;
@@ -86,11 +89,18 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
         Arrays.setAll(m_specs, i -> factories[i].getSpec());
         m_traits = new DataTraits[factories.length];
         Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
+        m_columnSpecs = new DataColumnSpec[factories.length];
+        Arrays.setAll(m_columnSpecs, i -> i == 0 ? null : sourceSpec.getColumnSpec(i - 1));
     }
 
     @Override
     public DataTableSpec getSourceSpec() {
         return m_sourceSpec;
+    }
+
+    @Override
+    public DataColumnSpec getDataColumnSpec(final int index) {
+        return m_columnSpecs[index];
     }
 
     @Override
