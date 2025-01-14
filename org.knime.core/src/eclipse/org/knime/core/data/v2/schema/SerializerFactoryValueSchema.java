@@ -84,7 +84,7 @@ import org.knime.core.node.util.CheckUtils;
  * @noreference This class is not intended to be referenced by clients.
  */
 @SuppressWarnings("deprecation")
-final class SerializerFactoryValueSchema extends DefaultValueSchema {
+final class SerializerFactoryValueSchema extends DefaultDataTableValueSchema {
 
     private final Map<DataType, String> m_factoryMapping;
 
@@ -97,10 +97,6 @@ final class SerializerFactoryValueSchema extends DefaultValueSchema {
         super(spec, colFactories);
         m_factoryMapping = factoryMapping;
         m_factory = factory;
-    }
-
-    DataCellSerializerFactory getSerializerFactory() {
-        return m_factory;
     }
 
     /**

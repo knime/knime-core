@@ -44,42 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Nov 22, 2021 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   7 Feb 2025 (pietzsch): created
  */
 package org.knime.core.data.v2.schema;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Map;
-
-import org.junit.Test;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
-import org.knime.core.data.meta.DataColumnMetaData;
-import org.knime.core.data.v2.RowKeyType;
 
 /**
- * Contains tests for {@link ValueSchemaUtils}.
+ * A {@link ValueSchema} with a matching {@link #getSourceSpec() DataTableSpec}.
+ * <p>
+ * The following constraints hold:
+ * <ul>
+ * <li>Column 0 of this {@code ValueSchema} is a RowKey column.</li>
+ * <li>All columns (except column 0) have unique column names.</li>
+ * </ul>
+ * <p>
+ * Note that the {@link #getSourceSpec() DataTableSpec} column indices do not include the RowKey column.
+ * Therefore, {@code this.getSourceSpec().getNumColumns()== this.numColumns()-1}, and column indices are offset by 1, that is,
+ * {@code this.getSourceSpec().getColumnSpec(i)} corresponds to {@code this.getColumn(i+1).dataColumnSpec())}.
  *
- * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @author Tobias Pietzsch
+ * @since 5.7
  */
-public class ValueSchemaUtilsTest {
+public interface DataTableValueSchema extends ValueSchema {
 
     /**
-     * Ensures that updating the domain and meta data does not change the name of table spec.
+     * @return the underlying {@link DataTableSpec}.
      */
-    @Test
-    public void testUpdateSourcePreservesTableSpecName() {
-        final var colSpec = new DataColumnSpecCreator("foo", StringCell.TYPE).createSpec();
-        final var initialSpec =
-            new DataTableSpec("foobar", colSpec);
-        final var initialSchema = ValueSchemaUtils.create(initialSpec, RowKeyType.CUSTOM, NotInWorkflowWriteFileStoreHandler.create());
-        final var updatedSchema = ValueSchemaUtils.updateDataTableSpec(//
-            initialSchema, //
-            Map.of(0, colSpec.getDomain()), //
-            Map.of(0, new DataColumnMetaData[0]));
-        assertEquals("foobar", updatedSchema.getSourceSpec().getName());
-    }
+    DataTableSpec getSourceSpec();
 }

@@ -44,102 +44,73 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 13, 2021 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   27 Mar 2025 (pietzsch): created
  */
 package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.ValueFactoryUtils;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ColumnarSchema;
 import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
 
 import com.google.common.collect.Iterators;
 
 /**
- * Default implementation of a ValueSchema. (As of KNIME Analytics Platform 4.5.0)
+ * Default implementation of {@link ValueSchema}.
  *
+ * @author Tobias Pietzsch
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-sealed class DefaultValueSchema implements ValueSchema permits SerializerFactoryValueSchema {
+sealed class DefaultValueSchema implements ValueSchema permits DefaultDataTableValueSchema {
 
-    private final DataTableSpec m_sourceSpec;
+    private final ValueSchemaColumn[] m_columns;
 
-    private final ValueFactory<?, ?>[] m_factories;
-
-    private final DataSpec[] m_specs;
-
-    private final DataTraits[] m_traits;
-
-    DefaultValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
-        m_sourceSpec = sourceSpec;
-        m_factories = factories;
-        m_specs = new DataSpec[factories.length];
-        Arrays.setAll(m_specs, i -> factories[i].getSpec());
-        m_traits = new DataTraits[factories.length];
-        Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
-    }
-
-    @Override
-    public DataTableSpec getSourceSpec() {
-        return m_sourceSpec;
-    }
-
-    @Override
-    public int numFactories() {
-        return m_factories.length;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return (ValueFactory<R, W>)m_factories[boundsCheckedColumnIndex(index)];
-    }
-
-    private int boundsCheckedColumnIndex(final int index)
+    DefaultValueSchema(final ValueSchemaColumn[] columns)
     {
+        m_columns = Objects.requireNonNull(columns);
+    }
+
+    @Override
+    public ValueSchemaColumn getColumn(final int index) {
         if (index < 0) {
             throw new IndexOutOfBoundsException(String.format("Column index %d smaller than 0.", index));
         } else if (index >= numColumns()) {
             throw new IndexOutOfBoundsException(
                 String.format("Column index %d greater than largest column index (%d).", index, numColumns() - 1));
         }
-        return index;
+        return m_columns[index];
     }
 
     // -------- ColumnarSchema --------
 
     @Override
-    public DataSpec getSpec(final int index) {
-        return m_specs[boundsCheckedColumnIndex(index)];
-    }
-
-    @Override
-    public DataTraits getTraits(final int index) {
-        return m_traits[boundsCheckedColumnIndex(index)];
+    public int numColumns() {
+        return m_columns.length;
     }
 
     @Override
     public Stream<DataSpec> specStream() {
-        return Arrays.stream(m_specs);
+        return Arrays.stream(m_columns).map(ValueSchemaColumn::dataSpec);
     }
 
     @Override
     public Iterator<DataSpec> iterator() {
-        return Arrays.stream(m_specs).iterator();
+        return specStream().iterator();
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(m_specs);
+        // NB: The following computes the same hashCode as
+        //     Arrays.hashCode(specStream().toArray()) would,
+        //     but avoids the array creation overhead.
+        int result = 1;
+        for (ValueSchemaColumn col : m_columns) {
+            result = 31 * result + col.dataSpec().hashCode();
+        }
+        return result;
     }
 
     @Override
@@ -152,11 +123,5 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
             return false;
         }
         return Iterators.elementsEqual(iterator(), other.iterator());
-    }
-
-    @Override
-    public String toString() {
-        return "Columns (" + m_specs.length + ") "
-            + StringUtils.join(specStream().map(Object::toString).iterator(), ",");
     }
 }

@@ -75,8 +75,8 @@ import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.IntCell.IntCellFactory;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.v2.schema.DataTableValueSchemaUtils;
 import org.knime.core.data.v2.schema.ValueSchema;
-import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.data.v2.value.ValueInterfaces.BooleanWriteValue;
 import org.knime.core.data.v2.value.ValueInterfaces.DoubleReadValue;
 import org.knime.core.data.v2.value.ValueInterfaces.DoubleWriteValue;
@@ -124,7 +124,7 @@ public class WriteAccessRowWriteTest {
                 new DataColumnSpecCreator("double", DoubleCell.TYPE).createSpec()//
             ).createSpec();
 
-    static final ValueSchema SCHEMA = ValueSchemaUtils.create(SOURCE_SPEC, RowKeyType.CUSTOM, NotInWorkflowWriteFileStoreHandler.create());
+    static final ValueSchema SCHEMA = DataTableValueSchemaUtils.create(SOURCE_SPEC, RowKeyType.CUSTOM, NotInWorkflowWriteFileStoreHandler.create());
 
     @Before
     public void init() {

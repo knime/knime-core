@@ -49,30 +49,20 @@
 package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.IntStream;
 
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.meta.DataColumnMetaData;
-import org.knime.core.data.v2.RowKeyType;
-import org.knime.core.data.v2.RowKeyValueFactory;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.ValueFactoryUtils;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.table.schema.ColumnarSchema;
-import org.knime.core.table.schema.traits.LogicalTypeTrait;
+import org.knime.core.data.v2.schema.ValueSchema.ValueSchemaColumn;
 
 /**
- * Utility class for creating, transforming, saving and loading of {@link ValueSchema ValueSchemas}.
+ * Utility class for creating and transforming {@link ValueSchema ValueSchemas}.
  *
+ * @author Tobias Pietzsch
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.5
  * @noreference This class is not intended to be referenced by clients.
@@ -80,139 +70,50 @@ import org.knime.core.table.schema.traits.LogicalTypeTrait;
 public final class ValueSchemaUtils {
 
     /**
-     * Creates a new {@link ValueSchema} based up-on the provided {@link DataTableSpec}.
+     * Create a {@code ValueSchema} with the specified {@code columns}.
      *
-     * @param spec the data table spec to derive the {@link ValueSchema} from.
-     * @param rowKeyType type of the {@link RowKey}
-     * @param fileStoreHandler file-store handler
-     * @return the value schema.
+     * @param columns the column specs
+     * @return a ValueSchema with the specified columns
+     * @since 5.7
      */
-    public static final ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
-        final IWriteFileStoreHandler fileStoreHandler) {
-        final var factories = new ValueFactory<?, ?>[spec.getNumColumns() + 1];
-        factories[0] = ValueFactoryUtils.getRowKeyValueFactory(rowKeyType);
-        for (int i = 1; i < factories.length; i++) {//NOSONAR
-            var type = spec.getColumnSpec(i - 1).getType();
-            factories[i] = ValueFactoryUtils.getValueFactory(type, fileStoreHandler);
-        }
-        return new DefaultValueSchema(spec, factories);
+    public static final ValueSchema create(final ValueSchemaColumn... columns) {
+        return new DefaultValueSchema(columns);
     }
 
     /**
-     * Creates a new {@link ValueSchema} given the provided {@link DataTableSpec spec} and {@link ValueFactory
-     * factories}.
+     * Create a {@code ValueSchema} with the specified {@code columns}.
      *
-     * @param spec the data table spec that the {@link ValueSchema} should wrap
-     * @param valueFactories one for the row key and one for each column in spec
-     * @return the value schema
-     * @since 4.5
+     * @param columns the column specs
+     * @return a ValueSchema with the specified columns
+     * @since 5.7
      */
-    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
-        return new DefaultValueSchema(spec, valueFactories);
+    public static final ValueSchema create(final Collection<ValueSchemaColumn> columns) {
+        return create(columns.toArray(ValueSchemaColumn[]::new));
     }
 
     /**
-     * Saves a ValueSchema to the provided settings.
-     *
-     * @param schema the ValueSchema to save.
-     * @param settings the settings to save the ValueSchema to.
-     */
-    public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
-        if (schema instanceof UpdatedValueSchema s) {
-            save(s.getDelegate(), settings);
-        } else if (schema instanceof SerializerFactoryValueSchema) {
-            SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
-        } else if (schema instanceof DefaultValueSchema) {
-            // nothing to save
-        } else {
-            throw new IllegalArgumentException("Unsupported schema type: " + schema.getClass());
-        }
-    }
-
-    /**
-     * Loads a ValueSchema from the given settings.
-     *
-     * @param schema underlying schema
-     * @param loadContext in which the schema is loaded
-     * @return the loaded {@link ValueSchema}.
-     *
-     * @throws InvalidSettingsException if the settings in loadContext are invalid
-     */
-    public static final ValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
-        throws InvalidSettingsException {
-        var source = loadContext.getTableSpec();
-        var dataRepository = loadContext.getDataRepository();
-        if (hasTypeTraits(schema)) {
-            return create(schema, loadContext);
-        } else {
-            return SerializerFactoryValueSchema.Serializer.load(source, dataRepository, loadContext.getSettings());
-        }
-    }
-
-    private static boolean hasTypeTraits(final ColumnarSchema schema) {
-        return IntStream.range(0, schema.numColumns())//
-            .mapToObj(schema::getTraits)//
-            .allMatch(t -> t.hasTrait(LogicalTypeTrait.class));
-    }
-
-    /**
-     * Creates a ValueSchema given the provided {@link DataTableSpec} and {@link ColumnarSchema}.
-     *
-     * @param source KNIME table spec
-     * @param schema of the underlying batch store
-     * @param dataRepository used for resolving filestore cells
-     * @return a new ValueSchema with the provided {@link DataTableSpec} as source
-     */
-    private static ValueSchema create(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
-        var source = loadContext.getTableSpec();
-        var dataRepository = loadContext.getDataRepository();
-        int numDataColumns = source.getNumColumns();
-        CheckUtils.checkArgument(numDataColumns + 1 == schema.numColumns(),
-            "Expected %s columns in the schema but encountered %s.", numDataColumns + 1, schema.numColumns());
-        final var factories = new ValueFactory<?, ?>[schema.numColumns()];
-        Arrays.setAll(factories, i -> ValueFactoryUtils.loadValueFactory(schema.getTraits(i), dataRepository));
-        return new DefaultValueSchema(source, factories);
-    }
-
-    /**
-     * Indicates whether the provided schema was created prior to KNIME Analytics Platform 4.5.0.
-     *
-     * @param schema to check
-     * @return true if the schema was created before KNIME AP 4.5.0
-     */
-    public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
-        if (schema instanceof UpdatedValueSchema s) {
-            return storesDataCellSerializersSeparately(s.getDelegate());
-        } else if (schema instanceof SerializerFactoryValueSchema) {
-            return true;
-        } else if (schema instanceof DefaultValueSchema) {
-            return false;
-        } else {
-            throw new IllegalArgumentException("Unsupported schema type: " + schema.getClass());
-        }
-    }
-
-    /**
-     * Updates the {@link DataTableSpec} of the passed source scheme with a new {@link DataTableSpec}, including the
-     * domains provided in the {@link Map}.
+     * Updates the {@link DataColumnSpec DataColumnSpecs} of the given {@code ValueSchema}.
      *
      * @param schema schema to update
      * @param domainMap the domains used for update.
      * @param metadataMap the columnar metadata used to update
      *
-     * @return the updated {@link ValueSchema}
+     * @return a new {@link ValueSchema}, with updated DataColumnSpecs
+     * @since 5.7
      */
-    public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
+    public static final ValueSchema updateDataColumnSpecs(final ValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
-        final var result = new DataColumnSpec[schema.numColumns() - 1];
-        for (int i = 0; i < result.length; i++) {//NOSONAR
-            final DataColumnSpec colSpec = schema.getSourceSpec().getColumnSpec(i);
-            final DataColumnDomain domain = domainMap.get(i + 1);
-            final DataColumnMetaData[] metadata = metadataMap.get(i + 1);
 
+        final int numCols = schema.numColumns();
+        final var updatedCols = new ValueSchemaColumn[numCols];
+        for (int i = 0; i < numCols; i++) {//NOSONAR
+            final ValueSchemaColumn column = schema.getColumn(i);
+            final DataColumnDomain domain = domainMap.get(i);
+            final DataColumnMetaData[] metadata = metadataMap.get(i);
             if (domain == null && metadata == null) {
-                result[i] = colSpec;
+                updatedCols[i] = column;
             } else {
+                final DataColumnSpec colSpec = column.dataColumnSpec();
                 final var creator = new DataColumnSpecCreator(colSpec);
                 if (domain != null) {
                     creator.setDomain(domain);
@@ -221,129 +122,75 @@ public final class ValueSchemaUtils {
                 for (final DataColumnMetaData element : metadata) {
                     creator.addMetaData(element, true);
                 }
-
-                result[i] = creator.createSpec();
+                updatedCols[i] = column.with(creator.createSpec());
             }
         }
-        final var sourceName = schema.getSourceSpec().getName();
-        return new UpdatedValueSchema(new DataTableSpec(sourceName, result), schema);
+        return new DefaultValueSchema(updatedCols);
     }
 
     /**
-     * Changes the {@code DataTableSpec} in the {@code schema}.
-     *
-     * @param schema schema to update
-     * @param spec to update the schema with (may have e.g. a different domains or different column names)
-     * @return the schema with the updated spec
-     */
-    public static final ValueSchema updateDataTableSpec(final ValueSchema schema, final DataTableSpec spec) {
-        return new UpdatedValueSchema(spec, schema);
-    }
-
-    /**
-     * Assign new random column names.
-     *
-     * @param schema input schema
-     * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with new random column names.
-     */
-    public static ValueSchema renameToRandomColumnNames(final ValueSchema schema) {
-        var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
-        Arrays.setAll(valueFactories, schema::getValueFactory);
-
-        final DataTableSpec sourceSpec = schema.getSourceSpec();
-        var colSpecs = new DataColumnSpec[sourceSpec.getNumColumns()];
-        Arrays.setAll(colSpecs, i -> {
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(sourceSpec.getColumnSpec(i));
-            creator.setName("random-" + UUID.randomUUID().toString());
-            return creator.createSpec();
-        });
-        var spec = new DataTableSpec(colSpecs);
-
-        return create(spec, valueFactories);
-    }
-
-    /**
-     * Assign new random column names to the specified columns.
-     *
-     * @param schema input schema
-     * @param columnIndices columns to rename (note that indices are including RowKey at 0)
-     * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with new random column names.
-     * @since 5.5
-     */
-    public static ValueSchema renameToRandomColumnNames(final ValueSchema schema, final int... columnIndices) {
-        var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
-        Arrays.setAll(valueFactories, schema::getValueFactory);
-
-        final DataTableSpec sourceSpec = schema.getSourceSpec();
-        var colSpecs = new DataColumnSpec[sourceSpec.getNumColumns()];
-        Arrays.setAll(colSpecs, sourceSpec::getColumnSpec);
-        for (int columnIndex : columnIndices) {
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(colSpecs[columnIndex - 1]);
-            creator.setName("random-" + UUID.randomUUID().toString());
-            colSpecs[columnIndex - 1] = creator.createSpec();
-        }
-        var spec = new DataTableSpec(colSpecs);
-        return create(spec, valueFactories);
-    }
-
-    /**
-     * Assign the specified column names to the specified columns.
-     *
-     * @param schema input schema
-     * @param columnIndices columns to rename (note that indices are including RowKey at 0)
-     * @param columnNames new names to assign
-     * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with renamed columns.
-     * @since 5.5
-     */
-    public static ValueSchema renameColumns(final ValueSchema schema, final int[] columnIndices,
-        final String[] columnNames) {
-        var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
-        Arrays.setAll(valueFactories, schema::getValueFactory);
-
-        final DataTableSpec sourceSpec = schema.getSourceSpec();
-        var colSpecs = new DataColumnSpec[sourceSpec.getNumColumns()];
-        Arrays.setAll(colSpecs, sourceSpec::getColumnSpec);
-        for (int i = 0; i < columnIndices.length; ++i) {
-            final int columnIndex = columnIndices[i];
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(colSpecs[columnIndex - 1]);
-            creator.setName(columnNames[i]);
-            colSpecs[columnIndex - 1] = creator.createSpec();
-        }
-        var spec = new DataTableSpec(colSpecs);
-        return create(spec, valueFactories);
-    }
-
-    /**
-     * Create a new {@code ValueSchema} comprising only the specified columns. The {@code columnIndices} are including
-     * RowID, that is, RowID columns has index 0.
+     * Create a new {@code ValueSchema} comprising only the specified columns.
      *
      * @param schema input schema
      * @param columnIndices indices of columns to select
-     * @return a new {@code ColumnarValueSchema} comprising only the specified columns
+     * @return a new {@code ValueSchema} comprising only the specified columns
      */
     public static ValueSchema selectColumns(final ValueSchema schema, final int... columnIndices) {
-        var valueFactories = new ValueFactory<?, ?>[columnIndices.length];
-        Arrays.setAll(valueFactories, i -> schema.getValueFactory(columnIndices[i]));
-
-        final DataTableSpec sourceSpec = schema.getSourceSpec();
-        var colSpecs = new DataColumnSpec[columnIndices.length];
-        Arrays.setAll(colSpecs, i -> sourceSpec.getColumnSpec(columnIndices[i] - 1));
-        var spec = new DataTableSpec(colSpecs);
-
-        return create(spec, valueFactories);
+        var columns = new ValueSchemaColumn[columnIndices.length];
+        Arrays.setAll(columns, i -> schema.getColumn(columnIndices[i]));
+        return new DefaultValueSchema(columns);
     }
 
     /**
-     * Checks whether a schema includes a RowID column.
+     * Checks whether a schema has a RowKey as column 0.
      *
      * @param schema to check
      * @return true if the schema has a RowID column
      */
     public static final boolean hasRowID(final ValueSchema schema) {
-        return schema.numColumns() > 0 && schema.getValueFactory(0) instanceof RowKeyValueFactory;
+        return schema.numColumns() > 0 && schema.getColumn(0).isRowKey();
+    }
+
+    /**
+     * Creates a new {@code DataTableSpec} matching the given {@code schema}.
+     * <p>
+     * The {@code schema} must satisfy the following constraints:
+     * <ul>
+     * <li>Column 0 (and only column 0) must be a RowKey column.</li>
+     * <li>All columns (except column 0) must have unique column names.</li>
+     * </ul>
+     *
+     * @param schema ValueSchema with RowKey in column 0
+     * @return DataTableSpec for the schema
+     *
+     * @throws IllegalArgumentException if the provided schema does not satisfy the constraints
+     * @since 5.7
+     */
+    public static DataTableSpec createDataTableSpec(final ValueSchema schema) throws IllegalArgumentException {
+        return new DataTableSpec(dataColumnSpecs(schema));
+    }
+
+    /**
+     * Extract {@code DataColumnSpec[]} from {@code schema}. This does not include the RowKey, i.e. the returned array
+     * contains {@code schema.getColumn(1).dataColumnSpec()} at index 0. Note, that the {@code schema} must have RowKey
+     * at column 0, otherwise an {@code IllegalArgumentException} is thrown!
+     *
+     * @param schema ValueSchema with RowKey in column 0
+     * @return extracted DataColumnSpecs (not including the RowKey)
+     *
+     * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
+     * @since 5.7
+     */
+    public static DataColumnSpec[] dataColumnSpecs(final ValueSchema schema) throws IllegalArgumentException {
+        if (schema.numColumns() < 1 || !schema.getColumn(0).isRowKey()) {
+            throw new IllegalArgumentException("expected schema with RowKey at column 0");
+        }
+        return Arrays.stream(schema.getColumns()) //
+            .skip(1) // skip RowKey column
+            .map(ValueSchemaColumn::dataColumnSpec) //
+            .toArray(DataColumnSpec[]::new);
     }
 
     private ValueSchemaUtils() {
-
     }
 }
