@@ -51,6 +51,7 @@ package org.knime.core.data.v2.schema;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.ReadAccess;
@@ -63,6 +64,7 @@ import org.knime.core.table.schema.traits.DataTraits;
  *
  * @author Christian Dietz, KNIME GmbH, Konstanz, Germany
  */
+// TODO (TP) remove this class in favour of always using DefaultValueSchema?
 final class UpdatedValueSchema implements ValueSchema {
 
     private final DataTableSpec m_updatedSpec;
@@ -83,6 +85,12 @@ final class UpdatedValueSchema implements ValueSchema {
     @Override
     public DataTableSpec getSourceSpec() {
         return m_updatedSpec;
+    }
+
+    // TODO (TP) Revise (didn't think a lot about implementing this, because maybe we'll remove this class anyway)
+    @Override
+    public DataColumnSpec getDataColumnSpec(final int index) {
+        return index == 0 ? null : m_updatedSpec.getColumnSpec(index - 1);
     }
 
     @Override

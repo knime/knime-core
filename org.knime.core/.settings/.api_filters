@@ -326,6 +326,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
+        <filter comment="WIP" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getDataColumnSpec(int)"/>
+            </message_arguments>
+        </filter>
         <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
