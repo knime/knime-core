@@ -242,6 +242,7 @@ public class AppendedRowsIterator extends CloseableRowIterator {
                             + "Suppress further warnings.");
                     m_hasPrintedError = true;
                 }
+                m_nrRowsSkipped++;
                 if (!m_curIterator.hasNext()) { // end of one table reached
                     // note, this causes one more call on the stack
                     // (but who wants to concatenate 60000 tables...)
@@ -249,7 +250,6 @@ public class AppendedRowsIterator extends CloseableRowIterator {
                     return;
                 }
                 if (m_exec != null) {
-                    m_nrRowsSkipped++;
                     String message = "Skipping row " + m_curRowIndex + " (\""
                             + key.toString() + "\")";
                     if (m_totalRowCount > 0L) {
