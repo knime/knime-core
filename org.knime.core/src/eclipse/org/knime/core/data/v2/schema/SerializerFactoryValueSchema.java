@@ -99,6 +99,15 @@ final class SerializerFactoryValueSchema extends DefaultValueSchema {
         m_factory = factory;
     }
 
+    SerializerFactoryValueSchema(final DataColumnSpec[] dataColumnSpecs, //
+        final ValueFactory<?, ?>[] colFactories, //
+        final Map<DataType, String> factoryMapping, //
+        final DataCellSerializerFactory factory) {
+        super(dataColumnSpecs, colFactories);
+        m_factoryMapping = factoryMapping;
+        m_factory = factory;
+    }
+
     DataCellSerializerFactory getSerializerFactory() {
         return m_factory;
     }
