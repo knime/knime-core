@@ -89,10 +89,10 @@ public class DefaultValueSchemaTest {
             .toArray(DataColumnSpec[]::new));
     }
 
-    static DefaultValueSchema createDefaultValueSchema(final DataTableSpec spec) {
+    static DefaultDataTableValueSchema createDefaultValueSchema(final DataTableSpec spec) {
         final ValueSchema valueSchema =
-            ValueSchemaUtils.create(spec, RowKeyType.NOKEY, NotInWorkflowWriteFileStoreHandler.create());
-        return (DefaultValueSchema)valueSchema;
+                DataTableValueSchemaUtils.create(spec, RowKeyType.NOKEY, NotInWorkflowWriteFileStoreHandler.create());
+        return (DefaultDataTableValueSchema)valueSchema;
     }
 
     @Test(expected = IndexOutOfBoundsException.class)

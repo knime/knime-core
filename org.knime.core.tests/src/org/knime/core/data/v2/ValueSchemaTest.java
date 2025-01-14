@@ -77,9 +77,10 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.v2.schema.DataTableValueSchema;
+import org.knime.core.data.v2.schema.DataTableValueSchemaUtils;
 import org.knime.core.data.v2.schema.ValueSchema;
 import org.knime.core.data.v2.schema.ValueSchemaLoadContext;
-import org.knime.core.data.v2.schema.ValueSchemaUtils;
 import org.knime.core.data.v2.value.BooleanListValueFactory;
 import org.knime.core.data.v2.value.BooleanSetValueFactory;
 import org.knime.core.data.v2.value.BooleanSparseListValueFactory;
@@ -103,7 +104,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.table.schema.DefaultColumnarSchema;
 
 /**
- * Tests for the {@link DefaultValueSchema} and the {@link ValueFactory}s used by it.
+ * Tests for the {@link DefaultDataTableValueSchema} and the {@link ValueFactory}s used by it.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  */
@@ -244,8 +245,8 @@ public class ValueSchemaTest {
         final IWriteFileStoreHandler fileStoreHandler = new DummyWriteFileStoreHandler();
 
         // Create the schema and check
-        final ValueSchema schema = ValueSchemaUtils.create(tableSpec, RowKeyType.NOKEY, fileStoreHandler);
-        assertEquals(2, schema.numFactories());
+        final DataTableValueSchema schema = DataTableValueSchemaUtils.create(tableSpec, RowKeyType.NOKEY, fileStoreHandler);
+        assertEquals(2, schema.numColumns());
         var rowKeyFactory = schema.getValueFactory(0);
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
         var dataFactory = schema.getValueFactory(1);
@@ -253,7 +254,7 @@ public class ValueSchemaTest {
 
         // Save to some note settings
         final NodeSettings settings = new NodeSettings("valueSchema");
-        ValueSchemaUtils.save(schema, settings);
+        DataTableValueSchemaUtils.save(schema, settings);
 
         var columnarSchema = DefaultColumnarSchema.builder()//
                 .addColumn(rowKeyFactory.getSpec(), ValueFactoryUtils.getTraits(rowKeyFactory))//
@@ -264,9 +265,9 @@ public class ValueSchemaTest {
         when(loadContext.getDataRepository()).thenReturn(dataRepository);
         when(loadContext.getSettings()).thenReturn(settings);
         // Load back and check
-        final ValueSchema loadedSchema = ValueSchemaUtils.load(columnarSchema, loadContext);
+        final ValueSchema loadedSchema = DataTableValueSchemaUtils.load(columnarSchema, loadContext);
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
-        assertEquals(2, loadedSchema.numFactories());
+        assertEquals(2, loadedSchema.numColumns());
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
     }
 
