@@ -50,11 +50,13 @@ package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.table.access.ReadAccess;
@@ -72,7 +74,7 @@ import com.google.common.collect.Iterators;
  */
 sealed class DefaultValueSchema implements ValueSchema permits SerializerFactoryValueSchema {
 
-    private final DataTableSpec m_sourceSpec;
+    private final AtomicReference<DataTableSpec> m_sourceSpec;
 
     private final DataColumnSpec[] m_columnSpecs;
 
@@ -83,7 +85,10 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
     private final DataTraits[] m_traits;
 
     DefaultValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
-        m_sourceSpec = sourceSpec;
+        if (sourceSpec.getNumColumns() + 1 != factories.length) {
+            throw new IllegalArgumentException();
+        }
+        m_sourceSpec = new AtomicReference<>(sourceSpec);
         m_factories = factories;
         m_specs = new DataSpec[factories.length];
         Arrays.setAll(m_specs, i -> factories[i].getSpec());
@@ -93,9 +98,32 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
         Arrays.setAll(m_columnSpecs, i -> i == 0 ? null : sourceSpec.getColumnSpec(i - 1));
     }
 
+    DefaultValueSchema(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] factories) {
+        if (dataColumnSpecs.length != factories.length) {
+            throw new IllegalArgumentException();
+        }
+        m_sourceSpec = new AtomicReference<>();
+        m_factories = factories;
+        m_columnSpecs = dataColumnSpecs;
+        m_specs = new DataSpec[factories.length];
+        Arrays.setAll(m_specs, i -> factories[i].getSpec());
+        m_traits = new DataTraits[factories.length];
+        Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
+    }
+
     @Override
     public DataTableSpec getSourceSpec() {
-        return m_sourceSpec;
+        final var spec = m_sourceSpec.get();
+        if (spec != null) {
+            return spec;
+        }
+        if (m_columnSpecs[0] != null || m_factories[0] instanceof RowKeyValueFactory) {
+            throw new IllegalStateException(
+                "Cannot create equivalent DataTableSpec. (The ValueSchema must have a RowKey column at index 0.)");
+        }
+        final var sourceSpec = new DataTableSpec(Arrays.copyOfRange(m_columnSpecs, 1, m_columnSpecs.length));
+        m_sourceSpec.compareAndSet(null, sourceSpec);
+        return m_sourceSpec.get();
     }
 
     @Override
