@@ -103,6 +103,10 @@ final class SerializerFactoryValueSchema extends DefaultValueSchema {
         return m_factory;
     }
 
+    Map<DataType, String> getFactoryMapping() {
+        return m_factoryMapping;
+    }
+
     /**
      * Creates a new LegacyValueSchema based up-on the provided {@link DataTableSpec}.
      *
