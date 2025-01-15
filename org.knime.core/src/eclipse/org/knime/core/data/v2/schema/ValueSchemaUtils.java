@@ -112,6 +112,18 @@ public final class ValueSchemaUtils {
     }
 
     /**
+     * TODO (TP): javadoc
+     *
+     * @param dataColumnSpecs
+     * @param valueFactories
+     * @return
+     * @since 5.5
+     */
+    public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] valueFactories) {
+        return new DefaultValueSchema(dataColumnSpecs, valueFactories);
+    }
+
+    /**
      * Saves a ValueSchema to the provided settings.
      *
      * @param schema the ValueSchema to save.
