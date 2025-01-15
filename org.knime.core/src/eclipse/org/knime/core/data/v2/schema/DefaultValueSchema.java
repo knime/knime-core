@@ -85,8 +85,17 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
     private final DataTraits[] m_traits;
 
     DefaultValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
-        if (sourceSpec.getNumColumns() + 1 != factories.length) {
-            throw new IllegalArgumentException();
+        m_columnSpecs = new DataColumnSpec[factories.length];
+        // TODO (TP): Revise. Eventually, we only want to support DataTableSpec for tables *with* a RowKey column.
+        if (sourceSpec.getNumColumns() == factories.length) {
+            // this is a ValueSchema *without* a RowKey column
+            Arrays.setAll(m_columnSpecs, sourceSpec::getColumnSpec);
+        } else if (sourceSpec.getNumColumns() + 1 == factories.length ) {
+            // this is a ValueSchema *with* a RowKey column
+            Arrays.setAll(m_columnSpecs, i -> i == 0 ? null : sourceSpec.getColumnSpec(i - 1));
+        } else {
+            // TODO (TP): remove debug string in IllegalArgumentException
+            throw new IllegalArgumentException("a="+ sourceSpec.getNumColumns() + ", b=" + factories.length);
         }
         m_sourceSpec = new AtomicReference<>(sourceSpec);
         m_factories = factories;
@@ -94,8 +103,6 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
         Arrays.setAll(m_specs, i -> factories[i].getSpec());
         m_traits = new DataTraits[factories.length];
         Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
-        m_columnSpecs = new DataColumnSpec[factories.length];
-        Arrays.setAll(m_columnSpecs, i -> i == 0 ? null : sourceSpec.getColumnSpec(i - 1));
     }
 
     DefaultValueSchema(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] factories) {
@@ -117,11 +124,15 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
         if (spec != null) {
             return spec;
         }
-        if (m_columnSpecs[0] != null || m_factories[0] instanceof RowKeyValueFactory) {
-            throw new IllegalStateException(
-                "Cannot create equivalent DataTableSpec. (The ValueSchema must have a RowKey column at index 0.)");
+        // TODO (TP): Revise. Eventually, we only want to support DataTableSpec for tables *with* a RowKey column.
+        final DataTableSpec sourceSpec;
+        if (m_columnSpecs[0] == null && m_factories[0] instanceof RowKeyValueFactory) {
+            // this is a ValueSchema *with* a RowKey column
+            sourceSpec = new DataTableSpec(Arrays.copyOfRange(m_columnSpecs, 1, m_columnSpecs.length));
+        } else {
+            // this is a ValueSchema *without* a RowKey column
+            sourceSpec = new DataTableSpec(m_columnSpecs);
         }
-        final var sourceSpec = new DataTableSpec(Arrays.copyOfRange(m_columnSpecs, 1, m_columnSpecs.length));
         m_sourceSpec.compareAndSet(null, sourceSpec);
         return m_sourceSpec.get();
     }
