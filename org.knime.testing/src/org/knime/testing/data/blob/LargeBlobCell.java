@@ -62,7 +62,50 @@ import org.knime.core.node.util.CheckUtils;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
+
+    /**
+     * Serializer, as required by extension point.
+     * @since 5.5
+     */
+    public static final class LargeBlobCellSerializer implements DataCellSerializer<LargeBlobCell> {
+        private final Random m_random;
+
+        public LargeBlobCellSerializer() {
+            long time = System.currentTimeMillis();
+            NodeLogger.getLogger(LargeBlobCell.class).debug(
+                    "Using seed " + time);
+            m_random = new Random(time);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public LargeBlobCell deserialize(final DataCellDataInput input) throws IOException {
+            int sizeOfCell = input.readInt();
+            CheckUtils.checkArgument(sizeOfCell >= 0, "Negative size %d", sizeOfCell);
+            for (int i = 0; i < sizeOfCell / 2; i++) {
+                input.readByte();
+            }
+            String identifier = input.readUTF();
+            for (int i = 0; i < sizeOfCell / 2; i++) {
+                input.readByte();
+            }
+            return new LargeBlobCell(identifier, LargeBlobCell.SIZE_OF_CELL);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void serialize(final LargeBlobCell cell, final DataCellDataOutput output) throws IOException {
+            output.writeInt(cell.m_sizeOfCell);
+            byte[] ar = new byte[cell.m_sizeOfCell / 2];
+            m_random.nextBytes(ar);
+            output.write(ar);
+            output.writeUTF(cell.m_identifier);
+            m_random.nextBytes(ar);
+            output.write(ar);
+        }
+    }
 
     public static final DataType TYPE = DataType.getType(LargeBlobCell.class);
 
@@ -77,46 +120,6 @@ public class LargeBlobCell extends BlobDataCell implements LargeBlobValue {
 
     /** The size in bytes as per constructor. */
     private final int m_sizeOfCell;
-
-    public static final DataCellSerializer<LargeBlobCell> getCellSerializer() {
-        return new DataCellSerializer<LargeBlobCell>() {
-            private final Random m_random;
-
-            {
-                long time = System.currentTimeMillis();
-                NodeLogger.getLogger(LargeBlobCell.class).debug(
-                        "Using seed " + time);
-                m_random = new Random(time);
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public LargeBlobCell deserialize(final DataCellDataInput input) throws IOException {
-                int sizeOfCell = input.readInt();
-                CheckUtils.checkArgument(sizeOfCell >= 0, "Negative size %d", sizeOfCell);
-                for (int i = 0; i < sizeOfCell / 2; i++) {
-                    input.readByte();
-                }
-                String identifier = input.readUTF();
-                for (int i = 0; i < sizeOfCell / 2; i++) {
-                    input.readByte();
-                }
-                return new LargeBlobCell(identifier, LargeBlobCell.SIZE_OF_CELL);
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public void serialize(final LargeBlobCell cell, final DataCellDataOutput output) throws IOException {
-                output.writeInt(cell.m_sizeOfCell);
-                byte[] ar = new byte[cell.m_sizeOfCell / 2];
-                m_random.nextBytes(ar);
-                output.write(ar);
-                output.writeUTF(cell.m_identifier);
-                m_random.nextBytes(ar);
-                output.write(ar);
-            }
-        };
-    }
 
     /**
      * @param identifier The identifier saved in the binary garbage.

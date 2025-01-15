@@ -57,6 +57,13 @@
                serializerClass="org.knime.testing.data.filestore.LargeFileStoreCell$Serializer">
          </serializer>
       </DataType>
+      <DataType
+            cellClass="org.knime.testing.data.blob.LargeBlobCell">
+         <serializer
+               cellClass="org.knime.testing.data.blob.LargeBlobCell"
+               serializerClass="org.knime.testing.data.blob.LargeBlobCell$LargeBlobCellSerializer">
+         </serializer>
+      </DataType>
    </extension>
    <extension
          point="org.knime.core.PortType">
