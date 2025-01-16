@@ -83,6 +83,51 @@ public interface ValueSchema extends ColumnarSchema {
     DataColumnSpec getDataColumnSpec(int index);
 
     /**
+     * TODO (TP) javadoc
+     *
+     * Find index of a (data) column by its name.
+     * (The RowKey column doesn't have a name.)
+     *
+     * @param columnName name of the column.
+     * @return
+     * @since 5.5
+     */
+    // TODO (TP) Make a (lazy?) lookup map, like DataTableSpec does?
+    //
+    // TODO (TP) Probably this should fail if column names are not unique?
+    //           So just lean on getSourceSpec() and add 1 (depending on whether hasRowKey)?
+    default int findColumnIndex(final String columnName) {
+        if (columnName != null) {
+            for (int i = 0; i < numColumns(); ++i) {
+                var spec = getDataColumnSpec(i);
+                if (spec != null && spec.getName().equals(columnName)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * TODO (TP) javadoc
+     *
+     * Returns the {@link DataColumnSpec} of the column with the provided name.
+     * This method returns {@code null} if the argument is {@code null}.
+     *
+     * @param columnName the column name to find the {@code DataColumnSpec} for
+     * @return the column specification or {@code null} if not available
+     * @since 5.5
+     */
+    default DataColumnSpec getColumnSpec(final String columnName) {
+        int columnIndex = findColumnIndex(columnName);
+        if (columnIndex == -1) {
+            return null;
+        }
+        return getDataColumnSpec(columnIndex);
+    }
+
+
+    /**
      * Returns the number of {@link ValueFactory factories} this schema holds. Includes the {@link RowKeyValueFactory}.
      * Therefore the returned value equals {@link DataTableSpec#getNumColumns()} + 1.
      *
