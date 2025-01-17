@@ -46,6 +46,7 @@ package org.knime.core.node;
 
 import java.util.function.Supplier;
 
+import org.knime.core.data.util.memory.ExternalProcessMemoryWatchdog;
 import org.knime.core.node.DefaultNodeProgressMonitor.SilentSubNodeProgressMonitor;
 import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
 
@@ -62,6 +63,8 @@ public class ExecutionMonitor {
 
     /** The progress monitor cancel and progress are delegated. */
     private final NodeProgressMonitor m_progress;
+
+    private final static NodeLogger LOGGER = NodeLogger.getLogger(ExecutionMonitor.class);
 
     /**
      * Creates a new execution monitor with an empty default progress monitor.
@@ -96,6 +99,11 @@ public class ExecutionMonitor {
      * @return <code>true</code> if the execution has been canceled.
      */
     boolean isCanceled() {
+        if (ExternalProcessMemoryWatchdog.getInstance().shouldNodeExecutionsBeCancelled()) {
+            LOGGER.warn("Node execution got cancelled because the watchdog reported a lack of resources");
+            return true;
+        }
+
         try {
             m_progress.checkCanceled();
             return false;
