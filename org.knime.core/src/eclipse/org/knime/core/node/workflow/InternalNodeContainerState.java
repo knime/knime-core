@@ -46,6 +46,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.knime.core.internal.ApplicationHealthInternal;
 import org.knime.core.node.workflow.NodeContainer.State;
 
 /** (Package scope) implementation of {@link NodeContainerState}.
@@ -54,19 +57,32 @@ import org.knime.core.node.workflow.NodeContainer.State;
  */
 enum InternalNodeContainerState implements NodeContainerState {
 
-    IDLE,
-    CONFIGURED,
-    UNCONFIGURED_MARKEDFOREXEC,
-    CONFIGURED_MARKEDFOREXEC,
-    EXECUTED_MARKEDFOREXEC,
-    CONFIGURED_QUEUED,
-    EXECUTED_QUEUED,
-    PREEXECUTE,
-    EXECUTING,
-    EXECUTINGREMOTELY,
-    POSTEXECUTE,
-    EXECUTED;
+    IDLE(ApplicationHealthInternal.NODESTATE_OTHER),
+    CONFIGURED(ApplicationHealthInternal.NODESTATE_OTHER),
+    UNCONFIGURED_MARKEDFOREXEC(ApplicationHealthInternal.NODESTATE_OTHER),
+    CONFIGURED_MARKEDFOREXEC(ApplicationHealthInternal.NODESTATE_OTHER),
+    EXECUTED_MARKEDFOREXEC(ApplicationHealthInternal.NODESTATE_OTHER),
+    CONFIGURED_QUEUED(ApplicationHealthInternal.NODESTATE_OTHER),
+    EXECUTED_QUEUED(ApplicationHealthInternal.NODESTATE_OTHER),
+    PREEXECUTE(ApplicationHealthInternal.NODESTATE_OTHER),
+    EXECUTING(ApplicationHealthInternal.NODESTATE_EXECUTING_COUNTER),
+    EXECUTINGREMOTELY(ApplicationHealthInternal.NODESTATE_EXECUTING_COUNTER),
+    POSTEXECUTE(ApplicationHealthInternal.NODESTATE_OTHER),
+    EXECUTED(ApplicationHealthInternal.NODESTATE_EXECUTED_COUNTER);
 
+    private final AtomicInteger m_nrOfNativeNodesInStateCount;
+
+    InternalNodeContainerState(final AtomicInteger nrOfNativeNodesInStateCount) {
+        m_nrOfNativeNodesInStateCount = nrOfNativeNodesInStateCount;
+    }
+
+    void decrementInStateCount() {
+        m_nrOfNativeNodesInStateCount.decrementAndGet();
+    }
+
+    void incrementInStateCount() {
+        m_nrOfNativeNodesInStateCount.incrementAndGet();
+    }
 
     /** {@inheritDoc} */
     @Override

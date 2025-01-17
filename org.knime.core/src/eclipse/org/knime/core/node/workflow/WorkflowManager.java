@@ -244,9 +244,20 @@ public final class WorkflowManager extends NodeContainer
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowManager.class);
 
-    private static final InstanceCounter<WorkflowManager> PROJECT_COUNTER =
+    /**
+     * Counter of non-gc'ed instances that are flagged as projects, including repository managers (e.g. incl. ROOT).
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.5
+     */
+    public static final InstanceCounter<WorkflowManager> PROJECT_COUNTER =
             InstanceCounter.register(WorkflowManager.class, "project");
-    private static final InstanceCounter<WorkflowManager> NO_PROJECT_COUNTER =
+
+    /**
+     * Counter of non-gc'ed instances that are flagged as non-projects, i.e. metanodes and subnodes.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.5
+     */
+    public static final InstanceCounter<WorkflowManager> NO_PROJECT_COUNTER =
             InstanceCounter.register(WorkflowManager.class, "no project");
 
     /**

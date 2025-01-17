@@ -127,7 +127,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NativeNodeContainer.class);
 
-    private static final InstanceCounter<NativeNodeContainer> INSTANCE_COUNTER =
+    /**
+     * Instance counter used by the application health checkers etc. Not public API.
+     * @noreference This field is not intended to be referenced by clients.set
+     * @since 5.5
+     */
+    public static final InstanceCounter<NativeNodeContainer> INSTANCE_COUNTER =
         InstanceCounter.register(NativeNodeContainer.class);
 
     /** underlying node. */
@@ -165,9 +170,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NativeNodeContainer(final WorkflowManager parent, final Node n, final NodeID id) {
         super(parent, id);
         m_node = n;
-        setPortNames();
-        INSTANCE_COUNTER.track(this); // NOSONAR
-        m_node.addMessageListener(new UnderlyingNodeMessageListener());
+        postConstruct();
     }
 
     /**
@@ -186,9 +189,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         assert m_node != null : persistor.getClass().getSimpleName()
                 + " did not provide Node instance for "
                 + getClass().getSimpleName() + " with id \"" + id + "\"";
-        setPortNames();
-        INSTANCE_COUNTER.track(this); // NOSONAR
-        m_node.addMessageListener(new UnderlyingNodeMessageListener());
+        postConstruct();
     }
 
     /**
@@ -204,6 +205,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node = node;
         CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
             def.getNodeName(), getClass().getSimpleName(), id);
+        postConstruct();
+    }
+
+    private void postConstruct() {
+        getInternalState().incrementInStateCount();
         setPortNames();
         INSTANCE_COUNTER.track(this); // NOSONAR
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
@@ -220,6 +226,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
         public void messageChanged(final NodeMessageEvent messageEvent) {
             NativeNodeContainer.this.setNodeMessage(messageEvent.getMessage());
         }
+    }
+
+    @Override
+    boolean setInternalState(final InternalNodeContainerState state, final boolean setDirty) {
+        getInternalState().decrementInStateCount();
+        state.incrementInStateCount();
+        return super.setInternalState(state, setDirty);
     }
 
     /** Get the underlying node.
@@ -394,6 +407,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         } finally {
             NodeContext.removeLastContext();
         }
+        getInternalState().decrementInStateCount();
         // call after node has been cleaned up, (DB) extensions rely on credentials provider (AP-23380)
         super.cleanup();
     }

@@ -216,7 +216,12 @@ public abstract class NodeModel implements ViewableModel {
 //        return m_nodeConfiguration;
 //    }
 
-    private static final InstanceCounter<NodeModel> INSTANCE_COUNTER = InstanceCounter.register(NodeModel.class);
+    /**
+     * Instance counter used by the application health checkers etc. Not public API.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.5
+     */
+    public static final InstanceCounter<NodeModel> INSTANCE_COUNTER = InstanceCounter.register(NodeModel.class);
 
     /**
      * The node logger for this class; do not make static to make sure the right

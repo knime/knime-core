@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,69 +41,68 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   20.09.2007 (Fabian Dill): created
+ *   Jan 16, 2025 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.monitor;
 
-import java.util.EventObject;
+import java.util.List;
+
+import org.knime.core.data.util.memory.InstanceCounter;
+import org.knime.core.internal.ApplicationHealthInternal;
 
 /**
+ * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
+ * its use is limited to KNIME internals such as health checkers in hub executors etc.
  *
- * @author Fabian Dill, University of Konstanz
+ * @noreference This class is not intended to be referenced by clients.
+ * @author Bernd Wiswedel
+ * @since 5.5
  */
-public class NodeStateEvent extends EventObject {
+public final class ApplicationHealth {
 
-    private final InternalNodeContainerState m_internalNCState;
-
-    /**
-     * A new event from node container with the given id.
-     *
-     * The internally kept (and deprecated) {@link InternalNodeContainerState} state will be set to <code>null</code>!
-     *
-     * @param nodeID the node container the state has changed for (not null)
-     * @since 3.5
-     */
-    public NodeStateEvent(final NodeID nodeID) {
-        this(nodeID, null);
-    }
-
-    /** A new event from the current node container ID and state.
-     * @param nc A node container to derive the state from (not null).
-     */
-    public NodeStateEvent(final NodeContainer nc) {
-        this(nc.getID(), nc.getInternalState());
+    private ApplicationHealth() {
+        // utility class
     }
 
     /**
-     * @param src id of the node
-     * @param newState the new state.
+     * InstanceCounter for various classes used within the framework, currently nodes and workflow projects.
+     * Content might change between releases.
+     *
+     * @return That non-modifiable list.
      */
-    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
-        super(src);
-        m_internalNCState = newState;
+    public static List<InstanceCounter<?>> getInstanceCounters() { // NOSONAR (generic wildcards)
+        return ApplicationHealthInternal.INSTANCE_COUNTERS;
     }
 
     /**
+     * An estimate for the number of native nodes currently in executing state (truly executing, not just waiting to be
+     * executed).
      *
-     * @return the new state of the node
-     * @deprecated Don't get the state from the event but receive it from the node itself
+     * @return That number
      */
-    @Deprecated(since = "2.8.0", forRemoval = true)
-    public NodeContainer.State getState() {
-        return m_internalNCState.mapToOldStyleState();
+    public static int getNodeStateExecutingCount() {
+        return ApplicationHealthInternal.NODESTATE_EXECUTING_COUNTER.get();
     }
 
-    /** @return the internalNCState */
-    InternalNodeContainerState getInternalNCState() {
-        return m_internalNCState;
+    /**
+     * An estimate for the number of native nodes currently in executed state.
+     *
+     * @return That number
+     */
+    public static int getNodeStateExecutedCount() {
+        return ApplicationHealthInternal.NODESTATE_EXECUTED_COUNTER.get();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
+    /**
+     * An estimate for the number of native nodes currently in other states, e.g. queued, post-processing etc.
+     *
+     * @return That number
+     */
+    public static int getNodeStateOtherCount() {
+        return ApplicationHealthInternal.NODESTATE_OTHER.get();
     }
+
 }

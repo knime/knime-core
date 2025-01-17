@@ -40,69 +40,12 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   20.09.2007 (Fabian Dill): created
+ * ------------------------------------------------------------------------
  */
-package org.knime.core.node.workflow;
-
-import java.util.EventObject;
 
 /**
+ * Functionality to monitor application health.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Bernd Wiswedel
  */
-public class NodeStateEvent extends EventObject {
-
-    private final InternalNodeContainerState m_internalNCState;
-
-    /**
-     * A new event from node container with the given id.
-     *
-     * The internally kept (and deprecated) {@link InternalNodeContainerState} state will be set to <code>null</code>!
-     *
-     * @param nodeID the node container the state has changed for (not null)
-     * @since 3.5
-     */
-    public NodeStateEvent(final NodeID nodeID) {
-        this(nodeID, null);
-    }
-
-    /** A new event from the current node container ID and state.
-     * @param nc A node container to derive the state from (not null).
-     */
-    public NodeStateEvent(final NodeContainer nc) {
-        this(nc.getID(), nc.getInternalState());
-    }
-
-    /**
-     * @param src id of the node
-     * @param newState the new state.
-     */
-    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
-        super(src);
-        m_internalNCState = newState;
-    }
-
-    /**
-     *
-     * @return the new state of the node
-     * @deprecated Don't get the state from the event but receive it from the node itself
-     */
-    @Deprecated(since = "2.8.0", forRemoval = true)
-    public NodeContainer.State getState() {
-        return m_internalNCState.mapToOldStyleState();
-    }
-
-    /** @return the internalNCState */
-    InternalNodeContainerState getInternalNCState() {
-        return m_internalNCState;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
-    }
-}
+package org.knime.core.monitor;

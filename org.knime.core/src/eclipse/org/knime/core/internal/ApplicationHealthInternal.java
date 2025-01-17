@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -40,69 +41,61 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   20.09.2007 (Fabian Dill): created
+ *   Jan 16, 2025 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.internal;
 
-import java.util.EventObject;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.knime.core.data.util.memory.InstanceCounter;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
+ * Bundle-internal fields that need to be public so that they can be modified from code inside org.knime.core.
  *
- * @author Fabian Dill, University of Konstanz
+ * <p>
+ * The fields below are defined here to centralize the definition of all relevant counters. This is necessary
+ * because the metrics endpoint (Prometheus) needs to be aware of the complete set of metrics upfront. Only this
+ * initial set defines the available metrics.
+ *
+ * @author Bernd Wiswedel
+ * @since 5.5
  */
-public class NodeStateEvent extends EventObject {
-
-    private final InternalNodeContainerState m_internalNCState;
+public final class ApplicationHealthInternal {
 
     /**
-     * A new event from node container with the given id.
-     *
-     * The internally kept (and deprecated) {@link InternalNodeContainerState} state will be set to <code>null</code>!
-     *
-     * @param nodeID the node container the state has changed for (not null)
-     * @since 3.5
+     * Collection of instance counters that are considered interesting or relevant. Content may change between releases.
      */
-    public NodeStateEvent(final NodeID nodeID) {
-        this(nodeID, null);
-    }
-
-    /** A new event from the current node container ID and state.
-     * @param nc A node container to derive the state from (not null).
-     */
-    public NodeStateEvent(final NodeContainer nc) {
-        this(nc.getID(), nc.getInternalState());
-    }
+    public static final List<InstanceCounter<?>> INSTANCE_COUNTERS = List.of( //
+        NativeNodeContainer.INSTANCE_COUNTER, //
+        NodeModel.INSTANCE_COUNTER, //
+        WorkflowManager.PROJECT_COUNTER, //
+        WorkflowManager.NO_PROJECT_COUNTER);
 
     /**
-     * @param src id of the node
-     * @param newState the new state.
+     * Counter of native nodes currently in EXECUTING state (as per <code>InternalNodeContainerState#EXECUTING</code>).
      */
-    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
-        super(src);
-        m_internalNCState = newState;
-    }
+    public static final AtomicInteger NODESTATE_EXECUTING_COUNTER = new AtomicInteger();
 
     /**
-     *
-     * @return the new state of the node
-     * @deprecated Don't get the state from the event but receive it from the node itself
+     * Counter of native nodes currently in EXECUTED state (as per <code>InternalNodeContainerState#EXECUTED</code>).
      */
-    @Deprecated(since = "2.8.0", forRemoval = true)
-    public NodeContainer.State getState() {
-        return m_internalNCState.mapToOldStyleState();
+    public static final AtomicInteger NODESTATE_EXECUTED_COUNTER = new AtomicInteger();
+
+    /**
+     * Counter of native nodes currently in not executed and not executing state, includes nodes that are
+     * queued or post processing.
+     */
+    public static final AtomicInteger NODESTATE_OTHER = new AtomicInteger();
+
+    private ApplicationHealthInternal() {
+        // no op
     }
 
-    /** @return the internalNCState */
-    InternalNodeContainerState getInternalNCState() {
-        return m_internalNCState;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
-    }
 }

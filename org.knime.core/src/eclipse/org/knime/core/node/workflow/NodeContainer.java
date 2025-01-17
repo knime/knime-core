@@ -992,7 +992,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /**
      * @return the status of this node
      */
-    @Deprecated
+    @Deprecated(since = "2.8.0", forRemoval = true)
     public State getState() {
         return getInternalState().mapToOldStyleState();
     }
