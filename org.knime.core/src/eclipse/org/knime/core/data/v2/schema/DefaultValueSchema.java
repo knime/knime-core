@@ -84,6 +84,11 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
 
     private final DataTraits[] m_traits;
 
+    @Override
+    public ValueSchemaColumn getColumn(final int index) {
+        return new ValueSchemaColumn(m_columnSpecs[index], m_factories[index], m_specs[index], m_traits[index]);
+    }
+
     DefaultValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
         m_columnSpecs = new DataColumnSpec[factories.length];
         // TODO (TP): Revise. Eventually, we only want to support DataTableSpec for tables *with* a RowKey column.
@@ -116,6 +121,18 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
         Arrays.setAll(m_specs, i -> factories[i].getSpec());
         m_traits = new DataTraits[factories.length];
         Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
+    }
+
+    DefaultValueSchema(final ValueSchemaColumn[] columns) {
+        m_sourceSpec = new AtomicReference<>();
+        m_factories = new ValueFactory[columns.length];
+        Arrays.setAll(m_factories, i -> columns[i].valueFactory());
+        m_columnSpecs = new DataColumnSpec[columns.length];
+        Arrays.setAll(m_columnSpecs, i -> columns[i].dataColumnSpec());
+        m_specs = new DataSpec[columns.length];
+        Arrays.setAll(m_specs, i -> columns[i].dataSpec());
+        m_traits = new DataTraits[columns.length];
+        Arrays.setAll(m_traits, i -> columns[i].dataTraits());
     }
 
     @Override

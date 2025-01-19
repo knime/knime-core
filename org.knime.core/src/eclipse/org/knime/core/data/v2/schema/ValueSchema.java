@@ -48,13 +48,18 @@
  */
 package org.knime.core.data.v2.schema;
 
+import java.util.Arrays;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
+import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ColumnarSchema;
+import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.traits.DataTraits;
 
 /**
  * Decorates a DataTableSpec with ValueFactories for all columns (including the RowKey).
@@ -95,7 +100,7 @@ public interface ValueSchema extends ColumnarSchema {
     // TODO (TP) Make a (lazy?) lookup map, like DataTableSpec does?
     //
     // TODO (TP) Probably this should fail if column names are not unique?
-    //           So just lean on getSourceSpec() and add 1 (depending on whether hasRowKey)?
+    //           So just lean on getSourceSpec() and add +1 (depending on whether hasRowKey)?
     default int findColumnIndex(final String columnName) {
         if (columnName != null) {
             for (int i = 0; i < numColumns(); ++i) {
@@ -133,6 +138,7 @@ public interface ValueSchema extends ColumnarSchema {
      *
      * @return the number of factories this schema holds
      */
+    // TODO (TP) Remove. Always use numColumns() instead (which is the same)
     int numFactories();
 
     @Override
@@ -148,4 +154,51 @@ public interface ValueSchema extends ColumnarSchema {
      */
     <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(int index);
 
+    /**
+     * @since 5.5
+     */
+    public record ValueSchemaColumn(//
+        DataColumnSpec dataColumnSpec, //
+        ValueFactory<?, ?> valueFactory, //
+        DataSpec dataSpec, //
+        DataTraits dataTraits//
+    ) {
+        public ValueSchemaColumn(final DataColumnSpec dataColumnSpec, final ValueFactory<?, ?> valueFactory) {
+            this(dataColumnSpec, valueFactory, valueFactory.getSpec(), ValueFactoryUtils.getTraits(valueFactory));
+        }
+
+        public ValueSchemaColumn with(final DataColumnSpec newDataColumnSpec) {
+            return new ValueSchemaColumn(newDataColumnSpec, valueFactory, dataSpec, dataTraits);
+        }
+
+        @SuppressWarnings("unchecked")
+        <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> castValueFactory() {
+            return (ValueFactory<R, W>)valueFactory();
+        }
+    }
+
+    /**
+     * TODO (TP): use this method to get info about a column, exclusively.
+     *            Instead of:
+     *              - getValueFactory
+     *              - getSpecWithTraits
+     *              - getTraits
+     *              - getSpec
+     *              - getDataColumnSpec
+     *
+     * @param index
+     * @return
+     * @since 5.5
+     */
+    ValueSchemaColumn getColumn(int index);
+
+    /**
+     * @return
+     * @since 5.5
+     */
+    default ValueSchemaColumn[] getColumns() {
+        final var columns = new ValueSchemaColumn[ numColumns()];
+        Arrays.setAll(columns, this::getColumn);
+        return columns;
+    }
 }
