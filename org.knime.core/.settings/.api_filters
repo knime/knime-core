@@ -329,6 +329,12 @@
         <filter comment="WIP" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getColumn(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="WIP" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
                 <message_argument value="getDataColumnSpec(int)"/>
             </message_arguments>
         </filter>
