@@ -64,6 +64,7 @@ import org.knime.core.data.v2.RowKeyType;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
+import org.knime.core.data.v2.schema.ValueSchema.ValueSchemaColumn;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
@@ -121,6 +122,17 @@ public final class ValueSchemaUtils {
      */
     public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] valueFactories) {
         return new DefaultValueSchema(dataColumnSpecs, valueFactories);
+    }
+
+    /**
+     * TODO (TP): javadoc
+     *
+     * @param columns
+     * @return
+     * @since 5.5
+     */
+    public static final ValueSchema create(final ValueSchemaColumn[] columns) {
+        return new DefaultValueSchema(columns);
     }
 
     /**
@@ -330,11 +342,9 @@ public final class ValueSchemaUtils {
      * @return a new {@code ColumnarValueSchema} comprising only the specified columns
      */
     public static ValueSchema selectColumns(final ValueSchema schema, final int... columnIndices) {
-        var valueFactories = new ValueFactory<?, ?>[columnIndices.length];
-        Arrays.setAll(valueFactories, i -> schema.getValueFactory(columnIndices[i]));
-        var colSpecs = new DataColumnSpec[columnIndices.length];
-        Arrays.setAll(colSpecs, i -> schema.getDataColumnSpec(columnIndices[i]));
-        return create(colSpecs, valueFactories);
+        var columns = new ValueSchemaColumn[columnIndices.length];
+        Arrays.setAll(columns, i -> schema.getColumn(columnIndices[i]));
+        return create(columns);
     }
 
     /**
