@@ -44,11 +44,14 @@
  */
 package org.knime.core.node;
 
+import static org.knime.core.node.CanceledExecutionException.DEFAULT_CANCEL_MESSAGE;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,6 +60,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
+import org.knime.core.node.message.Message;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeProgress;
@@ -81,8 +85,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private static final Consumer<List<String>> NOOP_APPENDER = l -> {};
 
-    /** The cancel requested flag. */
-    private boolean m_cancelExecute;
+    /** The cancel requested flag (null = not canceled, not null = custom message). */
+    private Message m_cancelMessage;
 
     /** Progress of the execution between 0 and 1, or null if not available. */
     private Double m_progress;
@@ -147,7 +151,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public DefaultNodeProgressMonitor() {
         m_listeners = new CopyOnWriteArrayList<>();
-        m_cancelExecute = false;
+        m_cancelMessage = null;
         m_messageSupplier = NULL_SUPPLIER;
         m_messageAppender = NOOP_APPENDER;
         // add this progress monitor to the list of active ones
@@ -174,7 +178,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         if ((m_progress != null) || (m_messageSupplier.get() != null)) {
             m_changed = true;
         }
-        m_cancelExecute = false;
+        m_cancelMessage = null;
         m_progress = null;
         m_messageSupplier = NULL_SUPPLIER;
         m_messageAppender = NOOP_APPENDER;
@@ -184,7 +188,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return <code>true</code> if the execution of the <code>NodeModel</code> has been canceled.
      */
     protected boolean isCanceled() {
-        return m_cancelExecute || Thread.currentThread().isInterrupted();
+        return m_cancelMessage != null || Thread.currentThread().isInterrupted();
     }
 
     /**
@@ -197,16 +201,28 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     @Override
     public void checkCanceled() throws CanceledExecutionException {
         if (isCanceled()) {
-            throw new CanceledExecutionException("ProgressMonitor has been canceled.");
+            throw new CanceledExecutionException(Objects.requireNonNullElse(m_cancelMessage, DEFAULT_CANCEL_MESSAGE));
         }
     }
 
     /**
-     * Sets the cancel requested flag.
+     * Sets the cancel requested flag, user based message will be some default message.
+     * @see #setExecuteCanceled(Message)
      */
     @Override
     public void setExecuteCanceled() {
-        m_cancelExecute = true;
+        setExecuteCanceled(DEFAULT_CANCEL_MESSAGE);
+    }
+
+    /**
+     * Sets the cancel requested flag with a custom message.
+     *
+     * @param cancelMessage The message to be shown to the user (if it gets shown). Must not be <code>null</code>.
+     * @throws IllegalArgumentException If the message is <code>null</code>.
+     * @since 5.5
+     */
+    public void setExecuteCanceled(final Message cancelMessage) {
+        m_cancelMessage = CheckUtils.checkArgumentNotNull(cancelMessage);
     }
 
     /**

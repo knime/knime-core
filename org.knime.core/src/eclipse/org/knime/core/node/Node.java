@@ -77,7 +77,6 @@ import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.container.RowFlushable;
 import org.knime.core.data.filestore.FileStorePortObject;
@@ -86,6 +85,8 @@ import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.MessageAwareException;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.monitor.ProcessWatchdog;
+import org.knime.core.monitor.ProcessWatchdog.ResourceAlertListener;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
@@ -984,8 +985,7 @@ public final class Node {
      * @since 2.8
      */
     public boolean execute(final PortObject[] rawInData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
-        LOGGER.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
+        LOGGER.assertLog(NodeContext.getContext() != null, "No node context available, check call hierarchy");
 
         // clear the message object
         clearNodeMessageAndNotify();
@@ -1013,37 +1013,22 @@ public final class Node {
             newOutData = new PortObject[getNrOutPorts()];
             Arrays.fill(newOutData, InactiveBranchPortObject.INSTANCE);
         } else {
-            PortObject[] newInData = new PortObject[rawInData.length];
-            newInData[0] = rawInData[0]; // flow variable port (or inactive)
-            // check for existence of all input tables
-            for (int i = 1; i < rawInData.length; i++) {
-                if (rawInData[i] == null && !m_inputs[i].getType().isOptional()) {
-                    createErrorMessageAndNotify(Message.fromSummary( //
-                        String.format("Couldn't get data from predecessor (Port No.%d).", i)));
-                    return false;
-                }
-                if (rawInData[i] == null) { // optional input
-                    newInData[i] = null;  // (checked above)
-                } else if (rawInData[i] instanceof BufferedDataTable) {
-                    newInData[i] = rawInData[i];
-                } else {
-                    exec.setMessage("Copying input object at port " +  i);
-                    ExecutionContext subExec = exec.createSubExecutionContext(0.0);
-                    try {
-                        newInData[i] = copyPortObject(rawInData[i], subExec);
-                    } catch (CanceledExecutionException e) {
-                        createWarningMessageAndNotify(Message.fromSummary("Execution canceled"));
-                        return false;
-                    } catch (Throwable e) {
-                        createMessageAwareErrorAndNotify(String.format("Unable to clone input data at port %d (%s)", //
-                            i, m_inputs[i].getName()), e);
-                        return false;
-                    }
-                }
+            final Thread executingThread = Thread.currentThread();
+            final ResourceAlertListener resourceAlertListener = message -> {
+                ((DefaultNodeProgressMonitor)exec.getProgressMonitor()).setExecuteCanceled(message);
+                executingThread.interrupt();
+            };
+
+            final PortObject[] newInData = fixupInputDataOnExecute(rawInData, exec, resourceAlertListener);
+            if (newInData == null) {
+                return false;
             }
 
+            exec.setMessage("Performing node execution...");
             PortObject[] rawOutData;
-            try {
+            try (final var t = ProcessWatchdog.getInstance()
+                    .registerResourceAlertListener(resourceAlertListener)) {
+                exec.checkCanceled();
                 // INVOKE MODEL'S EXECUTE
                 // (warnings will now be processed "automatically" - we listen)
                 rawOutData = invokeFullyNodeModelExecute(exec, exEnv, newInData);
@@ -1052,25 +1037,9 @@ public final class Node {
                     ((RowFlushable)m_model).flushRows();
                 }
             } catch (Throwable th) {
-                boolean isCanceled = th instanceof CanceledExecutionException;
-                isCanceled = isCanceled || th instanceof InterruptedException;
-                // TODO this can all be shortened to exec.isCanceled()?
-                isCanceled = isCanceled || exec.isCanceled();
-                // writing to a buffer is done asynchronously -- if this thread
-                // is interrupted while waiting for the IO thread to flush we take
-                // it as a graceful exit
-                isCanceled = isCanceled || (th instanceof DataContainerException
-                        && th.getCause() instanceof InterruptedException);
-                if (isCanceled) {
-                    // clear the flag so that the ThreadPool does not kill the thread
-                    Thread.interrupted();
-
-                    reset();
-                    createWarningMessageAndNotify(Message.fromSummary("Execution canceled"));
-                    return false;
-                } else {
-                    // check if we are inside a try-catch block (only if it was a real
-                    // error - not when canceled!)
+                Message message = checkAndHandleCancelationOnExecute(th, exec);
+                if (message == null) { // = not canceled
+                    // check if we are inside a try-catch block (only if it was a real error - not when canceled)
                     FlowTryCatchContext tcslc = flowObjectStack.peek(FlowTryCatchContext.class);
                     if ((tcslc != null) && (!tcslc.isInactiveScope())) {
                         // failure inside an active try-catch:
@@ -1091,8 +1060,10 @@ public final class Node {
                         return true;
                     }
                 }
-                Message message;
-                if (th instanceof MessageAwareException mae) {
+                boolean logAsError = true;
+                if (message != null) {  // canceled
+                    logAsError = false; // ... logged as warning
+                } else if (th instanceof MessageAwareException mae) {
                     var rawMessage = mae.getKNIMEMessage();
                     message = rawMessage.renderIssueDetails(ArrayUtils.remove(newInData, 0));
                 } else {
@@ -1105,7 +1076,11 @@ public final class Node {
                     message = Message.fromSummary(m);
                 }
                 reset();
-                createErrorMessageAndNotify(message, th);
+                if (logAsError) {
+                    createErrorMessageAndNotify(message, th);
+                } else {
+                    createWarningMessageAndNotify(message);
+                }
                 return false;
             }
             // copy to new array to prevent later modification in client code
@@ -1171,6 +1146,74 @@ public final class Node {
         }
         return true;
     } // execute
+
+    /**
+     *
+     * Called during execute to copy non-table input data (e.g. predictive models are always copied prior execution),
+     * also validates all input data is as expected etc. Handles errors and cancelation accordingly and returns null/
+     * @param rawInData The input data, including flow var port.
+     * @param exec ...
+     * @param resourceAlertListener resource listener tracking usage during copying data (iff...)
+     * @return The fixed up input data or null if an error/cancelation occurred
+     */
+    private PortObject[] fixupInputDataOnExecute(final PortObject[] rawInData, final ExecutionContext exec,
+        final ResourceAlertListener resourceAlertListener) {
+        final PortObject[] newInData = new PortObject[rawInData.length];
+        newInData[0] = rawInData[0]; // flow variable port (or inactive)
+        // check for existence of all input tables
+        for (int i = 1; i < rawInData.length; i++) {
+            if (rawInData[i] == null && !m_inputs[i].getType().isOptional()) {
+                createErrorMessageAndNotify(Message.fromSummary( //
+                    String.format("Couldn't get data from predecessor (Port No.%d).", i)));
+                return null; // NOSONAR - null is not the same as empty here
+            }
+            if (rawInData[i] == null) { // optional input
+                newInData[i] = null;  // (checked above)
+            } else if (rawInData[i] instanceof BufferedDataTable) {
+                newInData[i] = rawInData[i];
+            } else {
+                exec.setMessage("Copying input object at port " +  i);
+                ExecutionContext subExec = exec.createSubExecutionContext(0.0);
+                try (final var t = ProcessWatchdog.getInstance()
+                    .registerResourceAlertListener(resourceAlertListener)) {
+                    newInData[i] = copyPortObject(rawInData[i], subExec);
+                } catch (CanceledExecutionException e) {
+                    createWarningMessageAndNotify(e.getKNIMEMessage());
+                    return null; // NOSONAR - null is not the same as empty here
+                } catch (Throwable e) {
+                    createMessageAwareErrorAndNotify(String.format("Unable to clone input data at port %d (%s)", //
+                        i, m_inputs[i].getName()), e);
+                    return null; // NOSONAR - null is not the same as empty here
+                }
+            }
+        }
+        return newInData;
+    }
+
+    /** Extracted from main {@link #execute(PortObject[], ExecutionEnvironment, ExecutionContext)} method:
+     * Checks a thrown exception signals a cancelation and acts accordingly.
+     *
+     * @param th The throwable thrown during node execution
+     * @param exec The node's execution context
+     * @return A non-null message if the execution was canceled, otherwise null.
+     */
+    private static Message checkAndHandleCancelationOnExecute(final Throwable th, final ExecutionContext exec) {
+        Message message = null;
+        if (th instanceof CanceledExecutionException cee) {
+            message = cee.getKNIMEMessage();
+        } else {
+            try {
+                exec.checkCanceled();
+            } catch (CanceledExecutionException cee) { // NOSONAR - ok to ignore the exception, properly handled
+                message = cee.getKNIMEMessage();
+            }
+        }
+        if (message != null) {
+            // clear the flag so that the ThreadPool does not kill the thread
+            Thread.interrupted();
+        }
+        return message;
+    }
 
     /** Called after execute to retrieve internal held objects from underlying NodeModel and to do some clean-up with
      * previous objects. Only relevant for {@link BufferedDataTableHolder} and {@link PortObjectHolder}.

@@ -45,6 +45,11 @@
  */
 package org.knime.core.node;
 
+import java.util.Optional;
+
+import org.knime.core.internal.MessageAwareException;
+import org.knime.core.node.message.Message;
+
 /**
  * This exception is used in the
  * {@link org.knime.core.node.ExecutionMonitor} when a node's
@@ -56,13 +61,24 @@ package org.knime.core.node;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class CanceledExecutionException extends Exception {
+@SuppressWarnings("serial")
+public class CanceledExecutionException extends Exception implements MessageAwareException {
+
+    /**
+     * A message that is returned by {@link #getKNIMEMessage()} if not otherwise set during cancelation.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.5
+     */
+    public static final Message DEFAULT_CANCEL_MESSAGE = Message.fromSummary("Execution canceled");
+
+    private final Message m_knimeMessage; // NOSONAR (serialization)
 
     /**
      * Creates a new exception of this type with an error message.
      */
     public CanceledExecutionException() {
         super();
+        m_knimeMessage = DEFAULT_CANCEL_MESSAGE;
     }
 
     /**
@@ -76,6 +92,28 @@ public class CanceledExecutionException extends Exception {
      */
     public CanceledExecutionException(final String s) {
         super(s);
+        m_knimeMessage = Optional.ofNullable(s).map(Message::fromSummary).orElse(DEFAULT_CANCEL_MESSAGE);
+    }
+
+    /**
+     * Constructs an <code>CancelExecutionException</code> with the specified
+     * detail message.
+     *
+     * @param message a detail message about the cancelation
+     * @since 5.5
+     */
+    public CanceledExecutionException(final Message message) {
+        super(message.getSummary());
+        m_knimeMessage = message;
+    }
+
+    /**
+     * A message that was possibly set during construction, might explain details of cancellation (resource shortage).
+     * {@inheritDoc}
+     */
+    @Override
+    public Message getKNIMEMessage() {
+        return m_knimeMessage;
     }
 
     /**

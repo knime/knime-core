@@ -170,21 +170,9 @@ public final class ProcessWatchdog {
      * @since 5.5
      * @param resourceAlertListener A resource alert listener to call when the system is low on resources
      */
-    public void registerResourceAlertListener(final ResourceAlertListener resourceAlertListener) {
-        if (m_shouldNodeExecutionsBeCancelled) {
-            // TODO: use a custom exception here
-            throw new RuntimeException(
-                "Cannot register node execution thread -- node executions are cancelled due to a lack of resources");
-        }
+    public SafeCloseable registerResourceAlertListener(final ResourceAlertListener resourceAlertListener) {
         m_resourceAlertListeners.put(resourceAlertListener, resourceAlertListener);
-    }
-
-    /**
-     * @since 5.5
-     * @param resourceAlertListener A thread in which a node execution ran, but is finished (or cancelled) now
-     */
-    public void unregisterResourceAlertListener(final ResourceAlertListener resourceAlertListener) {
-        m_resourceAlertListeners.remove(resourceAlertListener);
+        return () -> m_resourceAlertListeners.remove(resourceAlertListener);
     }
 
     /**
@@ -198,7 +186,7 @@ public final class ProcessWatchdog {
     /**
      * @since 5.5
      */
-    public static interface ResourceAlertListener {
+    public interface ResourceAlertListener {
         void alert(Message message);
     }
 
@@ -208,13 +196,6 @@ public final class ProcessWatchdog {
 
     private ConcurrentMap<ResourceAlertListener, ResourceAlertListener> m_resourceAlertListeners =
         new ConcurrentHashMap<>();
-
-    private ConcurrentMap<ProcessHandle, LongConsumer> m_processesToKillCallbacks = new ConcurrentHashMap<>();
-
-    private final boolean m_watchdogRunning;
-
-    /** Set to false if we have warned once, and the memory usage did not drop below the limit */
-    private boolean m_shouldWarnAboutKnimeProcessMemory = true;
 
     private boolean m_shouldNodeExecutionsBeCancelled;
 

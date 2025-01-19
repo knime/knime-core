@@ -614,10 +614,8 @@ public abstract class NodeModel implements ViewableModel {
                 }
             }
 
-            // if execution was canceled without exception flying return false
-            if (exec.isCanceled()) {
-                throw new CanceledExecutionException("Result discarded due to user cancel");
-            }
+            // if execution was canceled without exception (e.g. graceful handling of interrupts)
+            exec.checkCanceled();
             executeModelPostProcessWarning(data);
         } catch (Exception e) {
             // clear local tables (which otherwise would continue to block resources)

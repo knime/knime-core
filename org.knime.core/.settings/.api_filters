@@ -376,6 +376,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/CanceledExecutionException.java" type="org.knime.core.node.CanceledExecutionException">
+        <filter comment="class compatible change, requires re-compilation of used code (accepted)" id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.CanceledExecutionException"/>
+                <message_argument value="DEFAULT_CANCEL_MESSAGE"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
         <filter comment="Remove static field, previously tagged with @noreference" id="338755678">
             <message_arguments>
