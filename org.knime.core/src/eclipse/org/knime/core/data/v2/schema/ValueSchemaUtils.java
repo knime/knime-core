@@ -332,13 +332,9 @@ public final class ValueSchemaUtils {
     public static ValueSchema selectColumns(final ValueSchema schema, final int... columnIndices) {
         var valueFactories = new ValueFactory<?, ?>[columnIndices.length];
         Arrays.setAll(valueFactories, i -> schema.getValueFactory(columnIndices[i]));
-
-        final DataTableSpec sourceSpec = schema.getSourceSpec();
         var colSpecs = new DataColumnSpec[columnIndices.length];
-        Arrays.setAll(colSpecs, i -> sourceSpec.getColumnSpec(columnIndices[i] - 1));
-        var spec = new DataTableSpec(colSpecs);
-
-        return create(spec, valueFactories);
+        Arrays.setAll(colSpecs, i -> schema.getDataColumnSpec(columnIndices[i]));
+        return create(colSpecs, valueFactories);
     }
 
     /**
