@@ -175,6 +175,44 @@ public interface ValueSchema extends ColumnarSchema {
         <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> castValueFactory() {
             return (ValueFactory<R, W>)valueFactory();
         }
+
+        public boolean isRowKey() {
+            return dataColumnSpec == null && valueFactory instanceof RowKeyValueFactory;
+        }
+
+        public boolean isCompatibleWith(final ValueSchemaColumn column) {
+            if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
+                return false;
+            }
+            if (!dataSpec.equals(column.dataSpec)) {
+                return false;
+            }
+            //
+            // TODO (TP): what about dataTraits? Do they have to match too?
+            //
+            if (dataColumnSpec == null) {
+                return column.dataColumnSpec == null;
+            } else {
+                return dataColumnSpec.isCompatibleWith(column.dataColumnSpec);
+            }
+        }
+
+        public boolean equalStructure(final ValueSchemaColumn column) {
+            if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
+                return false;
+            }
+            if (!dataSpec.equals(column.dataSpec)) {
+                return false;
+            }
+            //
+            // TODO (TP): what about dataTraits? Do they have to match too?
+            //
+            if (dataColumnSpec == null) {
+                return column.dataColumnSpec == null;
+            } else {
+                return dataColumnSpec.equalStructure(column.dataColumnSpec);
+            }
+        }
     }
 
     /**
