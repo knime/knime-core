@@ -60,17 +60,17 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
-import org.knime.core.data.TableBackend;
-import org.knime.core.data.TableBackendRegistry;
 import org.knime.core.node.NodeLogger;
 
 import gnu.trove.map.hash.TObjectLongHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 /**
- * Watchdog that tracks the memory usage of external processes. If the total memory usage of all external processes
- * surpasses a threshold, the process with the highest memory usage gets killed forcibly. The watchdog uses the
+ * Watchdog that tracks the memory usage of KNIME AP and its external processes. If the total memory usage surpasses a
+ * threshold, the external process with the highest memory usage gets killed forcibly. The watchdog uses the
  * proportional set size (PSS) of the processes and their subprocesses to determine their memory usage.
+ *
+ * TODO(AP-23844) Rename this class to ProcessWatchdog?
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
@@ -81,7 +81,9 @@ public final class ExternalProcessMemoryWatchdog {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ExternalProcessMemoryWatchdog.class);
 
     /** The polling interval for the watchdog in milliseconds. */
-    private static final long POLLING_INTERVAL_MS = Long.getLong("knime.externalprocesswatchdog.pollinginterval", 250);
+    private static final long POLLING_INTERVAL_MS = Long.getLong("knime.processwatchdog.pollinginterval", 250);
+
+    private static final ProcessHandle KNIME_PROCESS_HANDLE = ProcessHandle.current();
 
     /**
      * How often the KNIME process memory should be checked when the watchdog polls the memory usage, defaults to every
@@ -90,102 +92,35 @@ public final class ExternalProcessMemoryWatchdog {
     private static final int KNIME_PROCESS_CHECKING_INTERVAL = 4;
 
     /**
-     * How much memory there is available in the container. Null if the environment variable CONTAINER_MEMORY_REQUESTS
-     * is not set.
+     * The maximum memory that KNIME AP and external processes are allowed to allocate. <code>-1</code> means no limit
+     * and disables the watchdog.
      */
-    private static final Long CONTAINER_AVAILABLE_MEMORY_KBYTES;
-
-    /**
-     * The maximum memory that external processes are allowed to allocate. <code>-1</code> means no limit and disables
-     * the watchdog.
-     */
-    private static final long MAX_EXTERNAL_MEMORY_KBYTES;
-
-    /**
-     * How much "direct memory" (a kind of off-heap memory) may be used by the JVM. Null if the environment variable
-     * JAVA_DIRECT_MEMORY_SIZE is not set.
-     */
-    private static final Long DIRECT_MEMORY_KBYTES = getDirectMemoryKBytes();
+    private static final long MAX_MEMORY_KBYTES = getMaxMemoryKBytes();
 
     /**
      * How much memory we reserve for the OS and other processes running on the container
      */
     private static final long CONTAINER_RESERVED_MEMORY_KBYTES =
-        Long.getLong("knime.externalprocesswatchdog.containerreservedkbytes", 128);
+        Long.getLong("knime.processwatchdog.containerreservedkbytes", 128);
 
-    // Static initializer because CONTAINER_AVAILABLE_MEMORY_KBYTES must be initialized before
-    // MAX_EXTERNAL_MEMORY_KBYTES
-    static {
-        CONTAINER_AVAILABLE_MEMORY_KBYTES = getRequestedContainerSizeKBytes();
-        MAX_EXTERNAL_MEMORY_KBYTES = getMaxExternalMemoryKBytes(CONTAINER_AVAILABLE_MEMORY_KBYTES);
-    }
-
-    private static long getMaxExternalMemoryKBytes(final Long requestedContainerSizeKBytes) {
-        if (requestedContainerSizeKBytes == null) {
-            return getMaxMemoryKBytesFromSysProperty();
+    private static long getMaxMemoryKBytes() {
+        var max = Long.getLong("knime.processwatchdog.maxmemory");
+        if (max != null) {
+            LOGGER.info("KNIME Process Watchdog memory limit configured via system property to " + max);
+            return max;
         }
 
-        LOGGER.info("Watchdog config: CONTAINER_MEMORY_REQUESTS = " + requestedContainerSizeKBytes + " KB");
-        long jvmMemoryKBytes = Runtime.getRuntime().maxMemory() >> 10;
-        LOGGER.info("Watchdog config: JVM Memory = " + jvmMemoryKBytes + " KB");
-
-        long tableBackendOffHeapKBytes = TableBackendRegistry.getInstance().getTableBackends().stream() //
-            .mapToLong(TableBackend::getReservedOffHeapBytes) //
-            .sum() //
-                >> 10; // turn Bytes to KBytes
-
-        LOGGER.info("Watchdog config: TableBackend OffHeap = " + tableBackendOffHeapKBytes + " KB");
-
-        long directMemoryKBytes = DIRECT_MEMORY_KBYTES == null ? 0 : DIRECT_MEMORY_KBYTES;
-        LOGGER.info("Watchdog config: Max Direct Memory = " + directMemoryKBytes + " KB");
-
-        long memoryLimitKBytes = requestedContainerSizeKBytes //
-            - jvmMemoryKBytes //
-            - tableBackendOffHeapKBytes //
-            - directMemoryKBytes //
-            - CONTAINER_RESERVED_MEMORY_KBYTES;
-
-        LOGGER.info("KNIME External Process Watchdog memory limit configured based on environment variable "
-            + "CONTAINER_MEMORY_REQUESTS to " + memoryLimitKBytes + "kb");
-        return memoryLimitKBytes;
-    }
-
-    private static Long getDirectMemoryKBytes() {
-        var directMemorySizeBytes = System.getenv("JAVA_DIRECT_MEMORY_SIZE");
-        if (directMemorySizeBytes != null) {
-            try {
-                return Long.valueOf(directMemorySizeBytes) >> 10;
-            } catch (NumberFormatException e) {
-                LOGGER.warn("Could not parse value of environment variable 'JAVA_DIRECT_MEMORY_SIZE' ("
-                    + directMemorySizeBytes + ")");
-            }
-        }
-
-        return null;
-    }
-
-    private static Long getRequestedContainerSizeKBytes() {
         var requestedContainerSizeBytes = System.getenv("CONTAINER_MEMORY_REQUESTS");
         if (requestedContainerSizeBytes != null) {
             try {
-                return Long.valueOf(requestedContainerSizeBytes) >> 10;
+                return (Long.valueOf(requestedContainerSizeBytes) >> 10) - CONTAINER_RESERVED_MEMORY_KBYTES;
             } catch (NumberFormatException e) {
                 LOGGER.warn("Could not parse value of environment variable 'CONTAINER_MEMORY_REQUESTS' ("
                     + requestedContainerSizeBytes + ")");
             }
         }
 
-        return null;
-    }
-
-    private static long getMaxMemoryKBytesFromSysProperty() {
-        var max = Long.getLong("knime.externalprocesswatchdog.maxmemory");
-        if (max != null) {
-            LOGGER.info("KNIME External Process Watchdog memory limit configured via system property to " + max);
-            return max;
-        }
-
-        LOGGER.info("KNIME External Process Watchdog memory limit not configured");
+        LOGGER.info("KNIME Process Watchdog memory limit not configured");
         return -1;
     }
 
@@ -230,11 +165,12 @@ public final class ExternalProcessMemoryWatchdog {
 
     private final boolean m_watchdogRunning;
 
+    // TODO only log once when we are over the limit
     private int m_knimeProcessMemCheckingThrottleCounter = 0;
 
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
-        if (ProcessStateUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
+        if (ProcessStateUtil.supportsPSS() && ProcessStateUtil.supportsRSS() && MAX_MEMORY_KBYTES >= 0) {
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -243,13 +179,13 @@ public final class ExternalProcessMemoryWatchdog {
                 }
             }, 0, POLLING_INTERVAL_MS);
             m_watchdogRunning = true;
-        } else if (MAX_EXTERNAL_MEMORY_KBYTES < 0) {
+        } else if (MAX_MEMORY_KBYTES < 0) {
             LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to "
-                + MAX_EXTERNAL_MEMORY_KBYTES);
+                + MAX_MEMORY_KBYTES);
             m_watchdogRunning = false;
         } else if (SystemUtils.IS_OS_LINUX) {
-            LOGGER.warn(
-                "PSS measurements are not supported on this system. The external process memory watchdog is disabled.");
+            LOGGER.warn("PSS or RSS measurements are not supported on this system. "
+                + "The external process memory watchdog is disabled.");
             m_watchdogRunning = false;
         } else {
             m_watchdogRunning = false;
@@ -260,33 +196,24 @@ public final class ExternalProcessMemoryWatchdog {
         var memoryState = collectMemoryUsageState();
 
         // Check if the total memory usage surpasses the threshold
-        if (memoryState.getTotalMemoryUsage() > MAX_EXTERNAL_MEMORY_KBYTES) {
+        if (memoryState.getTotalMemoryUsage() > MAX_MEMORY_KBYTES) {
             killProcessWithHighestMemoryUsage(memoryState);
         }
 
-        warnIfKnimeMemoryCloseToContainerLimit();
+        warnIfKnimeMemoryCloseToMemoryLimit(memoryState.getMemoryUsage(KNIME_PROCESS_HANDLE));
     }
 
-    private void warnIfKnimeMemoryCloseToContainerLimit() {
+    private void warnIfKnimeMemoryCloseToMemoryLimit(final long knimeMemory) {
         // Warn if the memory usage of the JVM process itself is close to the limit
-        if (CONTAINER_AVAILABLE_MEMORY_KBYTES != null) {
-            if (m_knimeProcessMemCheckingThrottleCounter < KNIME_PROCESS_CHECKING_INTERVAL) {
-                m_knimeProcessMemCheckingThrottleCounter++;
-                return;
-            }
+        if (m_knimeProcessMemCheckingThrottleCounter < KNIME_PROCESS_CHECKING_INTERVAL) {
+            m_knimeProcessMemCheckingThrottleCounter++;
+            return;
+        }
 
-            m_knimeProcessMemCheckingThrottleCounter = 0;
-            try {
-                // We use PSSUtil.getPSS(pid) here instead of getMemoryUsage(pid) because we don't want to include
-                // child processes
-                var knimeMemory = ProcessStateUtil.getPSS(ProcessHandle.current().pid());
-                if (knimeMemory > CONTAINER_AVAILABLE_MEMORY_KBYTES * 0.80) {
-                    LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available "
-                        + CONTAINER_AVAILABLE_MEMORY_KBYTES + "KB in the container");
-                }
-            } catch (IOException ex) {
-                LOGGER.warn("Could not obtain memory usage of KNIME AP process", ex);
-            }
+        m_knimeProcessMemCheckingThrottleCounter = 0;
+        if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
+            LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
+                + "KB in the container");
         }
     }
 
@@ -294,6 +221,7 @@ public final class ExternalProcessMemoryWatchdog {
     private ExternalProcessMemoryState collectMemoryUsageState() {
         var memoryState = new ExternalProcessMemoryState();
 
+        // External process memory usage
         var iterator = m_processesToKillCallbacks.entrySet().iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
@@ -305,17 +233,43 @@ public final class ExternalProcessMemoryWatchdog {
                 continue;
             }
 
-            // Collect the current memory usage of the process
-            memoryState.put(process, getMemoryUsage(process.pid()));
+            /* Collect the current memory usage of the process using PSS (Proportional Set Size).
+             *
+             * PSS is more accurate than RSS (Resident Set Size) when there are subprocesses because it properly
+             * accounts for shared memory. Simply adding the RSS of each subprocess can significantly overestimate total
+             * memory (especially if they share large regions), while using only the parent process’s RSS underestimates
+             * usage if memory is heavily allocated in a subprocess.
+             *
+             * Although measuring PSS can be more runtime-intensive, the overhead is acceptable here because each
+             * subprocess typically only lives for the duration of a single task. Moreover, in the Python kernel queue
+             * scenario, new processes are initially very small, which helps keep the cost of collecting PSS minimal.
+             */
+            memoryState.put(process, getPSSOfProcessTree(process.pid()));
         }
+
+        /* Collect KNIME AP process memory usage
+         *
+         * Note that we use the RSS of the KNIME AP process here. This is less accurate than the PSS but is faster to
+         * obtain. For the KNIME AP process this should be sufficient because we do not share large memory regions with
+         * other processes. We do not sum up the memory usage of all subprocesses of KNIME AP because they are tracked
+         * individually by the watchdog.
+         */
+        memoryState.putKnimeProcess(getKnimeRSS());
 
         return memoryState;
     }
 
-    /** Kill the process with the highest memory usage. */
-    private void killProcessWithHighestMemoryUsage(final ExternalProcessMemoryState memoryState) {
+    /**
+     * Kill the process with the highest memory usage.
+     *
+     * @return <code>true</code> if there was an external process that was killed
+     */
+    private boolean killProcessWithHighestMemoryUsage(final ExternalProcessMemoryState memoryState) {
         var processToKill = memoryState.getProcessWithMaxMemoryUsage();
 
+        if (processToKill == null) {
+            return false;
+        }
         // Call the kill callback
         var killCallback = m_processesToKillCallbacks.remove(processToKill);
         if (killCallback != null) {
@@ -331,11 +285,22 @@ public final class ExternalProcessMemoryWatchdog {
 
         // Kill the process
         processToKill.destroyForcibly();
+        return true;
     }
 
     //#endregion
 
     //#region STATIC UTILS
+
+    /** Get the memory usage of the KNIME AP process in kb. Uses the RSS of the process. */
+    private static long getKnimeRSS() {
+        try {
+            return ProcessStateUtil.getRSS(KNIME_PROCESS_HANDLE.pid());
+        } catch (IOException e) {
+            LOGGER.warn("Could not obtain memory usage of KNIME AP process", e);
+            return 0;
+        }
+    }
 
     /**
      * Get the memory usage of the given process and all its subprocesses in kb. Uses the PSS of the individual
@@ -345,11 +310,11 @@ public final class ExternalProcessMemoryWatchdog {
      * @return proportional set size (PSS) of this process and all its subprocesses in kb or 0 if the memory usage could
      *         not be determined
      */
-    private static long getMemoryUsage(final long pid) {
+    private static long getPSSOfProcessTree(final long pid) {
         var childrenPids = getChildren(pid);
         var childrenMem = 0;
         for (var i = 0; i < childrenPids.length; i++) {
-            childrenMem += getMemoryUsage(childrenPids[i]);
+            childrenMem += getPSSOfProcessTree(childrenPids[i]);
         }
         try {
             return childrenMem + ProcessStateUtil.getPSS(pid);
@@ -428,8 +393,10 @@ public final class ExternalProcessMemoryWatchdog {
 
         private long m_totalMemoryUsage;
 
+        /** The memory usage of the process with the highest memory usage */
         private long m_maxMemoryUsage;
 
+        /** The process with the highest memory usage */
         private ProcessHandle m_maxMemoryUsageProcess;
 
         public ExternalProcessMemoryState() {
@@ -439,19 +406,33 @@ public final class ExternalProcessMemoryWatchdog {
         }
 
         /**
+         * Collect the memory usage of the KNIME AP process.
+         *
+         * @param memoryUsage the memory usage
+         */
+        public void putKnimeProcess(final long memoryUsage) {
+            put(KNIME_PROCESS_HANDLE, memoryUsage, false);
+        }
+
+        /**
          * Collect the memory usage of the given process.
          *
          * @param process the process
          * @param memoryUsage the memory usage
          */
         public void put(final ProcessHandle process, final long memoryUsage) {
+            put(process, memoryUsage, true);
+        }
+
+        private void put(final ProcessHandle process, final long memoryUsage, final boolean canBeKilled) {
+
             m_processToMemoryUsage.put(process, memoryUsage);
 
             // Update the total memory usage
             m_totalMemoryUsage += memoryUsage;
 
             // Update the max memory usage
-            if (memoryUsage > m_maxMemoryUsage) {
+            if (canBeKilled && memoryUsage > m_maxMemoryUsage) {
                 m_maxMemoryUsage = memoryUsage;
                 m_maxMemoryUsageProcess = process;
             }
