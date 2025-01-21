@@ -234,7 +234,7 @@ public final class ExternalProcessMemoryWatchdog {
 
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
-        if (PSSUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
+        if (ProcessStateUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -279,7 +279,7 @@ public final class ExternalProcessMemoryWatchdog {
             try {
                 // We use PSSUtil.getPSS(pid) here instead of getMemoryUsage(pid) because we don't want to include
                 // child processes
-                var knimeMemory = PSSUtil.getPSS(ProcessHandle.current().pid());
+                var knimeMemory = ProcessStateUtil.getPSS(ProcessHandle.current().pid());
                 if (knimeMemory > CONTAINER_AVAILABLE_MEMORY_KBYTES * 0.80) {
                     LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available "
                         + CONTAINER_AVAILABLE_MEMORY_KBYTES + "KB in the container");
@@ -352,7 +352,7 @@ public final class ExternalProcessMemoryWatchdog {
             childrenMem += getMemoryUsage(childrenPids[i]);
         }
         try {
-            return childrenMem + PSSUtil.getPSS(pid);
+            return childrenMem + ProcessStateUtil.getPSS(pid);
         } catch (IOException e) {
             LOGGER.info("Failed to get memory usage of external process with pid " + pid + ".", e);
             return 0;
