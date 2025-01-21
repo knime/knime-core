@@ -58,35 +58,35 @@ import java.nio.file.Path;
 import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
 
+import sun.misc.Unsafe;
+
 /**
- * Utility class for parsing the PSS (Proportional Set Size) from the /proc filesystem on Linux systems. The PSS is a
- * accurate measure of the memory usage of a process. It accounts for shared memory by dividing it evenly among the
- * processes that share it.
- * <P>
- * Description from the proc filesystem documentation: <blockquote> The “proportional set size” (PSS) of a process is
- * the count of pages it has in memory, where each page is divided by the number of processes sharing it. So if a
- * process has 1000 pages all to itself, and 1000 shared with one other process, its PSS will be 1500. </blockquote>
- *
+ * Utility class for accessing the process information from the Linux /proc filesystem.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @see <a href="https://docs.kernel.org/filesystems/proc.html">proc filesystem documentation</a>
  * @since 5.4
  */
-final class PSSUtil {
+final class ProcessStateUtil {
 
-    private PSSUtil() {
+    private ProcessStateUtil() {
     }
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(PSSUtil.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ProcessStateUtil.class);
+
+    private static final int PAGESIZE = getPagesize();
 
     /** Indicates if the system has smaps_rollup files (the file was added in 2017) */
-    private static final boolean HAS_PROC_SMAPS_ROLLUP = hasProcSmaps(true);
+    private static final boolean HAS_PROC_SMAPS_ROLLUP = hasProcFile("smaps_rollup");
 
     /**
      * Indicates if the system has smaps file (does not exist on kernels < 2.6.14 or if CONFIG_MMU kernel configuration
      * option is not enabled)
      */
-    private static final boolean HAS_PROC_SMAPS = hasProcSmaps(false);
+    private static final boolean HAS_PROC_SMAPS = hasProcFile("smaps");
+
+    /** Indicates if the system has statm file */
+    private static final boolean HAS_PROC_STATM = hasProcFile("statm");
 
     /**
      * The buffer size used for reading files in the /proc filesystem. We use a larger buffer size than the default
@@ -95,6 +95,9 @@ final class PSSUtil {
      * See https://github.com/giampaolo/psutil/blob/c034e6692cf736b5e87d14418a8153bb03f6cf42/psutil/_common.py#L783-L795
      */
     private static final int PROC_FILE_BUFFER_SIZE = 32 * 1024;
+
+    /** The index of the RSS column in the /proc/[pid]/statm file */
+    private static final int RSS_STATM_COLUMN_INDEX = 1;
 
     /**
      * Check if the system supports PSS (Proportional Set Size) measurements. This is only the case on Linux systems
@@ -107,8 +110,25 @@ final class PSSUtil {
     }
 
     /**
-     * Returns the PSS (Proportional Set Size) of the process with the given pid in KB. Uses the /proc filesystem to
-     * determine the PSS. If the kernel supports it, the PSS is read from the /proc/[pid]/smaps_rollup file.
+     * Check if the system supports RSS measurements. This is only the case on Linux systems that have the
+     * /proc/[pid]/statm file.
+     *
+     * @return <code>true</code> if the system supports RSS measurements
+     */
+    public static boolean supportsRSS() {
+        return SystemUtils.IS_OS_LINUX && HAS_PROC_STATM && PAGESIZE > 0;
+    }
+
+    /**
+     * Returns the PSS (Proportional Set Size) of the process with the given pid in KB. This is a slow but accurate
+     * estimate of the current memory usage of the process.
+     * <P>
+     * Description from the proc filesystem documentation: <blockquote> The “proportional set size” (PSS) of a process
+     * is the count of pages it has in memory, where each page is divided by the number of processes sharing it. So if a
+     * process has 1000 pages all to itself, and 1000 shared with one other process, its PSS will be 1500. </blockquote>
+     * <P>
+     * Note that getting the PSS for a process is expensive if the process in question has a many memory pages.
+     * Therefore, checking the PSS should be done sparingly.
      *
      * @param pid the process id
      * @return the PSS of the process with the given pid in KB
@@ -123,6 +143,8 @@ final class PSSUtil {
 
         if (HAS_PROC_SMAPS_ROLLUP) {
             try {
+                // Note that reading the smaps_rollup file is faster than reading the smaps file because the kernel
+                // is faster at aggregating the values
                 return readPSSFromSmapsRollup(pid);
             } catch (final IOException ex) {
                 // NB: Only debug log because we will try the smaps file next
@@ -134,6 +156,33 @@ final class PSSUtil {
         }
         throw new UnsupportedOperationException(
             "PSS is not available on this platform. Because the /proc/[pid]/smaps file is not present.");
+    }
+
+    /**
+     * Returns the Resident Set Size (RSS) of the process with the given pid in KB. This is the amount of memory that
+     * the process has in RAM. This is a fast but less accurate estimate of the current memory usage of the process.
+     *
+     * @param pid the process id
+     * @return the RSS of the process with the given pid in KB
+     * @throws IOException if the /proc/[pid]/statm file could not be read
+     * @throws UnsupportedOperationException if the PSS is not available on the current platform (call
+     *             {@link #supportsRSS()} to check this beforehand)
+     */
+    public static long getRSS(final long pid) throws IOException {
+        if (!SystemUtils.IS_OS_LINUX) {
+            throw new UnsupportedOperationException("RSS is only available on Linux");
+        }
+        if (PAGESIZE <= 0) {
+            throw new UnsupportedOperationException(
+                "RSS is not available because the page size could not be determined");
+        }
+        try (var reader = readFile("/proc/" + pid + "/statm")) {
+            // Note that the file only has one line
+            var numPages = Long.parseLong(reader.readLine().split(" ")[RSS_STATM_COLUMN_INDEX]);
+            return numPages * PAGESIZE / 1024;
+        } catch (NumberFormatException e) {
+            throw new IOException("Failed to parse RSS value", e);
+        }
     }
 
     private static long readPSSFromSmapsRollup(final long pid) throws IOException {
@@ -186,12 +235,30 @@ final class PSSUtil {
     }
 
     /** Utility to determine if the system generally has smaps_rollup files */
-    private static boolean hasProcSmaps(final boolean rollup) {
+    private static boolean hasProcFile(final String fileName) {
         if (!SystemUtils.IS_OS_LINUX) {
             return false;
         }
         var selfPid = ProcessHandle.current().pid();
-        var smapsPath = Path.of("/proc", "" + selfPid, rollup ? "smaps_rollup" : "smaps");
+        var smapsPath = Path.of("/proc", "" + selfPid, fileName);
         return Files.exists(smapsPath);
+    }
+
+    /** @return the page size in bytes or -1 if it could not be determined */
+    private static int getPagesize() {
+        if (!SystemUtils.IS_OS_LINUX) {
+            return -1;
+        }
+
+        try {
+            var theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            var unsafe = (Unsafe)theUnsafe.get(null);
+            return unsafe.pageSize();
+        } catch (Throwable ex) { // NOSONAR
+            // We catch everything to make sure that the class can always be loaded
+            LOGGER.error("Failed to get the page size from Unsafe", ex);
+            return -1;
+        }
     }
 }
