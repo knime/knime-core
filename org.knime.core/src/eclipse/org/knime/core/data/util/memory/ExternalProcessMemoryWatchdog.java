@@ -86,12 +86,6 @@ public final class ExternalProcessMemoryWatchdog {
     private static final ProcessHandle KNIME_PROCESS_HANDLE = ProcessHandle.current();
 
     /**
-     * How often the KNIME process memory should be checked when the watchdog polls the memory usage, defaults to every
-     * fourth time
-     */
-    private static final int KNIME_PROCESS_CHECKING_INTERVAL = 4;
-
-    /**
      * The maximum memory that KNIME AP and external processes are allowed to allocate. <code>-1</code> means no limit
      * and disables the watchdog.
      */
@@ -165,8 +159,8 @@ public final class ExternalProcessMemoryWatchdog {
 
     private final boolean m_watchdogRunning;
 
-    // TODO only log once when we are over the limit
-    private int m_knimeProcessMemCheckingThrottleCounter = 0;
+    /** Set to false if we have warned once, and the memory usage did not drop below the limit */
+    private boolean m_shouldWarnAboutKnimeProcessMemory = true;
 
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
@@ -205,15 +199,14 @@ public final class ExternalProcessMemoryWatchdog {
 
     private void warnIfKnimeMemoryCloseToMemoryLimit(final long knimeMemory) {
         // Warn if the memory usage of the JVM process itself is close to the limit
-        if (m_knimeProcessMemCheckingThrottleCounter < KNIME_PROCESS_CHECKING_INTERVAL) {
-            m_knimeProcessMemCheckingThrottleCounter++;
-            return;
-        }
-
-        m_knimeProcessMemCheckingThrottleCounter = 0;
         if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
-            LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
-                + "KB in the container");
+            if (m_shouldWarnAboutKnimeProcessMemory) {
+                LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
+                    + "KB in the container");
+                m_shouldWarnAboutKnimeProcessMemory = false;
+            }
+        } else {
+            m_shouldWarnAboutKnimeProcessMemory = true;
         }
     }
 
