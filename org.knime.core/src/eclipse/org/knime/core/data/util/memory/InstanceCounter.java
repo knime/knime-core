@@ -173,6 +173,16 @@ public final class InstanceCounter<T> {
         return m_counter.get();
     }
 
+    /**
+     * Returns the counter's name.
+     *
+     * @return the name
+     * @since 5.5
+     */
+    public String getName() {
+        return m_name;
+    }
+
     /** Decrement the instance count. */
     void decrement() {
         MODIFIED_SINCE_LAST_LOG.set(true);
