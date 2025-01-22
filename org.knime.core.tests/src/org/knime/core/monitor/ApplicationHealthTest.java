@@ -49,6 +49,7 @@
 package org.knime.core.monitor;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +64,12 @@ final class ApplicationHealthTest {
     @Test
     final void testInstanceCounters() {
         assertFalse(ApplicationHealth.getInstanceCounters().isEmpty(), "instance counter list should not be empty");
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    final void testLoadAverages() {
+        assertTrue(ApplicationHealth.getGlobalThreadPoolLoadAverages().avg1Min() >= 0.0, "Reports load average >= 0.0");
     }
 
 }

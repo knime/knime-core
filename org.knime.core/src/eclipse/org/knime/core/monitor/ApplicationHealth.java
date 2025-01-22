@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ApplicationHealthInternal;
+import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
 
 /**
  * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
@@ -103,6 +104,27 @@ public final class ApplicationHealth {
      */
     public static int getNodeStateOtherCount() {
         return ApplicationHealthInternal.NODESTATE_OTHER.get();
+    }
+
+    /**
+     * Return type of {@link #getGlobalThreadPoolLoadAverages()}.
+     * @param avg1Min 1min average load
+     * @param avg5Min 5min average load
+     * @param avg15Min 15min average load
+     */
+    public record GlobalPoolLoadAverages(double avg1Min, double avg5Min, double avg15Min) {}
+
+    /**
+     * The "load" average (estimate) of the global KNIME thread pool (as per
+     * {@link org.knime.core.node.KNIMEConstants#GLOBAL_THREAD_POOL}). That is, the number of concurrent jobs,
+     * usually node executions, that are running averaged over intervals of 1, 5, and 15min.
+     * @return The load averages at the current time.
+     */
+    public static GlobalPoolLoadAverages getGlobalThreadPoolLoadAverages() {
+        return new GlobalPoolLoadAverages(
+            ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.ONE_MIN),
+            ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.FIVE_MIN),
+            ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.FIFTEEN_MIN));
     }
 
 }

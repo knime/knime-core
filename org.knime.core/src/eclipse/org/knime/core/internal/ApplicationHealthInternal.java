@@ -48,13 +48,16 @@
  */
 package org.knime.core.internal;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.data.util.memory.InstanceCounter;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.LoadTracker;
 
 /**
  * Bundle-internal fields that need to be public so that they can be modified from code inside org.knime.core.
@@ -92,6 +95,26 @@ public final class ApplicationHealthInternal {
         NodeModel.INSTANCE_COUNTER, //
         WorkflowManager.PROJECT_COUNTER, //
         WorkflowManager.NO_PROJECT_COUNTER);
+
+    /**
+     * The intervals tracked in the load tracker observing the global thread pool load.
+     */
+    @SuppressWarnings("javadoc")
+    public enum LoadAvgIntervals {
+        ONE_MIN, FIVE_MIN, FIFTEEN_MIN
+    }
+
+    /**
+     * The load tracker observing {@link KNIMEConstants#GLOBAL_THREAD_POOL}.
+     */
+    public static final LoadTracker<LoadAvgIntervals> GLOBAL_THREAD_POOL_LOAD_TRACKER =
+            LoadTracker.<LoadAvgIntervals> builder(Duration.ofSeconds(5),
+                KNIMEConstants.GLOBAL_THREAD_POOL::getRunningThreads) //
+            .addInterval(LoadAvgIntervals.ONE_MIN, Duration.ofMinutes(1)) //
+            .addInterval(LoadAvgIntervals.FIVE_MIN, Duration.ofMinutes(5)) //
+            .addInterval(LoadAvgIntervals.FIFTEEN_MIN, Duration.ofMinutes(15)) //
+            .setIgnoreCloseInvocation(false) //
+            .start();
 
     private ApplicationHealthInternal() {
         // no op
