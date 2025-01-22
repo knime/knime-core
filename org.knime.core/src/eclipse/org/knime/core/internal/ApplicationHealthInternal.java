@@ -68,16 +68,6 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @since 5.5
  */
 public final class ApplicationHealthInternal {
-
-    /**
-     * Collection of instance counters that are considered interesting or relevant. Content may change between releases.
-     */
-    public static final List<InstanceCounter<?>> INSTANCE_COUNTERS = List.of( //
-        NativeNodeContainer.INSTANCE_COUNTER, //
-        NodeModel.INSTANCE_COUNTER, //
-        WorkflowManager.PROJECT_COUNTER, //
-        WorkflowManager.NO_PROJECT_COUNTER);
-
     /**
      * Counter of native nodes currently in EXECUTING state (as per <code>InternalNodeContainerState#EXECUTING</code>).
      */
@@ -93,6 +83,15 @@ public final class ApplicationHealthInternal {
      * queued or post processing.
      */
     public static final AtomicInteger NODESTATE_OTHER = new AtomicInteger();
+
+    /**
+     * Collection of instance counters that are considered interesting or relevant. Content may change between releases.
+     */
+    public static final List<InstanceCounter<?>> INSTANCE_COUNTERS = List.of( //
+        NativeNodeContainer.INSTANCE_COUNTER, //
+        NodeModel.INSTANCE_COUNTER, //
+        WorkflowManager.PROJECT_COUNTER, //
+        WorkflowManager.NO_PROJECT_COUNTER);
 
     private ApplicationHealthInternal() {
         // no op

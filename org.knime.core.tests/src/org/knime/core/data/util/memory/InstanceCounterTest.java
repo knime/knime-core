@@ -48,6 +48,8 @@
  */
 package org.knime.core.data.util.memory;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -90,6 +92,8 @@ final class InstanceCounterTest {
             Thread.sleep(50);
         }
         assertTrue(SomeClass.COUNTER.get() < 1000, "Counter after GC");
+
+        assertThat("Unexpected counter name", SomeClass.COUNTER.getName(), is(SomeClass.class.getName()));
     }
 
 }
