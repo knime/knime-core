@@ -80,6 +80,9 @@ public final class ExternalProcessMemoryWatchdog {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ExternalProcessMemoryWatchdog.class);
 
+    private static final boolean ENABLE_TIME_TRACKER_FOR_DEBUGGING =
+        Boolean.getBoolean("knime.processwatchdog.timetracker");
+
     /** The polling interval for the watchdog in milliseconds. */
     private static final long POLLING_INTERVAL_MS = Long.getLong("knime.processwatchdog.pollinginterval", 250);
 
@@ -163,16 +166,31 @@ public final class ExternalProcessMemoryWatchdog {
     private boolean m_shouldWarnAboutKnimeProcessMemory = true;
 
     private ExternalProcessMemoryWatchdog() {
+
         // We only track memory usage on Linux systems that support PSS measurements
         if (ProcessStateUtil.supportsPSS() && ProcessStateUtil.supportsRSS() && MAX_MEMORY_KBYTES >= 0) {
+
+            // Record the time it takes to update the memory usage if enabled
+            TimeTracker timeTracker;
+            if (ENABLE_TIME_TRACKER_FOR_DEBUGGING) {
+                timeTracker = new TimeTracker();
+            } else {
+                timeTracker = null;
+            }
+
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
+                    var startTime = System.nanoTime();
                     updateMemoryUsage();
+                    if (ENABLE_TIME_TRACKER_FOR_DEBUGGING) {
+                        timeTracker.addTime(System.nanoTime() - startTime);
+                    }
                 }
             }, 0, POLLING_INTERVAL_MS);
             m_watchdogRunning = true;
+
         } else if (MAX_MEMORY_KBYTES < 0) {
             LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to "
                 + MAX_MEMORY_KBYTES);
@@ -447,6 +465,38 @@ public final class ExternalProcessMemoryWatchdog {
         /** @return the process with the highest memory usage */
         public ProcessHandle getProcessWithMaxMemoryUsage() {
             return m_maxMemoryUsageProcess;
+        }
+    }
+
+    //#endregion
+
+    //#region TimeTracker
+
+    private static final class TimeTracker {
+
+        // every 10 seconds
+        private static final int LOGGING_INTERVAL = 10_000;
+
+        private long m_numCalls;
+
+        private long m_totalMeasuredTime;
+
+        public TimeTracker() {
+            var runtimeLogger = new Timer("KNIME Watchdog Runtime Logger", true);
+            runtimeLogger.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (m_numCalls > 0) {
+                        LOGGER.warnWithFormat("Avg measured time of Watchdog: %.3f ms",
+                            m_totalMeasuredTime / m_numCalls / 1e6);
+                    }
+                }
+            }, 0, LOGGING_INTERVAL);
+        }
+
+        public void addTime(final long time) {
+            m_numCalls++;
+            m_totalMeasuredTime += time;
         }
     }
 
