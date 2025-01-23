@@ -42,16 +42,30 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
- *   Oct 30, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.api;
+package org.knime.core.workbench.mountpoint.contribution;
+
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
 
 /**
- * 
- * @author wiswedel
+ * No-op settings for local workspace and temp space.
+ *
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-public interface WorkbenchMountPointSettings {
+public final class NoopMountPointState implements WorkbenchMountPointState {
 
+    /** Static singleton. */
+    public static final NoopMountPointState INSTANCE = new NoopMountPointState();
+
+    private NoopMountPointState() {
+        // no-op
+    }
+
+    @Override
+    public String getDisplayName() {
+        return ""; // TODO
+    }
 }

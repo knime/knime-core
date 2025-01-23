@@ -63,7 +63,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler.Storage;
+import org.knime.core.workbench.preferences.MountSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +71,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author wiswedel
  */
-public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSettings> {
+public final class WorkbenchMountPointType {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WorkbenchMountPointDefinition.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WorkbenchMountPointType.class);
 
     private static final String EXT_POINT_ID = "org.knime.core.workbench.mount";
 
@@ -83,7 +83,7 @@ public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSe
 
     private static final String EXT_ATT_SUPPORTS_MULTIPLE_INSTANCES = "supportsMultipleInstances";
 
-    private static final String EXT_ATT_SETTINGS_HANDLER_CLASS = "settingsHandlerClass";
+    private static final String EXT_ATT_SETTINGS_HANDLER_CLASS = "stateFactoryClass";
 
     private final String m_typeIdentifier;
 
@@ -91,15 +91,15 @@ public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSe
 
     private final String m_defaultMountID;
 
-    private final LazyInitializer<WorkbenchMountPointSettingsHandler<S>> m_settingsHandlerInitializer;
+    private final LazyInitializer<WorkbenchMountPointStateFactory<WorkbenchMountPointState>> m_stateFactoryInitializer;
 
-    private WorkbenchMountPointDefinition(final String typeIdentifier, final String defaultMountID,
+    private WorkbenchMountPointType(final String typeIdentifier, final String defaultMountID,
         final boolean supportsMultipleInstances,
-        final LazyInitializer<WorkbenchMountPointSettingsHandler<S>> settingsHandlerInitializer) {
+        final LazyInitializer<WorkbenchMountPointStateFactory<WorkbenchMountPointState>> stateFactoryInitializer) {
         m_typeIdentifier = typeIdentifier;
         m_defaultMountID = defaultMountID;
         m_supportsMultipleInstances = supportsMultipleInstances;
-        m_settingsHandlerInitializer = settingsHandlerInitializer;
+        m_stateFactoryInitializer = stateFactoryInitializer;
     }
 
     /**
@@ -134,32 +134,22 @@ public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSe
         return m_typeIdentifier.equals(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
     }
 
-    public WorkbenchMountPointSettingsHandler<S> getSettingsHandler() throws IOException {
+    public WorkbenchMountPoint createMountPoint(final MountSettings settings) throws IOException {
+        final WorkbenchMountPointStateFactory<?> stateFactory;
         try {
-            return m_settingsHandlerInitializer.get();
-        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
-            throw new IOException(String
-                .format("Failed to create settings handler for extension with type identifier %s", m_typeIdentifier),
-                ex.getCause());
-        }
-    }
-
-    public WorkbenchMountPoint<S> createMountPoint(final String mountID, final Storage storage) throws IOException {
-        WorkbenchMountPointSettingsHandler<S> settingsHandler;
-        try {
-            settingsHandler = m_settingsHandlerInitializer.get();
+            stateFactory = m_stateFactoryInitializer.get();
         } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
             throw new IOException(String.format("Failed to create settings handler for extension with "
                 + "type identifier %s", m_typeIdentifier), ex.getCause());
         }
-        S settings = settingsHandler.fromStorage(storage);
-        return new WorkbenchMountPoint<>(this, mountID, settings);
+        final var mountPointState = stateFactory.newInstance(settings);
+        return new WorkbenchMountPoint(this, settings, mountPointState);
     }
 
-    public static Map<String, WorkbenchMountPointDefinition<?>> collectDefinitions() {
+    public static Map<String, WorkbenchMountPointType> collectDefinitions() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-        Map<String, WorkbenchMountPointDefinition<?>> result = new LinkedHashMap<>();
+        Map<String, WorkbenchMountPointType> result = new LinkedHashMap<>();
         for (IExtension ext : point.getExtensions()) {
             for (IConfigurationElement element : ext.getConfigurationElements()) {
                 final String identifier = element.getAttribute(EXT_ATT_TYPE_IDENTIFIER);
@@ -181,13 +171,14 @@ public final class WorkbenchMountPointDefinition<S extends WorkbenchMountPointSe
                     continue;
                 }
                 // init lazy to avoid 3rd party bundle activation until needed
-                LazyInitializer<WorkbenchMountPointSettingsHandler<?>> settingsHandlerInitializer =
-                    LazyInitializer.<WorkbenchMountPointSettingsHandler<?>> builder() //
-                        .setInitializer(() -> (WorkbenchMountPointSettingsHandler<?>)element
+                @SuppressWarnings("unchecked")
+                LazyInitializer<WorkbenchMountPointStateFactory<WorkbenchMountPointState>> settingsHandlerInitializer = // NOSONAR
+                    LazyInitializer.<WorkbenchMountPointStateFactory<WorkbenchMountPointState>> builder() //
+                        .setInitializer(() -> (WorkbenchMountPointStateFactory<WorkbenchMountPointState>)element
                             .createExecutableExtension(EXT_ATT_SETTINGS_HANDLER_CLASS)) //
                         .get();
-                result.put(identifier, new WorkbenchMountPointDefinition(identifier, defaultMountID,
-                    supportsMultipleInstances, settingsHandlerInitializer));
+                result.put(identifier, new WorkbenchMountPointType(identifier,
+                    defaultMountID, supportsMultipleInstances, settingsHandlerInitializer));
             }
         }
         return Collections.unmodifiableMap(result);

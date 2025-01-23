@@ -19,16 +19,16 @@
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <choice minOccurs="1" maxOccurs="unbounded">
-               <element ref="MountPointDefinition"/>
+               <element ref="MountPointType"/>
             </choice>
          </sequence>
       </complexType>
    </element>
 
-   <element name="MountPointDefinition">
+   <element name="MountPointType">
       <annotation>
          <documentation>
-            A mount point definition. It defines an identifier to which concrete mount providers can contribute to.
+            A mount point type. It defines an identifier to which concrete mount providers can contribute to.
          </documentation>
       </annotation>
       <complexType>
@@ -53,13 +53,13 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="settingsHandlerClass" type="string" use="required">
+         <attribute name="stateFactoryClass" type="string" use="required">
             <annotation>
                <documentation>
                   
                </documentation>
                <appinfo>
-                  <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mounts.WorkbenchMountPointSettingsHandler"/>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory"/>
                </appinfo>
             </annotation>
          </attribute>

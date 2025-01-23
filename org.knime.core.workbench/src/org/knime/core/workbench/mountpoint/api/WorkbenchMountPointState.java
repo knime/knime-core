@@ -48,37 +48,11 @@
  */
 package org.knime.core.workbench.mountpoint.api;
 
-import java.io.IOException;
-import java.util.Objects;
-
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.osgi.service.prefs.Preferences;
-
 /**
  *
  * @author wiswedel
  */
-public interface WorkbenchMountPointSettingsHandler<T extends WorkbenchMountPointSettings> {
+public interface WorkbenchMountPointState {
 
-    static final Storage EMPTY_STORAGE = new Storage("");
-
-    record Storage(String storageString) {
-        public Storage {
-            Objects.requireNonNull(storageString);
-        }
-    }
-
-
-
-    T fromStorage(final Storage storage) throws IOException;
-
-    Storage toStorage(final T settings) throws IOException;
-
-    void saveStateToPreferenceNode(final IEclipsePreferences node, final T settings);
-
-    T loadStateFromPreferenceNode(final Preferences node);
-
-    // TODO refactor or accept the fact that this is a bit of a hack
-    String asLabel(final T settings);
-
+    String getDisplayName();
 }

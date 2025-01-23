@@ -49,71 +49,55 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import org.knime.core.node.util.CheckUtils;
-import org.knime.core.util.auth.Authenticator;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
  * Represents a content tree in the KNIME Explorer.
  *
  * @author ohl, University of Konstanz
  */
-public final class WorkbenchMountPoint<S extends WorkbenchMountPointSettings> {
+public final class WorkbenchMountPoint {
 
-    private final WorkbenchMountPointDefinition<S> m_definition;
+    private final WorkbenchMountPointType m_definition;
 
-    private final String m_mountID;
+    private final MountSettings m_settings;
 
-    private S m_settings;
-
-    private Authenticator m_authenticator;
+    private WorkbenchMountPointState m_state;
 
     private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
 
-    WorkbenchMountPoint(final WorkbenchMountPointDefinition<S> definition, final String mountID,
-        final S settings) {
+    WorkbenchMountPoint(final WorkbenchMountPointType definition, final MountSettings settings,
+        final WorkbenchMountPointState state) {
         m_definition = definition;
-        m_mountID = mountID;
         m_settings = settings;
+        m_state = state;
         m_contentProviders = new LinkedHashMap<>();
     }
 
     /**
      * @return the definition
      */
-    public WorkbenchMountPointDefinition<S> getDefinition() {
+    public WorkbenchMountPointType getDefinition() {
         return m_definition;
     }
 
     public String getMountID() {
-        return m_mountID;
+        return m_settings.getMountID();
     }
 
-    public synchronized Optional<Authenticator> getAuthenticator() {
-        return Optional.ofNullable(m_authenticator);
+    public String getDisplayName() {
+        return m_state.getDisplayName();
     }
 
-    public synchronized <T extends Authenticator> T getOrCreateAuthenticator(final Supplier<T> authenticatorSupplier) {
-        if (m_authenticator == null) {
-            m_authenticator = authenticatorSupplier.get();
-        }
-        return (T)m_authenticator;
-    }
-
-    public synchronized S getSettings() {
-        return m_settings;
-    }
-
-    public synchronized void setSettings(final S settings) {
-        CheckUtils.checkArgumentNotNull(settings, "Settings must not be null");
-        m_settings = settings;
+    public WorkbenchMountPointState getState() {
+        return m_state;
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointSettings> T
-        getProvider(final Class<T> providerType, final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_settings));
+    public <T extends MountPointProvider, S2 extends WorkbenchMountPointState> T
+        getProvider(final Class<T> providerType, final Function<S2, T> providerFactory) {
+        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S2)m_state));
     }
 
     @SuppressWarnings("unchecked")

@@ -52,8 +52,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
@@ -61,37 +60,33 @@ public final class WorkbenchActivator implements BundleActivator {
 
     private static WorkbenchActivator instance;
 
-    private Map<String, WorkbenchMountPointDefinition<?>> m_mountPointDefinitionMap;
+    private Map<String, WorkbenchMountPointType> m_mountPointTypeMap;
 
     @Override
     public void start(final BundleContext context) throws Exception {
         instance = this;
-        m_mountPointDefinitionMap = WorkbenchMountPointDefinition.collectDefinitions();
+        m_mountPointTypeMap = WorkbenchMountPointType.collectDefinitions();
     }
 
     @Override
     public void stop(final BundleContext context) throws Exception {
-        m_mountPointDefinitionMap = null;
+        m_mountPointTypeMap = null;
         instance = null;
     }
 
-    public Collection<WorkbenchMountPointDefinition<?>> getMountPointDefinitions() {
-        return m_mountPointDefinitionMap.values();
+    public Collection<WorkbenchMountPointType> getMountPointTypes() {
+        return m_mountPointTypeMap.values();
     }
 
     /**
      * @return mount point definition for a type registered in an extension point
      */
-    @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> Optional<WorkbenchMountPointDefinition<S>>
-        getMountPointDefinition(final String typeIdentifier) {
-        return Optional.ofNullable((WorkbenchMountPointDefinition<S>)m_mountPointDefinitionMap.get(typeIdentifier));
+    public Optional<WorkbenchMountPointType> getMountPointDefinition(final String typeIdentifier) {
+        return Optional.ofNullable(m_mountPointTypeMap.get(typeIdentifier));
     }
 
-    @SuppressWarnings("unchecked")
-    public <S extends WorkbenchMountPointSettings> WorkbenchMountPointDefinition<S>
-    getMountPointDefinitionOrFail(final String typeIdentifier) {
-        return (WorkbenchMountPointDefinition<S>)getMountPointDefinition(typeIdentifier)
+    public WorkbenchMountPointType getMountPointDefinitionOrFail(final String typeIdentifier) {
+        return getMountPointDefinition(typeIdentifier)
             .orElseThrow(() -> new IllegalStateException(
                 String.format("No mount point definition found for \"%s\"", typeIdentifier)));
     }
@@ -99,5 +94,4 @@ public final class WorkbenchActivator implements BundleActivator {
     public static WorkbenchActivator getInstance() {
         return instance;
     }
-
 }

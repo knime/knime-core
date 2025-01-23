@@ -60,14 +60,13 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.LoggerFactory;
 
-public class ExplorerPreferenceInitializer extends
-        AbstractPreferenceInitializer {
+public class ExplorerPreferenceInitializer extends AbstractPreferenceInitializer {
 
     private static final String MOUNTPOINT_PREFERENCE_LOCATION =
         WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID + "/defaultMountpoint";
@@ -99,17 +98,17 @@ public class ExplorerPreferenceInitializer extends
     public static void loadDefaultMountPoints() {
         IEclipsePreferences defaultPrefStore = DefaultScope.INSTANCE.getNode(WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID);
 
-        List<WorkbenchMountPointDefinition<?>> addableDefs = WorkbenchMountTable.getAddableContentProviders();
+        List<WorkbenchMountPointType> addableDefs = WorkbenchMountTable.getAddableMountPointDefinitions();
         // Set the default mount points
         final List<MountSettings> settingsList = new ArrayList<MountSettings>();
         final List<String> include = getIncludedDefaultMountPoints();
 
-        for (WorkbenchMountPointDefinition<?> fac : addableDefs) {
+        for (WorkbenchMountPointType<?> fac : addableDefs) {
             if (fac.getDefaultMountID().stream().anyMatch(include::contains)) {
                 WorkbenchMountPoint<?> mp = null;
                 try {
                     mp = fac.createMountPoint(fac.getDefaultMountID().orElseThrow(),
-                        WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
+                        WorkbenchMountPointStateFactory.EMPTY_STORAGE);
                     settingsList.add(new MountSettings(mp));
                 } catch (IOException ioe) {
                     LoggerFactory.getLogger(ExplorerPreferenceInitializer.class).atError().setCause(ioe).log(
@@ -170,7 +169,7 @@ public class ExplorerPreferenceInitializer extends
 
         if (mpSetting == null) {
             return enforceExclusion ? Collections.emptyList()
-                : WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
+                : WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                     .map(e -> e.getDefaultMountID()) //
                     .flatMap(Optional::stream) //
                     .filter(e -> !StringUtils.isEmpty(e)) //
@@ -192,7 +191,7 @@ public class ExplorerPreferenceInitializer extends
         if (DefaultScope.INSTANCE.getNode(MOUNTPOINT_PREFERENCE_LOCATION).getBoolean(ENFORCE_EXCLUSION, false)) {
             final List<String> includedMountPoints = getIncludedDefaultMountPoints();
 
-            return WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
+            return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                     .map(e -> e.getDefaultMountID()) //
                     .flatMap(Optional::stream) //
                     .filter(e -> !StringUtils.isEmpty(e) && !includedMountPoints.contains(e)) //

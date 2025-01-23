@@ -51,14 +51,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.osgi.storage.Storage;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
@@ -67,10 +72,8 @@ import org.knime.core.util.CoreConstants;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointDefinition;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler.Storage;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.knime.core.workbench.util.KNIMEWorkspaceUtil;
 import org.osgi.service.prefs.BackingStoreException;
@@ -95,7 +98,7 @@ public class MountSettings {
     /** Used for separating the different setting elements. */
     private static final String ELEMENTS_SEPARATOR = ":";
 
-    private static Logger LOGGER = LoggerFactory.getLogger(MountSettings.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MountSettings.class);
 
     /**
      * The workspace version for which KNIME Hub has been added. If the version is less than this number then the KNIME
@@ -111,15 +114,11 @@ public class MountSettings {
 
     private String m_factoryID;
 
-    private Storage m_content;
-
-    private String m_state;
+    private Map<String, String> m_additionalSettings;
 
     private boolean m_active;
 
     private int m_mountPointNumber;
-
-    private boolean m_useRest;
 
     /**
      * Creates a new mount settings object based on the passed settings string.
@@ -145,7 +144,6 @@ public class MountSettings {
         m_content = new Storage(settings.getString("content"));
         m_defaultMountID = settings.getString("defaultMountID");
         m_active = settings.getBoolean("active");
-        m_useRest = settings.getBoolean("useRest", false);
         if (settings.containsKey("mountPointNumber")) {
             m_mountPointNumber = settings.getInt("mountPointNumber");
         }
@@ -177,18 +175,14 @@ public class MountSettings {
      * @param cp the content provider to create mount settings for
      * @throws IOException
      */
-    public <S extends WorkbenchMountPointSettings> MountSettings(final WorkbenchMountPoint<S> cp) throws IOException {
+    public MountSettings(final WorkbenchMountPoint cp) throws IOException {
         m_mountID = cp.getMountID();
-        final WorkbenchMountPointDefinition<S> definition = cp.getDefinition();
-        final String label = definition.getSettingsHandler().asLabel(cp.getSettings());
-        m_displayName = m_mountID + " (" + label + ")";
+        m_displayName = cp.getDisplayName();
+        final WorkbenchMountPointType definition = cp.getDefinition();
         m_factoryID = definition.getTypeIdentifier();
-        m_content = definition.getSettingsHandler().toStorage(cp.getSettings());
         m_defaultMountID = definition.getDefaultMountID().orElse(null);
         m_active = true;
 
-        String[] splitContent = m_content.storageString().split(";");
-        m_useRest = splitContent.length >= 5 ? splitContent[4].equals("true") : false;
         // New Mount Points Are always at the top of the table.
         m_mountPointNumber = 0;
     }
@@ -205,48 +199,15 @@ public class MountSettings {
      * @param mountPointNumber The mountpoint number
      * @since 8.2
      */
-    public MountSettings(final String mountID, final String displayName, final String factoryID, final Storage content,
-        final String defaultMountID, final Boolean active, final int mountPointNumber) {
+    public MountSettings(final String mountID, final String factoryID, final String defaultMountID,
+            final Boolean active, final int mountPointNumber, final Map<String, String> additionalSettings) {
         m_mountID = mountID;
-        m_displayName = displayName;
+        m_displayName = null;
         m_factoryID = factoryID;
-        m_content = content;
         m_defaultMountID = defaultMountID;
         m_active = active;
         m_mountPointNumber = mountPointNumber;
-    }
-
-    /**
-     * @param settings the settings string to be parsed
-     */
-    @Deprecated
-    private void parse(final String settings) {
-        String[] visibleSplit = settings.split(VISIBILITY_SEPARATOR, 2);
-        if (2 != visibleSplit.length) {
-            throw new IllegalArgumentException("Invalid settings string provided.");
-        }
-        m_displayName = visibleSplit[0];
-        String[] settingsSplit = visibleSplit[1].split(ELEMENTS_SEPARATOR, 4);
-        if (3 != settingsSplit.length && 4 != settingsSplit.length) {
-            throw new IllegalArgumentException("Invalid settings string provided.");
-        }
-        m_mountID = settingsSplit[0];
-        m_factoryID = settingsSplit[1];
-        // settings with active state
-        if (settingsSplit.length == 4) {
-            String possibleBoolean = settingsSplit[2];
-            // in case previous content contained ":", test for boolean value
-            if ("true".equalsIgnoreCase(possibleBoolean) || "false".equalsIgnoreCase(possibleBoolean)) {
-                m_active = Boolean.parseBoolean(possibleBoolean);
-                m_content = new Storage(settingsSplit[3]);
-            } else {
-                m_active = true;
-                m_content = new Storage(settingsSplit[2] + ELEMENTS_SEPARATOR + settingsSplit[3]);
-            }
-        } else {
-            m_active = true;
-            m_content = new Storage(settingsSplit[2]);
-        }
+        m_additionalSettings = additionalSettings;
     }
 
     /**
@@ -318,33 +279,7 @@ public class MountSettings {
      * @since 6.0
      */
     public void setActive(final boolean active) {
-        if (m_active != active) {
-            m_state = null;
-        }
         m_active = active;
-    }
-
-    /**
-     * Whether if REST od EJB shall be used.
-     *
-     * @return {@code true} if REST shall be used, {@code false} otherwise.
-     * @since 8.3
-     */
-    public boolean isUseRest() {
-        return m_useRest;
-    }
-
-    /**
-     * Sets if REST or EJB shall be used.
-     *
-     * @param useRest {@code true} if REST shall be used, {@code false} otherwise.
-     * @since 8.3
-     */
-    public void setIsUseRest(final boolean useRest) {
-        if (m_useRest != useRest) {
-            m_state = null;
-        }
-        m_useRest = useRest;
     }
 
     /**
@@ -434,7 +369,7 @@ public class MountSettings {
      */
     public static boolean isMountSettingsAddable(final MountSettings mountSettings) {
         final String factoryID = mountSettings.getFactoryID();
-        return WorkbenchMountTable.getAddableContentProviders().contains(factoryID); // NOSONAR short list
+        return WorkbenchMountTable.getAddableMountPointDefinitions().contains(factoryID); // NOSONAR short list
     }
 
     /**
@@ -498,8 +433,8 @@ public class MountSettings {
                 && ExplorerPreferenceInitializer.getIncludedDefaultMountPoints()
                     .contains(CoreConstants.KNIME_HUB_MOUNT_ID)) {
 
-                final Optional<WorkbenchMountPointDefinition<?>> hubMountDef =
-                WorkbenchActivator.getInstance().getMountPointDefinitions().stream() //
+                final Optional<WorkbenchMountPointType> hubMountDef =
+                WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                     .filter(e -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e.getDefaultMountID().orElse(null))) //
                     .findFirst();
 
@@ -507,8 +442,8 @@ public class MountSettings {
                 if (hubMountDef.isPresent() && loadedSettingsList.stream()
                     .noneMatch(e -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e.getDefaultMountID()))) {
                     try {
-                        final WorkbenchMountPoint<?> tempHubMountPoint = hubMountDef.get().createMountPoint(
-                            CoreConstants.KNIME_HUB_MOUNT_ID, WorkbenchMountPointSettingsHandler.EMPTY_STORAGE);
+                        final WorkbenchMountPoint tempHubMountPoint = hubMountDef.get().createMountPoint(
+                            CoreConstants.KNIME_HUB_MOUNT_ID, WorkbenchMountPointStateFactory.EMPTY_STORAGE);
                         final MountSettings hubSettings = new MountSettings(tempHubMountPoint);
                         hubSettings.m_mountPointNumber = -2;
                         instanceMountSettingsList.add(hubSettings);
@@ -676,55 +611,36 @@ public class MountSettings {
         MOUNT_SETTINGS_SAVED_LISTENERS.add(listener);
     }
 
-    private static String MOUNT_ID = "mountID";
+    private static final String MOUNT_ID = "mountID";
 
-    private static String FACTORY_ID = "factoryID";
+    private static final String FACTORY_ID = "factoryID";
 
-    private static String DEFAULT_MOUNT_ID = "defaultMountID";
+    private static final String DEFAULT_MOUNT_ID = "defaultMountID";
 
-    private static String ACTIVE = "active";
+    private static final String ACTIVE = "active";
 
-    private static String MOUNTPOINT_NUMBER = "mountpointNumber";
+    private static final String MOUNTPOINT_NUMBER = "mountpointNumber";
 
-    private static String USE_REST = "useRest";
+    private static final List<String> m_necessaryKeys = Arrays.asList(MOUNT_ID, FACTORY_ID);
 
-    private static List<String> m_necessaryKeys = Arrays.asList(MOUNT_ID, FACTORY_ID);
+    private static final Set<String> RESERVED_KEYS =
+            Set.of(MOUNT_ID, FACTORY_ID, DEFAULT_MOUNT_ID, ACTIVE, MOUNTPOINT_NUMBER);
 
     private static void saveMountSettingsToNode(final MountSettings settings, final IEclipsePreferences node,
-        final int mountPointNumber) {
-
-        Optional<WorkbenchMountPointDefinition<WorkbenchMountPointSettings>> factory =
-            WorkbenchActivator.getInstance().getMountPointDefinition(settings.getFactoryID());
-
-        if (factory.isEmpty()) {
-            LOGGER.error("Unable to save mount point '{}': No content provider factory with id '{}' known.",
-                settings.getMountID(), settings.getFactoryID());
-            return;
-        }
-
-        final WorkbenchMountPointDefinition<WorkbenchMountPointSettings> workbenchMountPointDefinition = factory.get();
-        try {
-            final var setHandler = workbenchMountPointDefinition.getSettingsHandler();
-            final var wmpSettings = setHandler.fromStorage(new Storage(settings.getContent()));
-            setHandler.saveStateToPreferenceNode(node, wmpSettings);
-        } catch (IOException ex) {
-            LOGGER.atError().setCause(ex).log("Could not save mount point settings for '{}'.", settings.getMountID());
-        }
-
+            final int mountPointNumber) {
         String defaultMountID = settings.getDefaultMountID();
         if (!StringUtils.isEmpty(defaultMountID)) {
             node.put(DEFAULT_MOUNT_ID, defaultMountID);
         }
         node.putBoolean(ACTIVE, settings.isActive());
-
-        node.putBoolean(USE_REST, settings.isUseRest());
-
         node.putInt(MOUNTPOINT_NUMBER, mountPointNumber);
 
         // The factoryID and mountID are saved last, this makes sure that the settings do not get loaded prematurely
         // from a triggered preferenceChange event.
         node.put(FACTORY_ID, settings.getFactoryID());
         node.put(MOUNT_ID, settings.getMountID());
+
+        settings.m_additionalSettings.forEach(node::put);
     }
 
     private static MountSettings loadMountSettingsFromNode(final Preferences node) throws BackingStoreException {
@@ -734,27 +650,20 @@ public class MountSettings {
             try {
                 String mountID = node.get(MOUNT_ID, "");
                 String factoryID = node.get(FACTORY_ID, "");
-
-                Optional<WorkbenchMountPointDefinition<WorkbenchMountPointSettings>> definition =
-                        WorkbenchActivator.getInstance().getMountPointDefinition(factoryID);
-                Storage content = WorkbenchMountPointSettingsHandler.EMPTY_STORAGE;
-                String displayName = "";
-                if (definition.isPresent()) {
-                    final var settingsHandler = definition.get().getSettingsHandler();
-                    final var wmpSettings = settingsHandler.loadStateFromPreferenceNode(node);
-                    content = settingsHandler.toStorage(wmpSettings);
-                    displayName = mountID + " (" + settingsHandler.asLabel(wmpSettings) + ")";
-                }
-
                 String defaultMountID = node.get(DEFAULT_MOUNT_ID, "");
                 boolean active = node.getBoolean(ACTIVE, true);
                 int mountPointNumber = node.getInt(MOUNTPOINT_NUMBER, 0);
 
-                MountSettings settings = new MountSettings(mountID, displayName, factoryID, content, defaultMountID,
-                    active, mountPointNumber);
-                settings.setIsUseRest(node.getBoolean(USE_REST, false));
+                final LinkedHashMap<String, String> additionalSettings = Arrays.stream(node.childrenNames()) //
+                    .filter(c -> !RESERVED_KEYS.contains(c)) //
+                    .collect(Collectors.toMap( //
+                        Function.identity(), //
+                        c -> node.get(c, null), //
+                        (a, b) -> { throw new IllegalStateException("Duplicate key"); }, //
+                        LinkedHashMap<String, String>::new));
 
-                return settings;
+                return new MountSettings(mountID, factoryID, defaultMountID, active, mountPointNumber,
+                    additionalSettings);
             } catch (Exception ex) {
                 LoggerFactory.getLogger(MountSettings.class).atError().setCause(ex).log(
                     "Could not load mount point settings from node {}: {}", node.absolutePath(), ex.getMessage());
