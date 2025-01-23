@@ -51,6 +51,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.MultiLineStringValueRenderer;
+import org.knime.core.util.EclipseUtil;
 
 /**
  * Default renderer for XML values.
@@ -63,7 +64,9 @@ public final class XMLValueRenderer2 extends MultiLineStringValueRenderer {
     /**
      * Maximum number of characters to render.
      */
-    private static final int MAX_RENDER_CHARS = 1000;
+    private static final int MAX_RENDER_CHARS_MODERN_UI = 1_000;
+
+    private static final int MAX_RENDER_CHARS_CLASSIC_UI = 10_000;
 
     /**
      * Factory for {@link XMLValueRenderer2}.
@@ -102,7 +105,9 @@ public final class XMLValueRenderer2 extends MultiLineStringValueRenderer {
         }
         String s;
         s = ((XMLValue<?>)value).toString();
-        s = StringUtils.abbreviate(s, MAX_RENDER_CHARS);
+        final var maxRenderChars =
+            EclipseUtil.determineClassicUIUsage() ? MAX_RENDER_CHARS_CLASSIC_UI : MAX_RENDER_CHARS_MODERN_UI;
+        s = StringUtils.abbreviate(s, maxRenderChars);
         super.setValue(s);
     }
 }
