@@ -52,6 +52,7 @@ import java.util.Objects;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.StringValue;
+import org.knime.core.util.EclipseUtil;
 
 /**
  * Renderer for DataCells that are compatible with
@@ -118,10 +119,14 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
         return DESCRIPTION;
     }
 
-    private static final int TRUNCATED_LENGTH = 1_000;
+    private static final int TRUNCATED_LENGTH_MODERN_UI = 1_000;
+
+    private static final int TRUNCATED_LENGTH_CLASSIC_UI = 10_000;
 
     static String truncateOverlyLongStrings(final String s) {
-        return truncateOverlyLongStrings(s, TRUNCATED_LENGTH);
+        final var truncatedLength =
+            EclipseUtil.determineClassicUIUsage() ? TRUNCATED_LENGTH_CLASSIC_UI : TRUNCATED_LENGTH_MODERN_UI;
+        return truncateOverlyLongStrings(s, truncatedLength);
     }
 
     /**
