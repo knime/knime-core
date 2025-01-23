@@ -42,16 +42,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Oct 30, 2024 (wiswedel): created
  */
 package org.knime.core.workbench.mountpoint.api;
 
 /**
- * 
+ *
  * @author wiswedel
  */
-public interface WorkbenchMountPointSettings {
+public interface WorkbenchMountPointState {
 
+    String getDisplayName();
 }

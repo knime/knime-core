@@ -44,54 +44,28 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 29, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench;
+package org.knime.core.workbench.mountpoint.contribution;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
 
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+/**
+ * No-op settings for local workspace and temp space.
+ *
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ */
+public final class NoopMountPointState implements WorkbenchMountPointState {
 
-public final class WorkbenchActivator implements BundleActivator {
+    /** Static singleton. */
+    public static final NoopMountPointState INSTANCE = new NoopMountPointState();
 
-    private static WorkbenchActivator instance;
-
-    private Map<String, WorkbenchMountPointType> m_mountPointTypeMap;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        instance = this;
-        m_mountPointTypeMap = WorkbenchMountPointType.collectDefinitions();
+    private NoopMountPointState() {
+        // no-op
     }
 
     @Override
-    public void stop(final BundleContext context) throws Exception {
-        m_mountPointTypeMap = null;
-        instance = null;
-    }
-
-    public Collection<WorkbenchMountPointType> getMountPointTypes() {
-        return m_mountPointTypeMap.values();
-    }
-
-    /**
-     * @return mount point definition for a type registered in an extension point
-     */
-    public Optional<WorkbenchMountPointType> getMountPointType(final String typeIdentifier) {
-        return Optional.ofNullable(m_mountPointTypeMap.get(typeIdentifier));
-    }
-
-    public WorkbenchMountPointType getMountPointTypeOrFail(final String typeIdentifier) {
-        return getMountPointType(typeIdentifier)
-            .orElseThrow(() -> new IllegalStateException(
-                String.format("No mount point definition found for \"%s\"", typeIdentifier)));
-    }
-
-    public static WorkbenchActivator getInstance() {
-        return instance;
+    public String getDisplayName() {
+        return ""; // TODO
     }
 }

@@ -48,42 +48,18 @@
  */
 package org.knime.core.workbench.mountpoint.contribution;
 
-import java.io.IOException;
-
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettingsHandler;
-import org.osgi.service.prefs.Preferences;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
  * No-op settings handler
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public class NoopMountPointSettingsHandler
-    implements WorkbenchMountPointSettingsHandler<NoopMountPointSettings> {
+    implements WorkbenchMountPointStateFactory<NoopMountPointState> {
 
     @Override
-    public NoopMountPointSettings fromStorage(final Storage storage) throws IOException {
-        return NoopMountPointSettings.INSTANCE;
-    }
-
-    @Override
-    public Storage toStorage(final NoopMountPointSettings settings) throws IOException {
-        return WorkbenchMountPointSettingsHandler.EMPTY_STORAGE;
-    }
-
-    @Override
-    public void saveStateToPreferenceNode(final IEclipsePreferences node,
-        final NoopMountPointSettings settings) {
-        // no-op
-    }
-
-    @Override
-    public NoopMountPointSettings loadStateFromPreferenceNode(final Preferences node) {
-        return NoopMountPointSettings.INSTANCE;
-    }
-
-    @Override
-    public String asLabel(final NoopMountPointSettings settings) {
-        return "";
+    public NoopMountPointState newInstance(final MountSettings settings) {
+        return NoopMountPointState.INSTANCE;
     }
 }
