@@ -44,24 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 31, 2024 (wiswedel): created
+ *   Jan 24, 2025 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.contribution;
-
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
+package org.knime.core.workbench.mountpoint.api;
 
 /**
- * No-op settings for local workspace and temp space.
- *
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ * Exceptions thrown when attempting to mount a mount point, including errors in 3rd party extension (buggy
+ * extensions) or actual issues when creating the mount point (e.g. a folder no longer exists).
+ * @author wiswedel
  */
-public final class NoopMountPointSettings implements WorkbenchMountPointSettings {
+@SuppressWarnings("serial")
+public final class WorkbenchMountException extends Exception {
 
-    /** Static singleton. */
-    public static final NoopMountPointSettings INSTANCE = new NoopMountPointSettings();
+    public WorkbenchMountException(final String message) {
+        super(message);
+    }
 
-    private NoopMountPointSettings() {
-        // no-op
+    public WorkbenchMountException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
 }
