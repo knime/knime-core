@@ -57,6 +57,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
@@ -127,6 +128,15 @@ public final class ProcessWatchdog {
     public static ProcessWatchdog getInstance() {
         return INSTANCE;
     }
+
+    // #region monitoring
+
+    static final AtomicLong KNIME_PROCESS_RSS = new AtomicLong(0);
+
+    static final ConcurrentMap<ExternalProcessType, Long> EXTERNAL_PROCESS_PSS =
+        new ConcurrentHashMap<>(ExternalProcessType.values().length);
+
+    // #endregion
 
     //#region API
 

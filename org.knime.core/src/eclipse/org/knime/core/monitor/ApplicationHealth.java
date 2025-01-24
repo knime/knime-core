@@ -127,4 +127,19 @@ public final class ApplicationHealth {
             ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.FIFTEEN_MIN));
     }
 
+    /**
+     * @return the approximate current RSS (resident set size) of the KNIME process in bytes
+     */
+    public static long getKnimeProcessRssBytes() {
+        return ProcessWatchdog.KNIME_PROCESS_RSS.get();
+    }
+
+    /**
+     * @param type the type of the external process
+     * @return the current PSS (proportional set size) of all external processes of the given type (and their children)
+     *         in bytes
+     */
+    public static long getExternalProcessesPssBytes(final ExternalProcessType type) {
+        return ProcessWatchdog.EXTERNAL_PROCESS_PSS.get(type);
+    }
 }
