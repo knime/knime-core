@@ -64,6 +64,8 @@ import java.util.function.LongConsumer;
 
 import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.message.Message;
+import org.knime.core.util.SafeCloseable;
 
 import gnu.trove.set.hash.TLongHashSet;
 
@@ -77,6 +79,8 @@ import gnu.trove.set.hash.TLongHashSet;
  * @since 5.5
  */
 public final class ProcessWatchdog {
+
+    private static final String DEFAULT_LOW_RESOURCE_RESOLUTION = "Provide more resources to the system";
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(ProcessWatchdog.class);
 
@@ -167,26 +171,43 @@ public final class ProcessWatchdog {
     }
 
     /**
+     * Registers a {@link ResourceAlertListener} that should be called in case of low resources.
+     * <p>
+     * If the system is already low on resources, the listener is called immediately but still added to the list in case
+     * the system leaves and enters a low-resource state while the listener is registered.
+     * <p>
+     * Returns a closable that removes the listener again on close, so it can be used in try-with-resources blocks as
+     * follows:
+     * <pre>
+     * try (var t = ProcessWatchdog.getInstance().registerResourceAlertListener(listener)) {
+     *     // ... do something ...
+     * }
+     * // listener gets removed automatically
+     * </pre>
+     *
      * @since 5.5
      * @param resourceAlertListener A resource alert listener to call when the system is low on resources
+     * @return A Closeable that removes the listener when closed
      */
     public SafeCloseable registerResourceAlertListener(final ResourceAlertListener resourceAlertListener) {
+        if (m_shouldCallResourceAlertListeners) {
+            resourceAlertListener.alert(
+                Message.fromSummaryWithResolution("System is low on resources", DEFAULT_LOW_RESOURCE_RESOLUTION));
+        }
+
         m_resourceAlertListeners.put(resourceAlertListener, resourceAlertListener);
         return () -> m_resourceAlertListeners.remove(resourceAlertListener);
     }
 
     /**
-     * @since 5.5
-     * @return Whether node executions should be cancelled
-     */
-    public boolean shouldNodeExecutionsBeCancelled() {
-        return m_shouldNodeExecutionsBeCancelled;
-    }
-
-    /**
+     * A {@link ResourceAlertListener} can be registered to
+     *
      * @since 5.5
      */
     public interface ResourceAlertListener {
+        /**
+         * @param message
+         */
         void alert(Message message);
     }
 
@@ -197,7 +218,7 @@ public final class ProcessWatchdog {
     private ConcurrentMap<ResourceAlertListener, ResourceAlertListener> m_resourceAlertListeners =
         new ConcurrentHashMap<>();
 
-    private boolean m_shouldNodeExecutionsBeCancelled;
+    private boolean m_shouldCallResourceAlertListeners;
 
     private record TypeAndKillCallback(ExternalProcessType type, LongConsumer killCallback) {
     }
@@ -313,32 +334,34 @@ public final class ProcessWatchdog {
 
     private void handleKnimeProcessMemory(final long knimeMemory) {
         // Warn if the memory usage of the JVM process itself is close to the limit
+        var warningMessage =
+            "KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES + "KB";
+
         if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
             if (m_shouldWarnAboutKnimeProcessMemory) {
                 m_shouldWarnAboutKnimeProcessMemory = false;
 
-                LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
-                    + "KB in the container");
+                LOGGER.warn(warningMessage);
             }
         } else {
             m_shouldWarnAboutKnimeProcessMemory = true;
         }
 
         if (knimeMemory > MAX_MEMORY_KBYTES * 0.90) {
-            LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available "
-                + MAX_MEMORY_KBYTES + "KB in the container. Cancelling node executions");
-            cancelRunningNodes();
-            m_shouldNodeExecutionsBeCancelled = true;
+            if (!m_shouldCallResourceAlertListeners) {
+                m_shouldCallResourceAlertListeners = true;
+
+                LOGGER.warn(warningMessage + ". Calling ResourceAlertListeners");
+                callResourceAlertListeners(warningMessage);
+            }
         } else {
-            m_shouldNodeExecutionsBeCancelled = false;
+            m_shouldCallResourceAlertListeners = false;
         }
     }
 
-    private void cancelRunningNodes() {
-        // TODO: messaging that this node got cancelled.
-        m_resourceAlertListeners.keySet()
-            .forEach(t -> t.alert(Message.fromSummaryWithResolution("Execution cancelled due to low system resources",
-                "Provide more resources to this execution context")));
+    private void callResourceAlertListeners(final String warningMessage) {
+        var lowResourcesMessage = Message.fromSummaryWithResolution(warningMessage, DEFAULT_LOW_RESOURCE_RESOLUTION);
+        m_resourceAlertListeners.keySet().forEach(t -> t.alert(lowResourcesMessage));
     }
 
     /** Kill the process with the highest memory usage and call the kill callback */

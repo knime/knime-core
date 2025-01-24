@@ -86,7 +86,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private static final Consumer<List<String>> NOOP_APPENDER = l -> {};
 
     /** The cancel requested flag (null = not canceled, not null = custom message). */
-    private Message m_cancelMessage;
+    private Message m_cancelWithMessage;
 
     /** Progress of the execution between 0 and 1, or null if not available. */
     private Double m_progress;
@@ -151,7 +151,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public DefaultNodeProgressMonitor() {
         m_listeners = new CopyOnWriteArrayList<>();
-        m_cancelMessage = null;
+        m_cancelWithMessage = null;
         m_messageSupplier = NULL_SUPPLIER;
         m_messageAppender = NOOP_APPENDER;
         // add this progress monitor to the list of active ones
@@ -178,7 +178,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         if ((m_progress != null) || (m_messageSupplier.get() != null)) {
             m_changed = true;
         }
-        m_cancelMessage = null;
+        m_cancelWithMessage = null;
         m_progress = null;
         m_messageSupplier = NULL_SUPPLIER;
         m_messageAppender = NOOP_APPENDER;
@@ -188,7 +188,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return <code>true</code> if the execution of the <code>NodeModel</code> has been canceled.
      */
     protected boolean isCanceled() {
-        return m_cancelMessage != null || Thread.currentThread().isInterrupted();
+        return m_cancelWithMessage != null || Thread.currentThread().isInterrupted();
     }
 
     /**
@@ -201,7 +201,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     @Override
     public void checkCanceled() throws CanceledExecutionException {
         if (isCanceled()) {
-            throw new CanceledExecutionException(Objects.requireNonNullElse(m_cancelMessage, DEFAULT_CANCEL_MESSAGE));
+            throw new CanceledExecutionException(
+                Objects.requireNonNullElse(m_cancelWithMessage, DEFAULT_CANCEL_MESSAGE));
         }
     }
 
@@ -222,7 +223,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @since 5.5
      */
     public void setExecuteCanceled(final Message cancelMessage) {
-        m_cancelMessage = CheckUtils.checkArgumentNotNull(cancelMessage);
+        m_cancelWithMessage = CheckUtils.checkArgumentNotNull(cancelMessage);
     }
 
     /**

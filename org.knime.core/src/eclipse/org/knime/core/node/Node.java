@@ -1015,7 +1015,10 @@ public final class Node {
         } else {
             final Thread executingThread = Thread.currentThread();
             final ResourceAlertListener resourceAlertListener = message -> {
-                ((DefaultNodeProgressMonitor)exec.getProgressMonitor()).setExecuteCanceled(message);
+                var cancelationMessage = Message.fromSummaryWithResolution(
+                    "Node execution cancelled due to low resources:" + message.getSummary(),
+                    message.getResolutions().toArray(String[]::new));
+                ((DefaultNodeProgressMonitor)exec.getProgressMonitor()).setExecuteCanceled(cancelationMessage);
                 executingThread.interrupt();
             };
 
