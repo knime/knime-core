@@ -44,59 +44,31 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jul 23, 2024 (benjamin): created
+ *   Jan 24, 2025 (benjamin): created
  */
-package org.knime.core.data.util.memory;
-
-import java.util.function.LongConsumer;
-
-import org.knime.core.monitor.ExternalProcessType;
-import org.knime.core.monitor.ProcessWatchdog;
+package org.knime.core.monitor;
 
 /**
- * Watchdog that tracks the memory usage of KNIME AP and its external processes. If the total memory usage surpasses a
- * threshold, the external process with the highest memory usage gets killed forcibly. The watchdog uses the
- * proportional set size (PSS) of the processes and their subprocesses to determine their memory usage.
+ * Type of external process that is being monitored.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
- * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.4
- * @deprecated use {@link ProcessWatchdog} instead
  */
-@Deprecated
-public final class ExternalProcessMemoryWatchdog {
+public enum ExternalProcessType {
 
-    private static final ExternalProcessMemoryWatchdog INSTANCE = new ExternalProcessMemoryWatchdog();
+        /** Python2 integration process */
+        PYTHON_LEGACY,
 
-    /**
-     * @return the singleton instance of the watchdog
-     * @deprecated use {@link ProcessWatchdog} instead
-     */
-    @Deprecated
-    public static ExternalProcessMemoryWatchdog getInstance() {
-        return INSTANCE;
-    }
+        /** Python3 integration process */
+        PYTHON,
 
-    /**
-     * Start tracking the given external process. If the total memory usage of external processes surpasses a threshold,
-     * the process that uses most memory gets killed forcibly ({@link ProcessHandle#destroyForcibly()}). The
-     * <code>killCallback</code> is called for this process.
-     * <P>
-     * Note that the memory usage of the process and all subprocesses is tracked.
-     *
-     * @param process a handle for the process
-     * @param killCallback a callback that gets called before a process is killed by the watchdog. The argument of the
-     *            callback is the current memory usage of the process in kilo-bytes. The callback must not block. The
-     *            killing of the process cannot be prevented by freeing up memory. The callback must only be used to
-     *            record the reason why the process was killed.
-     * @deprecated use {@link ProcessWatchdog#trackProcess(ProcessHandle, LongConsumer)} instead
-     */
-    @Deprecated
-    @SuppressWarnings("static-method") // non-static for backward compatibility
-    public void trackProcess(final ProcessHandle process, final LongConsumer killCallback) {
-        ProcessWatchdog.getInstance().trackProcess(process, ExternalProcessType.OTHER, killCallback);
-    }
+        /** Conda environment creation process */
+        CONDA,
 
-    private ExternalProcessMemoryWatchdog() {
-    }
+        /** Tableau hyper process */
+        TABLEAU,
+
+        /** Everything else */
+        OTHER,
+
+    ;
 }

@@ -138,12 +138,14 @@ public final class ProcessWatchdog {
      * Note that the memory usage of the process and all subprocesses is tracked.
      *
      * @param process a handle for the process
+     * @param type the type of the external process
      * @param killCallback a callback that gets called before a process is killed by the watchdog. The argument of the
      *            callback is the current memory usage of the process in kilo-bytes. The callback must not block. The
      *            killing of the process cannot be prevented by freeing up memory. The callback must only be used to
      *            record the reason why the process was killed.
      */
-    public void trackProcess(final ProcessHandle process, final LongConsumer killCallback) {
+    public void trackProcess(final ProcessHandle process, final ExternalProcessType type,
+        final LongConsumer killCallback) {
         if (m_watchdogRunning) {
             var existingkillCallback = m_processesToKillCallbacks.putIfAbsent(process, killCallback);
             if (existingkillCallback != null) {
