@@ -195,6 +195,7 @@ public final class ProcessWatchdog {
 
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
+                @SuppressWarnings("null") // timeTracker is only null if ENABLE_TIME_TRACKER_FOR_DEBUGGING is false
                 @Override
                 public void run() {
                     var startTime = System.nanoTime();
