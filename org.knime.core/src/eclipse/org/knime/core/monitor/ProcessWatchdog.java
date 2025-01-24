@@ -46,7 +46,7 @@
  * History
  *   Jul 23, 2024 (benjamin): created
  */
-package org.knime.core.data.util.memory;
+package org.knime.core.monitor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -70,15 +70,13 @@ import gnu.trove.set.hash.TLongHashSet;
  * threshold, the external process with the highest memory usage gets killed forcibly. The watchdog uses the
  * proportional set size (PSS) of the processes and their subprocesses to determine their memory usage.
  *
- * TODO(AP-23844) Rename this class to ProcessWatchdog?
- *
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.4
+ * @since 5.5
  */
-public final class ExternalProcessMemoryWatchdog {
+public final class ProcessWatchdog {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ExternalProcessMemoryWatchdog.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ProcessWatchdog.class);
 
     private static final boolean ENABLE_TIME_TRACKER_FOR_DEBUGGING =
         Boolean.getBoolean("knime.processwatchdog.timetracker");
@@ -121,12 +119,12 @@ public final class ExternalProcessMemoryWatchdog {
         return -1;
     }
 
-    private static final ExternalProcessMemoryWatchdog INSTANCE = new ExternalProcessMemoryWatchdog();
+    private static final ProcessWatchdog INSTANCE = new ProcessWatchdog();
 
     /**
      * @return the singleton instance of the watchdog
      */
-    public static ExternalProcessMemoryWatchdog getInstance() {
+    public static ProcessWatchdog getInstance() {
         return INSTANCE;
     }
 
@@ -165,7 +163,7 @@ public final class ExternalProcessMemoryWatchdog {
     /** Set to false if we have warned once, and the memory usage did not drop below the limit */
     private boolean m_shouldWarnAboutKnimeProcessMemory = true;
 
-    private ExternalProcessMemoryWatchdog() {
+    private ProcessWatchdog() {
 
         // We only track memory usage on Linux systems that support PSS measurements
         if (ProcessStateUtil.supportsPSS() && ProcessStateUtil.supportsRSS() && MAX_MEMORY_KBYTES >= 0) {

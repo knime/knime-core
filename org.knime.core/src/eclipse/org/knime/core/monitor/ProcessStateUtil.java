@@ -46,7 +46,7 @@
  * History
  *   Jul 23, 2024 (benjamin): created
  */
-package org.knime.core.data.util.memory;
+package org.knime.core.monitor;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
