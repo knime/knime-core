@@ -65,7 +65,6 @@ import java.util.function.LongConsumer;
 import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
 
-import gnu.trove.map.hash.TObjectLongHashMap;
 import gnu.trove.set.hash.TLongHashSet;
 
 /**
@@ -87,7 +86,7 @@ public final class ProcessWatchdog {
     /** The polling interval for the watchdog in milliseconds. */
     private static final long POLLING_INTERVAL_MS = Long.getLong("knime.processwatchdog.pollinginterval", 250);
 
-    private static final ProcessHandle KNIME_PROCESS_HANDLE = ProcessHandle.current();
+    static final ProcessHandle KNIME_PROCESS_HANDLE = ProcessHandle.current();
 
     /**
      * The maximum memory that KNIME AP and external processes are allowed to allocate. <code>-1</code> means no limit
@@ -221,47 +220,17 @@ public final class ProcessWatchdog {
     }
 
     private void updateMemoryUsage() {
-        var memoryState = collectMemoryUsageState();
-
-        // Check if the total memory usage surpasses the threshold
-        if (memoryState.getTotalMemoryUsage() > MAX_MEMORY_KBYTES) {
-            killProcessWithHighestMemoryUsage(memoryState);
-        }
-
-        warnIfKnimeMemoryCloseToMemoryLimit(memoryState.getMemoryUsage(KNIME_PROCESS_HANDLE));
-
-        // Update monitoring values
-        KNIME_PROCESS_RSS.set(memoryState.getMemoryUsage(KNIME_PROCESS_HANDLE) * 1024);
-        var externalProcessUpdate = new HashMap<ExternalProcessType, Long>(ExternalProcessType.values().length);
-        m_trackedProcesses.forEach( //
-            (process, typeAndKillCallback) -> //
-            externalProcessUpdate.merge(typeAndKillCallback.type(), memoryState.getMemoryUsage(process) * 1024, Long::sum) //
-        );
-        EXTERNAL_PROCESS_PSS.putAll(externalProcessUpdate);
-    }
-
-    private void warnIfKnimeMemoryCloseToMemoryLimit(final long knimeMemory) {
-        // Warn if the memory usage of the JVM process itself is close to the limit
-        if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
-            if (m_shouldWarnAboutKnimeProcessMemory) {
-                LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
-                    + "KB in the container");
-                m_shouldWarnAboutKnimeProcessMemory = false;
-            }
-        } else {
-            m_shouldWarnAboutKnimeProcessMemory = true;
-        }
-    }
-
-    /** Collect the memory usage of all tracked external processes. Removes dead processes from the tracking. */
-    private ExternalProcessMemoryState collectMemoryUsageState() {
-        var memoryState = new ExternalProcessMemoryState();
+        var externalProcessMonitorUpdate = new HashMap<ExternalProcessType, Long>(ExternalProcessType.values().length);
+        long totalExternalProcessPss = 0;
+        long maxPss = -1;
+        ProcessHandle maxPssUsageProcess = null;
 
         // External process memory usage
         var iterator = m_trackedProcesses.entrySet().iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
             var process = entry.getKey();
+            var type = entry.getValue().type();
 
             // If the process is dead we do not need to track it anymore - remove it from the map
             if (!process.isAlive()) {
@@ -280,8 +249,19 @@ public final class ProcessWatchdog {
              * subprocess typically only lives for the duration of a single task. Moreover, in the Python kernel queue
              * scenario, new processes are initially very small, which helps keep the cost of collecting PSS minimal.
              */
-            memoryState.put(process, getPSSOfProcessTree(process.pid()));
+            var pss = getPSSOfProcessTree(process.pid());
+            totalExternalProcessPss += pss;
+
+            // Remember the process with the highest memory - this will be killed if we have memory pressure
+            if (pss > maxPss) {
+                maxPss = pss;
+                maxPssUsageProcess = process;
+            }
+
+            // Update the monitoring value for this process type
+            externalProcessMonitorUpdate.merge(type, pss * 1024, Long::sum);
         }
+        EXTERNAL_PROCESS_PSS.putAll(externalProcessMonitorUpdate);
 
         /* Collect KNIME AP process memory usage
          *
@@ -290,28 +270,38 @@ public final class ProcessWatchdog {
          * other processes. We do not sum up the memory usage of all subprocesses of KNIME AP because they are tracked
          * individually by the watchdog.
          */
-        memoryState.putKnimeProcess(getKnimeRSS());
+        var knimeRss = getKnimeRSS();
+        KNIME_PROCESS_RSS.set(knimeRss * 1024);
 
-        return memoryState;
+        // Kill the larges external process if the accumulated memory usage is above the threshold
+        if (totalExternalProcessPss + knimeRss > MAX_MEMORY_KBYTES && maxPssUsageProcess != null) {
+            killProcessWithHighestMemoryUsage(maxPssUsageProcess, maxPss);
+        }
+
+        warnIfKnimeMemoryCloseToMemoryLimit(knimeRss);
     }
 
-    /**
-     * Kill the process with the highest memory usage.
-     *
-     * @return <code>true</code> if there was an external process that was killed
-     */
-    private boolean killProcessWithHighestMemoryUsage(final ExternalProcessMemoryState memoryState) {
-        var processToKill = memoryState.getProcessWithMaxMemoryUsage();
-
-        if (processToKill == null) {
-            return false;
+    private void warnIfKnimeMemoryCloseToMemoryLimit(final long knimeMemory) {
+        // Warn if the memory usage of the JVM process itself is close to the limit
+        if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
+            if (m_shouldWarnAboutKnimeProcessMemory) {
+                LOGGER.warn("KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES
+                    + "KB in the container");
+                m_shouldWarnAboutKnimeProcessMemory = false;
+            }
+        } else {
+            m_shouldWarnAboutKnimeProcessMemory = true;
         }
+    }
+
+    /** Kill the process with the highest memory usage and call the kill callback */
+    private void killProcessWithHighestMemoryUsage(final ProcessHandle processToKill, final long memoryUsage) {
         // Call the kill callback
         var killCallback =
             Optional.ofNullable(m_trackedProcesses.remove(processToKill)).map(TypeAndKillCallback::killCallback);
         if (killCallback.isPresent()) {
             try {
-                killCallback.get().accept(memoryState.getMemoryUsage(processToKill));
+                killCallback.get().accept(memoryUsage);
             } catch (Throwable ex) { // NOSONAR: We want to make sure the callback cannot crash the watchdog
                 LOGGER.error("Error in kill callback for process " + processToKill + ".", ex);
             }
@@ -322,7 +312,6 @@ public final class ProcessWatchdog {
 
         // Kill the process
         processToKill.destroyForcibly();
-        return true;
     }
 
     //#endregion
@@ -416,81 +405,6 @@ public final class ProcessWatchdog {
                         ex);
                 }
             }
-        }
-    }
-
-    //#endregion
-
-    //#region ExternalProcessMemoryState
-
-    /** Utility class to store and collect the memory usage of external processes. Not thread-safe! */
-    private static final class ExternalProcessMemoryState {
-
-        private final TObjectLongHashMap<ProcessHandle> m_processToMemoryUsage;
-
-        private long m_totalMemoryUsage;
-
-        /** The memory usage of the process with the highest memory usage */
-        private long m_maxMemoryUsage;
-
-        /** The process with the highest memory usage */
-        private ProcessHandle m_maxMemoryUsageProcess;
-
-        public ExternalProcessMemoryState() {
-            m_processToMemoryUsage = new TObjectLongHashMap<>();
-            m_totalMemoryUsage = 0;
-            m_maxMemoryUsage = -1;
-        }
-
-        /**
-         * Collect the memory usage of the KNIME AP process.
-         *
-         * @param memoryUsage the memory usage
-         */
-        public void putKnimeProcess(final long memoryUsage) {
-            put(KNIME_PROCESS_HANDLE, memoryUsage, false);
-        }
-
-        /**
-         * Collect the memory usage of the given process.
-         *
-         * @param process the process
-         * @param memoryUsage the memory usage
-         */
-        public void put(final ProcessHandle process, final long memoryUsage) {
-            put(process, memoryUsage, true);
-        }
-
-        private void put(final ProcessHandle process, final long memoryUsage, final boolean canBeKilled) {
-
-            m_processToMemoryUsage.put(process, memoryUsage);
-
-            // Update the total memory usage
-            m_totalMemoryUsage += memoryUsage;
-
-            // Update the max memory usage
-            if (canBeKilled && memoryUsage > m_maxMemoryUsage) {
-                m_maxMemoryUsage = memoryUsage;
-                m_maxMemoryUsageProcess = process;
-            }
-        }
-
-        /**
-         * @param process the process
-         * @return the memory usage of the given process
-         */
-        public long getMemoryUsage(final ProcessHandle process) {
-            return m_processToMemoryUsage.get(process);
-        }
-
-        /** @return the total memory usage of all processes */
-        public long getTotalMemoryUsage() {
-            return m_totalMemoryUsage;
-        }
-
-        /** @return the process with the highest memory usage */
-        public ProcessHandle getProcessWithMaxMemoryUsage() {
-            return m_maxMemoryUsageProcess;
         }
     }
 
