@@ -53,6 +53,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -157,7 +159,8 @@ public final class ProcessWatchdog {
     public void trackProcess(final ProcessHandle process, final ExternalProcessType type,
         final LongConsumer killCallback) {
         if (m_watchdogRunning) {
-            var existingkillCallback = m_processesToKillCallbacks.putIfAbsent(process, killCallback);
+            var existingkillCallback =
+                m_trackedProcesses.putIfAbsent(process, new TypeAndKillCallback(type, killCallback));
             if (existingkillCallback != null) {
                 throw new IllegalArgumentException("The process " + process + " is already being tracked.");
             }
@@ -168,7 +171,10 @@ public final class ProcessWatchdog {
 
     //#region INSTANCE
 
-    private ConcurrentMap<ProcessHandle, LongConsumer> m_processesToKillCallbacks = new ConcurrentHashMap<>();
+    private record TypeAndKillCallback(ExternalProcessType type, LongConsumer killCallback) {
+    }
+
+    private ConcurrentMap<ProcessHandle, TypeAndKillCallback> m_trackedProcesses = new ConcurrentHashMap<>();
 
     private final boolean m_watchdogRunning;
 
@@ -223,6 +229,15 @@ public final class ProcessWatchdog {
         }
 
         warnIfKnimeMemoryCloseToMemoryLimit(memoryState.getMemoryUsage(KNIME_PROCESS_HANDLE));
+
+        // Update monitoring values
+        KNIME_PROCESS_RSS.set(memoryState.getMemoryUsage(KNIME_PROCESS_HANDLE) * 1024);
+        var externalProcessUpdate = new HashMap<ExternalProcessType, Long>(ExternalProcessType.values().length);
+        m_trackedProcesses.forEach( //
+            (process, typeAndKillCallback) -> //
+            externalProcessUpdate.merge(typeAndKillCallback.type(), memoryState.getMemoryUsage(process) * 1024, Long::sum) //
+        );
+        EXTERNAL_PROCESS_PSS.putAll(externalProcessUpdate);
     }
 
     private void warnIfKnimeMemoryCloseToMemoryLimit(final long knimeMemory) {
@@ -243,7 +258,7 @@ public final class ProcessWatchdog {
         var memoryState = new ExternalProcessMemoryState();
 
         // External process memory usage
-        var iterator = m_processesToKillCallbacks.entrySet().iterator();
+        var iterator = m_trackedProcesses.entrySet().iterator();
         while (iterator.hasNext()) {
             var entry = iterator.next();
             var process = entry.getKey();
@@ -292,10 +307,11 @@ public final class ProcessWatchdog {
             return false;
         }
         // Call the kill callback
-        var killCallback = m_processesToKillCallbacks.remove(processToKill);
-        if (killCallback != null) {
+        var killCallback =
+            Optional.ofNullable(m_trackedProcesses.remove(processToKill)).map(TypeAndKillCallback::killCallback);
+        if (killCallback.isPresent()) {
             try {
-                killCallback.accept(memoryState.getMemoryUsage(processToKill));
+                killCallback.get().accept(memoryState.getMemoryUsage(processToKill));
             } catch (Throwable ex) { // NOSONAR: We want to make sure the callback cannot crash the watchdog
                 LOGGER.error("Error in kill callback for process " + processToKill + ".", ex);
             }
