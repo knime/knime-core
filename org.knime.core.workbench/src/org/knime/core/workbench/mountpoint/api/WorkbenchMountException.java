@@ -44,30 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2024 (wiswedel): created
+ *   Jan 24, 2025 (wiswedel): created
  */
 package org.knime.core.workbench.mountpoint.api;
 
-import java.util.Map;
-import java.util.Optional;
-
-import org.knime.core.workbench.preferences.MountSettings;
-
 /**
- *
+ * Exceptions thrown when attempting to mount a mount point, including errors in 3rd party extension (buggy
+ * extensions) or actual issues when creating the mount point (e.g. a folder no longer exists).
  * @author wiswedel
  */
-public interface WorkbenchMountPointStateFactory<T extends WorkbenchMountPointState> {
+@SuppressWarnings("serial")
+public final class WorkbenchMountException extends Exception {
 
-    /**
-     * Mount point types contributing a default mount ID will also implement this and return the settings of an instance
-     * that would be created using no further configuration.
-     *
-     * @return a default instance for "default mount points", this implementation returns an empty optional.
-     */
-    default Optional<Map<String, String>> getDefaultSettings() {
-        return Optional.empty();
+    WorkbenchMountException(final String message) {
+        super(message);
     }
 
-    T newInstance(MountSettings settings);
+    WorkbenchMountException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
 }

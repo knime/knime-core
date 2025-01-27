@@ -126,6 +126,13 @@ public final class WorkbenchMountPointType {
         return Optional.ofNullable(m_defaultMountID);
     }
 
+    public Optional<MountSettings> getDefaultSettings() throws WorkbenchMountException {
+        // TODO this is duplicated? Extension define their default mount id in the extension point and in the
+        // implementation of the getDefault... method.
+        return instantiateStateFactory().getDefaultSettings() //
+            .map(map -> new MountSettings(m_defaultMountID, m_typeIdentifier, m_defaultMountID, true, 0, map));
+    }
+
     /**
      * Always returns <code>false</code>. Except for the one temp space provider implementation.
      * @return <code>false</code>. Almost always.
@@ -134,16 +141,24 @@ public final class WorkbenchMountPointType {
         return m_typeIdentifier.equals(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
     }
 
-    public WorkbenchMountPoint createMountPoint(final MountSettings settings) throws IOException {
-        final WorkbenchMountPointStateFactory<?> stateFactory;
-        try {
-            stateFactory = m_stateFactoryInitializer.get();
-        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
-            throw new IOException(String.format("Failed to create settings handler for extension with "
-                + "type identifier %s", m_typeIdentifier), ex.getCause());
-        }
+    public WorkbenchMountPoint createMountPoint(final MountSettings settings) throws WorkbenchMountException {
+        final WorkbenchMountPointStateFactory<?> stateFactory = instantiateStateFactory();
         final var mountPointState = stateFactory.newInstance(settings);
         return new WorkbenchMountPoint(this, settings, mountPointState);
+    }
+
+    /**
+     * @param stateFactory
+     * @return
+     * @throws IOException
+     */
+    private WorkbenchMountPointStateFactory<?> instantiateStateFactory() throws WorkbenchMountException {
+        try {
+            return m_stateFactoryInitializer.get();
+        } catch (ConcurrentException ex) { // NOSONAR ignoring exception, but using cause
+            throw new WorkbenchMountException(String.format("Failed to create settings handler for extension with "
+                + "type identifier %s", m_typeIdentifier), ex.getCause());
+        }
     }
 
     public static Map<String, WorkbenchMountPointType> collectDefinitions() {

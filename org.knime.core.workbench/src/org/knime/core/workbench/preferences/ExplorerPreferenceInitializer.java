@@ -44,7 +44,6 @@
  */
 package org.knime.core.workbench.preferences;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,10 +56,10 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.knime.core.util.CoreConstants;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountException;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.osgi.service.prefs.BackingStoreException;
@@ -89,42 +88,28 @@ public class ExplorerPreferenceInitializer extends AbstractPreferenceInitializer
         // EJB support removed in 5.4
     }
 
-    /**
-     * Loads the default mount points into default {@link PreferenceConstants#P_EXPLORER_MOUNT_POINT_XML}. This should
-     * be called if there are no other settings and you have to fall back to the old xml format.
-     *
-     * @since 8.5
-     */
     public static void loadDefaultMountPoints() {
-        IEclipsePreferences defaultPrefStore = DefaultScope.INSTANCE.getNode(WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID);
-
         List<WorkbenchMountPointType> addableDefs = WorkbenchMountTable.getAddableMountPointDefinitions();
         // Set the default mount points
-        final List<MountSettings> settingsList = new ArrayList<MountSettings>();
+        final List<MountSettings> settingsList = new ArrayList<>();
         final List<String> include = getIncludedDefaultMountPoints();
 
-        for (WorkbenchMountPointType<?> fac : addableDefs) {
-            if (fac.getDefaultMountID().stream().anyMatch(include::contains)) {
-                WorkbenchMountPoint<?> mp = null;
-                try {
-                    mp = fac.createMountPoint(fac.getDefaultMountID().orElseThrow(),
-                        WorkbenchMountPointStateFactory.EMPTY_STORAGE);
-                    settingsList.add(new MountSettings(mp));
-                } catch (IOException ioe) {
-                    LoggerFactory.getLogger(ExplorerPreferenceInitializer.class).atError().setCause(ioe).log(
-                        "Failed to create mount point for default mount point with id '{}'", fac.getDefaultMountID());
-                } finally {
-                    if (mp != null) {
-                        mp.dispose();
-                    }
-                }
+        for (WorkbenchMountPointType fac : addableDefs) {
+            try {
+                fac.getDefaultSettings().ifPresent(settingsList::add);
+            } catch (WorkbenchMountException ioe) {
+                LoggerFactory.getLogger(ExplorerPreferenceInitializer.class).atError().setCause(ioe).log(
+                    "Failed to create mount point for default mount point with id '{}'", fac.getDefaultMountID());
+            }
+            if (fac.getDefaultMountID().filter(include::contains).isPresent()) {
+                // TODO?
             }
         }
+        // Sort Mount Points in such a way that the KNIME Hub is on top (SRV-2308)
+        settingsList.sort((e1, e2) -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e1.getDefaultMountID()) ? -1
+            : CoreConstants.KNIME_HUB_MOUNT_ID.equals(e2.getDefaultMountID()) ? 1 : 0);
 
-        if (!settingsList.isEmpty()) {
-            defaultPrefStore.put(WorkbenchConstants.P_EXPLORER_MOUNT_POINT_XML,
-                MountSettings.getSettingsString(settingsList));
-        }
+        MountSettings.saveMountSettings(settingsList);
     }
 
     /**

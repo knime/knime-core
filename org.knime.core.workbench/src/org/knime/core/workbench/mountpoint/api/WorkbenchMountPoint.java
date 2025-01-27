@@ -94,6 +94,10 @@ public final class WorkbenchMountPoint {
         return m_state;
     }
 
+    public MountSettings getSettings() {
+        return m_settings;
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends MountPointProvider, S2 extends WorkbenchMountPointState> T
         getProvider(final Class<T> providerType, final Function<S2, T> providerFactory) {

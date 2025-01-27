@@ -44,7 +44,6 @@
  */
 package org.knime.core.workbench.preferences;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -56,8 +55,9 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListe
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.NodeChangeEvent;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountException;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,9 +115,9 @@ public final class ExplorerPrefsSyncer implements IPreferenceChangeListener, INo
                 continue;
             }
             try {
-                WorkbenchMountTable.mount(ms.getMountID(), ms.getFactoryID(), ms.getContent());
-            } catch (IOException e) {
-                LOGGER.atError().setCause(e).log("Mount point \"{}\" could not be mounted.", ms.getDisplayName());
+                WorkbenchMountTable.mount(ms);
+            } catch (WorkbenchMountException ex) {
+                LOGGER.atError().setCause(ex).log("Mount point \"{}\" could not be mounted.", ms.getDisplayName());
             }
         }
 

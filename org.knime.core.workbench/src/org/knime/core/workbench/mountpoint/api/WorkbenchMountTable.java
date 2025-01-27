@@ -62,7 +62,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.function.FailableFunction;
-import org.eclipse.osgi.storage.Storage;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.events.MountPointEvent;
@@ -147,14 +146,14 @@ public final class WorkbenchMountTable {
      * @param mountID name under which the content is mounted
      * @param providerID the provider factory id
      * @return a new content provider instance - or null if user canceled.
-     * @throws IOException if the mounting fails
+     * @throws WorkbenchMountException if the mounting fails
      */
-    public static WorkbenchMountPoint mount(final String mountID, final String providerID) throws IOException {
-        WorkbenchMountPointType definition =
-            WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
-                .orElseThrow(() -> new IOException("No mount point definition found for " + providerID));
-        return mountOrRestore(mountID, definition, WorkbenchMountPointStateFactory.EMPTY_STORAGE);
-    }
+//    public static WorkbenchMountPoint mount(final String mountID, final String providerID) throws WorkbenchMountException {
+//        WorkbenchMountPointType definition =
+//            WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
+//                .orElseThrow(() -> new WorkbenchMountException("No mount point definition found for " + providerID));
+//        return mountOrRestore(mountID, definition, WorkbenchMountPointStateFactory.EMPTY_STORAGE);
+//    }
 
     /**
      * Valid mount IDs must comply with the hostname restrictions. That is, they
@@ -251,13 +250,12 @@ public final class WorkbenchMountTable {
      * @return a new content provider instance - or null if user canceled.
      * @throws IOException if the mounting fails
      */
-    public static WorkbenchMountPoint mount(final String mountID, final String providerID,
-            final String storage) throws IOException {
-        WorkbenchMountPointType definition =
-            WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
-                .orElseThrow(() -> new IOException("No mount point definition found for " + providerID));
-        return mountOrRestore(mountID, definition,
-            storage == null ? WorkbenchMountPointStateFactory.EMPTY_STORAGE : new Storage(storage));
+    public static WorkbenchMountPoint mount(final MountSettings mountSettings) throws WorkbenchMountException {
+        final String factoryID = mountSettings.getFactoryID();
+        WorkbenchMountPointType type =
+            WorkbenchActivator.getInstance().getMountPointDefinition(factoryID)
+                .orElseThrow(() -> new WorkbenchMountException("No mount point definition found for " + factoryID));
+        return mountOrRestore(type, mountSettings);
     }
 
     /**
@@ -271,31 +269,32 @@ public final class WorkbenchMountTable {
      * @param active
      * @return
      */
-    private static WorkbenchMountPoint mountOrRestore(final String mountID,
-            final WorkbenchMountPointType definition, final Storage storage) throws IOException {
+    private static WorkbenchMountPoint mountOrRestore(final WorkbenchMountPointType definition,
+        final MountSettings settings) throws WorkbenchMountException {
+        final String mountID = settings.getMountID();
         checkMountID(mountID);
         WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
             // can't mount different providers with the same ID
             WorkbenchMountPoint existMp = MOUNTED.get(mountID);
             if (existMp != null) {
-                if (!Objects.equals(existMp.getDefinition(), definition)) {
+                final WorkbenchMountPointType type = existMp.getDefinition();
+                if (!Objects.equals(type, definition)) {
                     LOGGER.debug("The mount point definition with the specified type ({}) is already mounted with "
                             + "requested ID ({}).", definition.getTypeIdentifier(), mountID);
                     return existMp;
                 }
-                throw new IOException(String.format("There is a different content mounted with the same mountID "
-                    + "\"%s\" but different type: \"%s\" vs \"%s\"",
-                    mountID, definition.getTypeIdentifier(), existMp.getDefinition().getTypeIdentifier()));
+                throw new WorkbenchMountException(String.format("There is a different content mounted with the "
+                    + "same mountID \"%s\" but different type: \"%s\" vs \"%s\"",
+                    mountID, definition.getTypeIdentifier(), type.getTypeIdentifier()));
             }
 
-            // TODO review checked exception type
             if (!definition.supportsMultipleInstances() && isMounted(definition.getTypeIdentifier())) {
-                // should be prevented by the UI, hence unchecked exception
-                throw new IllegalStateException("Cannot mount " + definition.getTypeIdentifier() + " multiple times.");
+                throw new WorkbenchMountException(
+                    String.format("Cannot mount %s multiple times.", definition.getTypeIdentifier()));
             }
 
-            mp = definition.createMountPoint(mountID, storage);
+            mp = definition.createMountPoint(settings);
             MOUNTED.put(mountID, mp);
         }
         notifyMountPointAdded(new MountPointEvent(mp));
@@ -410,17 +409,7 @@ public final class WorkbenchMountTable {
                     continue;
                 }
                 String mountID = ms.getMountID();
-                String storage = ms.getContent();
-                if (storage == null) {
-                    LOGGER.error("Corrupted mount table state storage. Can't restore mount point \"{}\".", mountID);
-                    continue;
-                }
-
-                String factID = ms.getFactoryID();
-                if (factID == null) {
-                    LOGGER.error("Corrupted mount table state storage. Can't restore mount point \"{}\".", mountID);
-                    continue;
-                }
+                final String factID = ms.getFactoryID();
 
                 WorkbenchMountPointType definition =
                         WorkbenchActivator.getInstance().getMountPointDefinition(factID).orElse(null);
@@ -431,7 +420,7 @@ public final class WorkbenchMountTable {
                 }
 
                 try {
-                    if (mountOrRestore(mountID, definition, new Storage(storage)) == null) {
+                    if (mountOrRestore(definition, ms) == null) {
                         LOGGER.error("Unable to restore mount point '{}' (from {}: returned null).", mountID, factID);
                     }
                 } catch (Throwable t) {
@@ -454,15 +443,18 @@ public final class WorkbenchMountTable {
             LOGGER.error("No mount point definition for temp space found.");
             return;
         }
-        final WorkbenchMountPointType tempDef = tempDefOptional.get();
-        String mountID = tempDef.getDefaultMountID().orElse(null);
-        if (tempDef.isTemporaryMountPoint() && mountID != null) {
+        final WorkbenchMountPointType tempDefType = tempDefOptional.get();
+        String mountID = tempDefType.getDefaultMountID().orElse(null);
+        if (tempDefType.isTemporaryMountPoint() && mountID != null) {
             try {
-                mountOrRestore(mountID, tempDef, WorkbenchMountPointStateFactory.EMPTY_STORAGE);
-                LOGGER.info("Mounted Explorer Temp Space '{}' - {}", mountID, tempDef.getTypeIdentifier());
-            } catch (IOException e) {
+                final MountSettings defaultTempSettings =
+                    tempDefType.getDefaultSettings().orElseThrow(() -> new WorkbenchMountException(
+                        "Temporary mount point definition does not provide default settings."));
+                mountOrRestore(tempDefType, defaultTempSettings);
+                LOGGER.debug("Mounted Explorer Temp Space '{}' - {}", mountID, tempDefType.getTypeIdentifier());
+            } catch (WorkbenchMountException e) {
                 LOGGER.atError().setCause(e).log("Unable to mount the temp space '{}' - {}", mountID,
-                    tempDef.getTypeIdentifier());
+                    tempDefType.getTypeIdentifier());
             }
         }
     }
@@ -473,23 +465,15 @@ public final class WorkbenchMountTable {
      * @since 7.3
      */
     public static void updateProviderSettings() {
-        List<MountSettings> mountSettingsToSave = new ArrayList<>();
+        final List<MountSettings> mountSettingsToSave;
         synchronized (MOUNTED) {
-            for (MountSettings ms : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
-                WorkbenchMountPoint workbenchMountPoint = MOUNTED.get(ms.getMountID());
-                if (workbenchMountPoint != null) {
-                    try {
-                        ms = new MountSettings(workbenchMountPoint);
-                    } catch (IOException ex) {
-                        LOGGER.atError().setCause(ex).log("Failed to update mount point settings for '{}'",
-                            ms.getMountID());
-                        // ignored, save unchanged
-                    }
-                }
-                mountSettingsToSave.add(ms);
-            }
+            mountSettingsToSave = MountSettings.loadSortedMountSettingsFromPreferences(false).stream() //
+                .map(MountSettings::getMountID) //
+                .map(MOUNTED::get) //
+                .filter(Objects::nonNull) //
+                .map(WorkbenchMountPoint::getSettings) //
+                .toList();
         }
         MountSettings.saveMountSettings(mountSettingsToSave);
-
     }
 }
