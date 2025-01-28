@@ -51,6 +51,7 @@ package org.knime.core.monitor;
 /**
  * Type of external process that is being monitored.
  *
+ * @since 5.5
  * @author Benjamin Wilhelm, KNIME GmbH, Berlin, Germany
  */
 public enum ExternalProcessType {
