@@ -48,7 +48,11 @@
  */
 package org.knime.core.data.convert.util;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.AbstractConverterFactoryRegistry;
@@ -66,7 +70,6 @@ import org.knime.core.data.convert.map.ProducerRegistry;
 import org.knime.core.data.convert.map.ProductionPath;
 import org.knime.core.data.convert.map.Source;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBaseWO;
 
@@ -197,7 +200,7 @@ public final class SerializeUtil {
         config.addString(key + "_src", typeToString(factory.getSourceType()));
         config.addString(key + "_dst", typeToString(factory.getDestinationType()));
         config.addString(key + "_name", factory.getName());
-        final ConfigBase factoryConfig = config.addConfigBase(key + "_config");
+        final var factoryConfig = config.addConfigBase(key + "_config");
         factory.storeAdditionalConfig(factoryConfig);
     }
 
@@ -210,6 +213,28 @@ public final class SerializeUtil {
         }
 
         return type.toString();
+    }
+
+    public static Collection<String> historicToStringOutputsForNamedTypes(final DataType type,
+        final boolean includeCurrent) {
+        final var output = new ArrayList<String>();
+
+        var names = Arrays.stream(type.getHistoricNames());
+        if (includeCurrent) {
+            names = Stream.concat(Stream.of(type.getName()), names);
+        }
+
+        for (final var name : names.toList()) {
+            if (type.getCollectionElementType() instanceof DataType elemType) {
+                final var elemTypeToStrings = historicToStringOutputsForNamedTypes(elemType, true);
+                for (final var elemTypeToString : elemTypeToStrings) {
+                    output.add(name + " (Collection of: " + elemTypeToString + ")");
+                }
+            } else {
+                output.add(name);
+            }
+        }
+        return output;
     }
 
     /**

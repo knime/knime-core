@@ -92,5 +92,10 @@ public interface ListDataValue extends CollectionDataValue {
         public String getName() {
             return "Collection (List)";
         }
+
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"List"};
+        }
     }
 }

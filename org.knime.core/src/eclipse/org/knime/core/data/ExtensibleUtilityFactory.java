@@ -301,16 +301,21 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     }
 
     /**
-     * Returns a name for the data value this utility factory is responsible for. This name may change at any time and
-     * should not be used for any kind of type identification.
+     * Returns a human-readable name for the data value this utility factory is responsible for. This name may change at
+     * any time and should not be used for any kind of type identification.
      *
-     * @return a (short) name
+     * @return a (short) name, never <code>null</code>
      */
     public abstract String getName();
 
     /**
-     * {@inheritDoc}
+     * TODO
+     * @return
      */
+    public String[] getHistoricNames() {
+        return new String[0];
+    }
+
     @Override
     protected final DataValueRendererFamily getRendererFamily(final DataColumnSpec spec) {
         readRenderersFromExtensionPoint();

@@ -79,6 +79,11 @@ public final class PeriodUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
+    public String[] getHistoricNames() {
+        return new String[]{"Period"};
+    }
+
+    @Override
     public String getGroupName() {
         return "Basic";
     }

@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
  *
@@ -43,77 +44,16 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   21.01.2009 (meinl): created
+ *   22 Jan 2025 (jasper): created
  */
-package org.knime.core.data;
-
-import javax.swing.Icon;
-
-import org.knime.core.data.convert.DataValueAccessMethod;
-import org.knime.core.node.util.SharedIcons;
+package org.knime.core.data.convert.map;
 
 /**
- * Interface supporting generic long values.
  *
- * @author Thorsten Meinl, University of Konstanz
+ * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
  */
-public interface LongValue extends DataValue {
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    UtilityFactory UTILITY = new LongUtilityFactory();
+public interface IdentifiableType {
 
-    /**
-     * @return A generic <code>long</code> value.
-     */
-    @DataValueAccessMethod(name = "Long")
-    long getLongValue();
+    String getIdentifier();
 
-    /** Implementations of the meta information of this value class. */
-    class LongUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = SharedIcons.TYPE_LONG.get();
-
-        private static final LongValueComparator COMPARATOR =
-            new LongValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected LongUtilityFactory() {
-            super(LongValue.class);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return COMPARATOR;
-        }
-
-        @Override
-        public String getName() {
-            return "Number (Long Integer)";
-        }
-
-        @Override
-        public String[] getHistoricNames() {
-            return new String[]{"Number (long)"};
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Basic";
-        }
-    }
 }

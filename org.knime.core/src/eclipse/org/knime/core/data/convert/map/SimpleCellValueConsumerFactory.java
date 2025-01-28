@@ -48,7 +48,11 @@
  */
 package org.knime.core.data.convert.map;
 
+import java.util.List;
+
+import org.knime.core.data.DataType;
 import org.knime.core.data.convert.map.Destination.ConsumerParameters;
+import org.knime.core.data.convert.util.SerializeUtil;
 
 /**
  * Simple implementation of {@link CellValueConsumerFactory} that allows passing the consumption procedure as a lambda
@@ -88,7 +92,21 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
 
     @Override
     public String getIdentifier() {
-        return m_sourceType.getName() + "->" + m_externalType;
+        if (m_externalType instanceof IdentifiableType it) {
+            return m_sourceType.getName() + "->" + it.getIdentifier();
+        } else {
+            return m_sourceType.getName() + "->" + m_externalType.toString();
+        }
+    }
+
+    @Override
+    public Iterable<String> getIdentifierAliases() {
+        if (m_externalType instanceof DataType dt) {
+            return SerializeUtil.historicToStringOutputsForNamedTypes(dt, false).stream()
+                .map(name -> m_sourceType.getName() + "->" + name).toList();
+        } else {
+            return List.of();
+        }
     }
 
     @Override

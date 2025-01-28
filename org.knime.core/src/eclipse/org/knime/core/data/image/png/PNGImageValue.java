@@ -120,6 +120,11 @@ public interface PNGImageValue extends ImageValue {
             return "Image (PNG)";
         }
 
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"PNG Image"};
+        }
+
         /**
          * {@inheritDoc}
          */

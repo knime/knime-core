@@ -111,6 +111,11 @@ public interface BooleanValue extends DataValue {
             return "Boolean";
         }
 
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"Boolean value"};
+        }
+
         /**
          * {@inheritDoc}
          */

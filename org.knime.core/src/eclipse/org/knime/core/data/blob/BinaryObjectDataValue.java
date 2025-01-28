@@ -121,6 +121,11 @@ public interface BinaryObjectDataValue extends DataValue {
         public String getName() {
             return "Binary Object";
         }
+
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"Binary object"};
+        }
     }
 
     /**

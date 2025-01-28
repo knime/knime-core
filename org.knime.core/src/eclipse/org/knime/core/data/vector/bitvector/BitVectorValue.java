@@ -243,5 +243,10 @@ public interface BitVectorValue extends DataValue {
         public String getName() {
             return "Bit Vector";
         }
+
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"Bit vector"};
+        }
     }
 }

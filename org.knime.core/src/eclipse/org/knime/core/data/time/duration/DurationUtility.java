@@ -88,6 +88,11 @@ public final class DurationUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
+    public String[] getHistoricNames() {
+        return new String[]{"Duration"};
+    }
+
+    @Override
     public String getGroupName() {
         return "Basic";
     }

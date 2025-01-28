@@ -71,6 +71,7 @@ import javax.swing.Icon;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.convert.map.IdentifiableType;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRendererFamily;
@@ -131,7 +132,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @see org.knime.core.data.DataValue
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class DataType {
+public final class DataType implements IdentifiableType {
 
     /**
      * Backward compatible class of a missing cell. The INSTANCE has been replaced by MissingCell in the same package
@@ -732,7 +733,7 @@ public final class DataType {
     /** a map that caches whether certain encountered types are subtypes of this type */
     private final Map<DataType, Boolean> m_subTypes = new ConcurrentHashMap<>(100, 1 / 3f);
 
-    private String m_name;
+    private final Optional<ExtensibleUtilityFactory> m_extensibleUtilityFactory;
 
     /** the cached hash code of this type */
     private final int m_hashCode;
@@ -767,6 +768,7 @@ public final class DataType {
         m_collectionElementType = collectionElementType;
         m_adapterValueList = adapterClasses;
         m_hashCode = computeHashCode();
+        m_extensibleUtilityFactory = Optional.empty();
     }
 
     /**
@@ -826,12 +828,10 @@ public final class DataType {
         m_collectionElementType = elementType;
 
         UtilityFactory utilityFac = DataType.getUtilityFor(getPreferredValueClass());
-        if (utilityFac instanceof ExtensibleUtilityFactory) {
-            m_name = ((ExtensibleUtilityFactory) utilityFac).getName();
-        } else if (m_cellClass != null) {
-            m_name = m_cellClass.getSimpleName();
+        if (utilityFac instanceof ExtensibleUtilityFactory euf) {
+            m_extensibleUtilityFactory = Optional.of(euf);
         } else {
-            m_name = null;
+            m_extensibleUtilityFactory = Optional.empty();
         }
         m_hashCode = computeHashCode();
     }
@@ -865,6 +865,7 @@ public final class DataType {
         m_collectionElementType = type.m_collectionElementType;
         m_adapterValueList = type.m_adapterValueList;
         m_hashCode = computeHashCode();
+        m_extensibleUtilityFactory = Optional.empty();
     }
 
     /**
@@ -905,6 +906,7 @@ public final class DataType {
         }
         m_cellClass = null;
         m_hashCode = computeHashCode();
+        m_extensibleUtilityFactory = Optional.empty();
     }
 
     /**
@@ -1377,6 +1379,22 @@ public final class DataType {
         return valueClasses;
     }
 
+    /** TODO */
+    @Override
+    public String getIdentifier() {
+        // must not change, must not contain dynamic info such as name etc...
+        final var b = new StringBuilder("DataType{");
+        if (m_cellClass != null) {
+            b.append(m_cellClass.getName());
+        } else {
+            b.append(Arrays.toString(m_valueClasses.toArray()));
+        }
+        if (m_collectionElementType != null) {
+            b.append("(" + m_collectionElementType.getIdentifier() + ")");
+        }
+        b.append("}");
+        return b.toString();
+    }
 
     /**
      * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
@@ -1386,7 +1404,25 @@ public final class DataType {
      * @since 3.0
      */
     public String getName() {
-        return (m_name != null) ? m_name : "?";
+        if (m_extensibleUtilityFactory.isPresent()) {
+            return m_extensibleUtilityFactory.get().getName();
+        } else if (m_cellClass != null) {
+            return m_cellClass.getName();
+        } else {
+            return "?";
+        }
+    }
+
+    /**
+     * TODO mulllm
+     * @return mulm
+     */
+    public String[] getHistoricNames() {
+        if (m_extensibleUtilityFactory.isPresent()) {
+            return m_extensibleUtilityFactory.get().getHistoricNames();
+        } else {
+            return new String[0];
+        }
     }
 
     /**
@@ -1431,9 +1467,11 @@ public final class DataType {
      */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder();
-        if (m_name != null) {
-            b.append(m_name);
+        final var b = new StringBuilder();
+        if (m_extensibleUtilityFactory.isPresent()) {
+            b.append(m_extensibleUtilityFactory.get().getName());
+        } else if (m_cellClass != null) {
+            b.append(m_cellClass.getName());
         } else {
             b.append("Non-Native ");
             b.append(Arrays.toString(m_valueClasses.toArray()));
@@ -1457,9 +1495,11 @@ public final class DataType {
      * @since 3.0
      */
     public String toPrettyString() {
-        StringBuilder b = new StringBuilder();
-        if (m_name != null) {
-            b.append(m_name);
+        final var b = new StringBuilder();
+        if (m_extensibleUtilityFactory.isPresent()) {
+            b.append(m_extensibleUtilityFactory.get().getName());
+        } else if (m_cellClass != null) {
+            b.append(m_cellClass.getName());
         } else {
             b.append("Non-Native ");
             for (int i = 0; i < Math.min(3, m_valueClasses.size()); i++) {

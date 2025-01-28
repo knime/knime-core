@@ -88,6 +88,11 @@ public final class LocalDateTimeUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
+    public String[] getHistoricNames() {
+        return new String[]{"Local Date Time"};
+    }
+
+    @Override
     public String getGroupName() {
         return "Basic";
     }

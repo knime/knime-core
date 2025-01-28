@@ -204,5 +204,10 @@ public interface ByteVectorValue extends DataValue {
         public String getName() {
             return "Byte Vector";
         }
+
+        @Override
+        public String[] getHistoricNames() {
+            return new String[]{"Byte vector"};
+        }
     }
 }

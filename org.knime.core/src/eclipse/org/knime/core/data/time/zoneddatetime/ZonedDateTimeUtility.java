@@ -88,6 +88,11 @@ public final class ZonedDateTimeUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
+    public String[] getHistoricNames() {
+        return new String[]{"Zoned Date Time"};
+    }
+
+    @Override
     public String getGroupName() {
         return "Basic";
     }
