@@ -311,6 +311,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     /**
      * TODO
      * @return
+     * @since 5.5
      */
     public String[] getHistoricNames() {
         return new String[0];

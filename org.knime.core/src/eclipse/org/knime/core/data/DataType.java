@@ -1416,6 +1416,7 @@ public final class DataType implements IdentifiableType {
     /**
      * TODO mulllm
      * @return mulm
+     * @since 5.5
      */
     public String[] getHistoricNames() {
         if (m_extensibleUtilityFactory.isPresent()) {

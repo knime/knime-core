@@ -215,6 +215,13 @@ public final class SerializeUtil {
         return type.toString();
     }
 
+    /**
+     * TODO docs, move this somewhere else?
+     * @param type
+     * @param includeCurrent
+     * @return historic tostring outputs
+     * @since 5.5
+     */
     public static Collection<String> historicToStringOutputsForNamedTypes(final DataType type,
         final boolean includeCurrent) {
         final var output = new ArrayList<String>();
@@ -225,7 +232,8 @@ public final class SerializeUtil {
         }
 
         for (final var name : names.toList()) {
-            if (type.getCollectionElementType() instanceof DataType elemType) {
+            final var elemType = type.getCollectionElementType();
+            if (elemType != null) {
                 final var elemTypeToStrings = historicToStringOutputsForNamedTypes(elemType, true);
                 for (final var elemTypeToString : elemTypeToStrings) {
                     output.add(name + " (Collection of: " + elemTypeToString + ")");

@@ -49,8 +49,10 @@
 package org.knime.core.data.convert.map;
 
 /**
+ * TODO is this class necessary?
  *
  * @author Jasper Krauter, KNIME GmbH, Konstanz, Germany
+ * @since 5.5
  */
 public interface IdentifiableType {
 
