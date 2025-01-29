@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core Workflow tests
 Bundle-SymbolicName: org.knime.core.workflow.tests;singleton:=true
-Bundle-Version: 5.4.0.qualifier
+Bundle-Version: 5.4.1.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.core;bundle-version="[5.4.0,6.0.0)"
 Automatic-Module-Name: org.knime.core.workflow.tests
