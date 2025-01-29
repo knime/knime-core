@@ -62,6 +62,7 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.eclipseUtil.EclipseProxyServiceInitializer;
+import org.knime.core.monitor.ApplicationHealth;
 import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.pathresolve.ResolverUtil;
@@ -126,6 +127,8 @@ public class CorePlugin implements BundleActivator {
     private ServiceTracker<APCustomizationProviderService, APCustomizationProviderService>
             m_customizationServiceTracker;
 
+    private ApplicationHealth m_applicationHealth;
+
     @Override
     public void start(final BundleContext context)
         throws Exception {
@@ -173,6 +176,8 @@ public class CorePlugin implements BundleActivator {
         /* Listening on the proxy service initialization, we can install multiple proxy-supporting services.
          * Needs to happen early to avoid interference with org.apache.cxf.transport.http.ReferencingAuthenticator. */
         EclipseProxyServiceInitializer.startListening(context);
+
+        m_applicationHealth = new ApplicationHealth();
     }
 
     private static void readMimeTypes() throws IOException {
@@ -195,6 +200,8 @@ public class CorePlugin implements BundleActivator {
         m_customizationServiceTracker = null;
         m_customizationServiceRegistration.unregister();
         m_customizationServiceRegistration = null;
+        m_applicationHealth.close();
+        m_applicationHealth = null;
         instance = null;
     }
 
