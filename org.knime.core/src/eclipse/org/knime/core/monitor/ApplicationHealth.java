@@ -48,11 +48,32 @@
  */
 package org.knime.core.monitor;
 
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.ObjectName;
 
 import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ApplicationHealthInternal;
 import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
+import org.knime.core.monitor.beans.ApplicationHealthMetric;
+import org.knime.core.monitor.beans.CounterMXBean;
+import org.knime.core.monitor.beans.CounterMXBean.Counter;
+import org.knime.core.monitor.beans.CountersMXBean;
+import org.knime.core.monitor.beans.GlobalPoolLoadMXBean;
+import org.knime.core.monitor.beans.GlobalPoolLoadMXBean.Load;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
@@ -62,15 +83,85 @@ import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
  * @author Bernd Wiswedel
  * @since 5.5
  */
-public final class ApplicationHealth {
+public final class ApplicationHealth implements AutoCloseable {
 
-    private ApplicationHealth() {
-        // utility class
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ApplicationHealth.class);
+
+    private final List<ObjectName> m_registeredBeans = new ArrayList<>();
+
+    /**
+     * Constructs a new instance, setting up relevant metrics frameworks (e.g. MXBeans).
+     */
+    public ApplicationHealth() {
+
+        final var metrics = new HashMap<>(Map.of( //
+            "org.knime.core:type=GlobalPool,name=load", //
+            (GlobalPoolLoadMXBean)() -> {
+                final var load = ApplicationHealth.getGlobalThreadPoolLoadAverages();
+                return new Load(load.avg1Min(), load.avg5Min(), load.avg15Min());
+            }, //
+            "org.knime.core:type=Memory,name=ObjectInstances", //
+            (CountersMXBean)() -> ApplicationHealth.getInstanceCounters() //
+                .stream() //
+                .map(ic -> new Counter(ic.getName(), ic.get())) //
+                .toList(), //
+            "org.knime.core:name=NodeStates", //
+            (CountersMXBean)() -> List.of( //
+                new Counter("executing", ApplicationHealth.getNodeStateExecutingCount()), //
+                new Counter("executed", ApplicationHealth.getNodeStateExecutedCount()), //
+                new Counter("other", ApplicationHealth.getNodeStateOtherCount()) //
+            )));
+
+        if (ProcessStateUtil.supportsRSS()) {
+            metrics.put("org.knime.core:type=Memory,name=KNIMErss",
+                (CounterMXBean)() -> new Counter("rssBytes", ApplicationHealth.getKnimeProcessRssBytes()));
+        }
+        if (ProcessStateUtil.supportsPSS()) {
+            metrics.put("org.knime.core:type=Memory,name=ExternalProcessesPss",
+                (CountersMXBean)() -> Arrays.stream(ExternalProcessType.values()) //
+                    .map(t -> new Counter(t.name(), ApplicationHealth.getExternalProcessesPssBytes(t))) //
+                    .toList());
+        }
+
+        final var mbs = ManagementFactory.getPlatformMBeanServer();
+        metrics.entrySet().stream() //
+            .map(b -> tryRegisterAsBean(mbs, b.getKey(), b.getValue())) //
+            .forEach(t -> t.ifPresent(m_registeredBeans::add));
     }
 
     /**
-     * InstanceCounter for various classes used within the framework, currently nodes and workflow projects.
-     * Content might change between releases.
+     * Unregisters metrics at relevant metrics frameworks.
+     */
+    @Override
+    public void close() {
+        final var mbs = ManagementFactory.getPlatformMBeanServer();
+        m_registeredBeans.forEach(t -> {
+            try {
+                mbs.unregisterMBean(t);
+            } catch (MBeanRegistrationException | InstanceNotFoundException ex) {
+                LOGGER.debug(() -> "Failed to unregister bean for %s, ignoring...".formatted(t.getCanonicalName()), ex);
+            }
+        });
+    }
+
+    private static Optional<ObjectName> tryRegisterAsBean(final MBeanServer mbs, final String name,
+        final ApplicationHealthMetric obj) {
+        try {
+            final var objectName = new ObjectName(name);
+            LOGGER.debug("Registering JMX bean for %s".formatted(name));
+            mbs.registerMBean(obj, objectName);
+            return Optional.of(objectName);
+        } catch (final InstanceAlreadyExistsException | MBeanRegistrationException | NotCompliantMBeanException
+                | MalformedObjectNameException ex) {
+            LOGGER.error(() -> "Failed to register %s with JMX.".formatted(obj.getClass().getSimpleName())
+                + " You can ignore this error, but relevant metrics will be unavailable.", ex);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * InstanceCounter for various classes used within the framework, currently nodes and workflow projects. Content
+     * might change between releases.
      *
      * @return That non-modifiable list.
      */
@@ -108,16 +199,19 @@ public final class ApplicationHealth {
 
     /**
      * Return type of {@link #getGlobalThreadPoolLoadAverages()}.
+     *
      * @param avg1Min 1min average load
      * @param avg5Min 5min average load
      * @param avg15Min 15min average load
      */
-    public record GlobalPoolLoadAverages(double avg1Min, double avg5Min, double avg15Min) {}
+    public record GlobalPoolLoadAverages(double avg1Min, double avg5Min, double avg15Min) {
+    }
 
     /**
      * The "load" average (estimate) of the global KNIME thread pool (as per
-     * {@link org.knime.core.node.KNIMEConstants#GLOBAL_THREAD_POOL}). That is, the number of concurrent jobs,
-     * usually node executions, that are running averaged over intervals of 1, 5, and 15min.
+     * {@link org.knime.core.node.KNIMEConstants#GLOBAL_THREAD_POOL}). That is, the number of concurrent jobs, usually
+     * node executions, that are running averaged over intervals of 1, 5, and 15min.
+     *
      * @return The load averages at the current time.
      */
     public static GlobalPoolLoadAverages getGlobalThreadPoolLoadAverages() {
