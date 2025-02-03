@@ -1458,6 +1458,7 @@ public final class DataType implements IdentifiableType {
     /**
      * TODO docs
      * @return
+     * @since 5.5
      */
     public String getLegacyStringRepresentation() {
         // TODO explain why this is needed

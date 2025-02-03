@@ -118,6 +118,7 @@ public class DataTableSpecExtractor {
 
     /**
      * Defines how the column type is represented in the table
+     * @since 5.5
      */
     public enum TypeNameFormat {
         /**
@@ -159,6 +160,7 @@ public class DataTableSpecExtractor {
     /**
      * Set the format of the type name
      * @param format
+     * @since 5.5
      */
     public void setTypeNameFormat(final TypeNameFormat format) {
         m_typeNameFormat = format;
