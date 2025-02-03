@@ -733,7 +733,7 @@ public final class DataType implements IdentifiableType {
     /** a map that caches whether certain encountered types are subtypes of this type */
     private final Map<DataType, Boolean> m_subTypes = new ConcurrentHashMap<>(100, 1 / 3f);
 
-    private final Optional<ExtensibleUtilityFactory> m_extensibleUtilityFactory;
+    private final Optional<UtilityFactory> m_utilityFactory;
 
     /** the cached hash code of this type */
     private final int m_hashCode;
@@ -768,7 +768,7 @@ public final class DataType implements IdentifiableType {
         m_collectionElementType = collectionElementType;
         m_adapterValueList = adapterClasses;
         m_hashCode = computeHashCode();
-        m_extensibleUtilityFactory = Optional.empty();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -827,12 +827,8 @@ public final class DataType implements IdentifiableType {
         }
         m_collectionElementType = elementType;
 
-        UtilityFactory utilityFac = DataType.getUtilityFor(getPreferredValueClass());
-        if (utilityFac instanceof ExtensibleUtilityFactory euf) {
-            m_extensibleUtilityFactory = Optional.of(euf);
-        } else {
-            m_extensibleUtilityFactory = Optional.empty();
-        }
+        final var utilityFac = DataType.getUtilityFor(getPreferredValueClass());
+        m_utilityFactory = Optional.of(utilityFac);
         m_hashCode = computeHashCode();
     }
 
@@ -865,7 +861,7 @@ public final class DataType implements IdentifiableType {
         m_collectionElementType = type.m_collectionElementType;
         m_adapterValueList = type.m_adapterValueList;
         m_hashCode = computeHashCode();
-        m_extensibleUtilityFactory = Optional.empty();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -906,7 +902,7 @@ public final class DataType implements IdentifiableType {
         }
         m_cellClass = null;
         m_hashCode = computeHashCode();
-        m_extensibleUtilityFactory = Optional.empty();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -1379,23 +1375,6 @@ public final class DataType implements IdentifiableType {
         return valueClasses;
     }
 
-    /** TODO */
-    @Override
-    public String getIdentifier() {
-        // must not change, must not contain dynamic info such as name etc...
-        final var b = new StringBuilder("DataType{");
-        if (m_cellClass != null) {
-            b.append(m_cellClass.getName());
-        } else {
-            b.append(Arrays.toString(m_valueClasses.toArray()));
-        }
-        if (m_collectionElementType != null) {
-            b.append("(" + m_collectionElementType.getIdentifier() + ")");
-        }
-        b.append("}");
-        return b.toString();
-    }
-
     /**
      * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
      * type of identification. Use {@link #getCellClass()} or similar instead.
@@ -1404,25 +1383,12 @@ public final class DataType implements IdentifiableType {
      * @since 3.0
      */
     public String getName() {
-        if (m_extensibleUtilityFactory.isPresent()) {
-            return m_extensibleUtilityFactory.get().getName();
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            return euf.getName();
         } else if (m_cellClass != null) {
             return m_cellClass.getName();
         } else {
             return "?";
-        }
-    }
-
-    /**
-     * TODO mulllm
-     * @return mulm
-     * @since 5.5
-     */
-    public String[] getHistoricNames() {
-        if (m_extensibleUtilityFactory.isPresent()) {
-            return m_extensibleUtilityFactory.get().getHistoricNames();
-        } else {
-            return new String[0];
         }
     }
 
@@ -1461,28 +1427,73 @@ public final class DataType implements IdentifiableType {
     }
 
     /**
-     * Returns the simple name of the {@link DataCell} class (if any) or
-     * <i>Non-Native</i> the <code>toString()</code> results of all compatible
-     * values classes.
-     * {@inheritDoc}
+     * Returns the simple name of the {@link DataCell} class (if any) or <i>Non-Native</i> the <code>toString()</code>
+     * results of all compatible values classes. {@inheritDoc}
      */
     @Override
     public String toString() {
-        final var b = new StringBuilder();
-        if (m_extensibleUtilityFactory.isPresent()) {
-            b.append(m_extensibleUtilityFactory.get().getName());
+        final var collectionElementTypeName =
+            Optional.ofNullable(getCollectionElementType()).map(DataType::toString).orElse(null);
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            return toString(euf.getName(), collectionElementTypeName);
         } else if (m_cellClass != null) {
-            b.append(m_cellClass.getName());
+            return toString(m_cellClass.getName(), collectionElementTypeName);
         } else {
-            b.append("Non-Native ");
-            b.append(Arrays.toString(m_valueClasses.toArray()));
+            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
         }
-        if (getCollectionElementType() != null) {
+    }
+
+    @Override
+    public String getIdentifier() {
+        // just like toString, but with simple class names and no dynamic info like display names
+        final var collectionElementTypeName =
+            Optional.ofNullable(getCollectionElementType()).map(DataType::getIdentifier).orElse(null);
+        if (m_cellClass != null) {
+            return toString(m_cellClass.getName(), collectionElementTypeName);
+        } else {
+            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
+        }
+    }
+
+    /**
+     * TODO docs
+     * @return
+     */
+    public String getLegacyStringRepresentation() {
+        // TODO explain why this is needed
+        final var collectionElementTypeName =
+            Optional.ofNullable(getCollectionElementType()).map(DataType::getLegacyStringRepresentation).orElse(null);
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            final var names = euf.getHistoricNames();
+            if (names.length > 0) {
+                return toString(names[0], collectionElementTypeName);
+            } else {
+                return toString(euf.getName(), collectionElementTypeName);
+            }
+        } else if (m_cellClass != null) {
+            return toString(m_cellClass.getName(), collectionElementTypeName);
+        } else {
+            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
+        }
+    }
+
+    /**
+     * TODO docs
+     * @param typeName
+     * @param collectionElementTypeName nullable
+     * @return
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    private static String toString(final String typeName, final String collectionElementTypeName) {
+        final var b = new StringBuilder();
+        b.append(typeName);
+        if (collectionElementTypeName != null) {
             b.append(" (Collection of: ");
-            b.append(getCollectionElementType().toString());
+            b.append(collectionElementTypeName);
             b.append(")");
         }
         return b.toString();
+
     }
 
     /**
@@ -1496,25 +1507,21 @@ public final class DataType implements IdentifiableType {
      * @since 3.0
      */
     public String toPrettyString() {
-        final var b = new StringBuilder();
-        if (m_extensibleUtilityFactory.isPresent()) {
-            b.append(m_extensibleUtilityFactory.get().getName());
+        final var collectionElementTypeName =
+            Optional.ofNullable(getCollectionElementType()).map(DataType::toString).orElse(null);
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            return toString(euf.getName(), collectionElementTypeName);
         } else if (m_cellClass != null) {
-            b.append(m_cellClass.getName());
+            return toString(m_cellClass.getName(), collectionElementTypeName);
         } else {
-            b.append("Non-Native ");
-            for (int i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
-                b.append(i == 0 ? "[" : ", ");
-                b.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
+            final var builder = new StringBuilder("Non-Native ");
+            for (var i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
+                builder.append(i == 0 ? "[" : ", ");
+                builder.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
             }
-            b.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+            builder.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+            return toString(builder.toString(), collectionElementTypeName);
         }
-        if (getCollectionElementType() != null) {
-            b.append(" (Collection of: ");
-            b.append(getCollectionElementType().toString());
-            b.append(")");
-        }
-        return b.toString();
     }
 
     private static String stripEnd(final String toStrip, final String... ends) {

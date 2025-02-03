@@ -52,7 +52,6 @@ import java.util.List;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
-import org.knime.core.data.convert.util.SerializeUtil;
 
 /**
  * Simple implementation of {@link CellValueProducerFactory} that allows passing the production function as a lambda
@@ -102,8 +101,7 @@ public class SimpleCellValueProducerFactory<S extends Source<ET>, ET, T, PP exte
     @Override
     public Iterable<String> getIdentifierAliases() {
         if (m_externalType instanceof DataType dt) {
-            return SerializeUtil.historicToStringOutputsForNamedTypes(dt, false).stream()
-                .map(name -> name + "->" + m_destType.getName()).toList();
+            return List.of(dt.getLegacyStringRepresentation() + "->" + m_destType.getName());
         } else {
             return List.of();
         }

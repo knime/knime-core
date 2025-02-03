@@ -53,7 +53,6 @@ import java.util.function.Supplier;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
-import org.knime.core.data.convert.util.SerializeUtil;
 
 /**
  * A {@link CellValueProducerFactory} that uses a {@link Supplier} to create new {@link CellValueProducer} instances.
@@ -101,8 +100,7 @@ public final class SupplierCellValueProducerFactory<S extends Source<ET>, ET, T,
     @Override
     public Iterable<String> getIdentifierAliases() {
         if (m_externalType instanceof DataType dt) {
-            return SerializeUtil.historicToStringOutputsForNamedTypes(dt, false).stream()
-                    .map(name -> name + "->" + m_destType.getName()).toList();
+            return List.of(dt.getLegacyStringRepresentation() + "->" + m_destType.getName());
         } else {
             return List.of();
         }
