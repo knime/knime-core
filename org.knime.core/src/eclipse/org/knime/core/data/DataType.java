@@ -1480,6 +1480,26 @@ public final class DataType implements IdentifiableType {
 
     /**
      * TODO docs
+     * @return oldest name
+     * @since 5.5
+     */
+    public String getLegacyName() {
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            final var names = euf.getHistoricNames();
+            if (names.length > 0) {
+                return names[0];
+            } else {
+                return euf.getName();
+            }
+        } else if (m_cellClass != null) {
+            return m_cellClass.getName();
+        } else {
+            return "?";
+        }
+    }
+
+    /**
+     * TODO docs
      * @param typeName
      * @param collectionElementTypeName nullable
      * @return
