@@ -116,6 +116,26 @@ public final class ApplicationHealthInternal {
             .setIgnoreCloseInvocation(false) //
             .start();
 
+    /**
+     * Intervals tracked in the load tracker observing the queue length of {@link KNIMEConstants#GLOBAL_THREAD_POOL}.
+     */
+    @SuppressWarnings("javadoc")
+    public enum QueueLengthAvgIntervals {
+        ONE_MIN, FIVE_MIN, FIFTEEN_MIN
+    }
+
+    /**
+     * The load tracker observing the queue length of {@link KNIMEConstants#GLOBAL_THREAD_POOL}, i.e. queued jobs.
+     */
+    public static final LoadTracker<QueueLengthAvgIntervals> QUEUE_LENGTH_LOAD_TRACKER =
+            LoadTracker.<QueueLengthAvgIntervals> builder(Duration.ofSeconds(5),
+                KNIMEConstants.GLOBAL_THREAD_POOL::getQueueSize) //
+            .addInterval(QueueLengthAvgIntervals.ONE_MIN, Duration.ofMinutes(1)) //
+            .addInterval(QueueLengthAvgIntervals.FIVE_MIN, Duration.ofMinutes(5)) //
+            .addInterval(QueueLengthAvgIntervals.FIFTEEN_MIN, Duration.ofMinutes(15)) //
+            .setIgnoreCloseInvocation(false) //
+            .start();
+
     private ApplicationHealthInternal() {
         // no op
     }

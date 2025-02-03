@@ -53,6 +53,7 @@ import java.util.List;
 import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ApplicationHealthInternal;
 import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
+import org.knime.core.internal.ApplicationHealthInternal.QueueLengthAvgIntervals;
 
 /**
  * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
@@ -107,12 +108,13 @@ public final class ApplicationHealth {
     }
 
     /**
-     * Return type of {@link #getGlobalThreadPoolLoadAverages()}.
+     * Return type of load average methods.
+     *
      * @param avg1Min 1min average load
      * @param avg5Min 5min average load
      * @param avg15Min 15min average load
      */
-    public record GlobalPoolLoadAverages(double avg1Min, double avg5Min, double avg15Min) {}
+    public record LoadAverages(double avg1Min, double avg5Min, double avg15Min) {}
 
     /**
      * The "load" average (estimate) of the global KNIME thread pool (as per
@@ -120,11 +122,24 @@ public final class ApplicationHealth {
      * usually node executions, that are running averaged over intervals of 1, 5, and 15min.
      * @return The load averages at the current time.
      */
-    public static GlobalPoolLoadAverages getGlobalThreadPoolLoadAverages() {
-        return new GlobalPoolLoadAverages(
+    public static LoadAverages getGlobalThreadPoolLoadAverages() {
+        return new LoadAverages(
             ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.ONE_MIN),
             ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.FIVE_MIN),
             ApplicationHealthInternal.GLOBAL_THREAD_POOL_LOAD_TRACKER.getLoadAverage(LoadAvgIntervals.FIFTEEN_MIN));
+    }
+
+    /**
+     * Estimates for the number of queued jobs in the global KNIME thread pool averaged over intervals of 1, 5, and
+     * 15min.
+     *
+     * @return average number of queued jobs at the current time
+     */
+    public static LoadAverages getGlobalThreadPoolQueuedAverages() {
+        return new LoadAverages(
+            ApplicationHealthInternal.QUEUE_LENGTH_LOAD_TRACKER.getLoadAverage(QueueLengthAvgIntervals.ONE_MIN),
+            ApplicationHealthInternal.QUEUE_LENGTH_LOAD_TRACKER.getLoadAverage(QueueLengthAvgIntervals.FIVE_MIN),
+            ApplicationHealthInternal.QUEUE_LENGTH_LOAD_TRACKER.getLoadAverage(QueueLengthAvgIntervals.FIFTEEN_MIN));
     }
 
     /**

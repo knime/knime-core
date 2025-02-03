@@ -68,8 +68,14 @@ final class ApplicationHealthTest {
 
     @SuppressWarnings("static-method")
     @Test
-    final void testLoadAverages() {
+    final void testThreadPoolLoadAverages() {
         assertTrue(ApplicationHealth.getGlobalThreadPoolLoadAverages().avg1Min() >= 0.0, "Reports load average >= 0.0");
     }
 
+    @SuppressWarnings("static-method")
+    @Test
+    final void testQueuedAverages() {
+        assertTrue(ApplicationHealth.getGlobalThreadPoolQueuedAverages().avg1Min() >= 0.0,
+                "Reports queue length average >= 0.0");
+    }
 }

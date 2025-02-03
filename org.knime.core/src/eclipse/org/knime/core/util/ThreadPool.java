@@ -803,11 +803,12 @@ public class ThreadPool {
     }
 
     /**
-     * Returns the size of the future queue (needed by the unit test).
+     * Returns the number of queued jobs.
      *
-     * @return the queue size
+     * @return number of queued jobs
+     * @since 5.5
      */
-    int getQueueSize() {
+    public int getQueueSize() {
         return m_queuedFutures.size();
     }
 }
