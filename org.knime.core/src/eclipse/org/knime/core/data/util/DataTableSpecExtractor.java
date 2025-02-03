@@ -63,7 +63,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.CloseableTable;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
@@ -92,6 +91,9 @@ public class DataTableSpecExtractor {
 
     private PossibleValueOutputFormat m_possibleValueOutputFormat = PossibleValueOutputFormat.Hide;
 
+    // For backward compatibility, the default is LEGACY_DISPLAY_NAME
+    private TypeNameFormat m_typeNameFormat = TypeNameFormat.LEGACY_DISPLAY_NAME;
+
     private boolean m_extractColumnNameAsColumn = true;
 
     /** How the color, shape, size handler are shown in the table. */
@@ -114,6 +116,26 @@ public class DataTableSpecExtractor {
         Columns
     }
 
+    /**
+     * Defines how the column type is represented in the table
+     */
+    public enum TypeNameFormat {
+        /**
+         * Name-agnostic identifier of the data type
+         */
+        IDENTIFIER,
+        /**
+         * Legacy string representation of the data type
+         * @deprecated
+         */
+        @Deprecated
+        LEGACY_DISPLAY_NAME,
+        /**
+         * Current display name of the data type
+         */
+        DISPLAY_NAME;
+    }
+
     /** ...
      * @param f ...
      */
@@ -132,6 +154,14 @@ public class DataTableSpecExtractor {
             throw new NullPointerException();
         }
         m_possibleValueOutputFormat = f;
+    }
+
+    /**
+     * Set the format of the type name
+     * @param format
+     */
+    public void setTypeNameFormat(final TypeNameFormat format) {
+        m_typeNameFormat = format;
     }
 
     /**
@@ -232,7 +262,14 @@ public class DataTableSpecExtractor {
             if (m_extractColumnNameAsColumn) {
                 cells.add(new StringCell(colSpec.getName()));
             }
-            cells.add(new StringCell(colSpec.getType().toString()));
+
+            final var typeName = switch (m_typeNameFormat) {
+                case IDENTIFIER -> colSpec.getType().getIdentifier();
+                case LEGACY_DISPLAY_NAME -> colSpec.getType().getLegacyStringRepresentation(); // NOSONAR: deprecated
+                case DISPLAY_NAME -> colSpec.getType().toString();
+            };
+            cells.add(new StringCell(typeName));
+
             cells.add(new IntCell(i));
 
             ColorHandler colorHandler = colSpec.getColorHandler();
