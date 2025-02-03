@@ -280,6 +280,10 @@ public final class MountSettings {
         return m_mountPointNumber;
     }
 
+    public Map<String, String> getAdditionalSettings() {
+        return Collections.unmodifiableMap(m_additionalSettings);
+    }
+
 //    /**
 //     * @param config the NodeSettings to save to
 //     */

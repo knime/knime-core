@@ -81,12 +81,12 @@ public final class WorkbenchActivator implements BundleActivator {
     /**
      * @return mount point definition for a type registered in an extension point
      */
-    public Optional<WorkbenchMountPointType> getMountPointDefinition(final String typeIdentifier) {
+    public Optional<WorkbenchMountPointType> getMountPointType(final String typeIdentifier) {
         return Optional.ofNullable(m_mountPointTypeMap.get(typeIdentifier));
     }
 
-    public WorkbenchMountPointType getMountPointDefinitionOrFail(final String typeIdentifier) {
-        return getMountPointDefinition(typeIdentifier)
+    public WorkbenchMountPointType getMountPointTypeOrFail(final String typeIdentifier) {
+        return getMountPointType(typeIdentifier)
             .orElseThrow(() -> new IllegalStateException(
                 String.format("No mount point definition found for \"%s\"", typeIdentifier)));
     }

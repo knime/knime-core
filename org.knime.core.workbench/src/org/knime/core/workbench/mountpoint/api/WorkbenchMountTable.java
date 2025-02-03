@@ -253,7 +253,7 @@ public final class WorkbenchMountTable {
     public static WorkbenchMountPoint mount(final MountSettings mountSettings) throws WorkbenchMountException {
         final String factoryID = mountSettings.getFactoryID();
         WorkbenchMountPointType type =
-            WorkbenchActivator.getInstance().getMountPointDefinition(factoryID)
+            WorkbenchActivator.getInstance().getMountPointType(factoryID)
                 .orElseThrow(() -> new WorkbenchMountException("No mount point definition found for " + factoryID));
         return mountOrRestore(type, mountSettings);
     }
@@ -412,7 +412,7 @@ public final class WorkbenchMountTable {
                 final String factID = ms.getFactoryID();
 
                 WorkbenchMountPointType definition =
-                        WorkbenchActivator.getInstance().getMountPointDefinition(factID).orElse(null);
+                        WorkbenchActivator.getInstance().getMountPointType(factID).orElse(null);
                 if (definition == null) {
                     LOGGER.error("Unknown mount type \"{}\" stored, can't restore mount point \"{}\".", factID,
                         mountID);
@@ -438,7 +438,7 @@ public final class WorkbenchMountTable {
     /* Mounts all hidden spaces that provide a default mount id. */
     private static void mountTempSpace() {
         final var tempDefOptional =
-                WorkbenchActivator.getInstance().getMountPointDefinition(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
+                WorkbenchActivator.getInstance().getMountPointType(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
         if (tempDefOptional.isEmpty()) {
             LOGGER.error("No mount point definition for temp space found.");
             return;

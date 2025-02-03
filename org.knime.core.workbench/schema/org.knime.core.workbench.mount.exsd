@@ -56,7 +56,7 @@
          <attribute name="stateFactoryClass" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  asdf
                </documentation>
                <appinfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory"/>
@@ -71,7 +71,7 @@
          <meta.section type="since"/>
       </appinfo>
       <documentation>
-         v5.4
+         v5.5
       </documentation>
    </annotation>
 

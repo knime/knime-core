@@ -59,7 +59,7 @@ import org.knime.core.workbench.preferences.MountSettings;
  */
 public final class WorkbenchMountPoint {
 
-    private final WorkbenchMountPointType m_definition;
+    private final WorkbenchMountPointType m_type;
 
     private final MountSettings m_settings;
 
@@ -67,19 +67,19 @@ public final class WorkbenchMountPoint {
 
     private final Map<Class<? extends MountPointProvider>, MountPointProvider> m_contentProviders;
 
-    WorkbenchMountPoint(final WorkbenchMountPointType definition, final MountSettings settings,
+    WorkbenchMountPoint(final WorkbenchMountPointType type, final MountSettings settings,
         final WorkbenchMountPointState state) {
-        m_definition = definition;
+        m_type = type;
         m_settings = settings;
         m_state = state;
         m_contentProviders = new LinkedHashMap<>();
     }
 
     /**
-     * @return the definition
+     * @return the type
      */
     public WorkbenchMountPointType getDefinition() {
-        return m_definition;
+        return m_type;
     }
 
     public String getMountID() {
