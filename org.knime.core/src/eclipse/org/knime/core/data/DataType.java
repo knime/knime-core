@@ -1376,23 +1376,6 @@ public final class DataType implements IdentifiableType {
     }
 
     /**
-     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
-     * type of identification. Use {@link #getCellClass()} or similar instead.
-     *
-     * @return a human-readable name for this data type or the cell class name if not available
-     * @since 3.0
-     */
-    public String getName() {
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            return euf.getName();
-        } else if (m_cellClass != null) {
-            return m_cellClass.getName();
-        } else {
-            return "?";
-        }
-    }
-
-    /**
      * Returns a cell factory that can create cells of this DataType. If no cell factory is available, an empty
      * {@link Optional} is returned.
      * The passed execution context is required by some factories for creating cells, therefore it's recommended to
@@ -1427,8 +1410,12 @@ public final class DataType implements IdentifiableType {
     }
 
     /**
-     * Returns the simple name of the {@link DataCell} class (if any) or <i>Non-Native</i> the <code>toString()</code>
-     * results of all compatible values classes. {@inheritDoc}
+     * If given, returns the specified name of the data type, as per {@link ExtensibleUtilityFactory#getName()}. If the
+     * name is not specified, returns the simple name of the {@link DataCell} class (if any) or "Non-Native " followed
+     * by the list of value classes.
+     *
+     * If the type has a collection element type, the string will be appended with " (Collection of: " followed by the
+     * string representation of the collection element type.
      */
     @Override
     public String toString() {
@@ -1443,25 +1430,18 @@ public final class DataType implements IdentifiableType {
         }
     }
 
-    @Override
-    public String getIdentifier() {
-        // just like toString, but with simple class names and no dynamic info like display names
-        final var collectionElementTypeName =
-            Optional.ofNullable(getCollectionElementType()).map(DataType::getIdentifier).orElse(null);
-        if (m_cellClass != null) {
-            return toString(m_cellClass.getName(), collectionElementTypeName);
-        } else {
-            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
-        }
-    }
-
     /**
-     * TODO docs
-     * @return
+     * Returns the same as {@link #toString()}, but assuming that the oldest name this data type has ever had would be
+     * the current. This is solely useful for backwards-compatibility and should not be used for any other purpose.
+     *
+     * @return The output of {@link #toString()}, assuming {@link #getLegacyName()} was the current name of the type.
      * @since 5.5
      */
     public String getLegacyStringRepresentation() {
-        // TODO explain why this is needed
+        // Some parts of our software (and potentially external plugins) rely (or relied) on the string representation
+        // of a type to uniquely identify the type. We highly discourage this practice, but for backwards-compatibility
+        // reasons, we provide this API to retrieve the oldest string representation of a type. This might be the same
+        // as the current output of #toString(), but might differ.
         final var collectionElementTypeName =
             Optional.ofNullable(getCollectionElementType()).map(DataType::getLegacyStringRepresentation).orElse(null);
         if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
@@ -1479,8 +1459,30 @@ public final class DataType implements IdentifiableType {
     }
 
     /**
-     * TODO docs
-     * @return oldest name
+     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
+     * type of identification. Use {@link #getIdentifier()} instead.
+     *
+     * @return a human-readable name for this data type or the cell class name if not available
+     * @since 3.0
+     */
+    public String getName() {
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            return euf.getName();
+        } else if (m_cellClass != null) {
+            return m_cellClass.getName();
+        } else {
+            return "?";
+        }
+    }
+
+    /**
+     * Retrieve the first ever name that this data type had. May be used for backwards-compatibility, but other usage is
+     * strongly discouraged. The returned name may also be the current name, if there are no historic names, or the cell
+     * class name if the utility factory does not provide names.
+     *
+     * @return oldest name of this data type
+     * @see #getName()
+     * @see ExtensibleUtilityFactory#getHistoricNames()
      * @since 5.5
      */
     public String getLegacyName() {
@@ -1498,12 +1500,24 @@ public final class DataType implements IdentifiableType {
         }
     }
 
+    @Override
+    public String getIdentifier() {
+        // just like toString, but with only class names and no dynamic info like display names
+        final var collectionElementTypeName =
+            Optional.ofNullable(getCollectionElementType()).map(DataType::getIdentifier).orElse(null);
+        if (m_cellClass != null) {
+            return toString(m_cellClass.getName(), collectionElementTypeName);
+        } else {
+            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
+        }
+    }
+
     /**
-     * TODO docs
-     * @param typeName
-     * @param collectionElementTypeName nullable
-     * @return
-     * @noreference This method is not intended to be referenced by clients.
+     * Helper method to generate a string representation given a name and possibly a name for the collection item type.
+     *
+     * @param typeName the name of the type
+     * @param collectionElementTypeName may be {@code null}.
+     * @return either just the typeName, or "typeName (Collection of: collectionElementTypeName)"
      */
     private static String toString(final String typeName, final String collectionElementTypeName) {
         final var b = new StringBuilder();
@@ -1518,11 +1532,16 @@ public final class DataType implements IdentifiableType {
     }
 
     /**
-     * A slightly nicer string representation that can be used in UI elements. It will strip off fully qualified name
-     * of data value interface if this a non-native type.
+     * A slightly nicer string representation that can be used in UI elements. It will strip off fully qualified name of
+     * data value interface if this a non-native type.
      *
-     * <p>For a non-native type, say a DoubleCell type with a different
-     * preferred value, it would return "Non-Native [ComplexNumber, Double, DataValue, ...]"
+     * <p>
+     * For a non-native type, say a DoubleCell type with a different preferred value, it would return "Non-Native
+     * [ComplexNumber, Double, DataValue, ...]"
+     * </p>
+     *
+     * The output of this method may change at any time and should not be used for any type of identification. Use
+     * {@link #getIdentifier()} instead.
      *
      * @return A (non-canonical) string representation of this type, never null.
      * @since 3.0
