@@ -104,7 +104,7 @@ public interface LongValue extends DataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Number (long)"};
         }
 

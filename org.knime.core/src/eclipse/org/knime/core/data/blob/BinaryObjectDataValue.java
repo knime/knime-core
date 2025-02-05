@@ -123,7 +123,7 @@ public interface BinaryObjectDataValue extends DataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Binary object"};
         }
     }

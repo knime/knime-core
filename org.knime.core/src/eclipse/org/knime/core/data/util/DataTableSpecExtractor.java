@@ -267,7 +267,7 @@ public class DataTableSpecExtractor {
 
             final var typeName = switch (m_typeNameFormat) {
                 case IDENTIFIER -> colSpec.getType().getIdentifier();
-                case LEGACY_DISPLAY_NAME -> colSpec.getType().getLegacyStringRepresentation(); // NOSONAR: deprecated
+                case LEGACY_DISPLAY_NAME -> colSpec.getType().toLegacyString(); // NOSONAR: deprecated
                 case DISPLAY_NAME -> colSpec.getType().toString();
             };
             cells.add(new StringCell(typeName));

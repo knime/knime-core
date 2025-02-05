@@ -88,7 +88,7 @@ public final class DurationUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
-    public String[] getHistoricNames() {
+    protected String[] getLegacyNames() {
         return new String[]{"Duration"};
     }
 

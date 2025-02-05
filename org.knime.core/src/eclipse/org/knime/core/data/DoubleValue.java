@@ -106,7 +106,7 @@ public interface DoubleValue extends DataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Number (double)"};
         }
 

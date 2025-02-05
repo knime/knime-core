@@ -63,6 +63,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -1419,15 +1420,7 @@ public final class DataType implements IdentifiableType {
      */
     @Override
     public String toString() {
-        final var collectionElementTypeName =
-            Optional.ofNullable(getCollectionElementType()).map(DataType::toString).orElse(null);
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            return toString(euf.getName(), collectionElementTypeName);
-        } else if (m_cellClass != null) {
-            return toString(m_cellClass.getName(), collectionElementTypeName);
-        } else {
-            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
-        }
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.STRING, m_collectionElementType);
     }
 
     /**
@@ -1437,98 +1430,12 @@ public final class DataType implements IdentifiableType {
      * @return The output of {@link #toString()}, assuming {@link #getLegacyName()} was the current name of the type.
      * @since 5.5
      */
-    public String getLegacyStringRepresentation() {
+    public String toLegacyString() {
         // Some parts of our software (and potentially external plugins) rely (or relied) on the string representation
         // of a type to uniquely identify the type. We highly discourage this practice, but for backwards-compatibility
         // reasons, we provide this API to retrieve the oldest string representation of a type. This might be the same
-        // as the current output of #toString(), but might differ.
-        final var collectionElementTypeName =
-            Optional.ofNullable(getCollectionElementType()).map(DataType::getLegacyStringRepresentation).orElse(null);
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            final var names = euf.getHistoricNames();
-            if (names.length > 0) {
-                return toString(names[0], collectionElementTypeName);
-            } else {
-                return toString(euf.getName(), collectionElementTypeName);
-            }
-        } else if (m_cellClass != null) {
-            return toString(m_cellClass.getName(), collectionElementTypeName);
-        } else {
-            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
-        }
-    }
-
-    /**
-     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
-     * type of identification. Use {@link #getIdentifier()} instead.
-     *
-     * @return a human-readable name for this data type or the cell class name if not available
-     * @since 3.0
-     */
-    public String getName() {
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            return euf.getName();
-        } else if (m_cellClass != null) {
-            return m_cellClass.getName();
-        } else {
-            return "?";
-        }
-    }
-
-    /**
-     * Retrieve the first ever name that this data type had. May be used for backwards-compatibility, but other usage is
-     * strongly discouraged. The returned name may also be the current name, if there are no historic names, or the cell
-     * class name if the utility factory does not provide names.
-     *
-     * @return oldest name of this data type
-     * @see #getName()
-     * @see ExtensibleUtilityFactory#getHistoricNames()
-     * @since 5.5
-     */
-    public String getLegacyName() {
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            final var names = euf.getHistoricNames();
-            if (names.length > 0) {
-                return names[0];
-            } else {
-                return euf.getName();
-            }
-        } else if (m_cellClass != null) {
-            return m_cellClass.getName();
-        } else {
-            return "?";
-        }
-    }
-
-    @Override
-    public String getIdentifier() {
-        // just like toString, but with only class names and no dynamic info like display names
-        final var collectionElementTypeName =
-            Optional.ofNullable(getCollectionElementType()).map(DataType::getIdentifier).orElse(null);
-        if (m_cellClass != null) {
-            return toString(m_cellClass.getName(), collectionElementTypeName);
-        } else {
-            return toString("Non-Native " + Arrays.toString(m_valueClasses.toArray()), collectionElementTypeName);
-        }
-    }
-
-    /**
-     * Helper method to generate a string representation given a name and possibly a name for the collection item type.
-     *
-     * @param typeName the name of the type
-     * @param collectionElementTypeName may be {@code null}.
-     * @return either just the typeName, or "typeName (Collection of: collectionElementTypeName)"
-     */
-    private static String toString(final String typeName, final String collectionElementTypeName) {
-        final var b = new StringBuilder();
-        b.append(typeName);
-        if (collectionElementTypeName != null) {
-            b.append(" (Collection of: ");
-            b.append(collectionElementTypeName);
-            b.append(")");
-        }
-        return b.toString();
-
+        // as the current output of #toString(), but might also differ.
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.STRING, m_collectionElementType);
     }
 
     /**
@@ -1547,24 +1454,93 @@ public final class DataType implements IdentifiableType {
      * @since 3.0
      */
     public String toPrettyString() {
-        final var collectionElementTypeName =
-            Optional.ofNullable(getCollectionElementType()).map(DataType::toString).orElse(null);
-        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
-            return toString(euf.getName(), collectionElementTypeName);
-        } else if (m_cellClass != null) {
-            return toString(m_cellClass.getName(), collectionElementTypeName);
-        } else {
-            final var builder = new StringBuilder("Non-Native ");
-            for (var i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
-                builder.append(i == 0 ? "[" : ", ");
-                builder.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
-            }
-            builder.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
-            return toString(builder.toString(), collectionElementTypeName);
-        }
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.PRETTY_STRING, m_collectionElementType);
     }
 
-    private static String stripEnd(final String toStrip, final String... ends) {
+    /**
+     * Returns the same as {@link #toPrettyString()}, but assuming that the oldest name this data type has ever had
+     * would be the current. This is solely useful for backwards-compatibility and should not be used for any other
+     * purpose. The output of this method may change at any time and should not be used for any type of identification.
+     *
+     * @return The output of {@link #toPrettyString()}, assuming {@link #getLegacyName()} was the current name of the
+     *         type.
+     */
+    public String toLegacyPrettyString() {
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.PRETTY_STRING, m_collectionElementType);
+    }
+
+    /**
+     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
+     * type of identification. Use {@link #getIdentifier()} instead.
+     *
+     * @return a human-readable name for this data type or the cell class name if not available
+     * @since 3.0
+     */
+    public String getName() {
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.NAME, null);
+    }
+
+    /**
+     * Retrieve the first ever name that this data type had. May be used for backwards-compatibility, but other usage is
+     * strongly discouraged. The returned name may also be the current name, if the name has never changed, or the cell
+     * class name if the utility factory does not provide names.
+     *
+     * @return oldest name of this data type
+     * @see #getName()
+     * @see ExtensibleUtilityFactory#getLegacyName()
+     * @since 5.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public String getLegacyName() {
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.NAME, null);
+    }
+
+    private enum OutputType {
+            NAME, STRING, PRETTY_STRING;
+    }
+
+    private String makeString(final Function<ExtensibleUtilityFactory, String> extractName,
+        final OutputType outputConfig, final DataType collectionElementType) {
+        final var sb = new StringBuilder();
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            sb.append(extractName.apply(euf));
+        } else if (m_cellClass != null) {
+            sb.append(m_cellClass.getName());
+        } else {
+            sb.append(makeNonNativeName(outputConfig));
+        }
+        if (collectionElementType != null && outputConfig != OutputType.NAME) {
+            sb.append(" (Collection of: ");
+            sb.append(collectionElementType.makeString(extractName, OutputType.STRING,
+                collectionElementType.getCollectionElementType()));
+            sb.append(")");
+        }
+        return sb.toString();
+    }
+
+    private String makeNonNativeName(final OutputType outputConfig) {
+        final var sb = new StringBuilder();
+        switch (outputConfig) {
+            case NAME:
+                sb.append("?");
+                break;
+            case STRING:
+                sb.append("Non-Native ");
+                sb.append(Arrays.toString(m_valueClasses.toArray()));
+                break;
+            case PRETTY_STRING: // NOSONAR: not too complicated code
+                sb.append("Non-Native ");
+                for (var i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
+                    sb.append(i == 0 ? "[" : ", ");
+                    sb.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
+                }
+                sb.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+                break;
+        }
+        return sb.toString();
+    }
+
+    private static final String stripEnd(final String toStrip, final String... ends) {
         if (Arrays.asList(ends).contains(toStrip)) {
             return toStrip;
         }
@@ -1573,6 +1549,22 @@ public final class DataType implements IdentifiableType {
             result = StringUtils.removeEndIgnoreCase(result, end);
         }
         return result;
+    }
+
+    @Override
+    public String getIdentifier() {
+        final var sb = new StringBuilder();
+        if (m_cellClass != null) {
+            sb.append(m_cellClass.getName());
+        } else {
+            sb.append(Arrays.toString(m_valueClasses.toArray()));
+        }
+        if (m_collectionElementType != null) {
+            sb.append("<");
+            sb.append(m_collectionElementType.getIdentifier());
+            sb.append(">");
+        }
+        return sb.toString();
     }
 
     private static final class ClassAndSubDataTypePair {

@@ -206,7 +206,7 @@ public interface ByteVectorValue extends DataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Byte vector"};
         }
     }

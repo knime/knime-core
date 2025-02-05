@@ -105,7 +105,7 @@ public interface IntValue extends DataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Number (integer)"};
         }
 

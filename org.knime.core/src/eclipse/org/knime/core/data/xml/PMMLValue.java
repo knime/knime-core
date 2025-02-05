@@ -107,7 +107,7 @@ public interface PMMLValue extends XMLValue<Document> {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"PMML"};
         }
     }

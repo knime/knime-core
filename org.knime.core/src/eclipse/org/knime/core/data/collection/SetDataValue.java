@@ -94,7 +94,7 @@ public interface SetDataValue extends CollectionDataValue {
         }
 
         @Override
-        public String[] getHistoricNames() {
+        protected String[] getLegacyNames() {
             return new String[]{"Set"};
         }
     }

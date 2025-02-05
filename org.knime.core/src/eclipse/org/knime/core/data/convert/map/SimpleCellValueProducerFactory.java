@@ -101,7 +101,7 @@ public class SimpleCellValueProducerFactory<S extends Source<ET>, ET, T, PP exte
     @Override
     public Iterable<String> getIdentifierAliases() {
         if (m_externalType instanceof DataType dt) {
-            return List.of(dt.getLegacyStringRepresentation() + "->" + m_destType.getName());
+            return List.of(dt.toLegacyString() + "->" + m_destType.getName());
         } else {
             return List.of();
         }

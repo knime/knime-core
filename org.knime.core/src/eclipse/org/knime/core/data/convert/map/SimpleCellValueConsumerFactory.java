@@ -101,7 +101,7 @@ public class SimpleCellValueConsumerFactory<D extends Destination<ET>, T, ET, CP
     @Override
     public Iterable<String> getIdentifierAliases() {
         if (m_externalType instanceof DataType dt) {
-            return List.of(m_sourceType.getName() + "->" + dt.getLegacyStringRepresentation());
+            return List.of(m_sourceType.getName() + "->" + dt.toLegacyString());
         } else {
             return List.of();
         }

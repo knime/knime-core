@@ -79,7 +79,7 @@ public final class PeriodUtility extends ExtensibleUtilityFactory {
     }
 
     @Override
-    public String[] getHistoricNames() {
+    protected String[] getLegacyNames() {
         return new String[]{"Period"};
     }
 
