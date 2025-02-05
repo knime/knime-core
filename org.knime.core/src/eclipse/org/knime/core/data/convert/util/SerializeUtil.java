@@ -210,46 +210,6 @@ public final class SerializeUtil {
 
         return type.toString();
     }
-//
-//    /**
-//     * This method emulates the {@link DataType#toString()} method for older names of the data type. This is needed in
-//     * the deserialization of configurations of the table manipulator, as it used this string to identify data
-//     * producers.
-//     *
-//     * @see DataType#toString()
-//     * @see DataType#getHistoricNames()
-//     *
-//     * @param type the data type
-//     * @return historic tostring outputs
-//     * @since 5.5
-//     * @noreference This method is not intended to be referenced by clients.
-//     */
-//    public static Collection<String> allCurrentAndHistoricToStringOutputsForNamedTypes(final DataType type) {
-//        return allCurrentAndHistoricToStringOutputsForNamedTypes(type, true);
-//    }
-
-//    private static Collection<String> allCurrentAndHistoricToStringOutputsForNamedTypes(final DataType type,
-//        final boolean includeCurrent) {
-//        final var output = new ArrayList<String>();
-//
-//        var names = Arrays.stream(type.getHistoricNames());
-//        if (includeCurrent) {
-//            names = Stream.concat(Stream.of(type.getName()), names);
-//        }
-//
-//        for (final var name : names.toList()) {
-//            final var elemType = type.getCollectionElementType();
-//            if (elemType != null) {
-//                final var elemTypeToStrings = allCurrentAndHistoricToStringOutputsForNamedTypes(elemType, true);
-//                for (final var elemTypeToString : elemTypeToStrings) {
-//                    output.add(name + " (Collection of: " + elemTypeToString + ")");
-//                }
-//            } else {
-//                output.add(name);
-//            }
-//        }
-//        return output;
-//    }
 
     /**
      * Load a {@link DataCellToJavaConverterFactory} from given config.

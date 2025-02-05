@@ -249,7 +249,7 @@ public class MappingFrameworkTest {
         assertFalse(pathE.equals(pathA));
         assertFalse(pathA.equals(null));
 
-        assertEquals("INT ---> Integer --(\"Integer\")-> Number (Integer)", pathA.toString());
+        assertEquals("INT ---> Integer --(\"Integer\")-> Number (integer)", pathA.toString());
 
         assertEquals(pathA.hashCode(), pathA.hashCode());
         assertEquals(pathA.hashCode(), pathB.hashCode());
