@@ -1464,6 +1464,7 @@ public final class DataType implements IdentifiableType {
      *
      * @return The output of {@link #toPrettyString()}, assuming {@link #getLegacyName()} was the current name of the
      *         type.
+     * @since 5.5
      */
     public String toLegacyPrettyString() {
         return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.PRETTY_STRING, m_collectionElementType);
