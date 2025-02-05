@@ -263,27 +263,12 @@ public final class FileUtil {
     public static void copy(final File file, final File destination, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         final long size = file.length();
-        byte[] cache = new byte[BUFF_SIZE];
-        CanceledExecutionException cee = null;
         try (OutputStream copyOutStream = new FileOutputStream(destination);
                 InputStream copyInStream = new FileInputStream(file)) {
-            int read;
-            long processed = 0;
             exec.setMessage("Copying \"" + file.getName() + "\"");
-            while ((read = copyInStream.read(cache, 0, cache.length)) > 0) {
-                copyOutStream.write(cache, 0, read);
-                processed += read;
-                exec.setProgress(processed / (double)size);
-                try {
-                    exec.checkCanceled();
-                } catch (CanceledExecutionException c) {
-                    cee = c;
-                    break;
-                }
-            }
-        }
-        // delete destination file if canceled.
-        if (cee != null) {
+            copy(copyInStream, copyOutStream, size, exec);
+        } catch (final CanceledExecutionException cee) {
+            // delete destination file if canceled.
             if (!destination.delete()) {
                 LOGGER.warn("Unable to delete \"" + destination.getName() + "\" after copying has been canceled.");
             }
@@ -323,6 +308,36 @@ public final class FileUtil {
             }
             copy(sourceDir, targetDir);
         }
+    }
+
+    /**
+     * Copies the bytes as read from <code>input</code> to the output stream
+     * <code>destination</code>. Neither <code>input</code> nor
+     * <code>destination</code> get closed at the end!
+     *
+     * @param input any input stream from which data is read. The stream does not need to be buffered.
+     * @param destination any output stream to which data is written. The stream does not need to be buffered.
+     * @param size number of bytes in the input (for progress reporting), values {@code < 0} mean "unknown"
+     * @param exec execution monitor, used for progress reporting and cancellation
+     * @throws IOException If that fails for any reason.
+     * @throws CanceledExecutionException if the user has cancelled
+     * @throws NullPointerException If any argument is <code>null</code>.
+     * @since 5.5
+     */
+    public static void copy(final InputStream input, final OutputStream destination, final long size,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        final var cache = new byte[BUFF_SIZE];
+        int read;
+        long processed = 0;
+        while ((read = input.read(cache, 0, cache.length)) > 0) {
+            destination.write(cache, 0, read);
+            processed += read;
+            if (size > 0) {
+                exec.setProgress(processed / (double)size);
+            }
+            exec.checkCanceled();
+        }
+        exec.setProgress(1.0);
     }
 
     /**
