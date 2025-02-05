@@ -124,17 +124,41 @@ public class DataTableSpecExtractor {
         /**
          * Name-agnostic identifier of the data type
          */
-        IDENTIFIER,
+        IDENTIFIER("Identifier"),
         /**
          * Legacy string representation of the data type
          * @deprecated
          */
         @Deprecated
-        LEGACY_DISPLAY_NAME,
+        LEGACY_DISPLAY_NAME("Legacy Display Name"),
         /**
          * Current display name of the data type
          */
-        DISPLAY_NAME;
+        DISPLAY_NAME("Display Name");
+
+        private final String m_name;
+
+        TypeNameFormat(final String name) {
+            m_name = name;
+        }
+
+        @Override
+        public String toString() {
+            return m_name;
+        }
+
+        /**
+         * @param name
+         * @return the TypeNameFormat with the given name
+         */
+        public static TypeNameFormat fromString(final String name) {
+            for (TypeNameFormat f: values()) {
+                if (f.toString().equals(name)) {
+                    return f;
+                }
+            }
+            throw new IllegalArgumentException("No such format: " + name);
+        }
     }
 
     /** ...
