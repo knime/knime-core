@@ -84,12 +84,12 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.ParameterizedNodeFactory;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigEntries;
@@ -882,7 +882,7 @@ public final class WorkflowSummaryCreator {
             final String name = colSpec.getName();
             final List<ColumnProperty> columnProperties = createColumnProperties(colSpec.getProperties());
             final ColumnDomain culomnDomain = createColumnDomain(colSpec.getDomain());
-            final String type = colSpec.getType().toString();
+            final String type = colSpec.getType().getIdentifier();
 
             return new Column() {
 
