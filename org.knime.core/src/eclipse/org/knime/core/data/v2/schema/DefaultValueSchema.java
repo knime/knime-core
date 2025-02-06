@@ -124,7 +124,13 @@ sealed class DefaultValueSchema implements ValueSchema permits SerializerFactory
     }
 
     DefaultValueSchema(final ValueSchemaColumn[] columns) {
-        m_sourceSpec = new AtomicReference<>();
+        this(null, columns);
+    }
+
+    // TODO (TP) TEMPORARY
+    // TODO (TP) Debug stuff ... This is not intended for long-term use. If it turns out we need it, check for compatibility between columns and sourceSpec!
+    DefaultValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
+        m_sourceSpec = new AtomicReference<>(sourceSpec);
         m_factories = new ValueFactory[columns.length];
         Arrays.setAll(m_factories, i -> columns[i].valueFactory());
         m_columnSpecs = new DataColumnSpec[columns.length];

@@ -127,6 +127,19 @@ public final class ValueSchemaUtils {
     /**
      * TODO (TP): javadoc
      *
+     * @param spec
+     * @param columns
+     * @return
+     * @since 5.5
+     */
+    // TODO (TP) TEMPORARY
+    public static final ValueSchema create(final DataTableSpec spec, final ValueSchemaColumn[] columns) {
+        return new DefaultValueSchema(spec, columns);
+    }
+
+    /**
+     * TODO (TP): javadoc
+     *
      * @param columns
      * @return
      * @since 5.5
