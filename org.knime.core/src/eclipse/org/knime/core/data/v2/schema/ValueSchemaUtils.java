@@ -172,8 +172,9 @@ public final class ValueSchemaUtils {
      * @return the loaded {@link ValueSchema}.
      *
      * @throws InvalidSettingsException if the settings in loadContext are invalid
+     * @since 5.5
      */
-    public static final ValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
+    public static final DataTableValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
         throws InvalidSettingsException {
         if (hasTypeTraits(schema)) {
             return create(schema, loadContext);
@@ -198,7 +199,7 @@ public final class ValueSchemaUtils {
      * @param dataRepository used for resolving filestore cells
      * @return a new ValueSchema with the provided {@link DataTableSpec} as source
      */
-    private static ValueSchema create(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
+    private static DataTableValueSchema create(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
         var source = loadContext.getTableSpec();
         var dataRepository = loadContext.getDataRepository();
         int numDataColumns = source.getNumColumns();
@@ -234,8 +235,9 @@ public final class ValueSchemaUtils {
      * @param metadataMap the columnar metadata used to update
      *
      * @return the updated {@link ValueSchema}
+     * @since 5.5
      */
-    public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
+    public static final DataTableValueSchema updateDataTableSpec(final DataTableValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
         final var result = new DataColumnSpec[schema.numColumns() - 1];
         for (int i = 0; i < result.length; i++) {//NOSONAR
