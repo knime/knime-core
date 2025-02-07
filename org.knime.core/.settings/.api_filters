@@ -352,6 +352,12 @@
                 <message_argument value="getSpec(int)"/>
             </message_arguments>
         </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="getSourceSpec()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
         <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
