@@ -72,7 +72,7 @@ import com.google.common.collect.Iterators;
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-sealed class DefaultValueSchema implements ValueSchema permits SerializerFactoryValueSchema {
+sealed class DefaultValueSchema implements DataTableValueSchema permits SerializerFactoryValueSchema {
 
     private final AtomicReference<DataTableSpec> m_sourceSpec;
 
