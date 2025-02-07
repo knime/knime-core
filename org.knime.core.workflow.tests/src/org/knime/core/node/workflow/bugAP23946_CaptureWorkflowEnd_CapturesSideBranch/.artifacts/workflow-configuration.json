@@ -1,0 +1,7 @@
+{
+    "output_location-12": {
+        "label": "Path",
+        "type": "string",
+        "default": "knime://knime.workflow/../"
+    }
+}

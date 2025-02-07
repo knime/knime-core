@@ -127,6 +127,21 @@
 								<id>org.knime.features.clfixes</id>
 								<versionRange>0.0.0</versionRange>
 							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.buildworkflows</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.personalproductivity</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
+							<requirement>
+								<type>eclipse-feature</type>
+								<id>org.knime.features.reporting.runtime</id>
+								<versionRange>0.0.0</versionRange>
+							</requirement>
 						</extraRequirements>
 					</dependency-resolution>
 				</configuration>

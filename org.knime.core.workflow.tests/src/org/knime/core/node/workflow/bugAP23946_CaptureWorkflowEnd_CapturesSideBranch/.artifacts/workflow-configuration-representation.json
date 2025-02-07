@@ -1,0 +1,21 @@
+{
+    "output_location-12": {
+        "@class": "org.knime.js.base.node.configuration.input.string.StringDialogNodeRepresentation",
+        "label": "Path",
+        "description": "Path to the output folder, changed by the unit test case.",
+        "required": true,
+        "defaultValue": {
+            "@class": "org.knime.js.base.node.configuration.input.string.StringDialogNodeValue",
+            "string": "knime://knime.workflow/../"
+        },
+        "currentValue": {
+            "@class": "org.knime.js.base.node.configuration.input.string.StringDialogNodeValue",
+            "string": "knime://knime.workflow/../"
+        },
+        "regex": "",
+        "errorMessage": "",
+        "editorType": "Single-line",
+        "multilineEditorWidth": 40,
+        "multilineEditorHeight": 5
+    }
+}

@@ -207,6 +207,21 @@
 					<layout>p2</layout>
 					<url>${knime.reporting2.p2}</url>
 				</repository>
+				<repository>
+					<id>p2-knime-buildworkflows</id>
+					<layout>p2</layout>
+					<url>${knime.buildworkflows.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-productivity-oss</id>
+					<layout>p2</layout>
+					<url>${knime.productivity.oss.p2}</url>
+				</repository>
+				<repository>
+					<id>p2-knime-reporting</id>
+					<layout>p2</layout>
+					<url>${knime.reporting.p2}</url>
+				</repository>
 			</repositories>
 		</profile>
 	</profiles>

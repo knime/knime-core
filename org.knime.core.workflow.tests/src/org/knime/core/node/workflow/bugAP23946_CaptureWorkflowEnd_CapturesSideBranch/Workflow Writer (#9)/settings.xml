@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+    <entry key="node_file" type="xstring" value="settings.xml"/>
+    <config key="flow_stack"/>
+    <config key="internal_node_subsettings">
+        <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+    </config>
+    <config key="model">
+        <config key="filechooser_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_WriterFileChooser"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <config key="filechooser">
+            <config key="file_system_chooser__Internals">
+                <entry key="has_fs_port" type="xboolean" value="false"/>
+                <entry key="overwritten_by_variable" type="xboolean" value="true"/>
+                <entry key="convenience_fs_category" type="xstring" value="LOCAL"/>
+                <entry key="relative_to" type="xstring" value="knime.workflow"/>
+                <entry key="mountpoint" type="xstring" value="LOCAL"/>
+                <entry key="spaceId" type="xstring" value=""/>
+                <entry key="spaceName" type="xstring" value=""/>
+                <entry key="connected_fs" type="xboolean" value="true"/>
+            </config>
+            <config key="path">
+                <entry key="location_present" type="xboolean" value="true"/>
+                <entry key="file_system_type" type="xstring" value="LOCAL"/>
+                <entry key="path" type="xstring" value="knime:/knime.workflow/.."/>
+            </config>
+            <config key="filter_mode_Internals">
+                <entry key="SettingsModelID" type="xstring" value="SMID_FilterMode"/>
+                <entry key="EnabledStatus" type="xboolean" value="true"/>
+            </config>
+            <entry key="create_missing_folders" type="xboolean" value="false"/>
+        </config>
+        <config key="use-custom-name_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <entry key="use-custom-name" type="xboolean" value="true"/>
+        <config key="custom-name_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <entry key="custom-name" type="xstring" value="SavedWorkflow2"/>
+        <entry key="open" type="xboolean" value="false"/>
+        <entry key="archive" type="xboolean" value="false"/>
+        <config key="exists_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <entry key="exists" type="xstring" value="OVERWRITE"/>
+        <config key="io-nodes_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_IOnodes"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <config key="io-nodes">
+            <entry key="num_inputs" type="xint" value="1"/>
+            <config key="input_node_0">
+                <entry key="node_config_class" type="xstring" value="org.knime.buildworkflows.writer.WorkflowInputNodeConfig"/>
+                <entry key="input_id" type="xstring" value="Input"/>
+                <config key="node_config">
+                    <entry key="param_name" type="xstring" value="workflow-input"/>
+                </config>
+            </config>
+            <entry key="num_outputs" type="xint" value="1"/>
+            <config key="output_node_0">
+                <entry key="node_config_class" type="xstring" value="org.knime.buildworkflows.writer.WorkflowOutputNodeConfig"/>
+                <entry key="output_id" type="xstring" value="Output"/>
+                <config key="node_config">
+                    <entry key="param_name" type="xstring" value="workflow-output"/>
+                </config>
+            </config>
+        </config>
+        <config key="do_remove_template_links_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <entry key="do_remove_template_links" type="xboolean" value="false"/>
+        <config key="do_update_template_links_Internals">
+            <entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+            <entry key="EnabledStatus" type="xboolean" value="true"/>
+        </config>
+        <entry key="do_update_template_links" type="xboolean" value="false"/>
+    </config>
+    <config key="variables">
+        <entry key="version" type="xstring" value="V_2019_09_13"/>
+        <config key="tree">
+            <config key="filechooser">
+                <config key="path">
+                    <entry key="used_variable" type="xstring" value="output_location_location"/>
+                    <entry key="exposed_variable" type="xstring" isnull="true" value=""/>
+                </config>
+            </config>
+        </config>
+    </config>
+    <entry key="customDescription" type="xstring" isnull="true" value=""/>
+    <entry key="state" type="xstring" value="IDLE"/>
+    <config key="nodecontainer_message">
+        <entry key="type" type="xstring" value="WARNING"/>
+        <entry key="message" type="xstring" value="Errors loading flow variables into node : Errors overwriting node settings with flow variables: Unknown variable &quot;output_location_location&quot;"/>
+    </config>
+    <entry key="factory" type="xstring" value="org.knime.buildworkflows.writer.WorkflowWriter2NodeFactory"/>
+    <entry key="node-name" type="xstring" value="Workflow Writer"/>
+    <entry key="node-bundle-name" type="xstring" value="KNIME Integrated Deployment"/>
+    <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.buildworkflows"/>
+    <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
+    <entry key="node-bundle-version" type="xstring" value="5.5.0.qualifier"/>
+    <entry key="node-feature-name" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-symbolic-name" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
+    <entry key="node-feature-version" type="xstring" value="0.0.0"/>
+    <config key="factory_settings"/>
+    <config key="node_creation_config">
+        <config key="File System Connection"/>
+        <config key="Port Object"/>
+    </config>
+    <entry key="name" type="xstring" value="Workflow Writer"/>
+    <entry key="hasContent" type="xboolean" value="false"/>
+    <entry key="isInactive" type="xboolean" value="false"/>
+    <config key="ports"/>
+    <config key="filestores">
+        <entry key="file_store_location" type="xstring" isnull="true" value=""/>
+        <entry key="file_store_id" type="xstring" isnull="true" value=""/>
+    </config>
+</config>
