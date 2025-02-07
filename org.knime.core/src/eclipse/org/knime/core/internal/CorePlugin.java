@@ -53,12 +53,15 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
 import org.apache.logging.log4j.util.ProviderUtil;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.internal.provisional.p2.core.eventbus.IProvisioningEventBus;
+import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.eclipseUtil.EclipseProxyServiceInitializer;
@@ -70,6 +73,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.util.tracker.ServiceTracker;
@@ -79,6 +84,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * set the workspace path as KNIME home dir in the KNIMEConstants utility class.
  * @author wiswedel, University of Konstanz
  */
+@SuppressWarnings("restriction")
 public class CorePlugin implements BundleActivator {
 
     /** The symbolic name of the core plugin, i.e. {@value #PLUGIN_SYMBOLIC_NAME}.
@@ -173,6 +179,10 @@ public class CorePlugin implements BundleActivator {
         /* Listening on the proxy service initialization, we can install multiple proxy-supporting services.
          * Needs to happen early to avoid interference with org.apache.cxf.transport.http.ReferencingAuthenticator. */
         EclipseProxyServiceInitializer.startListening(context);
+
+        // Make sure we are notified about feature installations, so that we can ask the user
+        // to enable Windows long paths support if needed
+        registerProvisioningEventBusListener();
     }
 
     private static void readMimeTypes() throws IOException {
@@ -189,6 +199,7 @@ public class CorePlugin implements BundleActivator {
     /** {@inheritDoc} */
     @Override
     public void stop(final BundleContext context) throws Exception {
+        deregisterProvisioningEventBusListener();
         m_reportServiceTracker.close();
         m_reportServiceTracker = null;
         m_customizationServiceTracker.close();
@@ -250,5 +261,36 @@ public class CorePlugin implements BundleActivator {
     public static File resolveURItoLocalOrTempFile(final URI uri)
             throws IOException {
         return ResolverUtil.resolveURItoLocalOrTempFile(uri);
+    }
+
+    @SuppressWarnings("restriction")
+    private void applyToProvisioningEventBus(final Consumer<IProvisioningEventBus> consumer) {
+        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference<IProvisioningAgent> ref = context.getServiceReference(IProvisioningAgent.class);
+        if (ref != null) {
+            IProvisioningAgent agent = context.getService(ref);
+            try {
+                IProvisioningEventBus eventBus =
+                    (IProvisioningEventBus)agent.getService(IProvisioningEventBus.SERVICE_NAME);
+                if (eventBus != null) {
+                    // is null if started from the SDK
+                    consumer.accept(eventBus);
+                }
+            } finally {
+                context.ungetService(ref);
+            }
+        }
+    }
+
+    @SuppressWarnings("restriction")
+    private void registerProvisioningEventBusListener() {
+        applyToProvisioningEventBus(
+            eventBus -> eventBus.addListener(WindowsLongPathUtils.InstallationListener.INSTANCE));
+    }
+
+    @SuppressWarnings("restriction")
+    private void deregisterProvisioningEventBusListener() {
+        applyToProvisioningEventBus(
+            eventBus -> eventBus.removeListener(WindowsLongPathUtils.InstallationListener.INSTANCE));
     }
 }
