@@ -175,11 +175,11 @@ public final class ValueSchemaUtils {
      */
     public static final ValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
         throws InvalidSettingsException {
-        var source = loadContext.getTableSpec();
-        var dataRepository = loadContext.getDataRepository();
         if (hasTypeTraits(schema)) {
             return create(schema, loadContext);
         } else {
+            var source = loadContext.getTableSpec();
+            var dataRepository = loadContext.getDataRepository();
             return SerializerFactoryValueSchema.Serializer.load(source, dataRepository, loadContext.getSettings());
         }
     }
