@@ -73,12 +73,6 @@ import org.knime.core.table.schema.traits.DataTraits;
 public interface ValueSchema extends ColumnarSchema {
 
     /**
-     * @return the underlying {@link DataTableSpec}.
-     */
-    DataTableSpec getSourceSpec();
-
-
-    /**
      * TODO (TP) javadoc
      *
      * @param index colunm index (rowkey is 0)
