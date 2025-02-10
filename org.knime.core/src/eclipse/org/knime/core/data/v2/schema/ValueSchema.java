@@ -86,6 +86,11 @@ public interface ValueSchema extends ColumnarSchema {
      *
      * Find index of a (data) column by its name.
      * (The RowKey column doesn't have a name.)
+     * <p>
+     * Finds first column with matching name
+     * <p>
+     * Returns -1 if not found.
+     *
      *
      * @param columnName name of the column.
      * @return
