@@ -360,6 +360,24 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="load(ColumnarSchema, ValueSchemaLoadContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="renameToRandomColumnNames(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="updateDataTableSpec(ValueSchema, Map&lt;Integer,DataColumnDomain&gt;, Map&lt;Integer,DataColumnMetaData[]&gt;)"/>
+            </message_arguments>
+        </filter>
         <filter comment="AP-22308 - internal table API changes (no public API)" id="1143996420">
             <message_arguments>
                 <message_argument value="hasRowID(ValueSchema)"/>
