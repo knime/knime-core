@@ -280,8 +280,10 @@ public final class ValueSchemaUtils {
      *
      * @param schema input schema
      * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with new random column names.
+     * @since 5.5
      */
-    public static ValueSchema renameToRandomColumnNames(final ValueSchema schema) {
+    @Deprecated // TODO (TP) remove
+    public static ValueSchema renameToRandomColumnNames(final DataTableValueSchema schema) {
         var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
         Arrays.setAll(valueFactories, schema::getValueFactory);
 
@@ -305,7 +307,8 @@ public final class ValueSchemaUtils {
      * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with new random column names.
      * @since 5.5
      */
-    public static ValueSchema renameToRandomColumnNames(final ValueSchema schema, final int... columnIndices) {
+    @Deprecated // TODO (TP) remove
+    public static ValueSchema renameToRandomColumnNames(final DataTableValueSchema schema, final int... columnIndices) {
         var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
         Arrays.setAll(valueFactories, schema::getValueFactory);
 
@@ -330,7 +333,8 @@ public final class ValueSchemaUtils {
      * @return a new {@code ColumnarValueSchema}, equivalent to input {@code schema} but with renamed columns.
      * @since 5.5
      */
-    public static ValueSchema renameColumns(final ValueSchema schema, final int[] columnIndices,
+    @Deprecated // TODO (TP) remove
+    public static ValueSchema renameColumns(final DataTableValueSchema schema, final int[] columnIndices,
         final String[] columnNames) {
         var valueFactories = new ValueFactory<?, ?>[schema.numColumns()];
         Arrays.setAll(valueFactories, schema::getValueFactory);
