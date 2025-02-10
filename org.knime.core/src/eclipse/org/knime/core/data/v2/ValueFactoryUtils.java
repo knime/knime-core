@@ -349,7 +349,7 @@ public final class ValueFactoryUtils {
      * @param logicalType The JSON representation of the logical type
      * @return The {@link DataType}
      * @throws IllegalArgumentException if the logical type can not be mapped to a JSON {@link DataTraits}
-     * @since 5.4
+     * @since 5.5
      */
     public static String getTypeNameForLogicalTypeString(final String logicalType) {
         JsonNode json;
