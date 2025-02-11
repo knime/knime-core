@@ -48,7 +48,11 @@
  */
 package org.knime.core.data.v2.schema;
 
+import java.util.Arrays;
+
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 
 /**
  * TODO
@@ -70,4 +74,49 @@ public interface DataTableValueSchema extends ValueSchema {
      * @return the underlying {@link DataTableSpec}.
      */
     DataTableSpec getSourceSpec();
+
+    /**
+     * TODO (TP) javadoc
+     *
+     * @param spec
+     * @param schema
+     * @return
+     */
+    // TODO (TP) TEMPORARY. exploring API options.
+    static DataTableValueSchema create(final DataTableSpec spec, final ValueSchema schema) {
+        return new DefaultValueSchema(spec, schema.getColumns());
+    }
+
+    /**
+     * TODO (TP) javadoc
+     *
+     * @param dataTableSpec
+     * @param schema
+     * @return
+     */
+    // TODO (TP) TEMPORARY. exploring API options.
+    static DataTableSpec createDataTableSpecWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
+        return new DataTableSpecCreator(spec) //
+            .dropAllColumns() //
+            .addColumns(createDataTableSpec(schema)) //
+            .createSpec();
+    }
+
+    /**
+     * TODO (TP) javadoc
+     *
+     * @param dataTableSpec
+     * @param schema
+     * @return
+     */
+    // TODO (TP) TEMPORARY. exploring API options.
+    static DataTableSpec createDataTableSpec(final ValueSchema schema) {
+        if (schema.numColumns() < 1 || !schema.getColumn(0).isRowKey()) {
+            throw new IllegalArgumentException("expected schema with RowKey at column 0");
+        }
+        return new DataTableSpec(Arrays.stream(schema.getColumns()) //
+            .skip(1) // skip RowKey column
+            .map(ValueSchemaColumn::dataColumnSpec) //
+            .toArray(DataColumnSpec[]::new));
+    }
 }

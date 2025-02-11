@@ -87,8 +87,9 @@ public final class ValueSchemaUtils {
      * @param rowKeyType type of the {@link RowKey}
      * @param fileStoreHandler file-store handler
      * @return the value schema.
+     * @since 5.5
      */
-    public static final ValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
+    public static final DataTableValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
         final var factories = new ValueFactory<?, ?>[spec.getNumColumns() + 1];
         factories[0] = ValueFactoryUtils.getRowKeyValueFactory(rowKeyType);
@@ -106,9 +107,9 @@ public final class ValueSchemaUtils {
      * @param spec the data table spec that the {@link ValueSchema} should wrap
      * @param valueFactories one for the row key and one for each column in spec
      * @return the value schema
-     * @since 4.5
+     * @since 5.5
      */
-    public static final ValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
+    public static final DataTableValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
         return new DefaultValueSchema(spec, valueFactories);
     }
 
@@ -237,6 +238,7 @@ public final class ValueSchemaUtils {
      * @return the updated {@link ValueSchema}
      * @since 5.5
      */
+    @Deprecated // TODO (TP): remove?
     public static final DataTableValueSchema updateDataTableSpec(final DataTableValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
         final var result = new DataColumnSpec[schema.numColumns() - 1];
@@ -262,6 +264,44 @@ public final class ValueSchemaUtils {
         }
         final var sourceName = schema.getSourceSpec().getName();
         return UpdatedValueSchema.updateValueSchema(new DataTableSpec(sourceName, result), schema);
+    }
+
+    /**
+     * Updates the {@link DataTableSpec} of the passed source scheme with a new {@link DataTableSpec}, including the
+     * domains provided in the {@link Map}.
+     *
+     * @param schema schema to update
+     * @param domainMap the domains used for update.
+     * @param metadataMap the columnar metadata used to update
+     *
+     * @return the updated {@link ValueSchema}
+     * @since 5.5
+     */
+    public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
+        final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
+
+        final int numCols = schema.numColumns();
+        final var updatedCols = new ValueSchemaColumn[numCols];
+        for (int i = 0; i < numCols; i++) {//NOSONAR
+            final ValueSchemaColumn column = schema.getColumn(i);
+            final DataColumnDomain domain = domainMap.get(i);
+            final DataColumnMetaData[] metadata = metadataMap.get(i);
+            if (domain == null && metadata == null) {
+                updatedCols[i] = column;
+            } else {
+                final DataColumnSpec colSpec = column.dataColumnSpec();
+                final var creator = new DataColumnSpecCreator(colSpec);
+                if (domain != null) {
+                    creator.setDomain(domain);
+                }
+
+                for (final DataColumnMetaData element : metadata) {
+                    creator.addMetaData(element, true);
+                }
+                updatedCols[i] = new ValueSchemaColumn(creator.createSpec(), column.valueFactory());
+            }
+        }
+        return new DefaultValueSchema(updatedCols);
     }
 
     /**
