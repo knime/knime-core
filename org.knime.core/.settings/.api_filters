@@ -363,6 +363,12 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="create(DataTableSpec, RowKeyType, IWriteFileStoreHandler)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
                 <message_argument value="load(ColumnarSchema, ValueSchemaLoadContext)"/>
             </message_arguments>
         </filter>

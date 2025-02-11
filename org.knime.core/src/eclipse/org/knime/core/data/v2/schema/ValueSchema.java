@@ -230,11 +230,13 @@ public interface ValueSchema extends ColumnarSchema {
     ValueSchemaColumn getColumn(int index);
 
     /**
+     * TODO (TP): decide contract: Does this method always return a copy or the internal array if it exists?
+     *
      * @return
      * @since 5.5
      */
     default ValueSchemaColumn[] getColumns() {
-        final var columns = new ValueSchemaColumn[ numColumns()];
+        final var columns = new ValueSchemaColumn[numColumns()];
         Arrays.setAll(columns, this::getColumn);
         return columns;
     }
