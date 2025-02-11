@@ -205,6 +205,8 @@ public class ThreadPool {
 
         private boolean m_stopped;
 
+        private boolean m_isInvisible;
+
         // set context class loader after each runnable#run -- we had problems with some cxf web service client that
         // hijacked the current thread and subsequent runnables were using some URL class loader set by cxf
         private final ClassLoader m_contextClassLoaderAtInit;
@@ -337,6 +339,11 @@ public class ThreadPool {
     }
 
     private boolean checkQueue() {
+        synchronized (m_runningWorkers) {
+            // some workers might be waiting to become visible again
+            m_runningWorkers.notifyAll();
+        }
+
         synchronized (m_queuedFutures) {
             for (Iterator<MyFuture<?>> it = m_queuedFutures.iterator(); it
                     .hasNext();) {
@@ -563,7 +570,9 @@ public class ThreadPool {
      * @return the number of running threads
      */
     public int getRunningThreads() {
-        return m_runningWorkers.size() - m_invisibleThreads.get();
+        synchronized (m_runningWorkers) {
+            return m_runningWorkers.size() - m_invisibleThreads.get();
+        }
     }
 
     /**
@@ -608,15 +617,31 @@ public class ThreadPool {
             }
             return thisWorker.m_startedFrom.runInvisible(r);
         } else {
-            m_invisibleThreads.incrementAndGet();
+            final var isInvisible = thisWorker.m_isInvisible;
+            if (!isInvisible) {
+                m_invisibleThreads.incrementAndGet();
+                thisWorker.m_isInvisible = true;
+            }
             checkQueue();
 
             try {
-                return r.call();
+                final var result = r.call();
+                if (!isInvisible) {
+                    synchronized (m_runningWorkers) {
+                        // wait until thisWorker can become visible again
+                        while (m_runningWorkers.size() - m_invisibleThreads.get() > m_maxThreads.get()) {
+                            m_runningWorkers.wait();
+                        }
+                        thisWorker.m_isInvisible = false;
+                        m_invisibleThreads.decrementAndGet();
+                    }
+                }
+                return result;
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ExecutionException("Interrupted while waiting to be visible again", e);
             } catch (Exception ex) {
                 throw new ExecutionException(ex);
-            } finally {
-                m_invisibleThreads.decrementAndGet();
             }
         }
 
