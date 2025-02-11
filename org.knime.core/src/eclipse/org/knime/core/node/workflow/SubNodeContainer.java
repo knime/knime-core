@@ -645,6 +645,8 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     /* -------------------- Virtual node callbacks -------------- */
 
+    @SuppressWarnings("java:S2142")
+    // S2142: we repackage the InterruptedException into ExecutionException for normal control flow
     /** Called from virtual input node when executed - in possibly executes nodes in the parent wfm and then
      * fetches the data from it.
      * @return the subnode data input (incl. mandatory flow var port object).
@@ -665,9 +667,13 @@ public final class SubNodeContainer extends SingleNodeContainer
                 return null;
             }
         };
-        ThreadPool currentPool = ThreadPool.currentPool();
+        final ThreadPool currentPool = ThreadPool.currentPool();
         if (currentPool != null) {
-            return currentPool.runInvisible(c);
+            try {
+                return currentPool.runInvisible(c);
+            } catch (final InterruptedException e) {
+                throw new ExecutionException(e);
+            }
         } else {
             try {
                 return c.call();
@@ -1516,6 +1522,8 @@ public final class SubNodeContainer extends SingleNodeContainer
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("java:S2142")
+    // S2142: WorkflowManager is not set up for handling interrupted flag, but has its own "is canceled" mechanism
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] rawInObjects) {
         setNodeMessage(NodeMessage.NONE);
         assert rawInObjects.length == m_inports.length;
@@ -1551,6 +1559,8 @@ public final class SubNodeContainer extends SingleNodeContainer
                 isCanceled = false;
                 LOGGER.error(ee.getCause().getClass().getSimpleName() + " while waiting for inner workflow to complete",
                     ee);
+            } catch (final InterruptedException e) {
+                isCanceled = true;
             }
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
             boolean allExecuted = internalState.isExecuted();
@@ -2742,6 +2752,7 @@ public final class SubNodeContainer extends SingleNodeContainer
        }
     }
 
+    @SuppressWarnings("java:S2142") // interrupts are handled via WFM#cancelExecution
     /** Called by {@link #setInactive()} to run all nodes in the contained workflow. */
     private static void executeWorkflowAndWait(final WorkflowManager wfm) {
         Runnable inBackgroundRunner = () -> {
@@ -2749,7 +2760,6 @@ public final class SubNodeContainer extends SingleNodeContainer
                 wfm.executeAllAndWaitUntilDoneInterruptibly();
             } catch (InterruptedException e) {
                 wfm.cancelExecution();
-                Thread.currentThread().interrupt();
             }
         };
         ThreadPool currentPool = ThreadPool.currentPool();
@@ -2763,6 +2773,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             } catch (ExecutionException ee) {
                 LOGGER.error(ee.getCause().getClass().getSimpleName()
                 		+ " while waiting for inner workflow to complete", ee);
+            } catch (final InterruptedException e) {
+                wfm.cancelExecution();
             }
         } else {
             // streaming execution

@@ -203,6 +203,8 @@ public class ThreadPoolTest extends TestCase {
                     root.runInvisible(submitter);
                 } catch (ExecutionException ex) {
                     ex.printStackTrace();
+                } catch (final InterruptedException e) {
+                    return;
                 }
             }
         };
@@ -297,6 +299,8 @@ public class ThreadPoolTest extends TestCase {
                     NodeLogger.getLogger(ThreadPoolTest.class).info("Finished invisible");
                 } catch (ExecutionException ex) {
                     ex.printStackTrace();
+                } catch (final InterruptedException e) {
+                    return;
                 }
             }
         };

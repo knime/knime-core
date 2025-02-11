@@ -337,6 +337,11 @@ public class ThreadPool {
     }
 
     private boolean checkQueue() {
+        synchronized (m_runningWorkers) {
+            // some workers might be waiting to become visible again
+            m_runningWorkers.notifyAll();
+        }
+
         synchronized (m_queuedFutures) {
             for (Iterator<MyFuture<?>> it = m_queuedFutures.iterator(); it
                     .hasNext();) {
@@ -524,8 +529,7 @@ public class ThreadPool {
 
     private Worker wakeupWorker(final MyFuture<?> task, final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
-                    .get()) {
+            if (hasFreeWorkerSlot()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -541,9 +545,8 @@ public class ThreadPool {
                     m_runningWorkers.add(w);
                 }
                 return w;
-            } else {
-                return null;
             }
+            return null;
         }
     }
 
@@ -557,38 +560,60 @@ public class ThreadPool {
     }
 
     /**
-     * Returns the number of currently running threads in this pool and its sub
+     * Returns an estimate for the number of currently running threads in this pool and its sub
      * pools.
      *
      * @return the number of running threads
      */
     public int getRunningThreads() {
+        // no synchronization b/c it's only an estimate
+        // we exclude invisible threads because we assume they're not doing compute-heavy tasks
         return m_runningWorkers.size() - m_invisibleThreads.get();
+    }
+
+    private boolean hasFreeWorkerSlot() {
+        synchronized (m_runningWorkers) {
+            return m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads.get();
+        }
+    }
+
+    /**
+     * Returns an estimate for the number of queued jobs.
+     *
+     * @return the number of queued jobs
+     * @since 5.5
+     */
+    public int getQueueSize() {
+        return m_queuedFutures.size();
     }
 
     /**
      * Executes the runnable in the current thread. If the current thread is
      * taken out of this pool or any ancestor pool the number of invisible
      * threads is increased, so that it is not counted and one additional thread
-     * is allowed to run. This method should only be used if the Runnable does
-     * nothing more than submitting jobs.
+     * is allowed to run.
+     * After the runnable is finished, the thread is being accounted for again.
+     *
+     * <p><b>Note:</b> This method is intended for <em>blocking operations</em> or threads
+     * that submit other tasks.</p>
      *
      * @param <T> Type of the argument (result type)
      * @param r A callable, which will be executed by the thread invoking this
      *            method.
+     *
      * @return T The result of the callable.
      * @throws IllegalThreadStateException if the current thread is not taken
      *             out of a thread pool
      * @throws ExecutionException if the callable could not be executed for some
      *             reason
+     * @throws InterruptedException If either the current thread is interrupted, either when interrupted
+     *             while <code>r.call()</code> is executed or when reacquiring a "visible" thread slot.
      */
-    public <T> T runInvisible(final Callable<T> r) throws ExecutionException {
-        if (!(Thread.currentThread() instanceof Worker)) {
+    public <T> T runInvisible(final Callable<T> r) throws ExecutionException, InterruptedException {
+        if (!(Thread.currentThread() instanceof Worker thisWorker)) {
             throw new IllegalThreadStateException("The current thread is not "
                     + "taken out of a thread pool");
         }
-
-        Worker thisWorker = (Worker)Thread.currentThread();
 
         boolean b;
         synchronized (m_runningWorkers) {
@@ -610,16 +635,44 @@ public class ThreadPool {
         } else {
             m_invisibleThreads.incrementAndGet();
             checkQueue();
-
+            var interruptInCallable = false;
             try {
                 return r.call();
-            } catch (Exception ex) {
+            } catch (final InterruptedException e) {
+                interruptInCallable = true;
+                throw e;
+            } catch (final Exception ex) {
                 throw new ExecutionException(ex);
             } finally {
+                reacquireSlot(interruptInCallable);
+            }
+        }
+    }
+
+    private void reacquireSlot(final boolean interruptInCallable) throws InterruptedException {
+        synchronized (m_runningWorkers) {
+            try {
+                // no need to re-acquire a slot if we want to pass on the callable interrupt
+                if (!interruptInCallable) {
+                    // reacquire a "slot" among visible workers
+                    // Getting interrupted here can trigger a special case (see below in finally block)
+                    while (!hasFreeWorkerSlot()) {
+                        m_runningWorkers.wait();
+                    }
+                }
+            } finally {
+                /* One interesting special case:
+                 * When we were interrupted while waiting for a slot again in the loop above, we decrement the
+                 * "invisible" counter as if we would have acquired a slot. In any case, control is passed back
+                 * to the calling method. This means that the caller can opt to swallow the interrupted
+                 * exception in order to keep the thread running and thus keeping the pool oversubscribed.
+                 * Once the current task is finished, the thread will be put back into the available workers
+                 * but only actually used if the pool is not saturated anymore. This is exactly the behavior
+                 * as before the "re-acquire slot after call" change in AP-24224.
+                 */
                 m_invisibleThreads.decrementAndGet();
             }
         }
-
     }
 
     /**
@@ -758,16 +811,16 @@ public class ThreadPool {
         if (m_parent != null) {
             synchronized (m_runningWorkers) {
                 m_runningWorkers.remove(w);
+                m_runningWorkers.notifyAll();
             }
             m_parent.workerFinished(w);
         } else { // this is the root pool
             synchronized (m_runningWorkers) {
                 m_runningWorkers.remove(w);
                 m_availableWorkers.add(w);
+                m_runningWorkers.notifyAll();
             }
-            if (checkQueue()) {
-                return;
-            }
+            checkQueue();
         }
     }
 
@@ -795,20 +848,10 @@ public class ThreadPool {
      * @return a thread pool or <code>null</code>
      */
     public static ThreadPool currentPool() {
-        if (Thread.currentThread() instanceof Worker) {
-            return ((Worker)Thread.currentThread()).m_startedFrom;
+        if (Thread.currentThread() instanceof Worker worker) {
+            return worker.m_startedFrom;
         } else {
             return null;
         }
-    }
-
-    /**
-     * Returns the number of queued jobs.
-     *
-     * @return number of queued jobs
-     * @since 5.5
-     */
-    public int getQueueSize() {
-        return m_queuedFutures.size();
     }
 }
