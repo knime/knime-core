@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -361,7 +362,6 @@ public final class WorkflowSegmentExecutor {
         }
     }
 
-
     private void executeAndWait(final ExecutionContext exec, final AtomicReference<Exception> exception) {
         // code copied from SubNodeContainer#executeWorkflowAndWait
         final Runnable inBackgroundRunner = () -> {
@@ -377,15 +377,14 @@ public final class WorkflowSegmentExecutor {
         if (currentPool != null) {
             // ordinary workflow execution
             try {
-                currentPool.runInvisible(() -> {
-                    inBackgroundRunner.run();
-                    return null;
-                });
+                currentPool.runInvisible(Executors.callable(inBackgroundRunner::run));
             } catch (ExecutionException ee) {
                 exception.compareAndSet(null, ee);
                 NodeLogger.getLogger(this.getClass()).error(
                     ee.getCause().getClass().getSimpleName() + " while waiting for to-be-executed workflow to complete",
                     ee);
+            } catch (final InterruptedException e) { // NOSONAR interrupt is handled by WFM cancellation
+                m_wfm.cancelExecution();
             }
         } else {
             // streaming execution
