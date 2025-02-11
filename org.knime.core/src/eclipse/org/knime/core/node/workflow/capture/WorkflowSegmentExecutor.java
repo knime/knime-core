@@ -361,7 +361,7 @@ public final class WorkflowSegmentExecutor {
         }
     }
 
-
+    @SuppressWarnings("java:S2142") // interrupts are handled via WFM#cancelExecution
     private void executeAndWait(final ExecutionContext exec, final AtomicReference<Exception> exception) {
         // code copied from SubNodeContainer#executeWorkflowAndWait
         final Runnable inBackgroundRunner = () -> {
@@ -386,6 +386,8 @@ public final class WorkflowSegmentExecutor {
                 NodeLogger.getLogger(this.getClass()).error(
                     ee.getCause().getClass().getSimpleName() + " while waiting for to-be-executed workflow to complete",
                     ee);
+            } catch (final InterruptedException e) {
+                m_wfm.cancelExecution();
             }
         } else {
             // streaming execution
