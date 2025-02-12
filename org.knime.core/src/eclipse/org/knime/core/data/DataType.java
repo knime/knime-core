@@ -1506,7 +1506,7 @@ public final class DataType implements IdentifiableType {
         if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
             sb.append(extractName.apply(euf));
         } else if (m_cellClass != null) {
-            sb.append(m_cellClass.getName());
+            sb.append(m_cellClass.getSimpleName());
         } else {
             sb.append(makeNonNativeName(outputConfig));
         }
