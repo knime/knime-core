@@ -154,7 +154,7 @@ public class SimpleJavaToDataCellConverterFactory<T>
 
     @Override
     public Iterable<String> getIdentifierAliases() {
-        return List.of(getClass().getName() + "(" + m_sourceType.getSimpleName() + "," + m_dataType.toString() + ","
-            + m_name + ")");
+        return List.of(getClass().getName() + "(" + m_sourceType.getSimpleName() + "," + m_dataType.toLegacyString()
+            + "," + m_name + ")");
     }
 }
