@@ -84,7 +84,7 @@ public final class ZonedDateTimeUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Date&Time (Zoned)";
+        return "Date&time (Zoned)";
     }
 
     @Override
