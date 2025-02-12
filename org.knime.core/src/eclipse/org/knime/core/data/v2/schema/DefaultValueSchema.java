@@ -129,6 +129,7 @@ sealed class DefaultValueSchema implements DataTableValueSchema permits Serializ
 
     // TODO (TP) TEMPORARY
     // TODO (TP) Debug stuff ... This is not intended for long-term use. If it turns out we need it, check for compatibility between columns and sourceSpec!
+    //  ==> Don't check here. We assume callers have already made sure...
     DefaultValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
         m_sourceSpec = new AtomicReference<>(sourceSpec);
         m_factories = new ValueFactory[columns.length];
