@@ -205,8 +205,6 @@ public class ThreadPool {
 
         private boolean m_stopped;
 
-        private boolean m_isInvisible;
-
         // set context class loader after each runnable#run -- we had problems with some cxf web service client that
         // hijacked the current thread and subsequent runnables were using some URL class loader set by cxf
         private final ClassLoader m_contextClassLoaderAtInit;
@@ -531,8 +529,7 @@ public class ThreadPool {
 
     private Worker wakeupWorker(final MyFuture<?> task, final ThreadPool pool) {
         synchronized (m_runningWorkers) {
-            if (m_runningWorkers.size() - m_invisibleThreads.get() < m_maxThreads
-                    .get()) {
+            if (hasFreeWorkerSlot()) {
                 Worker w;
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
@@ -548,9 +545,8 @@ public class ThreadPool {
                     m_runningWorkers.add(w);
                 }
                 return w;
-            } else {
-                return null;
             }
+            return null;
         }
     }
 
@@ -564,7 +560,7 @@ public class ThreadPool {
     }
 
     /**
-     * Returns the number of currently running threads in this pool and its sub
+     * Returns an estimate for the number of currently running threads in this pool and its sub
      * pools.
      *
      * @return the number of running threads
@@ -573,6 +569,22 @@ public class ThreadPool {
         synchronized (m_runningWorkers) {
             return m_runningWorkers.size() - m_invisibleThreads.get();
         }
+    }
+
+    private boolean hasFreeWorkerSlot() {
+        synchronized (m_runningWorkers) {
+            return getRunningThreads() < m_maxThreads.get();
+        }
+    }
+
+    /**
+     * Returns an estimate for the number of queued jobs.
+     *
+     * @return the number of queued jobs
+     * @since 5.5
+     */
+    public int getQueueSize() {
+        return m_queuedFutures.size();
     }
 
     /**
@@ -617,24 +629,17 @@ public class ThreadPool {
             }
             return thisWorker.m_startedFrom.runInvisible(r);
         } else {
-            final var isInvisible = thisWorker.m_isInvisible;
-            if (!isInvisible) {
-                m_invisibleThreads.incrementAndGet();
-                thisWorker.m_isInvisible = true;
-            }
+            m_invisibleThreads.incrementAndGet();
             checkQueue();
 
             try {
                 final var result = r.call();
-                if (!isInvisible) {
-                    synchronized (m_runningWorkers) {
-                        // wait until thisWorker can become visible again
-                        while (m_runningWorkers.size() - m_invisibleThreads.get() > m_maxThreads.get()) {
-                            m_runningWorkers.wait();
-                        }
-                        thisWorker.m_isInvisible = false;
-                        m_invisibleThreads.decrementAndGet();
+                synchronized (m_runningWorkers) {
+                    // wait until thisWorker can become visible again
+                    while (!hasFreeWorkerSlot()) {
+                        m_runningWorkers.wait();
                     }
+                    m_invisibleThreads.decrementAndGet();
                 }
                 return result;
             } catch (final InterruptedException e) {
@@ -659,15 +664,17 @@ public class ThreadPool {
         if (newValue < 0) {
             throw new IllegalArgumentException("Thread count must be >= 0");
         }
-        if ((m_parent == null) && (newValue < m_maxThreads.get())) {
-            for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
-                Worker w = m_availableWorkers.poll();
-                if (w != null) {
-                    w.interrupt();
+        synchronized (m_availableWorkers) {
+            if ((m_parent == null) && (newValue < m_maxThreads.get())) {
+                for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
+                    Worker w = m_availableWorkers.poll();
+                    if (w != null) {
+                        w.interrupt();
+                    }
                 }
             }
+            m_maxThreads.set(newValue);
         }
-        m_maxThreads.set(newValue);
         checkQueue();
     }
 
@@ -825,15 +832,5 @@ public class ThreadPool {
         } else {
             return null;
         }
-    }
-
-    /**
-     * Returns the number of queued jobs.
-     *
-     * @return number of queued jobs
-     * @since 5.5
-     */
-    public int getQueueSize() {
-        return m_queuedFutures.size();
     }
 }
