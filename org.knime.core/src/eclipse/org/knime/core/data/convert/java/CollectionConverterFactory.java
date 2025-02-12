@@ -50,6 +50,7 @@ package org.knime.core.data.convert.java;
 import java.lang.reflect.Array;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
@@ -377,7 +378,17 @@ public class CollectionConverterFactory<D, SE extends DataValue, DE>
 
     @Override
     public String getIdentifier() {
-        return getClass().getName() + "(" + m_elementConverterFactory.getIdentifier() + ")";
+        return makeIdentifier(m_elementConverterFactory.getIdentifier());
+    }
+
+    @Override
+    public Iterable<String> getIdentifierAliases() {
+        return StreamSupport.stream(m_elementConverterFactory.getIdentifierAliases().spliterator(), false)
+            .map(this::makeIdentifier).toList();
+    }
+
+    private String makeIdentifier(final String inner) {
+        return getClass().getName() + "(" + inner + ")";
     }
 
     /**
