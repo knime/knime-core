@@ -61,14 +61,18 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
+import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetDataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.image.png.PNGImageCellFactory;
+import org.knime.core.data.time.period.PeriodValue;
+import org.knime.core.data.uri.URIDataCell;
 import org.knime.core.data.v2.value.DefaultRowKeyValueFactory;
 import org.knime.core.data.v2.value.DoubleValueFactory;
 import org.knime.core.data.v2.value.IntListValueFactory;
@@ -399,19 +403,22 @@ final class ValueFactoryUtilsTest {
 
         // JSON contains data_type
         String logicalURI = "{\"value_factory_class\":\"org.knime.core.data.v2.value.cell.DictEncodedDataCellValueFactory\",\"data_type\":{\"cell_class\":\"org.knime.core.data.uri.URIDataCell\"}}";
-        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalURI)).isEqualTo("URI");
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalURI)).isEqualTo(URIDataCell.TYPE.getName());
 
         // collection, value factory registered in SPECIFIC_COLLECTION_FACTORY_PROVIDER
         String logicalStringSet = "{\"value_factory_class\": \"org.knime.core.data.v2.value.StringSetValueFactory\"}";
-        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalStringSet)).isEqualTo("Set");
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalStringSet))
+            .isEqualTo(((ExtensibleUtilityFactory)SetDataValue.UTILITY).getName());
 
         // not-registered value factory
         String logicalPeriod = "{\"value_factory_class\":\"org.knime.core.data.v2.time.PeriodValueFactory\"}";
-        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalPeriod)).isEqualTo("Period");
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalPeriod))
+            .isEqualTo(PeriodValue.UTILITY.getName());
 
         // collection, not-registered value factory
         String logicalSet = "{\"value_factory_class\":\"org.knime.core.data.v2.value.SetValueFactory\"}";
-        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalSet)).isEqualTo("Set");
+        assertThat(ValueFactoryUtils.getTypeNameForLogicalTypeString(logicalSet))
+            .isEqualTo(((ExtensibleUtilityFactory)SetDataValue.UTILITY).getName());
     }
 
     @Test

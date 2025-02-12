@@ -33,6 +33,8 @@ Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
+ org.knime.core.data.time.period,
+ org.knime.core.data.uri,
  org.knime.shared.workflow.storage.multidir.loader
 Automatic-Module-Name: org.knime.core.tests
 Bundle-ClassPath: .,
