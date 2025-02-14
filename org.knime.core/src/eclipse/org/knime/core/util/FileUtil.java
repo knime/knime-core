@@ -278,7 +278,7 @@ public final class FileUtil {
 
     /**
      * Copies the given source (either a file or a directory) into the given
-     * target. If the source file or directory exist, it will be removed first.
+     * target. If the target file or directory exist, it will be removed first.
      * File permissions are not handled explicitly.
      *
      * @param sourceDir contains all source file and directories to be copied
