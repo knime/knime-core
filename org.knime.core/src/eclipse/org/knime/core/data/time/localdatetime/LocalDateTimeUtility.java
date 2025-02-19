@@ -84,7 +84,12 @@ public final class LocalDateTimeUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Local Date Time";
+        return "Date&time (Local)";
+    }
+
+    @Override
+    protected String[] getLegacyNames() {
+        return new String[]{"Local Date Time"};
     }
 
     @Override

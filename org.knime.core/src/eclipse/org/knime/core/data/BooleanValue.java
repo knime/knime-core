@@ -108,7 +108,12 @@ public interface BooleanValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Boolean value";
+            return "Boolean";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
+            return new String[]{"Boolean value"};
         }
 
         /**

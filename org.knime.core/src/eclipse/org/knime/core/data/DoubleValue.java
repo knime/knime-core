@@ -100,12 +100,14 @@ public interface DoubleValue extends DataValue {
             return COMPARATOR;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getName() {
-            return "Number (double)";
+            return "Number (Floating Decimal)";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
+            return new String[]{"Number (double)"};
         }
 
         /**

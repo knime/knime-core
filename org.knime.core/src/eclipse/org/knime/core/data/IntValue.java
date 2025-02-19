@@ -99,12 +99,14 @@ public interface IntValue extends DataValue {
             return COMPARATOR;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getName() {
-            return "Number (integer)";
+            return "Number (Integer)";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
+            return new String[]{"Number (integer)"};
         }
 
         /**

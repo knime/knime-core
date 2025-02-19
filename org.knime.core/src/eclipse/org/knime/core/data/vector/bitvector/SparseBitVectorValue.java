@@ -81,9 +81,14 @@ public interface SparseBitVectorValue extends BitVectorValue {
 
         @Override
         public String getName() {
+            return "Bit Vector (Sparse)";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
             // this must be different to BitVectorValue#BitVectorUtilityFactory -- this string is used in the UI of
             // the file reader node (users can change the type of columns).
-            return "Bit vector (sparse)";
+            return new String[]{"Bit vector (sparse)"};
         }
     }
 }

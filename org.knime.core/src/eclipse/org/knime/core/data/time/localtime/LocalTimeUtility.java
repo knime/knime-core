@@ -84,7 +84,12 @@ public final class LocalTimeUtility extends ExtensibleUtilityFactory {
 
     @Override
     public String getName() {
-        return "Local Time";
+        return "Time";
+    }
+
+    @Override
+    protected String[] getLegacyNames() {
+        return new String[]{"Local Time"};
     }
 
     @Override

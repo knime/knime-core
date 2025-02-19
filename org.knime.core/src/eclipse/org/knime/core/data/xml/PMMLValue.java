@@ -103,7 +103,12 @@ public interface PMMLValue extends XMLValue<Document> {
          */
         @Override
         public String getName() {
-            return "PMML";
+            return "Model (PMML)";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
+            return new String[]{"PMML"};
         }
     }
 

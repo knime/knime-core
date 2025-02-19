@@ -98,12 +98,14 @@ public interface LongValue extends DataValue {
             return COMPARATOR;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String getName() {
-            return "Number (long)";
+            return "Number (Long Integer)";
+        }
+
+        @Override
+        protected String[] getLegacyNames() {
+            return new String[]{"Number (long)"};
         }
 
         /**
