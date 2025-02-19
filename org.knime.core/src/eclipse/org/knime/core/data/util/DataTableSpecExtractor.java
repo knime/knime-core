@@ -63,7 +63,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.CloseableTable;
-import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.BooleanCell.BooleanCellFactory;
@@ -92,6 +91,9 @@ public class DataTableSpecExtractor {
 
     private PossibleValueOutputFormat m_possibleValueOutputFormat = PossibleValueOutputFormat.Hide;
 
+    // For backward compatibility, the default is LEGACY_DISPLAY_NAME
+    private TypeNameFormat m_typeNameFormat = TypeNameFormat.LEGACY_DISPLAY_NAME;
+
     private boolean m_extractColumnNameAsColumn = true;
 
     /** How the color, shape, size handler are shown in the table. */
@@ -114,6 +116,51 @@ public class DataTableSpecExtractor {
         Columns
     }
 
+    /**
+     * Defines how the column type is represented in the table
+     * @since 5.5
+     */
+    public enum TypeNameFormat {
+        /**
+         * Name-agnostic identifier of the data type
+         */
+        IDENTIFIER("Identifier"),
+        /**
+         * Legacy string representation of the data type
+         * @deprecated
+         */
+        @Deprecated
+        LEGACY_DISPLAY_NAME("Legacy Display Name"),
+        /**
+         * Current display name of the data type
+         */
+        DISPLAY_NAME("Display Name");
+
+        private final String m_name;
+
+        TypeNameFormat(final String name) {
+            m_name = name;
+        }
+
+        @Override
+        public String toString() {
+            return m_name;
+        }
+
+        /**
+         * @param name
+         * @return the TypeNameFormat with the given name
+         */
+        public static TypeNameFormat fromString(final String name) {
+            for (TypeNameFormat f: values()) {
+                if (f.toString().equals(name)) {
+                    return f;
+                }
+            }
+            throw new IllegalArgumentException("No such format: " + name);
+        }
+    }
+
     /** ...
      * @param f ...
      */
@@ -132,6 +179,15 @@ public class DataTableSpecExtractor {
             throw new NullPointerException();
         }
         m_possibleValueOutputFormat = f;
+    }
+
+    /**
+     * Set the format of the type name
+     * @param format
+     * @since 5.5
+     */
+    public void setTypeNameFormat(final TypeNameFormat format) {
+        m_typeNameFormat = format;
     }
 
     /**
@@ -232,7 +288,14 @@ public class DataTableSpecExtractor {
             if (m_extractColumnNameAsColumn) {
                 cells.add(new StringCell(colSpec.getName()));
             }
-            cells.add(new StringCell(colSpec.getType().toString()));
+
+            final var typeName = switch (m_typeNameFormat) {
+                case IDENTIFIER -> colSpec.getType().getIdentifier();
+                case LEGACY_DISPLAY_NAME -> colSpec.getType().toLegacyString(); // NOSONAR: deprecated
+                case DISPLAY_NAME -> colSpec.getType().toString();
+            };
+            cells.add(new StringCell(typeName));
+
             cells.add(new IntCell(i));
 
             ColorHandler colorHandler = colSpec.getColorHandler();

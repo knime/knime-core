@@ -57,6 +57,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.DataTableSpecExtractor;
 import org.knime.core.data.util.DataTableSpecExtractor.PossibleValueOutputFormat;
 import org.knime.core.data.util.DataTableSpecExtractor.PropertyHandlerOutputFormat;
+import org.knime.core.data.util.DataTableSpecExtractor.TypeNameFormat;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.port.PortObjectSpecView;
 import org.knime.core.node.tableview.TableContentModel;
@@ -114,6 +115,7 @@ public class DataTableSpecView extends JPanel implements PortObjectSpecView {
             e.setExtractColumnNameAsColumn(false);
             e.setPossibleValueOutputFormat(PossibleValueOutputFormat.Columns);
             e.setPropertyHandlerOutputFormat(PropertyHandlerOutputFormat.ToString);
+            e.setTypeNameFormat(TypeNameFormat.DISPLAY_NAME);
             return e.extract(spec);
         } else {
             String[] names = new String[]{"No outgoing table spec"};
