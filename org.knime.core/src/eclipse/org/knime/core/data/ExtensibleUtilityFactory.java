@@ -301,15 +301,57 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     }
 
     /**
-     * Returns a name for the data value this utility factory is responsible for.
+     * Returns a human-readable name for the data value this utility factory is responsible for. This name may change at
+     * any time and should not be used for any kind of type identification.
      *
-     * @return a (short) name
+     * @return a (short) name, never <code>null</code>
      */
     public abstract String getName();
 
     /**
-     * {@inheritDoc}
+     * Return the name that this data type used to go by. This is used to ensure backwards compatibility with older
+     * versions of KNIME, as this name sometimes was used to identify the data type. This is bad practice and should be
+     * avoided. See AP-23571. Affected nodes include e.g. the Table Manipulator and the Extract Table Spec Node.
+     *
+     * @return the legacy name of the data type
+     * @see DataType#getLegacyName()
+     * @since 5.5
+     * @noreference This method is not intended to be referenced by clients. Use {@link DataType#getLegacyName()}.
      */
+    public final String getLegacyName() {
+        if (m_legacyName == null) {
+            // caching to avoid creating a new array for every call to getLegacyName[s]()
+            final var names = getLegacyNames(); // may be overridden
+            if (names != null && names.length > 0) {
+                m_legacyName = names[0];
+            } else {
+                m_legacyName = getName();
+            }
+        }
+        return m_legacyName;
+    }
+
+    /** See {@link #getLegacyName()} */
+    private String m_legacyName;
+
+    /**
+     * Returns an array of names that this data type used to go by. The oldest name should be the first element in the
+     * array. See {@link #getLegacyName()}.
+     *
+     * As of 5.5, only the first name will ever be used by the core framework to determine the legacy (= oldest) name of
+     * the data type. The other names are only recorded for documentation purposes for now. However, this may change in
+     * the future.
+     *
+     * This method should be overridden by subclasses if the data type has changed its name (i.e. the output of
+     * {@link #getName()} in the past.
+     *
+     * @return an array of previous names of the data type
+     * @since 5.5
+     */
+    protected String[] getLegacyNames() {
+        return new String[0];
+    }
+
     @Override
     protected final DataValueRendererFamily getRendererFamily(final DataColumnSpec spec) {
         readRenderersFromExtensionPoint();

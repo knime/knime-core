@@ -63,6 +63,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -71,6 +72,7 @@ import javax.swing.Icon;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.convert.map.IdentifiableType;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRendererFamily;
@@ -131,7 +133,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @see org.knime.core.data.DataValue
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class DataType {
+public final class DataType implements IdentifiableType {
 
     /**
      * Backward compatible class of a missing cell. The INSTANCE has been replaced by MissingCell in the same package
@@ -732,7 +734,7 @@ public final class DataType {
     /** a map that caches whether certain encountered types are subtypes of this type */
     private final Map<DataType, Boolean> m_subTypes = new ConcurrentHashMap<>(100, 1 / 3f);
 
-    private String m_name;
+    private final Optional<UtilityFactory> m_utilityFactory;
 
     /** the cached hash code of this type */
     private final int m_hashCode;
@@ -767,6 +769,7 @@ public final class DataType {
         m_collectionElementType = collectionElementType;
         m_adapterValueList = adapterClasses;
         m_hashCode = computeHashCode();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -825,14 +828,8 @@ public final class DataType {
         }
         m_collectionElementType = elementType;
 
-        UtilityFactory utilityFac = DataType.getUtilityFor(getPreferredValueClass());
-        if (utilityFac instanceof ExtensibleUtilityFactory) {
-            m_name = ((ExtensibleUtilityFactory) utilityFac).getName();
-        } else if (m_cellClass != null) {
-            m_name = m_cellClass.getSimpleName();
-        } else {
-            m_name = null;
-        }
+        final var utilityFac = DataType.getUtilityFor(getPreferredValueClass());
+        m_utilityFactory = Optional.of(utilityFac);
         m_hashCode = computeHashCode();
     }
 
@@ -865,6 +862,7 @@ public final class DataType {
         m_collectionElementType = type.m_collectionElementType;
         m_adapterValueList = type.m_adapterValueList;
         m_hashCode = computeHashCode();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -905,6 +903,7 @@ public final class DataType {
         }
         m_cellClass = null;
         m_hashCode = computeHashCode();
+        m_utilityFactory = Optional.empty();
     }
 
     /**
@@ -1377,17 +1376,6 @@ public final class DataType {
         return valueClasses;
     }
 
-
-    /**
-     * Returns a human-readable name for this data type.
-     *
-     * @return the data types' name
-     * @since 3.0
-     */
-    public String getName() {
-        return (m_name != null) ? m_name : "?";
-    }
-
     /**
      * Returns a cell factory that can create cells of this DataType. If no cell factory is available, an empty
      * {@link Optional} is returned.
@@ -1423,59 +1411,137 @@ public final class DataType {
     }
 
     /**
-     * Returns the simple name of the {@link DataCell} class (if any) or
-     * <i>Non-Native</i> the <code>toString()</code> results of all compatible
-     * values classes.
-     * {@inheritDoc}
+     * If given, returns the specified name of the data type, as per {@link ExtensibleUtilityFactory#getName()}. If the
+     * name is not specified, returns the simple name of the {@link DataCell} class (if any) or "Non-Native " followed
+     * by the list of value classes.
+     *
+     * If the type has a collection element type, the string will be appended with " (Collection of: " followed by the
+     * string representation of the collection element type.
      */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder();
-        if (m_name != null) {
-            b.append(m_name);
-        } else {
-            b.append("Non-Native ");
-            b.append(Arrays.toString(m_valueClasses.toArray()));
-        }
-        if (getCollectionElementType() != null) {
-            b.append(" (Collection of: ");
-            b.append(getCollectionElementType().toString());
-            b.append(")");
-        }
-        return b.toString();
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.STRING, m_collectionElementType);
     }
 
     /**
-     * A slightly nicer string representation that can be used in UI elements. It will strip off fully qualified name
-     * of data value interface if this a non-native type.
+     * Returns the same as {@link #toString()}, but assuming that the oldest name this data type has ever had would be
+     * the current. This is solely useful for backwards-compatibility and should not be used for any other purpose.
      *
-     * <p>For a non-native type, say a DoubleCell type with a different
-     * preferred value, it would return "Non-Native [ComplexNumber, Double, DataValue, ...]"
+     * @return The output of {@link #toString()}, assuming {@link #getLegacyName()} was the current name of the type.
+     * @since 5.5
+     */
+    public String toLegacyString() {
+        // Some parts of our software (and potentially external plugins) rely (or relied) on the string representation
+        // of a type to uniquely identify the type. We highly discourage this practice, but for backwards-compatibility
+        // reasons, we provide this API to retrieve the oldest string representation of a type. This might be the same
+        // as the current output of #toString(), but might also differ.
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.STRING, m_collectionElementType);
+    }
+
+    /**
+     * A slightly nicer string representation that can be used in UI elements. It will strip off fully qualified name of
+     * data value interface if this a non-native type.
+     *
+     * <p>
+     * For a non-native type, say a DoubleCell type with a different preferred value, it would return "Non-Native
+     * [ComplexNumber, Double, DataValue, ...]"
+     * </p>
+     *
+     * The output of this method may change at any time and should not be used for any type of identification. Use
+     * {@link #getIdentifier()} instead.
      *
      * @return A (non-canonical) string representation of this type, never null.
      * @since 3.0
      */
     public String toPrettyString() {
-        StringBuilder b = new StringBuilder();
-        if (m_name != null) {
-            b.append(m_name);
-        } else {
-            b.append("Non-Native ");
-            for (int i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
-                b.append(i == 0 ? "[" : ", ");
-                b.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
-            }
-            b.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
-        }
-        if (getCollectionElementType() != null) {
-            b.append(" (Collection of: ");
-            b.append(getCollectionElementType().toString());
-            b.append(")");
-        }
-        return b.toString();
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.PRETTY_STRING, m_collectionElementType);
     }
 
-    private static String stripEnd(final String toStrip, final String... ends) {
+    /**
+     * Returns the same as {@link #toPrettyString()}, but assuming that the oldest name this data type has ever had
+     * would be the current. This is solely useful for backwards-compatibility and should not be used for any other
+     * purpose. The output of this method may change at any time and should not be used for any type of identification.
+     *
+     * @return The output of {@link #toPrettyString()}, assuming {@link #getLegacyName()} was the current name of the
+     *         type.
+     * @since 5.5
+     */
+    public String toLegacyPrettyString() {
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.PRETTY_STRING, m_collectionElementType);
+    }
+
+    /**
+     * Returns a human-readable name for this data type. This name may change at any time and should not be used for any
+     * type of identification. Use {@link #getIdentifier()} instead.
+     *
+     * @return a human-readable name for this data type or the cell class name if not available
+     * @since 3.0
+     */
+    public String getName() {
+        return makeString(ExtensibleUtilityFactory::getName, OutputType.NAME, null);
+    }
+
+    /**
+     * Retrieve the first ever name that this data type had. May be used for backwards-compatibility, but other usage is
+     * strongly discouraged. The returned name may also be the current name, if the name has never changed, or the cell
+     * class name if the utility factory does not provide names.
+     *
+     * @return oldest name of this data type
+     * @see #getName()
+     * @see ExtensibleUtilityFactory#getLegacyName()
+     * @since 5.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public String getLegacyName() {
+        return makeString(ExtensibleUtilityFactory::getLegacyName, OutputType.NAME, null);
+    }
+
+    private enum OutputType {
+            NAME, STRING, PRETTY_STRING;
+    }
+
+    private String makeString(final Function<ExtensibleUtilityFactory, String> extractName,
+        final OutputType outputConfig, final DataType collectionElementType) {
+        final var sb = new StringBuilder();
+        if (m_utilityFactory.orElse(null) instanceof ExtensibleUtilityFactory euf) {
+            sb.append(extractName.apply(euf));
+        } else if (m_cellClass != null) {
+            sb.append(m_cellClass.getSimpleName());
+        } else {
+            sb.append(makeNonNativeName(outputConfig));
+        }
+        if (collectionElementType != null && outputConfig != OutputType.NAME) {
+            sb.append(" (Collection of: ");
+            sb.append(collectionElementType.makeString(extractName, OutputType.STRING,
+                collectionElementType.getCollectionElementType()));
+            sb.append(")");
+        }
+        return sb.toString();
+    }
+
+    private String makeNonNativeName(final OutputType outputConfig) {
+        final var sb = new StringBuilder();
+        switch (outputConfig) {
+            case NAME:
+                sb.append("?");
+                break;
+            case STRING:
+                sb.append("Non-Native ");
+                sb.append(Arrays.toString(m_valueClasses.toArray()));
+                break;
+            case PRETTY_STRING: // NOSONAR: not too complicated code
+                sb.append("Non-Native ");
+                for (var i = 0; i < Math.min(3, m_valueClasses.size()); i++) {
+                    sb.append(i == 0 ? "[" : ", ");
+                    sb.append(stripEnd(m_valueClasses.get(i).getSimpleName(), "DataValue", "Value"));
+                }
+                sb.append(m_valueClasses.size() > 3 ? ", ...]" : "]");
+                break;
+        }
+        return sb.toString();
+    }
+
+    private static final String stripEnd(final String toStrip, final String... ends) {
         if (Arrays.asList(ends).contains(toStrip)) {
             return toStrip;
         }
@@ -1484,6 +1550,22 @@ public final class DataType {
             result = StringUtils.removeEndIgnoreCase(result, end);
         }
         return result;
+    }
+
+    @Override
+    public String getIdentifier() {
+        final var sb = new StringBuilder();
+        if (m_cellClass != null) {
+            sb.append(m_cellClass.getName());
+        } else {
+            sb.append(Arrays.toString(m_valueClasses.toArray()));
+        }
+        if (m_collectionElementType != null) {
+            sb.append("<");
+            sb.append(m_collectionElementType.getIdentifier());
+            sb.append(">");
+        }
+        return sb.toString();
     }
 
     private static final class ClassAndSubDataTypePair {
