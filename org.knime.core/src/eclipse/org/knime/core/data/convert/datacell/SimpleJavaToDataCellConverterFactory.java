@@ -47,6 +47,8 @@
 
 package org.knime.core.data.convert.datacell;
 
+import java.util.List;
+
 import org.knime.core.data.DataType;
 import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
 import org.knime.core.data.filestore.FileStoreFactory;
@@ -146,7 +148,15 @@ public class SimpleJavaToDataCellConverterFactory<T>
 
     @Override
     public String getIdentifier() {
-        return getClass().getName() + "(" + m_sourceType.getSimpleName() + "," + m_dataType.toString() + "," + m_name
-            + ")";
+        return makeIdentifier(m_dataType.getIdentifier());
+    }
+
+    @Override
+    public Iterable<String> getIdentifierAliases() {
+        return List.of(makeIdentifier(m_dataType.toLegacyString()));
+    }
+
+    private String makeIdentifier(final String destTypeString) {
+        return getClass().getName() + "(" + m_sourceType.getSimpleName() + "," + destTypeString + "," + m_name + ")";
     }
 }

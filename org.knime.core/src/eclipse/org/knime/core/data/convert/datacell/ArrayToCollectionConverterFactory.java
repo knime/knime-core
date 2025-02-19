@@ -50,6 +50,7 @@ package org.knime.core.data.convert.datacell;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -299,7 +300,17 @@ public class ArrayToCollectionConverterFactory<S, SE> implements JavaToDataCellC
 
     @Override
     public String getIdentifier() {
-        return getClass().getName() + "(" + m_elementConverterFactory.getIdentifier() + ")";
+        return makeIdentifier(m_elementConverterFactory.getIdentifier());
+    }
+
+    @Override
+    public Iterable<String> getIdentifierAliases() {
+        return StreamSupport.stream(m_elementConverterFactory.getIdentifierAliases().spliterator(), false)
+            .map(this::makeIdentifier).toList();
+    }
+
+    private final String makeIdentifier(final String inner) {
+        return getClass().getName() + "(" + inner + ")";
     }
 
     @Override

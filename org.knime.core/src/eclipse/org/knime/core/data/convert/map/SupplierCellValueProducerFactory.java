@@ -48,8 +48,10 @@
  */
 package org.knime.core.data.convert.map;
 
+import java.util.List;
 import java.util.function.Supplier;
 
+import org.knime.core.data.DataType;
 import org.knime.core.data.convert.map.Source.ProducerParameters;
 
 /**
@@ -88,7 +90,20 @@ public final class SupplierCellValueProducerFactory<S extends Source<ET>, ET, T,
 
     @Override
     public String getIdentifier() {
-        return m_externalType + "->" + m_destType.getName();
+        if (m_externalType instanceof DataType dt) {
+            return dt.getIdentifier() + "->" + m_destType.getName();
+        } else {
+            return m_externalType.toString() + "->" + m_destType.getName();
+        }
+    }
+
+    @Override
+    public Iterable<String> getIdentifierAliases() {
+        if (m_externalType instanceof DataType dt) {
+            return List.of(dt.toLegacyString() + "->" + m_destType.getName());
+        } else {
+            return List.of();
+        }
     }
 
     @Override
