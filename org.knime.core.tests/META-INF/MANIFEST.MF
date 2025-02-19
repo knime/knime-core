@@ -29,7 +29,8 @@ Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
  assertj-core;bundle-version="[3.22.0,4.0.0)",
  org.skyscreamer.jsonassert;bundle-version="[1.5.1,2.0.0)",
  org.json;bundle-version="[20240303.0.0,20240304.0.0)",
- slf4j.api;bundle-version="[2.0.12,3.0.0)"
+ slf4j.api;bundle-version="[2.0.12,3.0.0)",
+ org.knime.core.data.uritype;bundle-version="[5.5.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
