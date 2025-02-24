@@ -944,7 +944,12 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.2
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig) {
-        return replaceNode(id, newCreationConfig, null, true);
+        return replaceNode(id, newCreationConfig, null, true, null);
+    }
+
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
+        return replaceNode(id, newCreationConfig, null, true, portChangeMapping);
     }
 
     /**
@@ -969,7 +974,13 @@ public final class WorkflowManager extends NodeContainer
      */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory) {
-        return replaceNode(id, newCreationConfig, factory, true);
+        return replaceNode(id, newCreationConfig, factory, true, null);
+    }
+
+    public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
+        final NodeFactory<?> factory,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
+        return replaceNode(id, newCreationConfig, factory, true, portChangeMapping);
     }
 
     /**
@@ -998,7 +1009,8 @@ public final class WorkflowManager extends NodeContainer
      */
     @SuppressWarnings("java:S2301") // "selector" argument `transferNodeSettings` is reasonable here.
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final NodeFactory<?> factory, final boolean transferNodeSettingsAndLabel) {
+        final NodeFactory<?> factory, final boolean transferNodeSettingsAndLabel,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portMapping) {
         CheckUtils.checkState(canReplaceNode(id), "Node cannot be replaced");
         try (WorkflowLock lock = lock()) {
             var nnc = (NativeNodeContainer)getNodeContainer(id);
@@ -1059,8 +1071,8 @@ public final class WorkflowManager extends NodeContainer
                 replaceWithSameNodeType ? oldCreationConfig : null, //
                 replaceWithSameNodeType ? newCreationConfig : null, //
                 incomingConnections, //
-                outgoingConnections //
-            );
+                outgoingConnections, //
+                portMapping);
 
             // notify listeners if port config has changed
             if (replaceWithSameNodeType && nodeCreationConfigHasChangedPorts(oldCreationConfig, newCreationConfig)) {
@@ -1110,15 +1122,33 @@ public final class WorkflowManager extends NodeContainer
         return new Pair<>(inputPortMapping, outputPortMapping);
     }
 
+    /*private static Pair<Map<Integer, Integer>, Map<Integer, Integer>> testConfigMapping(final ModifiableNodeCreationConfiguration oldCreationConfig,
+        final ModifiableNodeCreationConfiguration newCreationConfig) {
+        Map<Integer, Integer> inputPortMapping = null;
+        Map<Integer, Integer> outputPortMapping = null;
+        if (oldCreationConfig != null && newCreationConfig != null) {
+            var oldPortConfig = oldCreationConfig.getPortConfig();
+            var newPortConfig = newCreationConfig.getPortConfig();
+            if (oldPortConfig.isPresent() && newPortConfig.isPresent()) {
+                inputPortMapping = oldPortConfig.get().getInputPortLocation();
+                outputPortMapping = oldPortConfig.get().getOutputPortLocation();
+            }
+        }
+        return new Pair<>(inputPortMapping, outputPortMapping);
+    }*/
+
     private List<ConnectionContainer> reconnect(final NodeID newId,
         final ModifiableNodeCreationConfiguration oldCreationConfig,
         final ModifiableNodeCreationConfiguration newCreationConfig, final Set<ConnectionContainer> incomingConnections,
-        final Set<ConnectionContainer> outgoingConnections) {
+        final Set<ConnectionContainer> outgoingConnections,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> customPortMapping) {
 
         List<ConnectionContainer> removedConnections = new ArrayList<>();
-
+        var portChange = Optional.ofNullable(customPortMapping);
         // set incoming connections
-        var portMappings = getPortConfigMapping(oldCreationConfig, newCreationConfig);
+        var portMappings = portChange.isPresent() ? portChange.get()
+            : getPortConfigMapping(oldCreationConfig, newCreationConfig);
+        //var portMappings = getPortConfigMapping(oldCreationConfig, newCreationConfig);
         Map<Integer, Integer> inputPortMapping = portMappings.getFirst();
         Map<Integer, Integer> outputPortMapping = portMappings.getSecond();
 
