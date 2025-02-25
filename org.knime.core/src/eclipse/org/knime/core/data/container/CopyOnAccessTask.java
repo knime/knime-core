@@ -57,6 +57,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.text.NumberFormat;
+import java.util.Optional;
 import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -71,6 +72,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
 
@@ -93,6 +95,9 @@ final class CopyOnAccessTask {
      * files won't report their copying (if faster than this threshold). */
     private static final long NOTIFICATION_DELAY = 3000;
 
+    /** The node's context set at construction time. It will be set during copying (which happens asynchronously), to
+     * guarantee that the copied file is extracted into the workflow's temp directory. Added as part of AP-24014. */
+    private final Optional<NodeContext> m_contextOptional;
     /** To read from. */
     private final ReferencedFile m_fileRef;
     /** The spec corresponding to the table in m_fileRef. */
@@ -123,6 +128,7 @@ final class CopyOnAccessTask {
         m_bufferID = bufferID;
         m_dataRepository = dataRepository;
         m_bufferCreator = rowKeys ? new BufferCreator() : new NoKeyBufferCreator();
+        m_contextOptional = NodeContext.getContextOptional();
     }
 
     /**
@@ -135,6 +141,7 @@ final class CopyOnAccessTask {
         // is in progress.
         TimerTask timerTask = null;
         m_fileRef.lock();
+        m_contextOptional.ifPresent(NodeContext::pushContext);
         try {
             final File file = m_fileRef.getFile();
             timerTask = new TimerTask() {
@@ -156,6 +163,7 @@ final class CopyOnAccessTask {
                 timerTask.cancel();
             }
             m_fileRef.unlock();
+            m_contextOptional.ifPresent(c -> NodeContext.removeLastContext());
         }
     }
 
