@@ -246,19 +246,21 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Counter of non-gc'ed instances that are flagged as projects, including repository managers (e.g. incl. ROOT).
+     *
      * @noreference This field is not intended to be referenced by clients.
      * @since 5.5
      */
     public static final InstanceCounter<WorkflowManager> PROJECT_COUNTER =
-            InstanceCounter.register(WorkflowManager.class, "project");
+        InstanceCounter.register(WorkflowManager.class, "project");
 
     /**
      * Counter of non-gc'ed instances that are flagged as non-projects, i.e. metanodes and subnodes.
+     *
      * @noreference This field is not intended to be referenced by clients.
      * @since 5.5
      */
     public static final InstanceCounter<WorkflowManager> NO_PROJECT_COUNTER =
-            InstanceCounter.register(WorkflowManager.class, "no project");
+        InstanceCounter.register(WorkflowManager.class, "no project");
 
     /**
      * Name of this workflow (usually displayed at top of the node figure). May be null to use name of workflow
@@ -494,10 +496,10 @@ public final class WorkflowManager extends NodeContainer
             createAndSetWorkflowTempDirectory(context);
             m_tableBackendSettings = new WorkflowTableBackendSettings();
             m_metadata = WorkflowMetadata.fluentBuilder() //
-                    .withPlainContent() //
-                    .withLastModifiedNow() //
-                    .withDescription("") //
-                    .build();
+                .withPlainContent() //
+                .withLastModifiedNow() //
+                .withDescription("") //
+                .build();
         } else {
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -622,13 +624,13 @@ public final class WorkflowManager extends NodeContainer
             } else {
                 LOGGER.coding("No workflow metadata available for " + m_name, new Throwable());
                 m_metadata = WorkflowMetadata.fluentBuilder() //
-                        .withPlainContent() //
-                        .withLastModifiedNow() //
-                        .withDescription("") //
-                        .build();
+                    .withPlainContent() //
+                    .withLastModifiedNow() //
+                    .withDescription("") //
+                    .build();
             }
             m_tableBackendSettings = Optional.ofNullable(persistor.getWorkflowTableBackendSettings()) //
-                    .orElseGet(WorkflowTableBackendSettings::new);
+                .orElseGet(WorkflowTableBackendSettings::new);
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -947,6 +949,23 @@ public final class WorkflowManager extends NodeContainer
         return replaceNode(id, newCreationConfig, null, true, null);
     }
 
+    /**
+     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
+     * ports.
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node
+     * @param portChangeMapping two maps identifying how port indices change
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
         return replaceNode(id, newCreationConfig, null, true, portChangeMapping);
@@ -977,9 +996,28 @@ public final class WorkflowManager extends NodeContainer
         return replaceNode(id, newCreationConfig, factory, true, null);
     }
 
+    /**
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
+     *
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
+     * @param portChangeMapping two maps identifying how port indices change
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors)
+     * @throws IllegalArgumentException if there is no node for the given id
+     */
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final NodeFactory<?> factory,
-        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
+        final NodeFactory<?> factory, final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
         return replaceNode(id, newCreationConfig, factory, true, portChangeMapping);
     }
 
@@ -1001,6 +1039,7 @@ public final class WorkflowManager extends NodeContainer
      *            same original type
      * @param transferNodeSettingsAndLabel whether to transfer the (matching) node settings and node label (aka node
      *            annotation) from one node to the other
+     * @param portMapping two maps identifying how port indices change
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
      *             node-creation-config is provided)
@@ -1034,9 +1073,8 @@ public final class WorkflowManager extends NodeContainer
 
             // make sure that creation configs are provided if a node is replaced with the same type
             if (replaceWithSameNodeType && oldCreationConfig == null) {
-                throw new IllegalStateException(String
-                    .format("<%s> cannot be replaced, no `ModifiableNodeCreationConfiguration` provided as parameter",
-                        id));
+                throw new IllegalStateException(String.format(
+                    "<%s> cannot be replaced, no `ModifiableNodeCreationConfiguration` provided as parameter", id));
             }
             if (replaceWithSameNodeType && newCreationConfig == null) {
                 throw new IllegalStateException(String.format(
@@ -1080,7 +1118,7 @@ public final class WorkflowManager extends NodeContainer
             }
 
             return new ReplaceNodeResult(this, id, removedConnections, oldCreationConfig,
-                replaceWithSameNodeType ? null : oldNodeFactory, settings, nodeAnnotation);
+                replaceWithSameNodeType ? null : oldNodeFactory, settings, nodeAnnotation, portMapping);
         }
     }
 
@@ -1122,21 +1160,6 @@ public final class WorkflowManager extends NodeContainer
         return new Pair<>(inputPortMapping, outputPortMapping);
     }
 
-    /*private static Pair<Map<Integer, Integer>, Map<Integer, Integer>> testConfigMapping(final ModifiableNodeCreationConfiguration oldCreationConfig,
-        final ModifiableNodeCreationConfiguration newCreationConfig) {
-        Map<Integer, Integer> inputPortMapping = null;
-        Map<Integer, Integer> outputPortMapping = null;
-        if (oldCreationConfig != null && newCreationConfig != null) {
-            var oldPortConfig = oldCreationConfig.getPortConfig();
-            var newPortConfig = newCreationConfig.getPortConfig();
-            if (oldPortConfig.isPresent() && newPortConfig.isPresent()) {
-                inputPortMapping = oldPortConfig.get().getInputPortLocation();
-                outputPortMapping = oldPortConfig.get().getOutputPortLocation();
-            }
-        }
-        return new Pair<>(inputPortMapping, outputPortMapping);
-    }*/
-
     private List<ConnectionContainer> reconnect(final NodeID newId,
         final ModifiableNodeCreationConfiguration oldCreationConfig,
         final ModifiableNodeCreationConfiguration newCreationConfig, final Set<ConnectionContainer> incomingConnections,
@@ -1145,10 +1168,8 @@ public final class WorkflowManager extends NodeContainer
 
         List<ConnectionContainer> removedConnections = new ArrayList<>();
         var portChange = Optional.ofNullable(customPortMapping);
-        // set incoming connections
-        var portMappings = portChange.isPresent() ? portChange.get()
-            : getPortConfigMapping(oldCreationConfig, newCreationConfig);
-        //var portMappings = getPortConfigMapping(oldCreationConfig, newCreationConfig);
+        var portMappings =
+            portChange.isPresent() ? portChange.get() : getPortConfigMapping(oldCreationConfig, newCreationConfig);
         Map<Integer, Integer> inputPortMapping = portMappings.getFirst();
         Map<Integer, Integer> outputPortMapping = portMappings.getSecond();
 
@@ -2099,8 +2120,8 @@ public final class WorkflowManager extends NodeContainer
                 // this is only to retain the connections set on the report input
                 newPorts = ArrayUtils.add(newPortsRaw,
                     MetaPortInfo.builder().setOldIndex(snc.getNrInPorts() - 1).setNewIndex(newPortsRaw.length)
-                    .setIsConnected(getIncomingConnectionFor(subFlowID, snc.getNrInPorts() - 1) != null)
-                    .setPortType(IReportPortObject.TYPE).build());
+                        .setIsConnected(getIncomingConnectionFor(subFlowID, snc.getNrInPorts() - 1) != null)
+                        .setPortType(IReportPortObject.TYPE).build());
             } else {
                 newPorts = newPortsRaw;
             }
@@ -2121,9 +2142,9 @@ public final class WorkflowManager extends NodeContainer
                 subFlow.removeConnection(p.getFirst());
             }
             final PortType[] portTypes = Stream.of(newPortsRaw) //
-                    .skip(1) // flow var port
-                    .map(MetaPortInfo::getType) //
-                    .toArray(PortType[]::new);
+                .skip(1) // flow var port
+                .map(MetaPortInfo::getType) //
+                .toArray(PortType[]::new);
             snc.setInPorts(portTypes, snc.getReportConfiguration().isPresent());
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
@@ -2163,22 +2184,22 @@ public final class WorkflowManager extends NodeContainer
                 return;
             }
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
-                    m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
+                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
                 removeConnection(old);
             }
             final var subFlow = snc.getWorkflowManager();
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                    subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPortsRaw, true);
+                subFlow.m_workflow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPortsRaw, true);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
             }
             final PortType[] portTypes = Stream.of(newPortsRaw) //
-                    .skip(1) // flow var port
-                    .map(MetaPortInfo::getType) //
-                    .toArray(PortType[]::new);
+                .skip(1) // flow var port
+                .map(MetaPortInfo::getType) //
+                .toArray(PortType[]::new);
             snc.setOutPorts(portTypes, snc.getReportConfiguration().isPresent());
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
@@ -3011,8 +3032,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Called by views of {@link InteractiveNode interactive nodes}. It will take the model settings of the NodeModel and save
-     * them in the {@link SingleNodeContainerSettings} so that they become the default for the next execution.
+     * Called by views of {@link InteractiveNode interactive nodes}. It will take the model settings of the NodeModel
+     * and save them in the {@link SingleNodeContainerSettings} so that they become the default for the next execution.
      *
      * @param id The node in question.
      * @since 2.8
@@ -4437,7 +4458,8 @@ public final class WorkflowManager extends NodeContainer
         final WorkflowManager subWFM, final Map<NodeID, NodeID> oldIDsHash) {
         final var virtualInID = snc.getVirtualInNodeID();
         final var virtualOutID = snc.getVirtualOutNodeID();
-        record NodeAndPort(NodeID nodeId, int outportIndex) {}
+        record NodeAndPort(NodeID nodeId, int outportIndex) {
+        }
         final var incomingThroughConnectionMap = new HashMap<ConnectionContainer, NodeAndPort>();
         // connect connections TO the sub workflow:
         for (ConnectionContainer outerConnection : m_workflow.getConnectionsByDest(nodeID)) {
@@ -4457,8 +4479,7 @@ public final class WorkflowManager extends NodeContainer
         // connect connections FROM the sub workflow:
         // (copy since collection is modified by replacing connections)
         for (ConnectionContainer outerConnection : new ArrayList<>(m_workflow.getConnectionsBySource(nodeID))) {
-            for (ConnectionContainer innerConnection : subWFM.m_workflow
-                .getConnectionsByDest(virtualOutID)) {
+            for (ConnectionContainer innerConnection : subWFM.m_workflow.getConnectionsByDest(virtualOutID)) {
                 if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
                     // three cases (there are more but 3 cases when there is an outside downstream connection)
                     // (1) through connection and a connection outside to an upstream node - needs rewiring
@@ -5261,7 +5282,7 @@ public final class WorkflowManager extends NodeContainer
     private void invokeResetOnSingleNodeContainer(final SingleNodeContainer snc) {
         assert m_workflowLock.isHeldByCurrentThread();
         snc.rawReset();
-        createAndSetFlowObjectStackFor(snc, new FlowObjectStack[] {}); // AP-21890
+        createAndSetFlowObjectStackFor(snc, new FlowObjectStack[]{}); // AP-21890
         snc.getNodeTimer().resetNode();
         if (snc.isModelCompatibleTo(LoopStartNode.class)) {
             ((NativeNodeContainer)snc).getNode().setLoopEndNode(null);
@@ -5272,8 +5293,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Can the argument node be modified, i.e. not in execution, has no downstream executors and this workflow
-     * itself can be modified (not embedded in a subnode that has downstream executors).
+     * Can the argument node be modified, i.e. not in execution, has no downstream executors and this workflow itself
+     * can be modified (not embedded in a subnode that has downstream executors).
      *
      * @param nodeID The node in question.
      * @return that property.
@@ -5381,9 +5402,9 @@ public final class WorkflowManager extends NodeContainer
      * equivalents.
      *
      * @param nodeID of the target node. This node and all its successors will be reset.
-     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the
-     *            metanode will be reset which are successors of the target node (i.e., as if the metanode contents were
-     *            part of the parent workflow).
+     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the metanode will
+     *            be reset which are successors of the target node (i.e., as if the metanode contents were part of the
+     *            parent workflow).
      */
     private void resetNodeAndSuccessors(final NodeID nodeID, final boolean fullyResetMetanodes) {
         assert m_workflowLock.isHeldByCurrentThread();
@@ -5510,10 +5531,11 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * Reset and configure node and all successors
+     *
      * @param node Reset and configure this node and its successors
-     * @param fullyResetMetanodes If true, all nodes in a metanode successor are reset and configured.
-     *                            If false, only those contained nodes which are in fact strict successors (as if the
-     *                            metanode was expanded) are reset and configured).
+     * @param fullyResetMetanodes If true, all nodes in a metanode successor are reset and configured. If false, only
+     *            those contained nodes which are in fact strict successors (as if the metanode was expanded) are reset
+     *            and configured).
      * @since 5.3
      */
     public void resetAndConfigureNode(final NodeID node, final boolean fullyResetMetanodes) {
@@ -5627,9 +5649,9 @@ public final class WorkflowManager extends NodeContainer
      * @param port index of output port of which successors should be reset, or -1 to reset successors connected to any
      *            out port.
      * @param propagateOutside whether to propagate the reset outside this metanode/component (iff...)
-     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the
-     *            metanode will be reset which are successors of the target node (i.e., as if the metanode contents were
-     *            part of the parent workflow).
+     * @param fullyResetMetanodes Whether to fully reset a metanode successor. If false, only nodes in the metanode will
+     *            be reset which are successors of the target node (i.e., as if the metanode contents were part of the
+     *            parent workflow).
      */
     void resetSuccessors(final NodeID node, final int port, final boolean propagateOutside,
         final boolean fullyResetMetanodes) {
@@ -5686,8 +5708,8 @@ public final class WorkflowManager extends NodeContainer
      * @param handleMetanodesAsSingleNodes Whether traversal should be aware of the workflow inside a metanode, or treat
      *            the metanode as a single node.
      */
-    private void resetSuccessorsOfConnectionWithinWorkflow(final SingleNodeContainer successor, final boolean propagateOutside,
-        final boolean handleMetanodesAsSingleNodes) {
+    private void resetSuccessorsOfConnectionWithinWorkflow(final SingleNodeContainer successor,
+        final boolean propagateOutside, final boolean handleMetanodesAsSingleNodes) {
         resetSuccessors(successor.getID(), -1, propagateOutside, handleMetanodesAsSingleNodes);
         if (successor.isResetable()) {
             invokeResetOnSingleNodeContainer(successor);
@@ -5701,7 +5723,8 @@ public final class WorkflowManager extends NodeContainer
      * @param successor The metanode to reset
      * @param propagateOutside Whether traversal of successors should leave the current workflow.
      */
-    private void resetSuccessorsOfConnectionWithinWorkflow(final WorkflowManager successor, final boolean propagateOutside) {
+    private void resetSuccessorsOfConnectionWithinWorkflow(final WorkflowManager successor,
+        final boolean propagateOutside) {
         resetSuccessors(successor.getID(), -1, propagateOutside, true);
         if (successor.isResetable()) {
             // Do not need specifically reset loop context: Any loop start nodes in the metanode workflow are reset
@@ -7286,8 +7309,8 @@ public final class WorkflowManager extends NodeContainer
 
             if (!notFullyConnectedNodes.isEmpty()) {
                 if (notFullyConnectedNodes.size() == 1) {
-                    msgBuilder.withSummary("Contains an unconnected node (\"%s\")".formatted(
-                        notFullyConnectedNodes.iterator().next().getNameWithID(getID())));
+                    msgBuilder.withSummary("Contains an unconnected node (\"%s\")"
+                        .formatted(notFullyConnectedNodes.iterator().next().getNameWithID(getID())));
                 } else {
                     msgBuilder.withSummary("Contains %d unconnected nodes".formatted(notFullyConnectedNodes.size()));
                     notFullyConnectedNodes.stream().limit(3).map(nc -> nc.getNameWithID(getID()))
@@ -7903,7 +7926,7 @@ public final class WorkflowManager extends NodeContainer
         final var sourceURI = templInfo.getSourceURI();
 
         NodeContainerTemplate tempLink = Optional.ofNullable(visitedTemplateMap.get(sourceURI)) //
-                .map(TemplateUpdateCheckResult::template).orElse(null);
+            .map(TemplateUpdateCheckResult::template).orElse(null);
         if (tempLink == null) {
             try {
                 // we need a template to perform the update, download it unconditionally (see AP-22321)
@@ -8003,8 +8026,7 @@ public final class WorkflowManager extends NodeContainer
     public NodeContainerTemplateLinkUpdateResult updateMetaNodeLinks(final WorkflowLoadHelper lH,
         final boolean failOnLoadError, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         // all linked metanodes that need to be checked.
-        Map<NodeID, NodeContainerTemplate> linkedMetaNodes =
-            fillLinkedTemplateNodesList(new HashMap<>(), true, true);
+        Map<NodeID, NodeContainerTemplate> linkedMetaNodes = fillLinkedTemplateNodesList(new HashMap<>(), true, true);
         var linksChecked = 0;
         var linksUpdated = 0;
         final var update = new NodeContainerTemplateLinkUpdateResult(
@@ -8238,10 +8260,12 @@ public final class WorkflowManager extends NodeContainer
         addListener(listener, true);
     }
 
-    /** Add listener to listener list.
+    /**
+     * Add listener to listener list.
+     *
      * @param listener The non-null listener
      * @param isAsync True if the listener should is to be called asynchronously, false (=sync) only for internal
-     * listeners.
+     *            listeners.
      */
     void addListener(final WorkflowListener listener, final boolean isAsync) {
         m_wfmListeners.addIfAbsent(new WorkflowListenerAndAsyncFlag(listener, isAsync));
@@ -8466,8 +8490,8 @@ public final class WorkflowManager extends NodeContainer
         try (WorkflowLock lock = lock()) {
             CheckUtils.checkState(canModifyStructure(), "Cannot paste into workflow since execution is in progress");
             try {
-                return loadContent(persistor, new HashMap<>(), new FlowObjectStack(getID()),
-                    new ExecutionMonitor(), new LoadResult("Paste into Workflow"), false);
+                return loadContent(persistor, new HashMap<>(), new FlowObjectStack(getID()), new ExecutionMonitor(),
+                    new LoadResult("Paste into Workflow"), false);
             } catch (CanceledExecutionException e) {
                 throw new IllegalStateException("Cancelation although no access on execution monitor");
             }
@@ -9322,7 +9346,7 @@ public final class WorkflowManager extends NodeContainer
         return switch (def.getNodeType()) {
             case METANODE -> Optional.of(newMetaNodeInstance(this, nodeId, (MetaNodeDef)def));
             case NATIVENODE -> DefToCoreUtil.tryToNode((NativeNodeDef)def) //
-                    .map(node -> new NativeNodeContainer(this, nodeId, (NativeNodeDef)def, node));
+                .map(node -> new NativeNodeContainer(this, nodeId, (NativeNodeDef)def, node));
             case COMPONENT -> Optional.of(new SubNodeContainer(this, nodeId, (ComponentNodeDef)def));
         };
     }
@@ -11186,9 +11210,8 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Updates this workflow manager's workflow context.
-     * This is needed when the storage location of the workflow is changed from the outside (e.g. in Save-As for
-     * component templates, see AP-20541).
+     * Updates this workflow manager's workflow context. This is needed when the storage location of the workflow is
+     * changed from the outside (e.g. in Save-As for component templates, see AP-20541).
      *
      * @param newWorkflowContext a {@link WorkflowContextV2} or <code>null</code>
      * @since 5.1
@@ -11267,9 +11290,8 @@ public final class WorkflowManager extends NodeContainer
     @Override
     public void setContainerMetadata(final NodeContainerMetadata updatedMetadata) {
         if ((m_metadata == null) != (updatedMetadata == null)) {
-            throw new IllegalArgumentException(m_metadata == null
-                    ? "Only project workflow managers can have metadata"
-                        : "Project workflow manager must have metadata");
+            throw new IllegalArgumentException(m_metadata == null ? "Only project workflow managers can have metadata"
+                : "Project workflow manager must have metadata");
         }
         if (updatedMetadata instanceof WorkflowMetadata wfMetadata) {
             if (!m_metadata.equals(wfMetadata)) {
@@ -11280,7 +11302,7 @@ public final class WorkflowManager extends NodeContainer
             }
         } else if (updatedMetadata != null) {
             throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName() + "`, found: `"
-                    + updatedMetadata.getClass().getSimpleName() + "`");
+                + updatedMetadata.getClass().getSimpleName() + "`");
         }
     }
 }

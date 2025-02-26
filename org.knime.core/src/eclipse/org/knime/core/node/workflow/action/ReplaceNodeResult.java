@@ -48,7 +48,10 @@
  */
 package org.knime.core.node.workflow.action;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
@@ -61,6 +64,7 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 
 /**
  * Result of the replace node operation, e.g.,
@@ -88,6 +92,8 @@ public final class ReplaceNodeResult {
 
     private final NodeAnnotation m_originalNodeAnnotation;
 
+    private final Pair<Map<Integer, Integer>, Map<Integer, Integer>> m_portMappings;
+
     /**
      * New instance.
      *
@@ -100,11 +106,13 @@ public final class ReplaceNodeResult {
      * @param originalNodeSettings the settings of the deleted node
      * @param originalNodeAnnotation the original node annotation of the deleted node; won't be restored, if
      *            {@code null}
+     * @param portMappings port mappings used to reconnect after port removal
      */
     public ReplaceNodeResult(final WorkflowManager wfm, final NodeID replacedNodeID,
         final List<ConnectionContainer> removedConnections,
         final ModifiableNodeCreationConfiguration originalNodeCreationConfig, final NodeFactory<?> originalNodeFactory,
-        final NodeSettings originalNodeSettings, final NodeAnnotation originalNodeAnnotation) {
+        final NodeSettings originalNodeSettings, final NodeAnnotation originalNodeAnnotation,
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portMappings) {
         CheckUtils.checkNotNull(wfm);
         CheckUtils.checkNotNull(replacedNodeID);
         CheckUtils.checkNotNull(removedConnections);
@@ -117,6 +125,7 @@ public final class ReplaceNodeResult {
         m_originalNodeFactory = originalNodeFactory;
         m_originalNodeSettings = originalNodeSettings;
         m_originalNodeAnnotation = originalNodeAnnotation;
+        m_portMappings = portMappings;
     }
 
     /**
@@ -130,7 +139,9 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false);
+        var portChange = Optional.ofNullable(m_portMappings);
+        var portMappings = portChange.isPresent() ?  getPortMappingForPortRemovalUndo() : null;
+        m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false, portMappings);
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))
             .forEach(c -> {
@@ -148,6 +159,58 @@ public final class ReplaceNodeResult {
         } catch (InvalidSettingsException ex) {
             NodeLogger.getLogger(ReplaceNodeResult.class).error("Could not re-apply node settings on undo", ex);
         }
+    }
+
+    private Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortMappingForPortRemovalUndo() {
+        var incomingPorts = m_portMappings.getFirst();
+        var outgoingPorts = m_portMappings.getSecond();
+        var removedIncomingPort = false;
+        var removedOutgoingPort = false;
+        var incomingPortIndex = -1;
+        var outgoingPortIndex = -1;
+        for(var entry : incomingPorts.entrySet()) {
+            if(entry.getValue().equals(-1)) {
+                removedIncomingPort = true;
+                incomingPortIndex = entry.getKey();
+            }
+        }
+        for(var entry : outgoingPorts.entrySet()) {
+            if(entry.getValue().equals(-1)) {
+                removedOutgoingPort = true;
+                outgoingPortIndex = entry.getKey();
+            }
+        }
+        Map<Integer, Integer> inputPortMapping = new HashMap<>();
+        Map<Integer, Integer> outputPortMapping = new HashMap<>();
+        if (!removedIncomingPort) {
+            var inputLength = m_nodeCreationConfig.getPortConfig().get().getInputPorts().length + 1;
+            for (int i = 0; i < inputLength; i++) {
+                inputPortMapping.put(i, i);
+            }
+        } else {
+            for (int i = 0; i < incomingPorts.size() - 1; i++) {
+                if (i < incomingPortIndex) {
+                    inputPortMapping.put(i, i);
+                } else{
+                    inputPortMapping.put(i, (i + 1));
+                }
+            }
+        }
+        if (!removedOutgoingPort) {
+            var inputLength = m_nodeCreationConfig.getPortConfig().get().getOutputPorts().length + 1;
+            for (int i = 0; i < inputLength; i++) {
+                outputPortMapping.put(i, i);
+            }
+        } else {
+            for (int i = 0; i < outgoingPorts.size() - 1; i++) {
+                if (i < outgoingPortIndex) {
+                    outputPortMapping.put(i, i);
+                } else {
+                    outputPortMapping.put(i, (i + 1));
+                }
+            }
+        }
+        return new Pair<>(inputPortMapping, outputPortMapping);
     }
 
 }

@@ -81,7 +81,8 @@ import org.knime.core.node.workflow.node.configurable.ConfigurableNodeWithoutPor
 import org.knime.filehandling.core.port.FileSystemPortObject;
 
 /**
- * Tests behavior related to updating native node ports, see SRV-2696 and NXT-1229.
+ * Tests behavior related to updating native node ports, see SRV-2696 and
+ * NXT-1229.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Kai Franze, KNIME GmbH
@@ -93,9 +94,9 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 	private NodeID m_concatenate_2;
 
 	private NodeID m_metanode_4;
-	
+
 	private NodeID m_caseswitchend_12;
-	
+
 	private Integer m_nodePortsChangedEventCounter;
 
 	private final WorkflowListener m_workflowListener = mock(WorkflowListener.class);
@@ -160,11 +161,11 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 		waitAndCheckNodePortsChangedEventCounterIs(1);
 	}
-	
-    /**
-     * Tests
-     * {@link WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory))}.
-     */
+
+	/**
+	 * Tests {@link WorkflowManager#replaceNode(NodeID,
+	 * ModifiableNodeCreationConfiguration, NodeFactory))}.
+	 */
 	@Test
 	public void testReplaceNodeWithAnotherNodeType() {
 		WorkflowManager wfm = getManager();
@@ -175,7 +176,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		assertThat("Create new node", concatenateNode.getNode().getFactory().getClass().getSimpleName(),
 				is("AppendedRowsNodeFactory"));
 		assertThat("Restore a single connection", wfm.getOutgoingConnectionsFor(m_datagenerator_1).size(), is(1));
-		
+
 		result.undo();
 		var dataGenNode = wfm.getNodeContainer(m_datagenerator_1, NativeNodeContainer.class, true);
 		assertThat("Reverted node replacement", dataGenNode.getNode().getFactory().getClass().getSimpleName(),
@@ -216,8 +217,8 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 	}
 
 	/**
-	 * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections and bendpoints
-	 * removed during the node replacement are added back again on undo.
+	 * Tests {@link ReplaceNodeResult#undo()} and makes sure that connections and
+	 * bendpoints removed during the node replacement are added back again on undo.
 	 */
 	@Test
 	public void testReplaceNodeUndo() {
@@ -280,7 +281,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		var newNewNC = (NativeNodeContainer) wfm.getNodeContainer(m_caseswitchend_12);
 		assertNodeReplacement(newNC, newNewNC, 4, 2);
 		waitAndCheckNodePortsChangedEventCounterIs(2);
-		
+
 		// Remove input port from case switch end
 		var newNewCreationConfig = newNewNC.getNode().getCopyOfCreationConfig().get();
 		newNewCreationConfig.getPortConfig().get().getExtendablePorts().get("Input").removeLastPort();
@@ -289,27 +290,27 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		var finalNC = (NativeNodeContainer) wfm.getNodeContainer(m_caseswitchend_12);
 		assertNodeReplacement(newNewNC, finalNC, 3, 2);
 		waitAndCheckNodePortsChangedEventCounterIs(3);
-		
+
 		var caseswitchstart_14 = new NodeID(wfm.getID(), 14);
 		var oldNC14 = (NativeNodeContainer) wfm.getNodeContainer(caseswitchstart_14);
 		var creationConfig14 = oldNC14.getNode().getCopyOfCreationConfig().get();
-		
+
 		// Add new input port to case switch start
 		creationConfig14.getPortConfig().get().getExtendablePorts().get("Input").addPort(BufferedDataTable.TYPE);
 		wfm.replaceNode(caseswitchstart_14, creationConfig14);
-		
-		var newNC14 =(NativeNodeContainer) wfm.getNodeContainer(caseswitchstart_14);
+
+		var newNC14 = (NativeNodeContainer) wfm.getNodeContainer(caseswitchstart_14);
 		assertNodeReplacement(oldNC14, newNC14, 2, 3);
 		waitAndCheckNodePortsChangedEventCounterIs(4);
-		
+
 		// Add new output port to case switch end
 		var newCreationConfig14 = newNC14.getNode().getCopyOfCreationConfig().get();
 		newCreationConfig14.getPortConfig().get().getExtendablePorts().get("Output").addPort(BufferedDataTable.TYPE);
 		wfm.replaceNode(caseswitchstart_14, newCreationConfig14);
-		
-		var newNewNC14 =(NativeNodeContainer) wfm.getNodeContainer(caseswitchstart_14);
+
+		var newNewNC14 = (NativeNodeContainer) wfm.getNodeContainer(caseswitchstart_14);
 		assertNodeReplacement(newNC14, newNewNC14, 2, 4);
-		waitAndCheckNodePortsChangedEventCounterIs(5);				 
+		waitAndCheckNodePortsChangedEventCounterIs(5);
 	}
 
 	/**
@@ -342,9 +343,10 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 	/**
 	 * Tests replacing a node that doesn't provide a port configuration
-	 * @throws  
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
+	 * 
+	 * @throws
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
 	 */
 	@Test
 	public void testReplaceNodeWithOutPortConfig() throws Exception {
@@ -380,8 +382,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		var wfm = getManager();
 		var caseSwitchStart19 = wfm.getID().createChild(19);
 		var newFactory = NodeFactoryProvider.getInstance() //
-				.getNodeFactory("org.knime.base.node.io.filehandling.model.reader.ModelReaderNodeFactory")
-				.orElse(null);
+				.getNodeFactory("org.knime.base.node.io.filehandling.model.reader.ModelReaderNodeFactory").orElse(null);
 		assertThat(newFactory, is(notNullValue()));
 		var replaceResult = wfm.replaceNode(caseSwitchStart19, null, newFactory);
 		var nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
@@ -392,17 +393,18 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		nc = wfm.getNodeContainer(caseSwitchStart19, NativeNodeContainer.class, true);
 		assertThat(nc.getNode().getFactory().getClass().getSimpleName(), is("CaseStartAnyNodeFactory"));
 		// output port 1 connects to node 21
-        // output port 2 connects to node 22
-        // output port 3 connects to node 23
-		for(var entry : Map.of(1, 21, 2, 22, 3, 23).entrySet()) {
-            var outConnections = wfm.getOutgoingConnectionsFor(caseSwitchStart19, entry.getKey());
-            String reason = "Expected a connection from output port %s to node %s".formatted(entry.getKey(), entry.getValue());
-            assertThat(reason, outConnections.size(), is(1));
-            var outConnection = outConnections.stream().findFirst().get();
-            assertThat(reason, outConnection.getDest(), is(wfm.getID().createChild(entry.getValue())));
-        }
+		// output port 2 connects to node 22
+		// output port 3 connects to node 23
+		for (var entry : Map.of(1, 21, 2, 22, 3, 23).entrySet()) {
+			var outConnections = wfm.getOutgoingConnectionsFor(caseSwitchStart19, entry.getKey());
+			String reason = "Expected a connection from output port %s to node %s".formatted(entry.getKey(),
+					entry.getValue());
+			assertThat(reason, outConnections.size(), is(1));
+			var outConnection = outConnections.stream().findFirst().get();
+			assertThat(reason, outConnection.getDest(), is(wfm.getID().createChild(entry.getValue())));
+		}
 	}
-	
+
 	/**
 	 * Make sure that the original settings are restored when undoing the node
 	 * replacement.
@@ -418,13 +420,13 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2));
 		var replaceResult = wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null,
-				false);
+				false, null);
 		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
 		var newSettings = nnc.getNodeSettings();
 		var newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
 		assertThat(newLabel, is(""));
-	
+
 		replaceResult.undo();
 		var originalSettingsAfterUndo = new NodeSettings("original settings");
 		wfm.saveNodeSettings(m_concatenate_2, originalSettingsAfterUndo);
@@ -432,7 +434,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		assertThat(originalSettingsAfterUndo.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 		assertThat(originalLabelAfterUndo, is("Node 2"));
 	}
-	
+
 	/**
 	 * Assert that settings are transfered to the node replacement, if desired.
 	 * 
@@ -447,22 +449,22 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 		// transfer settings and label true
 		var oldNode = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2));
-		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true);
+		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, true, null);
 		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
 		var newSettings = nnc.getNodeSettings();
 		var newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup_original_setting"));
 		assertThat(newLabel, is("Node 2"));
-		
+
 		// transfer settings and label false
-		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false);
+		wfm.replaceNode(m_concatenate_2, oldNode.getNode().getCopyOfCreationConfig().get(), null, false, null);
 		nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
 		newSettings = nnc.getNodeSettings();
 		newLabel = nnc.getNodeAnnotation().getText();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
 		assertThat(newLabel, is(""));
 	}
-	
+
 	/**
 	 * Replaces a node of the same type by explicitly specifying the type. But
 	 * without providing a creation config.
@@ -478,7 +480,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 		var nnc = (NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2);
 		// provide no node creation config, but the exact same factory
-		var result = wfm.replaceNode(m_concatenate_2, null, nnc.getNode().getFactory(), false);
+		var result = wfm.replaceNode(m_concatenate_2, null, nnc.getNode().getFactory(), false, null);
 		var newSettings = ((NativeNodeContainer) wfm.getNodeContainer(m_concatenate_2)).getNodeSettings();
 		assertThat(newSettings.getNodeSettings("model").getString("suffix"), is("_dup"));
 
@@ -506,5 +508,5 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 		assertThat("unexpected number of input ports", newNC.getNrInPorts(), is(nrInPorts));
 		assertThat("unexpected number of output ports", newNC.getNrOutPorts(), is(nrOutPorts));
 	}
-	
+
 }
