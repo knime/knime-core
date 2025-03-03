@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.core"
       label="KNIME AP Core feature"
-      version="5.4.2.qualifier"
+      version="5.4.3.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
