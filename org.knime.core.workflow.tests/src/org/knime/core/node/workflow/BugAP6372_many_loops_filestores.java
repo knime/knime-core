@@ -79,7 +79,7 @@ public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
     public void setUp() throws Exception {
         // on my (BW) laptop (T470p) this runs in 17s ... but I am forseeing much larger runtimes on test instances
         // running win or mac; given that the bug was in pure Java code I find that an acceptable filter
-        Assumptions.assumeTrue(Platform.OS_LINUX.equals(Platform.getOS()), "Not run on all systems due to runtime");
+        Assumptions.assumeFalse(Platform.OS_LINUX.equals(Platform.getOS()), "Not run on all systems due to runtime");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }
