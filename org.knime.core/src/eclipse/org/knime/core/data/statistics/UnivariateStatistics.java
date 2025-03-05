@@ -319,33 +319,27 @@ public final class UnivariateStatistics {
         final String[] selectedColumns, final ExecutionContext executionContext,
         final Collection<Statistic> selectedStatistics)
         throws CanceledExecutionException {
-        final var eligibleCols = Arrays.stream(selectedColumns)//
-            .filter(name -> {
-                var type = inputTable.getDataTableSpec().getColumnSpec(name).getType();
-                return type.isCompatible(DoubleValue.class) || type.isCompatible(StringValue.class);
-            })//
-            .toArray(String[]::new);
 
         // trivial case -- nothing to do
         final var statisticsTable = executionContext.createDataContainer(getStatisticsTableSpec(selectedStatistics));
-        if (eligibleCols.length == 0) {
+        if (selectedColumns.length == 0) {
             statisticsTable.close();
             return statisticsTable.getTable();
         }
 
         // compute statistics for each column individually
         final var selectedColumnTables =
-            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, true, true, executionContext);
+            StatisticsTableUtil.splitTableByColumnNames(inputTable, selectedColumns, true, true, executionContext);
         final var selectedColumnTablesWithMissingValues =
-            StatisticsTableUtil.splitTableByColumnNames(inputTable, eligibleCols, false, true, executionContext);
-        for (var columnName : eligibleCols) {
+            StatisticsTableUtil.splitTableByColumnNames(inputTable, selectedColumns, false, true, executionContext);
+        for (var columnName : selectedColumns) {
             final var allColumnStatistics = new UnivariateStatistics();
             final var sortedTable =
                 BufferedDataTableSorter.sortTable(selectedColumnTables.get(columnName), 0, executionContext);
             final var tableWithMissingValues = selectedColumnTablesWithMissingValues.get(columnName);
             allColumnStatistics.performStatisticsCalculationForAllColumns(sortedTable, executionContext);
-            boolean isStringColumn = sortedTable.getSpec().getColumnSpec(0).getType().isCompatible(StringValue.class);
-            if (!isStringColumn) {
+            boolean isNumericColumn = sortedTable.getSpec().getColumnSpec(0).getType().isCompatible(DoubleValue.class);
+            if (isNumericColumn) {
                 allColumnStatistics.performStatisticsCalculationForNumericColumns(sortedTable, executionContext);
             }
             allColumnStatistics.performMissingValuesComputation(tableWithMissingValues, executionContext);
