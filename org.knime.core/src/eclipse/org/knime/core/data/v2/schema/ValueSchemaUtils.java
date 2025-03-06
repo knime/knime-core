@@ -225,45 +225,6 @@ public final class ValueSchemaUtils {
      * @return the updated {@link ValueSchema}
      * @since 5.5
      */
-    @Deprecated // TODO (TP): remove?
-    public static final DataTableValueSchema updateDataTableSpec(final DataTableValueSchema schema,
-        final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
-        final var result = new DataColumnSpec[schema.numColumns() - 1];
-        for (int i = 0; i < result.length; i++) {//NOSONAR
-            final DataColumnSpec colSpec = schema.getSourceSpec().getColumnSpec(i);
-            final DataColumnDomain domain = domainMap.get(i + 1);
-            final DataColumnMetaData[] metadata = metadataMap.get(i + 1);
-
-            if (domain == null && metadata == null) {
-                result[i] = colSpec;
-            } else {
-                final var creator = new DataColumnSpecCreator(colSpec);
-                if (domain != null) {
-                    creator.setDomain(domain);
-                }
-
-                for (final DataColumnMetaData element : metadata) {
-                    creator.addMetaData(element, true);
-                }
-
-                result[i] = creator.createSpec();
-            }
-        }
-        final var sourceName = schema.getSourceSpec().getName();
-        return UpdatedValueSchema.updateValueSchema(new DataTableSpec(sourceName, result), schema);
-    }
-
-    /**
-     * Updates the {@link DataTableSpec} of the passed source scheme with a new {@link DataTableSpec}, including the
-     * domains provided in the {@link Map}.
-     *
-     * @param schema schema to update
-     * @param domainMap the domains used for update.
-     * @param metadataMap the columnar metadata used to update
-     *
-     * @return the updated {@link ValueSchema}
-     * @since 5.5
-     */
     public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
 
