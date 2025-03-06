@@ -51,6 +51,7 @@ package org.knime.core.data.probability.nominal;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -122,6 +123,22 @@ public final class NominalDistributionValueMetaData implements DataColumnMetaDat
      */
     public int size() {
         return m_values.size();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_values);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof NominalDistributionValueMetaData other) {
+            return Objects.equals(m_values, other.m_values);
+        }
+        return false;
     }
 
     /**
