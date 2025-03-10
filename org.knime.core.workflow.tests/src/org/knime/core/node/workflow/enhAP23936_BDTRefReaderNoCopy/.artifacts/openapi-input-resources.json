@@ -1,0 +1,16 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "workflow-input": {
+                "type": "string",
+                "format": "binary"
+            }
+        }
+    },
+    "encoding": {
+        "workflow-input": {
+            "contentType": "knime-port/org.knime.core.node.port.flowvariable.FlowVariablePortObject"
+        }
+    }
+}

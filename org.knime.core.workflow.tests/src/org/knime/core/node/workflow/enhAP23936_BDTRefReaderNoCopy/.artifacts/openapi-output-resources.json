@@ -1,0 +1,16 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "workflow-output": {
+                "type": "string",
+                "format": "binary"
+            }
+        }
+    },
+    "encoding": {
+        "workflow-output": {
+            "contentType": "knime-port/org.knime.core.node.BufferedDataTable"
+        }
+    }
+}
