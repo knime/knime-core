@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -473,8 +474,23 @@ public class CoreToDefUtil {
     public static WorkflowDef copyToDef(final WorkflowManager wfm, final WorkflowCopyContent content,
         final PasswordRedactor passwordRedactor) {
 
-        HashSet<NodeID> nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs()));
-        HashSet<NodeID> virtualNodeIDs = new HashSet<>();
+        final var nodeIDs = new HashSet<>(Arrays.asList(content.getNodeIDs())); // NOSONAR must be outside loop
+        final var blockedNodeIDs = new HashSet<NodeID>(); // NOSONAR close enough, must be outside loop
+        final Predicate<NativeNodeContainer> isBlocked = nc -> {
+            // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
+            // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
+            // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
+            if (NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.test(nc)) {
+                return true;
+            }
+            // AP-23936: BDTInNodeFactory should not be copied, because its reference data file is not copied with it
+            // and the node is non-functional after pasting. The only way to repair it is to manually copy the file from
+            // the data directory and adjust the settings xml. Thus, we block it from being copied so users are not
+            // left with a non-functional node instance.
+            return nc.getNodeAndBundleInformation().getFactoryClass()
+                .filter(org.knime.core.node.exec.dataexchange.in.BDTInNodeFactory.class.getName()::equals).isPresent();
+        };
+
         checkPasswordRedactor(passwordRedactor);
         CheckUtils.checkArgument(nodeIDs.size() == content.getNodeIDs().length, "Copy spec contains duplicate nodes.");
 
@@ -483,7 +499,8 @@ public class CoreToDefUtil {
 
         // 1. Nodes ------------------------
 
-        // for each node: create a def, possibly updating the id and location in the workflow (move a little bit before paste)
+        // for each node: create a def, possibly updating the id and location in the workflow
+        // (move a little bit before paste)
         for (NodeID nodeID : nodeIDs) {
             var nc = wfm.getNodeContainer(nodeID);
 
@@ -499,24 +516,21 @@ public class CoreToDefUtil {
                 .map(CoreToDefUtil::toNodeUIInfoDef);
             var defaultUiInfo = CoreToDefUtil.toNodeUIInfoDef(nc.getUIInformation());
             Optional<BaseNodeDef> node = Optional.empty();
-            // Virtual in/out nodes are excluded from the copy result if they are selected directly, otherwise
-            // pasting would allow users to create virtual nodes. They are included when copied as part of an entire
-            // component node (via SubnodeContainerToDefAdapter -> WorkflowManagerToDefAdapter#getNodes).
-            if (nc instanceof NativeNodeContainer) {
-                if (NativeNodeContainer.IS_VIRTUAL_IN_OUT_NODE.test(nc)) {
-                    virtualNodeIDs.add(nodeID);
+            if (nc instanceof NativeNodeContainer nnc) {
+                if (isBlocked.test(nnc)) {
+                    blockedNodeIDs.add(nodeID);
                 } else {
                     var originalNativeNodeDef =
                         new NativeNodeContainerToDefAdapter((NativeNodeContainer)nc, passwordRedactor);
                     node = Optional.ofNullable(new NativeNodeDefBuilder(originalNativeNodeDef)//
                         .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
                 }
-            } else if (nc instanceof SubNodeContainer) {
-                var originalComponentDef = new SubnodeContainerToDefAdapter((SubNodeContainer)nc, passwordRedactor);
+            } else if (nc instanceof SubNodeContainer snc) {
+                var originalComponentDef = new SubnodeContainerToDefAdapter(snc, passwordRedactor);
                 node = Optional.ofNullable(new ComponentNodeDefBuilder(originalComponentDef)//
                     .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
-            } else if (nc instanceof WorkflowManager) {
-                var originalMetanodeDef = new MetanodeToDefAdapter((WorkflowManager)nc, passwordRedactor);
+            } else if (nc instanceof WorkflowManager metaWfm) {
+                var originalMetanodeDef = new MetanodeToDefAdapter(metaWfm, passwordRedactor);
                 node = Optional.ofNullable(new MetaNodeDefBuilder(originalMetanodeDef)//
                     .setId(defNodeId).setUiInfo(defUiInfo.orElse(defaultUiInfo)).build());
             }
@@ -531,7 +545,7 @@ public class CoreToDefUtil {
 
         inducedConnections.stream()//
             // filter out the connection from/to virtual nodes.
-            .filter(cc -> !virtualNodeIDs.contains(cc.getDest())).filter(cc -> !virtualNodeIDs.contains(cc.getSource()))
+            .filter(cc -> !blockedNodeIDs.contains(cc.getDest())).filter(cc -> !blockedNodeIDs.contains(cc.getSource()))
             // apply copy content translation offset to connections, convert to def, and add to workflow
             .map(cc -> {
                 var t = new ConnectionContainerTemplate(cc, false);
