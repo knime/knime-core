@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Core Workbench
+Bundle-SymbolicName: org.knime.core.workbench;singleton:=true
+Bundle-Version: 5.5.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.knime.core.workbench.WorkbenchActivator
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Eclipse-BundleShape: jar
+Export-Package: org.knime.core.workbench,
+ org.knime.core.workbench.mountpoint.api,
+ org.knime.core.workbench.mountpoint.api.events,
+ org.knime.core.workbench.mountpoint.contribution.local,
+ org.knime.core.workbench.mountpoint.contribution.temp,
+ org.knime.core.workbench.preferences
+Require-Bundle: slf4j.api;bundle-version="[2.0.12,3.0.0)",
+ org.knime.core.util;bundle-version="[6.5.0,7.0.0)",
+ org.eclipse.core.runtime;bundle-version="[3.31.0,4.0.0)",
+ org.apache.commons.lang3;bundle-version="[3.14.0,4.0.0)"
+Automatic-Module-Name: org.knime.core.workbench
