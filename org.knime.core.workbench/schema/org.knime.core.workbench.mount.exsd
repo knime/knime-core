@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core.workbench" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="org.knime.core.workbench" id="org.knime.core.workbench.mount" name="MountPoint"/>
+      </appinfo>
+      <documentation>
+         Abstract definition of a mount point, i.e. additional resources contributing spaces to the workbench. Examples include a LOCAL space, Hub spaces etc.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element internal="true" />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <choice minOccurs="1" maxOccurs="unbounded">
+               <element ref="MountPointType"/>
+            </choice>
+         </sequence>
+      </complexType>
+   </element>
+
+   <element name="MountPointType">
+      <annotation>
+         <documentation>
+            A mount point type. It defines an identifier to which concrete mount providers can contribute to.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="typeIdentifier" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The identifier of the type of mount point, something unique.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="defaultMountID" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="supportsMultipleInstances" type="boolean" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="stateFactoryClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The fully qualified class definting the factory for the state.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="sortPriority" type="string" use="default" value="1">
+            <annotation>
+               <documentation>
+                  Sort priority of mount point types in the &quot;new mount point&quot; editor dialog. Default is 1 but some types (hub mount points) are more imporant than others and will set a higher value. Valid values are integer strings between 1 and 100, incl.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         v5.5
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         This extension point is used internally by the KNIME Framework. It&apos;s not meant as public API.
+      </documentation>
+   </annotation>
+
+
+
+</schema>

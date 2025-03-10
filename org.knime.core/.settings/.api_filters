@@ -552,12 +552,4 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/util/IEarlyStartup.java" type="org.knime.core.util.IEarlyStartup">
-        <filter comment="no API" id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.IEarlyStartup"/>
-                <message_argument value="NO_AUTOSTART_APPLICATIONS"/>
-            </message_arguments>
-        </filter>
-    </resource>
 </component>

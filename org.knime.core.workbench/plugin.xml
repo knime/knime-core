@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="MountPointType" name="KNIME Mount Point Type" schema="schema/org.knime.core.workbench.mount.exsd"/>
+   <extension
+         point="org.knime.core.workbench.MountPointType">
+      <MountPointType
+            defaultMountID="LOCAL"
+            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointState$Factory"
+            supportsMultipleInstances="false"
+            typeIdentifier="org.knime.workbench.explorer.workspace">
+      </MountPointType>
+      <MountPointType
+            defaultMountID="knime-temp-space"
+            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointState$Factory"
+            supportsMultipleInstances="false"
+            typeIdentifier="com.knime.explorer.tempspace">
+      </MountPointType>
+   </extension>
+
+</plugin>
