@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<fragment>
+   <extension
+         point="org.knime.core.workbench.MountPointType">
+      <MountPointType
+            stateFactoryClass="org.knime.core.workbench.TestMountPointState$Factory"
+            supportsMultipleInstances="true"
+            typeIdentifier="test-provider">
+      </MountPointType>
+   </extension>
+
+</fragment>
