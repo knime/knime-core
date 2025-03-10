@@ -28,6 +28,7 @@
 				<module>org.knime.core.data.uritype</module>
 				<module>org.knime.core.pmml</module>
 				<module>org.knime.core</module>
+				<module>org.knime.core.workbench</module>
 				<module>org.knime.slf4j.binding</module>
 				<module>org.knime.testing</module>
 				<module>org.knime.rsyntaxtextarea</module>
@@ -46,6 +47,7 @@
 				<module>org.knime.core.data.uritype</module>
 				<module>org.knime.core.pmml</module>
 				<module>org.knime.core</module>
+				<module>org.knime.core.workbench</module>
 				<module>org.knime.core.tests/lib/fetch_jars</module>
 				<module>org.knime.core.tests</module>
 				<module>org.knime.rsyntaxtextarea</module>
