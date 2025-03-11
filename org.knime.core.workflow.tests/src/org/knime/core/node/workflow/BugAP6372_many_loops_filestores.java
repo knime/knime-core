@@ -51,10 +51,10 @@ import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.io.File;
 
-import org.eclipse.core.runtime.Platform;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -67,6 +67,7 @@ import org.knime.core.util.FileUtil;
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
+@EnabledOnOs(value = OS.LINUX, disabledReason = "Not run on all systems due to runtime")
 public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
 
 	@TempDir
@@ -75,11 +76,10 @@ public class BugAP6372_many_loops_filestores extends WorkflowTestCase {
     private NodeID m_testFileStore_804;
     private NodeID m_testFileStore_813;
 
+    // on my (BW) laptop (T470p) this runs in 17s ... but I am forseeing much larger runtimes on test instances
+    // running win or mac; given that the bug was in pure Java code I find that an acceptable filter
     @BeforeEach
     public void setUp() throws Exception {
-        // on my (BW) laptop (T470p) this runs in 17s ... but I am forseeing much larger runtimes on test instances
-        // running win or mac; given that the bug was in pure Java code I find that an acceptable filter
-        Assumptions.assumeTrue(Platform.OS_LINUX.equals(Platform.getOS()), "Not run on all systems due to runtime");
         FileUtil.copyDir(getDefaultWorkflowDirectory(), m_workflowDir);
         initWorkflowFromTemp();
     }

@@ -49,14 +49,14 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.object.IsCompatibleType.typeCompatibleWith;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
 
 import java.util.stream.IntStream;
 
-import org.eclipse.core.runtime.Platform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.report.IReportPortObject;
 import org.knime.core.node.port.report.ReportConfiguration;
@@ -67,6 +67,7 @@ import org.knime.shared.workflow.storage.util.PasswordRedactor;
  * 
  * @author Bernd Wiswedel, KNIME
  */
+@DisabledOnOs(value = OS.MAC, disabledReason = "Disabled on Mac due to DEVOPS-2105")
 public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 
     private NodeID m_subnode_4;
@@ -78,7 +79,6 @@ public class EnhAP20402_SubnodeWithReportPort extends WorkflowTestCase {
 
     @BeforeEach
     public void setUp() throws Exception {
-        assumeFalse(Platform.OS_MACOSX.equals(Platform.getOS()), "Disabled on Mac due to DEVOPS-2105");
         NodeID baseID = loadAndSetWorkflow();
         m_subnode_4 = baseID.createChild(4);
         final var subnodeWFM = m_subnode_4.createChild(0);
