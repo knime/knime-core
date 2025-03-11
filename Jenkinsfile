@@ -41,6 +41,7 @@ try {
                 'knime-ensembles',
                 'knime-filehandling',
                 'knime-gateway',
+                'knime-hubclient-sdk',
                 'knime-jep',
                 'knime-js-base',
                 'knime-json',

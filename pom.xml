@@ -113,6 +113,11 @@
 					<url>${knime.server.client.p2}</url>
 				</repository>
 				<repository>
+					<id>p2-knime-hubclient-sdk</id>
+					<layout>p2</layout>
+					<url>${knime.p2.repo}/knime-hubclient-sdk/${git.branch}</url>
+				</repository>
+				<repository>
 					<id>p2-knime-json</id>
 					<layout>p2</layout>
 					<url>${knime.json.p2}</url>
@@ -244,5 +249,5 @@
 			<url>${knime.tp.p2}</url>
 		</repository>
 	</repositories>
-	
+
 </project>
