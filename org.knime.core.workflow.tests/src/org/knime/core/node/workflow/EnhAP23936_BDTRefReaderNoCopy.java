@@ -2,10 +2,11 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.knime.shared.workflow.storage.util.PasswordRedactor;
 
@@ -24,7 +25,7 @@ public final class EnhAP23936_BDTRefReaderNoCopy extends WorkflowTestCase {
     private NodeID m_rowFilter;
     private NodeID m_columnFilter;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         final var baseID = loadAndSetWorkflow();
         m_wfm = getManager();
@@ -49,9 +50,9 @@ public final class EnhAP23936_BDTRefReaderNoCopy extends WorkflowTestCase {
         assertThat(wf.getNodes().size(), is(2));
 
         final var bdtReader = wf.getNodes().get("1");
-        assertTrue("BufferedDataTable Reference Reader should not be copied", bdtReader == null);
+        assertTrue(bdtReader == null, "BufferedDataTable Reference Reader should not be copied");
         final var poReader = wf.getNodes().get("12");
-        assertTrue("PortObject Reference Reader should not be copied", poReader == null);
+        assertTrue(poReader == null, "PortObject Reference Reader should not be copied");
 
         // the copied nodes are Row Filter and Column Filter
         final var rowFilter = (NativeNodeDef)wf.getNodes().get("2");
