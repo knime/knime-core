@@ -123,9 +123,7 @@ public interface ExtendablePortGroup extends ConfigurablePortGroup {
      * @param portIndex The index of the port to remove
      *
      * @return the port type that was removed
-     * @throws IndexOutOfBoundsException if the index is larger than the configured ports list
-     * @throws UnsupportedOperationException if the port cannot be removed
      */
-    PortType removePort(int portIndex) throws IndexOutOfBoundsException, UnsupportedOperationException;
+    PortType removePort(int portIndex);
 
 }
