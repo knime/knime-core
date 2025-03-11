@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.context.ports.ExtendablePortGroup;
 import org.knime.core.node.context.ports.PortGroupConfiguration;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Implementation of an bound extendible port group.
@@ -237,16 +238,13 @@ public final class TypeBoundExtendablePortGroup implements ExtendablePortGroup {
     }
 
     @Override
-    public PortType removePort(final int portIndex) throws IndexOutOfBoundsException, UnsupportedOperationException {
-        if (portIndex < m_fixedPortNumber) {
-            throw new UnsupportedOperationException(
-                "Port at index %s cannot be removed. Index is within fixed port types. ".formatted(portIndex));
-        }
+    public PortType removePort(final int portIndex) {
+        CheckUtils.checkArgument(portIndex >= m_fixedPortNumber,
+            "Port at index %s cannot be removed. Index is within fixed port types. ".formatted(portIndex));
         var totalNumberOfPorts = m_configuredTypes.size() + m_fixedPortNumber;
-        if (portIndex >= totalNumberOfPorts) {
-            throw new IndexOutOfBoundsException("Port at index %s cannot be removed. There are only %s ports in total."
-                .formatted(portIndex, totalNumberOfPorts));
-        }
+        CheckUtils.checkArgument(portIndex < totalNumberOfPorts,
+            "Port at index %s cannot be removed. There are only %s ports in total.".formatted(portIndex,
+                totalNumberOfPorts));
         return m_configuredTypes.remove(portIndex - m_fixedPortNumber);
     }
 
