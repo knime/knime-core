@@ -208,7 +208,8 @@ public final class MountSettings {
      */
     @Override
     public String toString() {
-        return "MountSettings[" + getDisplayName() + "]";
+        return "MountSettings[mountId=%s, factoryId=%s, active=%s, customSettings=%s]" //
+                .formatted(m_mountID, m_factoryID, m_active, m_customSettings);
     }
 
     /**
