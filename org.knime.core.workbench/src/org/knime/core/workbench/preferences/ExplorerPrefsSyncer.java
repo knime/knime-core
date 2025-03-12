@@ -79,7 +79,7 @@ public final class ExplorerPrefsSyncer implements IPreferenceChangeListener, INo
         if (InstanceScope.INSTANCE.getNode(MountSettings.getMountpointPreferenceLocation())
             .equals(event.getNode().parent())) {
             Object eventValue = event.getNewValue();
-            if (!(eventValue == null)) {
+            if (eventValue != null) {
                 // if the eventValue is null, then the preference was removed
                 List<MountSettings> newValue = getUserOrDefaultValue();
                 updateSettings(m_previousValues, newValue);
@@ -93,12 +93,12 @@ public final class ExplorerPrefsSyncer implements IPreferenceChangeListener, INo
             return;
         }
 
-        Set<MountSettings> oldSettings = new LinkedHashSet<MountSettings>(oldValues);
-        oldSettings.removeAll(new LinkedHashSet<MountSettings>(newValues));
+        Set<MountSettings> oldSettings = new LinkedHashSet<>(oldValues);
+        oldSettings.removeAll(newValues);
 
-        Set<MountSettings> newSettings = new LinkedHashSet<MountSettings>(newValues);
+        Set<MountSettings> newSettings = new LinkedHashSet<>(newValues);
         // leave unchanged values untouched
-        newSettings.removeAll(oldSettings);
+        newSettings.removeAll(oldValues);
 
         // remove deleted mount points
         for (MountSettings ms : oldSettings) {
@@ -122,7 +122,7 @@ public final class ExplorerPrefsSyncer implements IPreferenceChangeListener, INo
         }
 
         // sync the ordering of the mount points
-        List<String> newMountIds = new ArrayList<String>();
+        List<String> newMountIds = new ArrayList<>();
         for (MountSettings ms : newValues) {
             newMountIds.add(ms.getMountID());
         }
