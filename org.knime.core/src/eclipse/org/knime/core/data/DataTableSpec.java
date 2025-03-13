@@ -241,7 +241,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
-     * Static helper method for converting an array of column names to an array of column indices.
+     * Helper method for converting an array of column names to an array of column indices.
      *
      * @param columns the column names to find the indices for
      * @return an array of column indices corresponding to the column names
