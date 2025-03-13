@@ -95,7 +95,8 @@ public final class ReplaceNodeResult {
     private final Pair<Map<Integer, Integer>, Map<Integer, Integer>> m_portMappings;
 
     /**
-     * New instance.
+     * New ReplaceNodeResult instance as result of a port removal operation
+     * Used to store all information required to undo the port removal
      *
      * @param wfm the host workflow manager
      * @param replacedNodeID the id of the newly created node
@@ -130,7 +131,8 @@ public final class ReplaceNodeResult {
     }
 
     /**
-     * New instance.
+     * New ReplaceNodeResult for any operation resulting in replacement of a node except port removal
+     * Mainly used to store information required to undo the replace node operation
      *
      * @param wfm the host workflow manager
      * @param replacedNodeID the id of the newly created node
