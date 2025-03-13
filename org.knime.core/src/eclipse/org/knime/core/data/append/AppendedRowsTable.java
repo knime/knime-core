@@ -129,7 +129,7 @@ public class AppendedRowsTable implements DataTable {
     private final DataTableSpec m_spec;
 
     /**
-     * Suffix to append or null to skip subsequent occurences of a row key.
+     * Suffix to append or null to skip subsequent occurrences of a row key.
      */
     private final String m_suffix;
 
