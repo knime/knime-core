@@ -332,10 +332,21 @@ public final class ProcessWatchdog {
         handleKnimeProcessMemory(knimeRss);
     }
 
+    private static String humanReadableByteCount(final long bytes) {
+        int unit = 1024;
+        if (bytes < unit) {
+            return bytes + " B";
+        }
+        int exponent = (int) (Math.log(bytes) / Math.log(unit));
+        char sizeLetter = "KMGTPE".charAt(exponent-1);
+        return String.format("%.1f %sB", bytes / Math.pow(unit, exponent), sizeLetter);
+    }
+
     private void handleKnimeProcessMemory(final long knimeMemory) {
         // Warn if the memory usage of the JVM process itself is close to the limit
         var warningMessage =
-            "KNIME AP process is using " + knimeMemory + "KB of the available " + MAX_MEMORY_KBYTES + "KB";
+            "KNIME AP process is using " + humanReadableByteCount(knimeMemory * 1024) //
+            + " of the available " + humanReadableByteCount(MAX_MEMORY_KBYTES * 1024);
 
         if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
             if (m_shouldWarnAboutKnimeProcessMemory) {
