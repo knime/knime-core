@@ -2019,6 +2019,13 @@ public class Buffer implements KNIMEStreamConstants {
         m_lifecycle.onClear();
     }
 
+    /** @return true if {@link #clear()} has been called */
+    boolean isCleared() {
+        synchronized (m_isClearedLock) {
+            return m_isClearedLock.booleanValue();
+        }
+    }
+
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
 
     private static final AtomicInteger FILES_CREATED_COUNTER = new AtomicInteger(0);
@@ -2925,6 +2932,10 @@ public class Buffer implements KNIMEStreamConstants {
                     /** Buffer was already discarded (no rows added) */
                     return null;
                 }
+                if (buffer.isCleared()) { // added as part of AP-22244 (especially noted during test execution)
+                    LOGGER.debug("Attempting to swap a Buffer that has been cleared ... will ignore.");
+                    return null;
+                }
                 // START debug AP-13181 buffers not being cleared when workflow is closed and cleaned up
                 if (m_nodeContext != null) {
                     final WorkflowManager wfm = m_nodeContext.getWorkflowManager();
@@ -2933,6 +2944,9 @@ public class Buffer implements KNIMEStreamConstants {
                         if (workflowContext != null) {
                             final File tempLocation = workflowContext.getTempLocation();
                             if (!tempLocation.isDirectory()) {
+                                if (buffer.isCleared()) {
+                                    return null; // clearing happens asynchronously
+                                }
                                 throw new IOException(
                                     "Workflow temp directory " + tempLocation.toString() + " has been deleted.");
                             }
