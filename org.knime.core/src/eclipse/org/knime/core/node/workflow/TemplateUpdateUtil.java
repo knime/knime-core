@@ -78,6 +78,8 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
+import org.knime.core.util.hub.ItemVersionURIUtil;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
 
@@ -99,7 +101,9 @@ public final class TemplateUpdateUtil {
      * </ul>
      *
      * @since 5.0
+     * @deprecated prefer {@link ItemVersion} and {@link ItemVersionURIUtil} for working with Hub item versions
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     public enum LinkType {
         /** Specific version is selected, no updates will be available. */
         FIXED_VERSION(Object::toString, null, null),
