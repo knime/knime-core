@@ -114,10 +114,9 @@ public final class PMMLFormatter {
         private boolean isBadChar (final char ch)
         {
             return ! (
-                (ch >= 0x20 && ch <= 0xD7FF ) ||
-                (ch >= 0xE000 && ch <= 0xFFFD) ||
-                (ch >= 0x10000 && ch <= 0x10FFFF) ||
-                (ch == 0x9) || (ch == 0xA) || (ch == 0xD)
+                (ch == 0x9) || (ch == 0xA) || (ch == 0xD) ||
+                // AP-24108: allow surrogates (0xD800 - 0xDFFF) here and let XMLBeans deal with unmatched ones
+                (ch >= 0x20 && ch <= 0xFFFD) 
                 );
         }
     }
