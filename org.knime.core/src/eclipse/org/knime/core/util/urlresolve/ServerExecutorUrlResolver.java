@@ -60,7 +60,7 @@ import org.eclipse.core.runtime.Path;
 import org.knime.core.node.workflow.contextv2.ServerJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for a Server executor.
@@ -85,7 +85,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
         checkNoVersion(version);
 
         if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
@@ -97,7 +97,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         checkNoVersion(version);
 
@@ -120,13 +120,13 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         return resolveMountpointRelative(url, path, version);
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         checkNoVersion(version);
 
@@ -178,7 +178,7 @@ final class ServerExecutorUrlResolver extends KnimeUrlResolver {
         return URLResolverUtil.toURL(uriBuilder);
     }
 
-    private static void checkNoVersion(final HubItemVersion version) throws ResourceAccessException {
+    private static void checkNoVersion(final ItemVersion version) throws ResourceAccessException {
         if (version != null) {
             throw new ResourceAccessException("KNIME URLs on a KNIME Server cannot specify an item version.");
         }
