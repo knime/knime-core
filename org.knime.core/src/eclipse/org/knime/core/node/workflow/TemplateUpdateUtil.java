@@ -77,11 +77,10 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
 import org.knime.core.util.hub.ItemVersion;
-import org.knime.core.util.hub.ItemVersionURIUtil;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
+import org.knime.core.util.urlresolve.URLResolverUtil;
 
 /**
  * Encapsulates util functionality for updating template links (a.k.a Components, Metanodes).
@@ -97,26 +96,23 @@ public final class TemplateUpdateUtil {
      *      <li>A specific item version can be referenced: {@code version=42}</li>
      *      <li>The link can point to the <i>latest</i> version: {@code version=most-recent}</li>
      *      <li>If no {@code version} query parameter is given or {@code version=current-state} the current state
-     * (i.e., the staging area) of the space is referenced.</li>
+     *          of the item is referenced.</li>
      * </ul>
      *
      * @since 5.0
-     * @deprecated prefer {@link ItemVersion} and {@link ItemVersionURIUtil} for working with Hub item versions
      */
-    @Deprecated(since = "5.5", forRemoval = true)
     public enum LinkType {
         /** Specific version is selected, no updates will be available. */
-        FIXED_VERSION(Object::toString, null, null),
+        FIXED_VERSION(Object::toString, null),
 
         /** <i>Latest version</i> is selected. */
-        LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
+        LATEST_VERSION(v -> "most-recent", "most-recent"),
 
         /** <i>Current state</i> is selected, which includes unversioned changes. */
-        LATEST_STATE(v -> null, "current-state", "-1");
+        LATEST_STATE(v -> null, "current-state");
 
         private final Function<Integer, String> m_paramString;
         private final String m_identifier;
-        private final String m_legacyIdentifier;
 
         /**
          * The key used in KNIME hub catalog service query parameters to specify the version of a repository item.
@@ -133,10 +129,16 @@ public final class TemplateUpdateUtil {
          */
         public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
 
-        LinkType(final Function<Integer, String> paramString, final String identifier, final String legacyIdentifier) {
+
+        /**
+         * Creates a link type.
+         *
+         * @param paramString function to create the query parameter for the numeric version
+         * @param identifier identifier to denote a non-numeric version
+         */
+        LinkType(final Function<Integer, String> paramString, final String identifier) {
             m_paramString = paramString;
             m_identifier = identifier;
-            m_legacyIdentifier = legacyIdentifier;
         }
 
         /**
@@ -155,15 +157,6 @@ public final class TemplateUpdateUtil {
          */
         public String getIdentifier() {
             return m_identifier;
-        }
-
-        /**
-         * @return the value previously used in query parameters (for Space Versioning) to denote a specific link type.
-         * {@code null} for FIXED_VERSION.
-         * @since 5.1
-         */
-        public String getLegacyIdentifier() {
-            return m_legacyIdentifier;
         }
 
         /**
@@ -284,9 +277,10 @@ public final class TemplateUpdateUtil {
              * the version of the template.)
              */
             // ignore modified since for versioned content
-            final var cutoffDate = HubItemVersion.of(sourceURI).filter(HubItemVersion::isVersioned).isPresent() ? null
-                : Optional.ofNullable(linkInfo.getTimestampInstant()) //
-                    .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
+            final var cutoffDate = URLResolverUtil.parseVersion(sourceURI)
+                .filter(ItemVersion::isVersioned).isPresent() ? null
+                    : Optional.ofNullable(linkInfo.getTimestampInstant()) //
+                        .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
             final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
                 new NullProgressMonitor(), cutoffDate).orElse(null);
             if (localDir == null) {

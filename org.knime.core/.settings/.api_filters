@@ -474,6 +474,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/TemplateUpdateUtil.java" type="org.knime.core.node.workflow.TemplateUpdateUtil$LinkType">
+        <filter comment="Removed support for legacy Space Version feature" id="372346978">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.TemplateUpdateUtil.LinkType"/>
+                <message_argument value="getLegacyIdentifier()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter comment="removed &quot;OLD&quot; (unused) method" id="338792546">
             <message_arguments>
@@ -525,6 +533,20 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.IEarlyStartup"/>
                 <message_argument value="NO_AUTOSTART_APPLICATIONS"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/hub/HubItemVersion.java" type="org.knime.core.util.hub.HubItemVersion">
+        <filter comment="Removed support for legacy Space Version feature" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.hub.HubItemVersion"/>
+                <message_argument value="addVersionToURI(URIBuilder, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Removed support for legacy Space Version feature" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.hub.HubItemVersion"/>
+                <message_argument value="migrateFromSpaceVersion(URI)"/>
             </message_arguments>
         </filter>
     </resource>
