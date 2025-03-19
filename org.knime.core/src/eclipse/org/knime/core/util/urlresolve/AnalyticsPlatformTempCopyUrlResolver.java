@@ -62,7 +62,7 @@ import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.util.Pair;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for an Analytics Platform with a workflow that comes from a REST location.
@@ -96,7 +96,7 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
 
         if (m_locationInfo instanceof HubSpaceLocationInfo && isHubIdUrl(path)) {
             // cannot relativize ID URLs (for now)
@@ -118,13 +118,13 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         return resolveSpaceRelative(url, path, version);
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         // we are mounted in the Analytics Platform, make the ExplorerMountTable sort it out
 
@@ -155,7 +155,7 @@ final class AnalyticsPlatformTempCopyUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         final var localMountId = m_mountpointURI.getAuthority();
         final var contextPaths = getContextPaths().orElseThrow();

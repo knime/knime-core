@@ -74,7 +74,7 @@ import org.knime.core.node.workflow.contextv2.WorkflowContextV2.LocationType;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * Resolves a KNIME URL in a specified environment specified by a {@link WorkflowContextV2}.
@@ -184,7 +184,7 @@ public abstract class KnimeUrlResolver {
      * @param resourceURL URL which can be read and (potentially) written to
      * @param canBeRelativized flag indicating that the URL can be represented as a relative URL
      */
-    record ResolvedURL(String mountID, IPath path, HubItemVersion version, IPath pathInsideWorkflow,
+    record ResolvedURL(String mountID, IPath path, ItemVersion version, IPath pathInsideWorkflow,
         URL resourceURL, boolean canBeRelativized) {
         ResolvedURL withPath(final IPath newPath) {
             return new ResolvedURL(mountID, newPath, version, pathInsideWorkflow, resourceURL, canBeRelativized);
@@ -212,10 +212,10 @@ public abstract class KnimeUrlResolver {
             // If the user renames the mountpoint, resolution fails here -- live with.
             final var mountId = restInfo.getDefaultMountId();
 
-            HubItemVersion version = null;
+            ItemVersion version = null;
             HubSpaceLocationInfo hubLocationInfo = null;
             if (restInfo instanceof HubSpaceLocationInfo hubInfo) {
-                version = hubInfo.getItemVersion().stream().mapToObj(HubItemVersion::of).findAny().orElse(null);
+                version = hubInfo.getItemVersion().stream().mapToObj(ItemVersion::of).findAny().orElse(null);
                 hubLocationInfo = hubInfo;
             }
 
@@ -430,7 +430,7 @@ public abstract class KnimeUrlResolver {
 
         final var currrentType = optCurrentType.get();
         final var path = getPath(url);
-        final var version = HubItemVersion.of(url).orElse(null);
+        final var version = URLResolverUtil.parseVersion(URLResolverUtil.toURI(url)).orElse(null);
         final var resolved = switch (currrentType) {
             case MOUNTPOINT_ABSOLUTE -> resolveMountpointAbsolute(url, url.getAuthority(), path, version);
             case MOUNTPOINT_RELATIVE -> resolveMountpointRelative(url, path, version);
@@ -472,7 +472,7 @@ public abstract class KnimeUrlResolver {
      * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
-    abstract ResolvedURL resolveMountpointAbsolute(URL url, String mountId, IPath path, HubItemVersion version)
+    abstract ResolvedURL resolveMountpointAbsolute(URL url, String mountId, IPath path, ItemVersion version)
             throws ResourceAccessException;
 
     /**
@@ -483,7 +483,7 @@ public abstract class KnimeUrlResolver {
      * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
-    abstract ResolvedURL resolveMountpointRelative(URL url, IPath path, HubItemVersion version)
+    abstract ResolvedURL resolveMountpointRelative(URL url, IPath path, ItemVersion version)
             throws ResourceAccessException;
 
     /**
@@ -494,7 +494,7 @@ public abstract class KnimeUrlResolver {
      * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
-    abstract ResolvedURL resolveSpaceRelative(URL url, IPath path, HubItemVersion version)
+    abstract ResolvedURL resolveSpaceRelative(URL url, IPath path, ItemVersion version)
             throws ResourceAccessException;
 
     /**
@@ -505,7 +505,7 @@ public abstract class KnimeUrlResolver {
      * @param version item version stated by url to resolve
      * @throws ResourceAccessException if the URL could not be resolved
      */
-    abstract ResolvedURL resolveWorkflowRelative(URL url, IPath path, HubItemVersion version)
+    abstract ResolvedURL resolveWorkflowRelative(URL url, IPath path, ItemVersion version)
             throws ResourceAccessException;
 
     /**
@@ -565,7 +565,7 @@ public abstract class KnimeUrlResolver {
      * @throws ResourceAccessException if a version was specified
      */
     static ResolvedURL resolveInExecutorWorkflowDir(final URL url, final String mountId, final IPath workflowPath,
-        final IPath pathInWorkflow, final HubItemVersion version, final java.nio.file.Path localWorkflowPath)
+        final IPath pathInWorkflow, final ItemVersion version, final java.nio.file.Path localWorkflowPath)
             throws ResourceAccessException {
         if (version != null) {
             throw new ResourceAccessException("Workflow relative URLs accessing workflow contents cannot specify a "
@@ -577,14 +577,14 @@ public abstract class KnimeUrlResolver {
         return new ResolvedURL(mountId, workflowPath, version, pathInWorkflow, resourceUrl, true);
     }
 
-    static URL createKnimeUrl(final String mountId, final IPath path, final HubItemVersion version)
+    static URL createKnimeUrl(final String mountId, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         final var builder = new URIBuilder() //
                 .setScheme(KnimeUrlType.SCHEME) //
                 .setHost(mountId) //
                 .setPathSegments(Arrays.asList(path.segments()));
         if (version != null) {
-            version.addVersionToURI(builder, false);
+            URLResolverUtil.addVersionQueryParameter(version, builder::addParameter);
         }
         return URLResolverUtil.toURL(builder);
     }

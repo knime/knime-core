@@ -67,6 +67,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.urlresolve.URLResolverUtil;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 
 /**
@@ -478,7 +479,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      */
     public static MetaNodeTemplateInformation createNewTemplate(final TemplateInfoDef def, final TemplateType type) {
         var uri = StringUtils.isEmpty(def.getUri()) ? null : URI.create(def.getUri());
-        uri = HubItemVersion.migrateFromSpaceVersion(uri);
+        uri = URLResolverUtil.migrateFromSpaceVersion(uri);
         var role = Role.Link;
         final var updatedAt = def.getUpdatedAt();
         if (uri == null) {
