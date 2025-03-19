@@ -70,7 +70,9 @@ import org.knime.core.node.workflow.VariableType;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.2
+ * @deprecated use {@link ItemVersion} and {@link ItemVersionStringPersistor} instead
  */
+@Deprecated(since = "5.5", forRemoval = true)
 public final class HubItemVersionPersistor {
 
     private HubItemVersionPersistor() {

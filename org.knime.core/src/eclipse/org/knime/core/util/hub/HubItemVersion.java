@@ -49,18 +49,15 @@
 package org.knime.core.util.hub;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Optional;
 
-import org.apache.hc.core5.http.NameValuePair;
-import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.hc.core5.net.WWWFormCodec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
+import org.knime.core.util.urlresolve.URLResolverUtil;
 
 /**
  * Reference to a KNIME Hub item version. Provides utility methods for conversion to/from URI query parameters.
@@ -70,7 +67,11 @@ import org.knime.core.node.workflow.TemplateUpdateUtil.LinkType;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.1
+ * @deprecated Use {@link ItemVersion} and {@link URLResolverUtil} instead
+ * @see ItemVersion
+ * @see URLResolverUtil
  */
+@Deprecated(since = "5.5", forRemoval = true)
 public record HubItemVersion(LinkType linkType, Integer versionNumber) {
 
     private static final HubItemVersion CURRENT_STATE = new HubItemVersion(LinkType.LATEST_STATE, null);
@@ -117,14 +118,15 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      *
      * @param uri to derive new URI from. Non-null.
      * @return source URI, possibly with item version query parameter.
+     * @see URLResolverUtil#applyTo(ItemVersion, URI)
      */
     public URI applyTo(final URI uri) {
-        CheckUtils.checkArgumentNotNull(uri);
-        return replaceParam(uri, LinkType.VERSION_QUERY_PARAM, getQueryParameterValue().orElse(null));
+        return URLResolverUtil.applyTo(convert(this), uri);
     }
 
     /**
      * @return a to the staging area state
+     * @see ItemVersion#currentState()
      */
     public static HubItemVersion currentState() {
         return CURRENT_STATE;
@@ -132,6 +134,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
 
     /**
      * @return a reference to the newest version state
+     * @see ItemVersion#mostRecent()
      */
     public static HubItemVersion latestVersion() {
         return MOST_RECENT;
@@ -140,9 +143,10 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     /**
      * @param versionNumber id of the version, larger than zero
      * @return a reference to a fixed version state
+     * @see SpecificVersion#SpecificVersion(int)
      */
     public static HubItemVersion of(final int versionNumber) {
-        return new HubItemVersion(LinkType.FIXED_VERSION, versionNumber);
+        return convert(ItemVersion.of(versionNumber));
     }
 
     /**
@@ -157,6 +161,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      * @param knimeUrl KNIME URL. Non-null.
      * @return the link type and item version. Item version is {@code null} for link types ≠ FIXED_VERSION
      * @throws IllegalArgumentException if the given URL is null or the version cannot be determined
+     * @see URLResolverUtil#parseVersion(URI)
      */
     public static Optional<HubItemVersion> of(final URI knimeUrl) {
         CheckUtils.checkArgumentNotNull(knimeUrl);
@@ -175,6 +180,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      * @param knimeUrl KNIME URL. Non-null.
      * @return the link type and item version. Item version is {@code null} for link types ≠ FIXED_VERSION
      * @throws IllegalArgumentException if the given URI is null or the version cannot be determined
+     * @see URLResolverUtil#parseVersion(URI)
      */
     public static Optional<HubItemVersion> of(final URL knimeUrl) {
         CheckUtils.checkArgumentNotNull(knimeUrl);
@@ -189,17 +195,14 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         HubItemVersion found = null;
         for (final var param : WWWFormCodec.parse(query, StandardCharsets.UTF_8)) {
             final var isItemVersion = LinkType.VERSION_QUERY_PARAM.equals(param.getName());
-            boolean isLegacySpaceVersion = LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM.equals(param.getName());
-            if (isItemVersion || isLegacySpaceVersion) {
+            if (isItemVersion) {
                 final var value = CheckUtils.checkArgumentNotNull(param.getValue(),
                     "version parameter can't be empty in URL '%s'", url);
 
                 final HubItemVersion versionHere;
-                if (value.equals(isItemVersion ? LinkType.LATEST_STATE.getIdentifier()
-                        : LinkType.LATEST_STATE.getLegacyIdentifier())) {
+                if (value.equals(LinkType.LATEST_STATE.getIdentifier())) {
                     versionHere = CURRENT_STATE;
-                } else if (value.equals(isItemVersion ? LinkType.LATEST_VERSION.getIdentifier()
-                        : LinkType.LATEST_VERSION.getLegacyIdentifier())) {
+                } else if (value.equals(LinkType.LATEST_VERSION.getIdentifier())) {
                     versionHere = MOST_RECENT;
                 } else {
                     try { // NOSONAR
@@ -221,27 +224,25 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     }
 
     /**
+     * Migrates an URI that might contain a "Space Version" query parameter to item versioning.
+     *
      * @param uri URI that might contain a spaceVersion query parameter. Nullable.
      * @return URI that has no spaceVersion parameter. If the input has a spaceVersion=X, the output has version=X. If
      *         given {@code null}, {@code null} is returned.
      */
+    // kept for backwards compatibility
     public static URI migrateFromSpaceVersion(final URI uri) {
-        if (uri == null) {
-            return null;
-        }
-        var spaceVersion = new URIBuilder(uri).getQueryParams().stream()
-            .filter(nvp -> nvp.getName().equals(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM)).findFirst()
-            .map(NameValuePair::getValue);
-        if (spaceVersion.isPresent()) {
-            return replaceParam(uri, LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM, LinkType.VERSION_QUERY_PARAM,
-                spaceVersion.get());
-        } else {
-            return uri;
-        }
+        return URLResolverUtil.migrateFromSpaceVersion(uri);
     }
 
-    private static URI replaceParam(final URI uri, final String name, final String value) {
-        return replaceParam(uri, name, name, value);
+    /**
+     * Adds the {@code version=[...]} query parameter to the given builder if this version needs them.
+     *
+     * @param uriBuilder URI builder
+     * @since 5.0
+     */
+    public void addVersionToURI(final URIBuilder uriBuilder) {
+        addVersionToURI(uriBuilder, false);
     }
 
     /**
@@ -271,51 +272,34 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
     }
 
     /**
-     * Adds both the legacy {@code spaceVersion=[...]} and the new {@code version=[...]} query parameter to the given
-     * builder if this version needs them.
+     * Converts a {@link HubItemVersion} to an {@link ItemVersion}.
      *
-     * @param uriBuilder URI builder
+     * @param version the version
+     * @return the corresponding {@link ItemVersion}
+     * @since 5.5
      */
-    public void addVersionToURI(final URIBuilder uriBuilder) {
-        addVersionToURI(uriBuilder, true);
+    public static ItemVersion convert(final HubItemVersion version) {
+        if (version == null) {
+            return null;
+        }
+        return switch (version.linkType) {
+            case LATEST_STATE -> ItemVersion.currentState();
+            case LATEST_VERSION -> ItemVersion.mostRecent();
+            case FIXED_VERSION -> new SpecificVersion(version.versionNumber());
+        };
     }
 
     /**
+     * Converts an {@link ItemVersion} to a {@link HubItemVersion}.
      *
-     * @param uri to derive new URI from. Non-null.
-     * @param oldName Parameter to remove or replace. Non-null.
-     * @param newName Parameter to hold the value if it is not null. Non-null.
-     * @param value new value or null if the parameter is to be removed
-     * @return new URI with the modified query parameter
+     * @param version the version
+     * @return the corresponding {@link HubItemVersion}
+     * @since 5.5
      */
-    private static URI replaceParam(final URI uri, final String oldName, final String newName, final String value) {
-        CheckUtils.checkArgumentNotNull(uri);
-        CheckUtils.checkArgumentNotNull(oldName);
-        CheckUtils.checkArgumentNotNull(newName);
-
-        var builder = new URIBuilder(uri);
-        var params = new ArrayList<>(builder.getQueryParams());
-
-        var multiValueParameter = params.stream().filter(nvp -> nvp.getValue().contains(",")).findAny();
-        if (multiValueParameter.isPresent()) {
-            throw new IllegalArgumentException("Cannot handle multi-valued query parameters. "
-                + "Commas will be URL encoded, which means the parameter is interpreted as a single value parameter.");
+    public static HubItemVersion convert(final ItemVersion version) {
+        if (version == null) {
+            return null;
         }
-
-        var offset = params.stream().map(NameValuePair::getName).toList().indexOf(oldName);
-        if (offset != -1) {
-            params.remove(offset);
-        }
-
-        var insertAt = offset == -1 ? params.size() : offset;
-        Optional.ofNullable(value)//
-            .map(v -> new BasicNameValuePair(newName, v))//
-            .ifPresent(pair -> params.add(insertAt, pair));
-
-        try {
-            return builder.setParameters(params).build();
-        } catch (URISyntaxException ex) {
-            throw new IllegalStateException(ex);
-        }
+        return version.match(cs -> currentState(), mr -> latestVersion(), sv -> of(sv.version()));
     }
 }

@@ -49,7 +49,6 @@
 package org.knime.core.util.hub;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -233,20 +232,7 @@ public class HubItemVersionTest {
             withVersionLatest, "version should be set to most-recent in URI");
     }
 
-    /**
-     * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&spaceVersion=3&param=4 <br/>
-     * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4
-     */
-    @Test
-    public void testMigrateVersionReplacesQueryParameter() {
-        // given a URI with a space version set and some other parameters
-        URI withSpaceVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&spaceVersion=3&param=4");
-        // when calling migrate version
-        var withVersion3 = HubItemVersion.migrateFromSpaceVersion(withSpaceVersion3);
-        // then the version is set to version=3
-        assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4"), withVersion3,
-            "version should be migrated to version=3 in URI");
-    }
+    // no migration from space version anymore
 
     /**
      * Example input: knime://My-KNIME-Hub/*02j3f023j <br/>
@@ -267,7 +253,7 @@ public class HubItemVersionTest {
         // then the resulting URI has both parameters
         final List<NameValuePair> params = WWWFormCodec.parse(result.getQuery(), StandardCharsets.UTF_8);
         assertTrue(params.contains(new BasicNameValuePair(LinkType.VERSION_QUERY_PARAM, "3")), "URI should have query parameter version=3");
-        assertTrue(params.contains(new BasicNameValuePair(LinkType.LEGACY_SPACE_VERSION_QUERY_PARAM, "3")), "URI should have query parameter spaceVersion=3");
+        assertTrue(params.contains(new BasicNameValuePair("spaceVersion", "3")), "URI should have query parameter spaceVersion=3");
     }
 
     /**
@@ -278,10 +264,7 @@ public class HubItemVersionTest {
         // given null
         URI nonExistent = null;
 
-        // when migrating
-        var migrated = HubItemVersion.migrateFromSpaceVersion(nonExistent);
-        // we get null
-        assertNull(migrated, "Null URI should be untouched by migration.");
+        // no migration from space version anymore
 
         // when applying, we expect an illegal argument exception
         final var version = HubItemVersion.of(1);
