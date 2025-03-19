@@ -53,7 +53,7 @@ import java.util.Optional;
 
 import org.eclipse.core.runtime.IPath;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for a workflow with no workflow context at all (should not happen in normal operation).
@@ -74,24 +74,24 @@ final class ContextlessUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
         return new ResolvedURL(mountId, path, version, null, url, false);
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         throw new ResourceAccessException("No context for relative URL available");
     }

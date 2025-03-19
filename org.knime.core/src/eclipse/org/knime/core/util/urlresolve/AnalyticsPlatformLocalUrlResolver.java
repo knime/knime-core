@@ -57,7 +57,7 @@ import org.eclipse.core.runtime.Path;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
 import org.knime.core.util.Pair;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for an Analytics Platform with a workflow that comes from the local file system.
@@ -91,7 +91,7 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
         final var sameMountpoint = m_executorInfo.getMountpoint() //
                 .map(Pair::getFirst) //
                 .filter(uri -> Objects.equals(uri.getAuthority(), mountId)) //
@@ -101,7 +101,7 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         final var mountpoint = m_executorInfo.getMountpoint()
             .orElseThrow(() -> new ResourceAccessException("Mountpoint or space relative URL needs a mountpoint."));
@@ -134,13 +134,13 @@ final class AnalyticsPlatformLocalUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         return resolveMountpointRelative(url, path, version);
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         // in local application or a file inside the workflow
         final var workflowPath = m_executorInfo.getLocalWorkflowPath().normalize();
