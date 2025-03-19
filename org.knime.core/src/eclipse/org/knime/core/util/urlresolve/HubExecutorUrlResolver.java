@@ -60,7 +60,7 @@ import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.workflow.contextv2.HubJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for a Hub executor.
@@ -85,7 +85,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
         if (!m_locationInfo.getDefaultMountId().equals(mountId)) {
             // possibly a MountTable is present, which will then resolve the URL (AP-19986)
             return new ResolvedURL(mountId, path, null, null, url, false);
@@ -99,20 +99,20 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         return resolveSpaceRelative(url, path, version);
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         // we're on a Hub executor, resolve workflow locally via the repository
         return resolveRelativeToHubSpace(m_locationInfo, path, version);
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         final var mountId = m_locationInfo.getDefaultMountId();
         final var workflowPath = getWorkflowPath(m_locationInfo);
@@ -154,7 +154,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
      * @throws ResourceAccessException if resolution fails
      */
     static ResolvedURL resolveRelativeToHubSpace(final HubSpaceLocationInfo locationInfo, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
         final var spacePath = getSpacePath(locationInfo);
         final var resolvedPath = spacePath.append(path);
 
@@ -174,7 +174,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         return new ResolvedURL(locationInfo.getDefaultMountId(), resolvedPath, version, null, resourceUrl, true);
     }
 
-    private static URL createRepoUrl(final URI repositoryAddress, final HubItemVersion version,
+    private static URL createRepoUrl(final URI repositoryAddress, final ItemVersion version,
         final IPath referencedItemPath) throws ResourceAccessException {
 
         final var builder = new URIBuilder(repositoryAddress.normalize());
@@ -184,8 +184,7 @@ final class HubExecutorUrlResolver extends KnimeUrlResolver {
         builder.setPathSegments(pathSegments);
 
         if (version != null) {
-            // add both old and new version parameter for backwards compatibility with old Hubs
-            version.addVersionToURI(builder, true);
+            URLResolverUtil.addVersionQueryParameter(version, builder::addParameter);
         }
 
         return URLResolverUtil.toURL(builder);

@@ -57,7 +57,7 @@ import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * KNIME URL Resolver for a remote executor in the Remote Workflow Editor.
@@ -95,7 +95,7 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
-        final HubItemVersion version) throws ResourceAccessException {
+        final ItemVersion version) throws ResourceAccessException {
 
         // we are conservative here and accept the URL as referencing the same mountpoint if the mount ID matches either
         // the mount ID of the workflow in the local AP or the default mount ID of the remote Hub
@@ -117,14 +117,14 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         // Mountpoint and space are synonymous here
         return resolveSpaceRelative(url, path, version);
     }
 
     @Override
-    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         final IPath resolvedPath;
         if (m_hubLocationInfo != null) {
@@ -146,7 +146,7 @@ final class RemoteExecutorUrlResolver extends KnimeUrlResolver {
     }
 
     @Override
-    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final HubItemVersion version)
+    ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
             throws ResourceAccessException {
         if (!leavesScope(path)) {
             throw new ResourceAccessException(
