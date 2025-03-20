@@ -65,37 +65,41 @@ public interface PortsConfiguration {
 
     /**
      * Returns the configured input ports.
+     * <p>
+     * Does not include the implicit flow variable port on native nodes.
      *
      * @return the configured input ports
      */
-    public PortType[] getInputPorts();
+    PortType[] getInputPorts();
 
     /**
      * Returns the configured output ports.
      *
      * @return the configured output ports
      */
-    public PortType[] getOutputPorts();
+    PortType[] getOutputPorts();
 
     /**
      * Returns for each input port group its position.
      *
-     * @return mapping from input port groups to their locations
+     * @return mapping from input port group name/id to list of indices belonging to that port group. Indices do not
+     *         count implicit flow variable port.
      */
-    public Map<String, int[]> getInputPortLocation();
+    Map<String, int[]> getInputPortLocation();
 
     /**
      * Returns for each output port group its position.
      *
-     * @return mapping from output port groups to their locations
+     * @return mapping from output port group name/id to list of indices belonging to that port group. Indices do not
+     *         count implicit flow variable port.
      */
-    public Map<String, int[]> getOutputPortLocation();
+    Map<String, int[]> getOutputPortLocation();
 
     /**
      * Returns the set of port group names.
      *
      * @return the port group names
      */
-    public List<String> getPortGroupNames();
+    List<String> getPortGroupNames();
 
 }

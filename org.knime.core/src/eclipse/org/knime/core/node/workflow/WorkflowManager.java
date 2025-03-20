@@ -139,6 +139,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.context.NodeCreationConfiguration;
+import org.knime.core.node.context.ports.PortsConfiguration;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.ExternalNodeData;
@@ -1116,6 +1117,16 @@ public final class WorkflowManager extends NodeContainer
             || !(Arrays.equals(oldPortConfig.getOutputPorts(), newPortConfig.getOutputPorts()));
     }
 
+    /**
+     * Fallback logic to map ports before and after node replacement in case such a port mapping is not already given by
+     * the caller. This is used by the Eclipse RCP UI ("Classic"), where only the last port in a group could be removed.
+     * 
+     * @param oldCreationConfig configuration of the replaced node
+     * @param newCreationConfig configuration of the replacing node
+     * @return see
+     *         {@link org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration#mapInputPorts(PortsConfiguration)},
+     *         {@link org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration#mapOutputPorts(PortsConfiguration)}
+     */ 
     private static Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortConfigMapping(
         final ModifiableNodeCreationConfiguration oldCreationConfig,
         final ModifiableNodeCreationConfiguration newCreationConfig) {
@@ -1134,35 +1145,37 @@ public final class WorkflowManager extends NodeContainer
 
     private List<ConnectionContainer> reconnect(final NodeID newId,
         final ModifiableNodeCreationConfiguration oldCreationConfig,
-        final ModifiableNodeCreationConfiguration newCreationConfig, final Set<ConnectionContainer> incomingConnections,
+        final ModifiableNodeCreationConfiguration newCreationConfig,
+final Set<ConnectionContainer> incomingConnections,
         final Set<ConnectionContainer> outgoingConnections,
         final Pair<Map<Integer, Integer>, Map<Integer, Integer>> customPortMapping) {
 
         List<ConnectionContainer> removedConnections = new ArrayList<>();
-        var portChange = Optional.ofNullable(customPortMapping);
-        var portMappings =
-                portChange.orElseGet(() -> getPortConfigMapping(oldCreationConfig, newCreationConfig));
+        var portMappings = Optional.ofNullable(customPortMapping) //
+                .orElseGet(() -> getPortConfigMapping(oldCreationConfig, newCreationConfig));
         var inputPortMapping = portMappings.getFirst();
         var outputPortMapping = portMappings.getSecond();
 
-        for (final var c : incomingConnections) {
-            var destPort = inputPortMapping != null ? inputPortMapping.get(c.getDestPort()) : c.getDestPort();
-            if (canAddConnection(c.getSource(), c.getSourcePort(), newId, destPort)) {
-                final var newcc = addConnection(c.getSource(), c.getSourcePort(), newId, destPort);
-                newcc.setUIInfo(c.getUIInfo());
+        for (final var originalConnection : incomingConnections) {
+            // mapping does not contain added ports -- but these cannot be connected yet
+            var destPort = inputPortMapping != null ? inputPortMapping.get(originalConnection.getDestPort()) : originalConnection.getDestPort();
+            // canAddConnection fails for destPort < 0  (interpreted as being removed)
+            if (canAddConnection(originalConnection.getSource(), originalConnection.getSourcePort(), newId, destPort)) {
+                final var newConnection = addConnection(originalConnection.getSource(), originalConnection.getSourcePort(), newId, destPort);
+                newConnection.setUIInfo(originalConnection.getUIInfo());
             } else {
-                removedConnections.add(c);
+                removedConnections.add(originalConnection);
             }
         }
 
         // set outgoing connections
-        for (final var c : outgoingConnections) {
-            var sourcePort = outputPortMapping != null ? outputPortMapping.get(c.getSourcePort()) : c.getSourcePort();
-            if (canAddConnection(newId, sourcePort, c.getDest(), c.getDestPort())) {
-                final var newcc = addConnection(newId, sourcePort, c.getDest(), c.getDestPort());
-                newcc.setUIInfo(c.getUIInfo());
+        for (final var originalConnection : outgoingConnections) {
+            var sourcePort = outputPortMapping != null ? outputPortMapping.get(originalConnection.getSourcePort()) : originalConnection.getSourcePort();
+            if (canAddConnection(newId, sourcePort, originalConnection.getDest(), originalConnection.getDestPort())) {
+                final var newConnection = addConnection(newId, sourcePort, originalConnection.getDest(), originalConnection.getDestPort());
+                newConnection.setUIInfo(originalConnection.getUIInfo());
             } else {
-                removedConnections.add(c);
+                removedConnections.add(originalConnection);
             }
         }
 
