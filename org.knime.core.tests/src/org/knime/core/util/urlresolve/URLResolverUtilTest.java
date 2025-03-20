@@ -50,6 +50,7 @@ package org.knime.core.util.urlresolve;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.MalformedURLException;
@@ -275,6 +276,24 @@ final class URLResolverUtilTest {
             "URI should have query parameter version=3");
         assertFalse(params.contains(new BasicNameValuePair("spaceVersion", "3")),
             "URI should not have query parameter spaceVersion=3");
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    void testConflictingVersionsException() {
+        final var params = "version=3&version=most-recent";
+        final var thrown = assertThrows(IllegalArgumentException.class, () -> URLResolverUtil.parseVersion(params));
+        assertTrue(thrown.getMessage().contains("Conflicting version parameters"),
+            "Expected exception message to talk about conflicting versions, is: " + thrown.getMessage());
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    void testNonNumericVersionException() {
+        final var param = "version=bogus-version";
+        final var thrown = assertThrows(IllegalArgumentException.class, () -> URLResolverUtil.parseVersion(param));
+        assertTrue(thrown.getMessage().contains("Cannot parse specific version from value: "),
+            "Expected exception message talking about version parse error, is: " + thrown.getMessage());
     }
 
 }
