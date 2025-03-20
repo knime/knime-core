@@ -46,6 +46,7 @@
 package org.knime.core.node.workflow;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -60,6 +61,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.net.URIBuilder;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -478,8 +480,17 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @return a {@link MetaNodeTemplateInformation}.
      */
     public static MetaNodeTemplateInformation createNewTemplate(final TemplateInfoDef def, final TemplateType type) {
-        var uri = StringUtils.isEmpty(def.getUri()) ? null : URI.create(def.getUri());
-        uri = URLResolverUtil.migrateFromSpaceVersion(uri);
+        URI uri = null;
+        if (StringUtils.isNotEmpty(def.getUri())) {
+            final var defUri = URI.create(def.getUri());
+            final var migratedQueryParams = URLResolverUtil.migrateFromSpaceVersion(defUri.getQuery());
+            try {
+                uri = new URIBuilder(defUri).setCustomQuery(migratedQueryParams).build();
+            } catch (final URISyntaxException e) {
+                throw new IllegalStateException(e); // same as old HubItemVersion#replaceParam
+            }
+        }
+
         var role = Role.Link;
         final var updatedAt = def.getUpdatedAt();
         if (uri == null) {
