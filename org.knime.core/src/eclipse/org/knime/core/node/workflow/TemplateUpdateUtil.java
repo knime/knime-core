@@ -277,7 +277,7 @@ public final class TemplateUpdateUtil {
              * the version of the template.)
              */
             // ignore modified since for versioned content
-            final var cutoffDate = URLResolverUtil.parseVersion(sourceURI)
+            final var cutoffDate = URLResolverUtil.parseVersion(sourceURI.getQuery())
                 .filter(ItemVersion::isVersioned).isPresent() ? null
                     : Optional.ofNullable(linkInfo.getTimestampInstant()) //
                         .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
