@@ -77,11 +77,10 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
 import org.knime.core.util.hub.ItemVersion;
-import org.knime.core.util.hub.ItemVersionURIUtil;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
+import org.knime.core.util.urlresolve.URLResolverUtil;
 
 /**
  * Encapsulates util functionality for updating template links (a.k.a Components, Metanodes).
@@ -284,9 +283,10 @@ public final class TemplateUpdateUtil {
              * the version of the template.)
              */
             // ignore modified since for versioned content
-            final var cutoffDate = HubItemVersion.of(sourceURI).filter(HubItemVersion::isVersioned).isPresent() ? null
-                : Optional.ofNullable(linkInfo.getTimestampInstant()) //
-                    .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
+            final var cutoffDate = URLResolverUtil.parseVersion(sourceURI.getQuery())
+                .filter(ItemVersion::isVersioned).isPresent() ? null
+                    : Optional.ofNullable(linkInfo.getTimestampInstant()) //
+                        .map(instant -> instant.atZone(ZoneOffset.UTC)).orElse(null);
             final var localDir = ResolverUtil.resolveURItoLocalOrTempFileConditional(sourceURI,
                 new NullProgressMonitor(), cutoffDate).orElse(null);
             if (localDir == null) {

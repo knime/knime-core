@@ -52,20 +52,21 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
-import org.knime.core.node.NodeLogger;
+import org.apache.hc.core5.net.WWWFormCodec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.URIPathEncoder;
-import org.knime.core.util.URIQueryParamUtil;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.CurrentState;
 import org.knime.core.util.hub.ItemVersion;
@@ -74,15 +75,13 @@ import org.knime.core.util.hub.SpecificVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 
 /**
- * Utility class for the KNIME URI resolving. Includes utilities for the item versions and conversion to URL.
+ * Utility class for the KNIME URL resolving. Includes utilities for the item versions and conversion to URL.
  * Introduced to narrow Exception types from IOException to ResourceAccessException.
  *
  * @author Leon Wenzler, KNIME AG, Konstanz, Germany
  * @since 5.3
  */
 public final class URLResolverUtil {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(URLResolverUtil.class);
 
     /**
      * Converts the URI builder for the space URI to a URL. Used in KnimeUrlResolvers.
@@ -154,8 +153,12 @@ public final class URLResolverUtil {
     // from core LinkType.LATEST_VERSION.getIdentifier()
     private static final String MOST_RECENT_IDENTIFIER = "most-recent";
 
+    private static final String LEGACY_SPACE_VERSION_MOST_RECENT = "latest";
+
     // from core LinkType.LATEST_STATE.getIdentifier()
     private static final String CURRENT_STATE_IDENTIFIER = "current-state";
+
+    private static final String LEGACY_SPACE_VERSION_CURRENT = "-1";
 
     // from core LinkType.VERSION_QUERY_PARAM
     private static final String VERSION_QUERY_PARAM_NAME = "version";
@@ -166,16 +169,18 @@ public final class URLResolverUtil {
     // these methods formerly lived in the HubItemVersion class
 
     /**
-     * Applies the given {@link ItemVersion} to the given URI by adding/replacing the version.
-     * In case the given version is not {@link ItemVersion#isVersioned}, the parameter is removed.
+     * Applies the given {@link ItemVersion} to the given query parameters by adding/replacing the version. In case the
+     * given version is not {@link ItemVersion#isVersioned}, the parameter is removed.
      *
      * @param version to apply to the URI
-     * @param uri non-{@code null} URI to apply the version
-     * @return the URI with the version applied
+     * @param queryParams the params to apply the version to
+     * @return the query parameters with the version applied
      * @since 5.5
      */
-    public static URI applyTo(final ItemVersion version, final URI uri) {
-        return URIQueryParamUtil.applyTo(uri, VERSION_QUERY_PARAM_NAME, getQueryParameterValue(version).orElse(null));
+    public static List<NameValuePair> applyTo(final ItemVersion version, final List<NameValuePair> queryParams) {
+        return URLQueryParamUtil.replaceParameterValue(queryParams, VERSION_QUERY_PARAM_NAME,
+            getQueryParameterValue(version).orElse(null), NameValuePair::getName, NameValuePair::getValue,
+            BasicNameValuePair::new);
     }
 
     /**
@@ -196,71 +201,72 @@ public final class URLResolverUtil {
     }
 
     /**
-     * Tries to parse the {@link ItemVersion} from the given non-{@code null} URI.
+     * Tries to parse the {@link ItemVersion} from the given nullable query parameter string.
      *
-     * @param uri to parse the version from
+     * <br>
+     * Note: this method supports parsing the legacy space version parameter as well
+     *
+     * @param queryParams nullable query parameter string to parse the version from
      * @return the parsed {@link ItemVersion} or {@link Optional#empty()} if the version could not be parsed
      * @since 5.5
      */
-    public static Optional<ItemVersion> parseVersion(final URI uri) {
-        // the old method did not care about the scheme (that it is a knime:// URL), so we don't either
-        CheckUtils.checkArgumentNotNull(uri);
-        return fromQueryParameters(VERSION_QUERY_PARAM_NAME, new URIBuilder(uri).getQueryParams(), uri::toString);
+    public static Optional<ItemVersion> parseVersion(final String queryParams) {
+        final var params = parseQuery(queryParams);
+        return parseVersion(params);
+    }
+
+    private static Optional<ItemVersion> parseVersion(final Collection<NameValuePair> queryParams) {
+        return fromQueryParameters(queryParams, VERSION_QUERY_PARAM_NAME, SPACE_VERSION_QUERY_PARAM_NAME,
+            queryParams.toString());
+    }
+
+    private static List<NameValuePair> parseQuery(final String query) {
+        if (query == null || query.isEmpty()) {
+            return List.of();
+        }
+        return WWWFormCodec.parse(query, StandardCharsets.UTF_8);
     }
 
     /**
-     * Migrates an URI that might contain a "Space Version" query parameter to item versioning.
+     * Migrates query parameters that might contain a "Space Version" query parameter to item versioning.
      *
-     * @param uri nullable URI that might contain the legacy parameter query parameter
-     * @return URI that has no spaceVersion parameter. If the input has a spaceVersion=X, the output has version=X. If
-     *         given {@code null}, {@code null} is returned.
+     * @param queryParams nullable query parameters that might contain the legacy parameter query parameter
+     * @return query parameters that has no spaceVersion parameter. If the input has a spaceVersion=X, the output has
+     *         version=X. If given {@code null}, {@code null} is returned.
      * @since 5.5
      */
     // necessary for backwards compatibility
-    public static URI migrateFromSpaceVersion(final URI uri) {
-        if (uri == null) {
-            return null;
-        }
-        return new URIBuilder(uri).getQueryParams().stream()
-            .filter((final NameValuePair nvp) -> nvp.getName().equals(SPACE_VERSION_QUERY_PARAM_NAME)).findFirst()
-            .map(NameValuePair::getValue) //
-            .map((final String versionValue) -> URIQueryParamUtil.applyTo(uri, SPACE_VERSION_QUERY_PARAM_NAME, VERSION_QUERY_PARAM_NAME,
-                versionValue))
-            .orElse(uri);
+    public static String migrateFromSpaceVersion(final String queryParams) {
+        final var params = parseQuery(queryParams);
+        return parseVersion(params).map(v -> applyTo(v, params))
+            .map(p -> WWWFormCodec.format(p, StandardCharsets.UTF_8)).orElse(queryParams);
     }
 
     // Helper methods
 
-    /**
-     * Parses the first occurrence of the "version" query parameter from the given query string into an ItemVersion.
-     *
-     * @param query query string to parse ItemVersion from
-     * @return
-     */
-    private static Optional<ItemVersion> fromQueryParameters(final String versionQueryParam,
-        final Collection<NameValuePair> queryParams, final Supplier<String> uriForLogging) {
-        if (queryParams != null && !queryParams.isEmpty()) {
-            // parse "version" parameter from query string and parse its value into an ItemVersion
-            final var versionParams = queryParams.stream()
-                .filter(p -> versionQueryParam.equals(p.getName())).toList();
-            if (versionParams.size() > 1) {
-                // TODO exception? debug? try first successful one?
-                // HubItemVersion method threw IllegalArgumentException in case of multiple inconsistent _values_
-                LOGGER.warn(() ->
-                    "Multiple \"version\" query parameters found in URI query string \"%s\", taking first one"
-                    .formatted(uriForLogging.get()));
-            }
-            for (final var param : versionParams) {
-                if (versionQueryParam.equals(param.getName())) {
-                    final var value = param.getValue();
-                    CheckUtils.check(value != null, IllegalArgumentException::new,
-                        () -> "\"%s\" parameter cannot be empty in query parameters of \"%s\""
-                            .formatted(versionQueryParam, uriForLogging.get()));
-                    return match(value);
+    // old HubItemVersion#fromQuery (more or less)
+    private static Optional<ItemVersion> fromQueryParameters(final Collection<NameValuePair> queryParams,
+        final String versionParam, final String spaceVersionParam, final String queryForLogging) {
+        if (queryParams == null || queryParams.isEmpty()) {
+            return Optional.empty();
+        }
+        ItemVersion found = null;
+        for (final var param : queryParams) {
+            final var isItemVersion = versionParam.equals(param.getName());
+            boolean isLegacySpaceVersion = spaceVersionParam.equals(param.getName());
+            if (isItemVersion || isLegacySpaceVersion) {
+                final var value = CheckUtils.checkArgumentNotNull(param.getValue(),
+                    "version parameter can't be empty in query parameters \"%s\"", queryForLogging);
+                final ItemVersion versionHere = match(value).orElse(null);
+                if (found != null && !found.equals(versionHere)) {
+                    throw new IllegalArgumentException(
+                        "Conflicting version parameters in query parameters \"%s\": \"%s\" vs. \"%s\""
+                            .formatted(queryForLogging, found, versionHere));
                 }
+                found = versionHere;
             }
         }
-        return Optional.empty();
+        return Optional.ofNullable(found);
     }
 
     /**
@@ -320,12 +326,14 @@ public final class URLResolverUtil {
      * @return {@link ItemVersion} if it can be matched (parsed), otherwise {@link Optional#empty()}
      */
     private static Optional<ItemVersion> match(final String itemVersionParamValue) {
-        if (CURRENT_STATE_IDENTIFIER.equals(itemVersionParamValue)) {
-            return Optional.of(new CurrentState());
-        }
-        if (MOST_RECENT_IDENTIFIER.equals(itemVersionParamValue)) {
-            return Optional.of(new MostRecent());
-        }
+        return switch (itemVersionParamValue) {
+            case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(new CurrentState());
+            case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(new MostRecent());
+            default -> parseVersionSafe(itemVersionParamValue);
+        };
+    }
+
+    private static Optional<ItemVersion> parseVersionSafe(final String itemVersionParamValue) {
         try {
             return Optional.of(new SpecificVersion(Integer.parseUnsignedInt(itemVersionParamValue)));
         } catch (final NumberFormatException e) {

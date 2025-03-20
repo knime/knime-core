@@ -430,7 +430,7 @@ public abstract class KnimeUrlResolver {
 
         final var currrentType = optCurrentType.get();
         final var path = getPath(url);
-        final var version = URLResolverUtil.parseVersion(URLResolverUtil.toURI(url)).orElse(null);
+        final var version = URLResolverUtil.parseVersion(url.getQuery()).orElse(null);
         final var resolved = switch (currrentType) {
             case MOUNTPOINT_ABSOLUTE -> resolveMountpointAbsolute(url, url.getAuthority(), path, version);
             case MOUNTPOINT_RELATIVE -> resolveMountpointRelative(url, path, version);

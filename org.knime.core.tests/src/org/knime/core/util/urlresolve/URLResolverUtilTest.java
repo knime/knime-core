@@ -50,7 +50,6 @@ package org.knime.core.util.urlresolve;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.MalformedURLException;
@@ -93,8 +92,8 @@ final class URLResolverUtilTest {
         final URI httpsURI = new URI("https://www.knime.com");
 
         // when extracting the version number
-        final var knimeURIVersion = URLResolverUtil.parseVersion(knimeURI);
-        final var httpsURIVersion = URLResolverUtil.parseVersion(httpsURI);
+        final var knimeURIVersion = URLResolverUtil.parseVersion(knimeURI.getQuery());
+        final var httpsURIVersion = URLResolverUtil.parseVersion(httpsURI.getQuery());
 
         // then the version is empty
         assertEquals(Optional.empty(), knimeURIVersion, "version should be empty in URI: " + knimeURI);
@@ -116,8 +115,8 @@ final class URLResolverUtilTest {
             new URL("https://www.hub.knime.com/repo/some/item?multiValueParam=4,4&version=3&otherParam=book");
 
         // when extracting the version number
-        var uriVersion = URLResolverUtil.parseVersion(uri).get();
-        var urlVersion = URLResolverUtil.parseVersion(url.toURI()).get();
+        var uriVersion = URLResolverUtil.parseVersion(uri.getQuery()).get();
+        var urlVersion = URLResolverUtil.parseVersion(url.toURI().getQuery()).get();
 
         // then the link type is fixed version and the version number is 3
         final var version3 = new SpecificVersion(3);
@@ -142,8 +141,8 @@ final class URLResolverUtilTest {
             new URL("https://www.hub.knime.com/repo/some/item?someParameter=12&version=most-recent&param=4");
 
         // when extracting the version number
-        var uriVersion = URLResolverUtil.parseVersion(uri).get();
-        var urlVersion = URLResolverUtil.parseVersion(url.toURI()).get();
+        var uriVersion = URLResolverUtil.parseVersion(uri.getQuery()).get();
+        var urlVersion = URLResolverUtil.parseVersion(url.getQuery()).get();
 
         // then the link type is latest version and the version number is null
         final var latest = ItemVersion.mostRecent();
@@ -154,15 +153,18 @@ final class URLResolverUtilTest {
     /**
      * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4
+     * @throws URISyntaxException
      */
     @SuppressWarnings("static-method")
     @Test
-    void testApplyCurrentStateRemovesVersion() {
+    void testApplyCurrentStateRemovesVersion() throws URISyntaxException {
         // given a URI/URL with version set
         final URI uri = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
 
         // when setting to current state
-        final var appliedUri = URLResolverUtil.applyTo(ItemVersion.currentState(), uri);
+        final var builder = new URIBuilder(uri);
+        final var appliedParams = URLResolverUtil.applyTo(ItemVersion.currentState(), builder.getQueryParams());
+        final var appliedUri = builder.setParameters(appliedParams).build();
 
         // then the version is removed
         assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&param=4"), appliedUri,
@@ -172,15 +174,18 @@ final class URLResolverUtilTest {
     /**
      * Example input: knime://SomeMountPoint/some/path?someParameter=12 <br/>
      * Example output: unchanged
+     * @throws URISyntaxException
      */
     @SuppressWarnings("static-method")
     @Test
-    void testApplyCurrentStateToCurrentStateLeavesUnchanged() {
+    void testApplyCurrentStateToCurrentStateLeavesUnchanged() throws URISyntaxException {
         // given a URI/URL without version set
         final URI uri = URI.create("knime://SomeMountPoint/some/path?someParameter=12");
 
         // when setting to current state
-        final var appliedUri = URLResolverUtil.applyTo(ItemVersion.currentState(), uri);
+        final var builder = new URIBuilder(uri);
+        final var appliedParams = URLResolverUtil.applyTo(ItemVersion.currentState(), builder.getQueryParams());
+        final var appliedUri = builder.setParameters(appliedParams).build();
 
         // then the result is unchanged
         assertEquals(uri, appliedUri, "URI should be unchanged.");
@@ -189,14 +194,18 @@ final class URLResolverUtilTest {
     /**
      * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=4&param=4
+     * @throws URISyntaxException
      */
     @SuppressWarnings("static-method")
     @Test
-    void testApplyFixedVersionUpdatesVersion() {
+    void testApplyFixedVersionUpdatesVersion() throws URISyntaxException {
         // given a URI with version set
         URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?param=12&version=3&param=4");
         // when setting a different version
-        var withVersion4 = URLResolverUtil.applyTo(ItemVersion.of(4), withVersion3);
+        final var builder = new URIBuilder(withVersion3);
+        final var appliedParams = URLResolverUtil.applyTo(ItemVersion.of(4), builder.getQueryParams());
+        final var withVersion4 = builder.setParameters(appliedParams).build();
+
         // then the version is removed
         assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?param=12&version=4&param=4"), withVersion4,
             "version should be updated in URI");
@@ -205,14 +214,17 @@ final class URLResolverUtilTest {
     /**
      * Example input: knime://SomeMountPoint/some/path <br/>
      * Example output: knime://SomeMountPoint/some/path?version=4
+     * @throws URISyntaxException
      */
     @SuppressWarnings("static-method")
     @Test
-    void testApplyFixedVersionAddsVersion() {
+    void testApplyFixedVersionAddsVersion() throws URISyntaxException {
         // given a URI without version set
         URI withoutVersion = URI.create("knime://SomeMountPoint/some/path");
         // when setting a version
-        var withVersion4 = URLResolverUtil.applyTo(ItemVersion.of(4), withoutVersion);
+        final var builder = new URIBuilder(withoutVersion);
+        final var appliedParams = URLResolverUtil.applyTo(ItemVersion.of(4), builder.getQueryParams());
+        final var withVersion4 = builder.setParameters(appliedParams).build();
         // then the version is added
         assertEquals(URI.create("knime://SomeMountPoint/some/path?version=4"), withVersion4,
             "version should be added to URI");
@@ -221,14 +233,18 @@ final class URLResolverUtilTest {
     /**
      * Example input: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4 <br/>
      * Example output: knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4
+     * @throws URISyntaxException
      */
     @SuppressWarnings("static-method")
     @Test
-    void testApplyLatestVersionReplacesFixedVersion() {
+    void testApplyLatestVersionReplacesFixedVersion() throws URISyntaxException {
         // given a URI with version set
         URI withVersion3 = URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=3&param=4");
         // when setting to latest version
-        var withVersionLatest = URLResolverUtil.applyTo(ItemVersion.mostRecent(), withVersion3);
+        final var builder = new URIBuilder(withVersion3);
+        final var appliedParams = URLResolverUtil.applyTo(ItemVersion.mostRecent(), builder.getQueryParams());
+        final var withVersionLatest = builder.setParameters(appliedParams).build();
+
         // then the version is set to most-recent
         assertEquals(URI.create("knime://My-KNIME-Hub/*02j3f023j?someParameter=12&version=most-recent&param=4"),
             withVersionLatest, "version should be set to most-recent in URI");
@@ -261,22 +277,4 @@ final class URLResolverUtilTest {
             "URI should not have query parameter spaceVersion=3");
     }
 
-    /**
-     * Test that null inputs are handled correctly. They are quite common.
-     */
-    @SuppressWarnings("static-method")
-    @Test
-    void testNullInputs() {
-        // given null
-        URI nonExistent = null;
-
-        // when applying, we expect an illegal argument exception
-        final var version = ItemVersion.of(1);
-        assertThrows(IllegalArgumentException.class, () -> URLResolverUtil.applyTo(version, nonExistent),
-            "Null URI should not be applicable.");
-
-        // when parsing, we expect an illegal argument exception
-        assertThrows(IllegalArgumentException.class, () -> URLResolverUtil.parseVersion(nonExistent),
-            "Null URI should not be parsable.");
-    }
 }

@@ -49,6 +49,7 @@
 package org.knime.core.util.hub;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -118,10 +119,19 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      *
      * @param uri to derive new URI from. Non-null.
      * @return source URI, possibly with item version query parameter.
-     * @see URLResolverUtil#applyTo(ItemVersion, URI)
+     * @see URLResolverUtil#applyTo(ItemVersion, java.util.List)
      */
     public URI applyTo(final URI uri) {
-        return URLResolverUtil.applyTo(convert(this), uri);
+        CheckUtils.checkArgumentNotNull(uri);
+        final var builder = new URIBuilder(uri);
+        final var params = builder.getQueryParams();
+        final var replaced = URLResolverUtil.applyTo(convert(this), params);
+        try {
+            return builder.setParameters(replaced).build();
+        } catch (final URISyntaxException e) {
+            // we just modify the query parameters and these should not cause a URISyntaxException
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -146,7 +156,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      * @see SpecificVersion#SpecificVersion(int)
      */
     public static HubItemVersion of(final int versionNumber) {
-        return convert(ItemVersion.of(versionNumber));
+        return new HubItemVersion(LinkType.FIXED_VERSION, versionNumber);
     }
 
     /**
@@ -232,7 +242,15 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      */
     // kept for backwards compatibility
     public static URI migrateFromSpaceVersion(final URI uri) {
-        return URLResolverUtil.migrateFromSpaceVersion(uri);
+        final var builder = new URIBuilder(uri);
+        final var params = URLResolverUtil.migrateFromSpaceVersion(uri.getQuery());
+        builder.setCustomQuery(params);
+        try {
+            return builder.build();
+        } catch (final URISyntaxException e) {
+            // we just modify the query parameters and these should not cause a URISyntaxException
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
