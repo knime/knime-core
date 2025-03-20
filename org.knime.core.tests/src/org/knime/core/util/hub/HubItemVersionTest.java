@@ -49,6 +49,7 @@
 package org.knime.core.util.hub;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -253,7 +254,8 @@ public class HubItemVersionTest {
         // then the resulting URI has both parameters
         final List<NameValuePair> params = WWWFormCodec.parse(result.getQuery(), StandardCharsets.UTF_8);
         assertTrue(params.contains(new BasicNameValuePair(LinkType.VERSION_QUERY_PARAM, "3")), "URI should have query parameter version=3");
-        assertTrue(params.contains(new BasicNameValuePair("spaceVersion", "3")), "URI should have query parameter spaceVersion=3");
+        // No support for space version _creation_ anymore
+        assertFalse(params.contains(new BasicNameValuePair("spaceVersion", "3")), "URI should have query parameter spaceVersion=3");
     }
 
     /**
