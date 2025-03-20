@@ -75,7 +75,7 @@ import org.knime.core.node.workflow.VariableType;
  */
 public final class ItemVersionStringPersistor {
 
-    private static final String CONFIG_KEY = HubItemVersionPersistor.CONFIG_KEY;
+    static final String CONFIG_KEY = "hubItemVersion"; // do not make public
 
     // LinkType#toString uses this string value to represent this "non-version" current-state
     private static final String CURRENT_STATE_LINK_TYPE = "LATEST_STATE";
@@ -119,7 +119,7 @@ public final class ItemVersionStringPersistor {
             return new SpecificVersion(Integer.parseUnsignedInt(versionString));
         } catch (final NumberFormatException e) {
             throw new InvalidSettingsException(
-                "Invalid Hub item version \"%s\". Must be \"%s\", \"%s\", or a non-negative integer value."
+                "Invalid Hub item version \"%s\". Valid values are \"%s\", \"%s\", or a non-negative integer value."
                     .formatted(versionString, CURRENT_STATE_LINK_TYPE, MOST_RECENT_LINK_TYPE));
         }
     }

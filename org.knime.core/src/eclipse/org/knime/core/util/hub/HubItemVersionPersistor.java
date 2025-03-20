@@ -79,7 +79,7 @@ public final class HubItemVersionPersistor {
     }
 
     /** The settings key used to store the version information */
-    public static final String CONFIG_KEY = "hubItemVersion";
+    public static final String CONFIG_KEY = ItemVersionStringPersistor.CONFIG_KEY;
 
     private static String toString(final HubItemVersion version) {
         return Optional.ofNullable(version.versionNumber())//

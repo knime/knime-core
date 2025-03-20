@@ -207,7 +207,8 @@ public final class URLResolverUtil {
      * Note: this method supports parsing the legacy space version parameter as well
      *
      * @param queryParams nullable query parameter string to parse the version from
-     * @return the parsed {@link ItemVersion} or {@link Optional#empty()} if the version could not be parsed
+     * @return the parsed {@link ItemVersion} or {@link Optional#empty()} if no version parameter is present
+     * @throws IllegalArgumentException if conflicting or unparsable version parameters are present
      * @since 5.5
      */
     public static Optional<ItemVersion> parseVersion(final String queryParams) {
@@ -252,11 +253,13 @@ public final class URLResolverUtil {
         }
         ItemVersion found = null;
         for (final var param : queryParams) {
-            final var isItemVersion = versionParam.equals(param.getName());
-            boolean isLegacySpaceVersion = spaceVersionParam.equals(param.getName());
+            final var name = param.getName();
+            final var isItemVersion = versionParam.equals(name);
+            boolean isLegacySpaceVersion = spaceVersionParam.equals(name);
             if (isItemVersion || isLegacySpaceVersion) {
                 final var value = CheckUtils.checkArgumentNotNull(param.getValue(),
-                    "version parameter can't be empty in query parameters \"%s\"", queryForLogging);
+                    "Version parameter value for \"%s\" cannot be empty in query parameters \"%s\"", name,
+                    queryForLogging);
                 final ItemVersion versionHere = match(value).orElse(null);
                 if (found != null && !found.equals(versionHere)) {
                     throw new IllegalArgumentException(
@@ -329,15 +332,16 @@ public final class URLResolverUtil {
         return switch (itemVersionParamValue) {
             case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(new CurrentState());
             case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(new MostRecent());
-            default -> parseVersionSafe(itemVersionParamValue);
+            default -> parse(itemVersionParamValue);
         };
     }
 
-    private static Optional<ItemVersion> parseVersionSafe(final String itemVersionParamValue) {
+    private static Optional<ItemVersion> parse(final String itemVersionParamValue) {
         try {
             return Optional.of(new SpecificVersion(Integer.parseUnsignedInt(itemVersionParamValue)));
         } catch (final NumberFormatException e) {
-            return Optional.empty();
+            throw new IllegalArgumentException(
+                "Cannot parse specific version from value: \"%s\"".formatted(itemVersionParamValue), e);
         }
     }
 }
