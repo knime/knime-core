@@ -110,13 +110,15 @@ public final class PMMLFormatter {
          * Test if a character is valid in xml character content. See
          * http://www.w3.org/TR/REC-xml#NT-Char
          */
+        private static boolean isBadChar(final char ch) {
+            // Adopted changes from XMLBeans for AP-24108 to make code points greater than {@code 0xFFFF} work:
+            // https://github.com/apache/xmlbeans/blob/trunk/src/main/java/org/apache/xmlbeans/impl/store/Saver.java
 
-        private boolean isBadChar (final char ch)
-        {
-            return ! (
-                (ch >= 0x20 && ch <= 0xD7FF ) ||
+            return !( // NOSONAR too many conditions
+                Character.isHighSurrogate(ch) ||
+                Character.isLowSurrogate(ch) ||
+                (ch >= 0x20 && ch <= 0xD7FF) ||
                 (ch >= 0xE000 && ch <= 0xFFFD) ||
-                (ch >= 0x10000 && ch <= 0x10FFFF) ||
                 (ch == 0x9) || (ch == 0xA) || (ch == 0xD)
                 );
         }
