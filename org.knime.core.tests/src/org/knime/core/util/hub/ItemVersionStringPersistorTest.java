@@ -50,13 +50,21 @@ package org.knime.core.util.hub;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 
+import javax.swing.event.ChangeEvent;
+
 import org.junit.jupiter.api.Test;
+import org.knime.core.node.EmptyNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.SimpleConfig;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.VariableType;
+import org.mockito.Mockito;
 
 /**
  * Tests for the {@link ItemVersionStringPersistor}.
@@ -101,5 +109,38 @@ final class ItemVersionStringPersistorTest {
             "Invalid Hub item version \"BOGUS_VERSION\". "
                 + "Valid values are \"LATEST_STATE\", \"LATEST_VERSION\", or a non-negative integer value.",
             exception.getMessage());
+    }
+
+    /**
+     * Tests that the "version" flow variable is of type string, because in addition to numeric identifiers we have
+     * "current-state" and "most-recent" (ensures backwards-compatibility).
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    void testFlowVariableModelHandling() {
+        final var pane = new EmptyNodeDialogPane();
+        final var model = ItemVersionStringPersistor.createFlowVariableModel(pane);
+        assertEquals(VariableType.StringType.INSTANCE, model.getVariableType(),
+            "Expected version variable to be string");
+        assertEquals(ItemVersionStringPersistor.CONFIG_KEY, model.getKeys()[0],
+            "Expected version variable to be under the correct config key");
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    void testFlowVariableChangeEventHandling() throws InvalidSettingsException {
+        // given a flow variable model that returns a specific version
+        final var pane = new EmptyNodeDialogPane();
+        final var model = ItemVersionStringPersistor.createFlowVariableModel(pane);
+        final var spy = Mockito.spy(model);
+        when(spy.getVariableValue()).thenReturn(Optional.of(new FlowVariable("itemVersion", "42")));
+        when(spy.isVariableReplacementEnabled()).thenReturn(true);
+
+        // we obtain the version from the change event
+        final var expected = ItemVersion.of(42);
+        final var evt = new ChangeEvent(spy);
+        final var itemVersion = ItemVersionStringPersistor.fromFlowVariableChangeEvent(evt);
+        assertTrue(itemVersion.isPresent(), "Expected an item version");
+        assertEquals(expected, itemVersion.get(), "Expected the item version to be the same as the test version");
     }
 }
