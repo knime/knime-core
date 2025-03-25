@@ -184,10 +184,10 @@ public final class URLResolverUtil {
     }
 
     /**
-     * Adds the version information to the query parameters consumer if the given version is
+     * Adds the version information to the query parameters consumer if the given non-{@code null} version is
      * {@link ItemVersion#isVersioned}.
      *
-     * @param version version to add to parameter consumer
+     * @param version non-{@code null} version to add to parameter consumer
      * @param parameterConsumer consumer for version key-value pair
      * @since 5.5
      */
@@ -260,7 +260,7 @@ public final class URLResolverUtil {
                 final var value = CheckUtils.checkArgumentNotNull(param.getValue(),
                     "Version parameter value for \"%s\" cannot be empty in query parameters \"%s\"", name,
                     queryForLogging);
-                final ItemVersion versionHere = match(value).orElse(null);
+                final ItemVersion versionHere = matchVersionValue(value).orElse(null);
                 if (found != null && !found.equals(versionHere)) {
                     throw new IllegalArgumentException(
                         "Conflicting version parameters in query parameters \"%s\": \"%s\" vs. \"%s\""
@@ -273,9 +273,9 @@ public final class URLResolverUtil {
     }
 
     /**
-     * Gets the version as a query parameter.
+     * Gets the non-{@code null} version as a query parameter.
      *
-     * @param version the version to get the query parameter for
+     * @param version the non-{@code null} version to get the query parameter for
      * @return the value for the version query parameter, e.g., "most-recent" or "4". Empty if this refers to the
      *         current state.
      */
@@ -288,17 +288,18 @@ public final class URLResolverUtil {
     }
 
     /**
-     * Matches one of the functions with the given version and applies it.
+     * Matches one of the functions with the given non-{@code null} version and applies it.
      *
      * @param <T> return type of the functions
-     * @param version version to apply functions to
+     * @param version {@code null}able version to apply functions to
      * @param currentStateFn function to apply if given current-state version
      * @param mostRecentFn function to apply if given most-recent version
      * @param versionFn function to apply if given fixed version number
-     * @return function return value
+     * @return function return value or {@code null} if version was {@code null}
      */
     private static <T> T matchFn(final ItemVersion version, final Function<CurrentState, T> currentStateFn,
         final Function<MostRecent, T> mostRecentFn, final Function<SpecificVersion, T> versionFn) {
+        CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
         // good candidate for pattern-matching switch in next Java version (preview in Java 17)
         if (version instanceof CurrentState cs) {
             return currentStateFn.apply(cs);
@@ -306,18 +307,24 @@ public final class URLResolverUtil {
         if (version instanceof MostRecent mr) {
             return mostRecentFn.apply(mr);
         }
-        return versionFn.apply((SpecificVersion)version);
+        if (version instanceof SpecificVersion sv) {
+            return versionFn.apply(sv);
+        }
+        throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
     }
 
     private static void match(final ItemVersion version, final Consumer<CurrentState> currentStateFn,
         final Consumer<MostRecent> mostRecentFn, final Consumer<SpecificVersion> versionFn) {
+        CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
         // good candidate for pattern-matching switch in next Java version (preview in Java 17)
         if (version instanceof CurrentState cs) {
             currentStateFn.accept(cs);
         } else if (version instanceof MostRecent mr) {
             mostRecentFn.accept(mr);
+        } else if (version instanceof SpecificVersion sv){
+            versionFn.accept(sv);
         } else {
-            versionFn.accept((SpecificVersion)version);
+            throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
         }
     }
 
@@ -328,15 +335,15 @@ public final class URLResolverUtil {
      * @param itemVersionParamValue query parameter value to match to {@link ItemVersion}
      * @return {@link ItemVersion} if it can be matched (parsed), otherwise {@link Optional#empty()}
      */
-    private static Optional<ItemVersion> match(final String itemVersionParamValue) {
+    private static Optional<ItemVersion> matchVersionValue(final String itemVersionParamValue) {
         return switch (itemVersionParamValue) {
             case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(new CurrentState());
             case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(new MostRecent());
-            default -> parse(itemVersionParamValue);
+            default -> parseIntegerVersion(itemVersionParamValue);
         };
     }
 
-    private static Optional<ItemVersion> parse(final String itemVersionParamValue) {
+    private static Optional<ItemVersion> parseIntegerVersion(final String itemVersionParamValue) {
         try {
             return Optional.of(new SpecificVersion(Integer.parseUnsignedInt(itemVersionParamValue)));
         } catch (final NumberFormatException e) {

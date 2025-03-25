@@ -68,7 +68,7 @@ import org.knime.core.util.urlresolve.URLResolverUtil;
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.1
- * @deprecated Use {@link ItemVersion} and {@link URLResolverUtil} instead
+ * @deprecated Use {@link ItemVersion} for version references and {@link URLResolverUtil} for URL query parameter handling
  * @see ItemVersion
  * @see URLResolverUtil
  */
