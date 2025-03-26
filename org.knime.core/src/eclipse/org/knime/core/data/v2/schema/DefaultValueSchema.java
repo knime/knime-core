@@ -167,7 +167,7 @@ sealed class DefaultValueSchema implements DataTableValueSchema permits Serializ
     }
 
     @Override
-    public int numFactories() {
+    public int numColumns() {
         return m_factories.length;
     }
 

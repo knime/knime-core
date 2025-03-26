@@ -51,7 +51,6 @@ package org.knime.core.data.v2.schema;
 import java.util.Arrays;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
@@ -128,21 +127,6 @@ public interface ValueSchema extends ColumnarSchema {
             return null;
         }
         return getDataColumnSpec(columnIndex);
-    }
-
-
-    /**
-     * Returns the number of {@link ValueFactory factories} this schema holds. Includes the {@link RowKeyValueFactory}.
-     * Therefore the returned value equals {@link DataTableSpec#getNumColumns()} + 1.
-     *
-     * @return the number of factories this schema holds
-     */
-    // TODO (TP) Remove. Always use numColumns() instead (which is the same)
-    int numFactories();
-
-    @Override
-    default int numColumns() {
-        return numFactories();
     }
 
     /**

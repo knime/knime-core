@@ -358,6 +358,12 @@
                 <message_argument value="getSourceSpec()"/>
             </message_arguments>
         </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
+                <message_argument value="numFactories()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchemaUtils.java" type="org.knime.core.data.v2.schema.ValueSchemaUtils">
         <filter id="338792546">

@@ -245,7 +245,7 @@ public class ValueSchemaTest {
 
         // Create the schema and check
         final ValueSchema schema = ValueSchemaUtils.create(tableSpec, RowKeyType.NOKEY, fileStoreHandler);
-        assertEquals(2, schema.numFactories());
+        assertEquals(2, schema.numColumns());
         var rowKeyFactory = schema.getValueFactory(0);
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
         var dataFactory = schema.getValueFactory(1);
@@ -266,7 +266,7 @@ public class ValueSchemaTest {
         // Load back and check
         final ValueSchema loadedSchema = ValueSchemaUtils.load(columnarSchema, loadContext);
         assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
-        assertEquals(2, loadedSchema.numFactories());
+        assertEquals(2, loadedSchema.numColumns());
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
     }
 

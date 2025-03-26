@@ -62,7 +62,7 @@ import org.knime.core.data.v2.ValueFactory;
 final class UpdatedValueSchema {
 
     static DataTableValueSchema updateValueSchema(final DataTableSpec spec, final ValueSchema delegate) {
-        final ValueFactory<?, ?>[] factories = new ValueFactory[delegate.numFactories()];
+        final ValueFactory<?, ?>[] factories = new ValueFactory[delegate.numColumns()];
         Arrays.setAll(factories, delegate::getValueFactory);
         if (delegate instanceof SerializerFactoryValueSchema s) {
             return new SerializerFactoryValueSchema(spec, factories, s.getFactoryMapping(), s.getSerializerFactory());
