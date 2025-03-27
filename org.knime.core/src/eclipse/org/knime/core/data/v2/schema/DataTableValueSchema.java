@@ -117,7 +117,7 @@ public interface DataTableValueSchema extends ValueSchema {
                 throw new IllegalArgumentException("column spec mismatch at column " + i +": schema has " + schemaCol + ", spec has " + specCol + " |" + msg);
             }
         }
-        return new DefaultValueSchema(spec, schema.getColumns());
+        return new DefaultDataTableValueSchema(spec, schema.getColumns());
     }
 
     /**
@@ -138,7 +138,7 @@ public interface DataTableValueSchema extends ValueSchema {
                 .dropAllColumns() //
                 .addColumns(dataColumnSpecs(schema)) //
                 .createSpec();
-        return new DefaultValueSchema(newSpec, schema.getColumns());
+        return new DefaultDataTableValueSchema(newSpec, schema.getColumns());
     }
 
     /**

@@ -103,7 +103,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.table.schema.DefaultColumnarSchema;
 
 /**
- * Tests for the {@link DefaultValueSchema} and the {@link ValueFactory}s used by it.
+ * Tests for the {@link DefaultDataTableValueSchema} and the {@link ValueFactory}s used by it.
  *
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  */

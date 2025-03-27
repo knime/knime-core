@@ -96,7 +96,7 @@ public final class ValueSchemaUtils {
             var type = spec.getColumnSpec(i - 1).getType();
             factories[i] = ValueFactoryUtils.getValueFactory(type, fileStoreHandler);
         }
-        return new DefaultValueSchema(spec, factories);
+        return new DefaultDataTableValueSchema(spec, factories);
     }
 
     /**
@@ -109,7 +109,7 @@ public final class ValueSchemaUtils {
      * @since 5.5
      */
     public static final DataTableValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
-        return new DefaultValueSchema(spec, valueFactories);
+        return new DefaultDataTableValueSchema(spec, valueFactories);
     }
 
     /**
@@ -121,7 +121,7 @@ public final class ValueSchemaUtils {
      * @since 5.5
      */
     public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] valueFactories) {
-        return new DefaultValueSchema(dataColumnSpecs, valueFactories);
+        return new DefaultDataTableValueSchema(dataColumnSpecs, valueFactories);
     }
 
     /**
@@ -132,7 +132,7 @@ public final class ValueSchemaUtils {
      * @since 5.5
      */
     public static final ValueSchema create(final ValueSchemaColumn[] columns) {
-        return new DefaultValueSchema(columns);
+        return new DefaultDataTableValueSchema(columns);
     }
 
     /**
@@ -144,7 +144,7 @@ public final class ValueSchemaUtils {
     public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
         if (schema instanceof SerializerFactoryValueSchema) {
             SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
-        } else if (schema instanceof DefaultValueSchema) {
+        } else if (schema instanceof DefaultDataTableValueSchema) {
             // nothing to save
         } else {
             throw new IllegalArgumentException("Unsupported schema type: " + schema.getClass());
@@ -194,7 +194,7 @@ public final class ValueSchemaUtils {
             "Expected %s columns in the schema but encountered %s.", numDataColumns + 1, schema.numColumns());
         final var factories = new ValueFactory<?, ?>[schema.numColumns()];
         Arrays.setAll(factories, i -> ValueFactoryUtils.loadValueFactory(schema.getTraits(i), dataRepository));
-        return new DefaultValueSchema(source, factories);
+        return new DefaultDataTableValueSchema(source, factories);
     }
 
     /**
@@ -206,7 +206,7 @@ public final class ValueSchemaUtils {
     public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
         if (schema instanceof SerializerFactoryValueSchema) {
             return true;
-        } else if (schema instanceof DefaultValueSchema) {
+        } else if (schema instanceof DefaultDataTableValueSchema) {
             return false;
         } else {
             throw new IllegalArgumentException("Unsupported schema type: " + schema.getClass());
@@ -248,18 +248,7 @@ public final class ValueSchemaUtils {
                 updatedCols[i] = new ValueSchemaColumn(creator.createSpec(), column.valueFactory());
             }
         }
-        return new DefaultValueSchema(updatedCols);
-    }
-
-    /**
-     * Changes the {@code DataTableSpec} in the {@code schema}.
-     *
-     * @param schema schema to update
-     * @param spec to update the schema with (may have e.g. a different domains or different column names)
-     * @return the schema with the updated spec
-     */
-    public static final ValueSchema updateDataTableSpec(final ValueSchema schema, final DataTableSpec spec) {
-        return UpdatedValueSchema.updateValueSchema(spec, schema);
+        return new DefaultDataTableValueSchema(updatedCols);
     }
 
     /**

@@ -163,6 +163,7 @@ public interface ValueSchema extends ColumnarSchema {
             return dataColumnSpec == null && valueFactory instanceof RowKeyValueFactory;
         }
 
+        // TODO: This is unused. Remove?
         public boolean isCompatibleWith(final ValueSchemaColumn column) {
             if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
                 return false;
@@ -180,6 +181,7 @@ public interface ValueSchema extends ColumnarSchema {
             }
         }
 
+        // TODO: This only used in a test. Remove?
         public boolean equalStructure(final ValueSchemaColumn column) {
             if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
                 return false;
@@ -215,6 +217,7 @@ public interface ValueSchema extends ColumnarSchema {
 
     /**
      * TODO (TP): decide contract: Does this method always return a copy or the internal array if it exists?
+     *              ==> Always return internal array if it exists. That is, clients need to make a copy if they want to modify it.
      *
      * @return
      * @since 5.5
