@@ -142,16 +142,26 @@ public interface ValueSchema extends ColumnarSchema {
      */
     public record ValueSchemaColumn(//
         DataColumnSpec dataColumnSpec, //
-        ValueFactory<?, ?> valueFactory, //
-        DataSpec dataSpec, //
-        DataTraits dataTraits//
+        ValueFactory<?, ?> valueFactory //
     ) {
-        public ValueSchemaColumn(final DataColumnSpec dataColumnSpec, final ValueFactory<?, ?> valueFactory) {
-            this(dataColumnSpec, valueFactory, valueFactory.getSpec(), ValueFactoryUtils.getTraits(valueFactory));
+        public ValueSchemaColumn {
+            // TODO (TP): We should check whether dataColumnSpec.getType() matches valueFactory,
+            //            but I'm not sure how to do that.
+            if (!dataColumnSpec.getType().equals(ValueFactoryUtils.getDataTypeForValueFactory(valueFactory))) {
+                throw new IllegalArgumentException("dataColumnSoec and valueFactory don't match");
+            }
         }
 
         public ValueSchemaColumn with(final DataColumnSpec newDataColumnSpec) {
-            return new ValueSchemaColumn(newDataColumnSpec, valueFactory, dataSpec, dataTraits);
+            return new ValueSchemaColumn(newDataColumnSpec, valueFactory);
+        }
+
+        public DataSpec dataSpec() {
+            return valueFactory.getSpec();
+        }
+
+        public DataTraits dataTraits() {
+            return valueFactory.getTraits();
         }
 
         @SuppressWarnings("unchecked")
@@ -168,7 +178,7 @@ public interface ValueSchema extends ColumnarSchema {
             if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
                 return false;
             }
-            if (!dataSpec.equals(column.dataSpec)) {
+            if (!dataSpec().equals(column.dataSpec())) {
                 return false;
             }
             //
@@ -186,7 +196,7 @@ public interface ValueSchema extends ColumnarSchema {
             if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
                 return false;
             }
-            if (!dataSpec.equals(column.dataSpec)) {
+            if (!dataSpec().equals(column.dataSpec())) {
                 return false;
             }
             //

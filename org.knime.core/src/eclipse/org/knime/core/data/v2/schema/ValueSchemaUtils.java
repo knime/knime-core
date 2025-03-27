@@ -120,8 +120,17 @@ public final class ValueSchemaUtils {
      * @return
      * @since 5.5
      */
-    public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] valueFactories) {
-        return new DefaultDataTableValueSchema(dataColumnSpecs, valueFactories);
+    public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>... valueFactories) {
+        if (dataColumnSpecs == null) {
+            throw new NullPointerException();
+        }
+        if (dataColumnSpecs.length != valueFactories.length) {
+            throw new IllegalArgumentException("Lengths of dataColumnSpecs and valueFactories must match");
+        }
+        final ValueSchemaColumn[] columns = new ValueSchemaColumn[valueFactories.length];
+        Arrays.setAll(columns,
+            i -> new ValueSchemaColumn(i == 0 ? null : dataColumnSpecs[i], valueFactories[i]));
+        return new DefaultValueSchema(columns);
     }
 
     /**
