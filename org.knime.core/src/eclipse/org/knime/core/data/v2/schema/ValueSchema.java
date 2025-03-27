@@ -147,8 +147,14 @@ public interface ValueSchema extends ColumnarSchema {
         public ValueSchemaColumn {
             // TODO (TP): We should check whether dataColumnSpec.getType() matches valueFactory,
             //            but I'm not sure how to do that.
-            if (!dataColumnSpec.getType().equals(ValueFactoryUtils.getDataTypeForValueFactory(valueFactory))) {
-                throw new IllegalArgumentException("dataColumnSoec and valueFactory don't match");
+            if (dataColumnSpec == null) {
+                if (!(valueFactory instanceof RowKeyValueFactory)) {
+                    throw new IllegalArgumentException("if dataColumnSpec==null, then valueFactory must be a RowKeyValueFactory");
+                }
+            } else {
+                if (!dataColumnSpec.getType().equals(ValueFactoryUtils.getDataTypeForValueFactory(valueFactory))) {
+                    throw new IllegalArgumentException("dataColumnSpec and valueFactory don't match");
+                }
             }
         }
 
