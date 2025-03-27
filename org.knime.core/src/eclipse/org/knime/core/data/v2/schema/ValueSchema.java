@@ -140,9 +140,10 @@ public interface ValueSchema extends ColumnarSchema {
     /**
      * @since 5.5
      */
-    public record ValueSchemaColumn(//
+    public record ValueSchemaColumn( //
         DataColumnSpec dataColumnSpec, //
-        ValueFactory<?, ?> valueFactory //
+        ValueFactory<?, ?> valueFactory, //
+        DataTraits dataTraits //
     ) {
         public ValueSchemaColumn {
             // TODO (TP): We should check whether dataColumnSpec.getType() matches valueFactory,
@@ -158,16 +159,16 @@ public interface ValueSchema extends ColumnarSchema {
             }
         }
 
+        public ValueSchemaColumn(final DataColumnSpec dataColumnSpec, final ValueFactory<?, ?> valueFactory) {
+            this(dataColumnSpec, valueFactory, ValueFactoryUtils.getTraits(valueFactory));
+        }
+
         public ValueSchemaColumn with(final DataColumnSpec newDataColumnSpec) {
-            return new ValueSchemaColumn(newDataColumnSpec, valueFactory);
+            return new ValueSchemaColumn(newDataColumnSpec, valueFactory, dataTraits);
         }
 
         public DataSpec dataSpec() {
             return valueFactory.getSpec();
-        }
-
-        public DataTraits dataTraits() {
-            return valueFactory.getTraits();
         }
 
         @SuppressWarnings("unchecked")
