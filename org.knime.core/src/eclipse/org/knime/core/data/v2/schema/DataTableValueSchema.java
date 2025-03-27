@@ -91,30 +91,9 @@ public interface DataTableValueSchema extends ValueSchema {
                 "schema has " + cols.length + " data columns, but spec has " + spec.getNumColumns());
         }
         for (int i = 0; i < cols.length; i++) {
-            if(!cols[i].equals(spec.getColumnSpec(i))) {
-                final DataColumnSpec schemaCol = cols[i];
-                final DataColumnSpec specCol = spec.getColumnSpec(i);
-
-                String msg = "";
-                if (!schemaCol.getName().equals(specCol.getName())) {
-                    msg += "mismatching getName(): " + schemaCol.getName() + " vs " + specCol.getName() + "|";
-                }
-                if (!schemaCol.getType().equals(specCol.getType())) {
-                    msg += "mismatching getType(): " + schemaCol.getType() + " vs " + specCol.getType() + "|";
-                }
-                if (!schemaCol.getDomain().equals(specCol.getDomain())) {
-                    msg += "mismatching getDomain(): " + schemaCol.getDomain() + " vs " + specCol.getDomain() + "|";
-                }
-                if (!schemaCol.getProperties().equals(specCol.getProperties())) {
-                    msg += "mismatching getProperties(): " + schemaCol.getProperties() + " vs "
-                        + specCol.getProperties() + "|";
-                }
-                if (!schemaCol.getElementNames().equals(specCol.getElementNames())) {
-                    msg += "mismatching getElementNames(): " + schemaCol.getElementNames() + " vs "
-                        + specCol.getElementNames() + "|";
-                }
-
-                throw new IllegalArgumentException("column spec mismatch at column " + i +": schema has " + schemaCol + ", spec has " + specCol + " |" + msg);
+            if (!cols[i].equals(spec.getColumnSpec(i))) {
+                throw new IllegalArgumentException("column spec mismatch at column " + i + ": schema has " + cols[i]
+                    + ", spec has " + spec.getColumnSpec(i));
             }
         }
         return new DefaultDataTableValueSchema(spec, schema.getColumns());
