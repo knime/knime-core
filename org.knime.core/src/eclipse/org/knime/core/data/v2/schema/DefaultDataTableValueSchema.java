@@ -49,187 +49,51 @@
 package org.knime.core.data.v2.schema;
 
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
+import java.util.Objects;
 
-import org.apache.commons.lang3.StringUtils;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.ValueFactoryUtils;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
-import org.knime.core.table.schema.ColumnarSchema;
-import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
-
-import com.google.common.collect.Iterators;
 
 /**
  * Default implementation of {@link DataTableValueSchema}.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
-sealed class DefaultDataTableValueSchema implements DataTableValueSchema permits SerializerFactoryValueSchema {
+sealed class DefaultDataTableValueSchema extends DefaultValueSchema implements DataTableValueSchema permits SerializerFactoryValueSchema {
 
-    private final AtomicReference<DataTableSpec> m_sourceSpec;
-
-    private final DataColumnSpec[] m_columnSpecs;
-
-    private final ValueFactory<?, ?>[] m_factories;
-
-    private final DataSpec[] m_specs;
-
-    private final DataTraits[] m_traits;
-
-    @Override
-    public ValueSchemaColumn getColumn(final int index) {
-        return new ValueSchemaColumn(m_columnSpecs[index], m_factories[index], m_specs[index], m_traits[index]);
-    }
+    private final DataTableSpec m_sourceSpec;
 
     DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
-        m_columnSpecs = new DataColumnSpec[factories.length];
-        // TODO (TP): Revise. Eventually, we only want to support DataTableSpec for tables *with* a RowKey column.
-        if (sourceSpec.getNumColumns() == factories.length) {
-            // this is a ValueSchema *without* a RowKey column
-            Arrays.setAll(m_columnSpecs, sourceSpec::getColumnSpec);
-        } else if (sourceSpec.getNumColumns() + 1 == factories.length ) {
-            // this is a ValueSchema *with* a RowKey column
-            Arrays.setAll(m_columnSpecs, i -> i == 0 ? null : sourceSpec.getColumnSpec(i - 1));
-        } else {
-            // TODO (TP): remove debug string in IllegalArgumentException
-            throw new IllegalArgumentException("a="+ sourceSpec.getNumColumns() + ", b=" + factories.length);
-        }
-        m_sourceSpec = new AtomicReference<>(sourceSpec);
-        m_factories = factories;
-        m_specs = new DataSpec[factories.length];
-        Arrays.setAll(m_specs, i -> factories[i].getSpec());
-        m_traits = new DataTraits[factories.length];
-        Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
+        super(createColumns(Objects.requireNonNull(sourceSpec), Objects.requireNonNull(factories)));
+        m_sourceSpec = sourceSpec;
     }
 
-    DefaultDataTableValueSchema(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>[] factories) {
-        if (dataColumnSpecs.length != factories.length) {
-            throw new IllegalArgumentException();
+    private static ValueSchemaColumn[] createColumns(final DataTableSpec sourceSpec,
+        final ValueFactory<?, ?>[] factories) {
+        if (sourceSpec.getNumColumns() + 1 != factories.length) {
+            throw new IllegalArgumentException("Number of factories doesnn't match the sourceSpec.");
         }
-        m_sourceSpec = new AtomicReference<>();
-        m_factories = factories;
-        m_columnSpecs = dataColumnSpecs;
-        m_specs = new DataSpec[factories.length];
-        Arrays.setAll(m_specs, i -> factories[i].getSpec());
-        m_traits = new DataTraits[factories.length];
-        Arrays.setAll(m_traits, i -> ValueFactoryUtils.getTraits(factories[i]));
-    }
-
-    DefaultDataTableValueSchema(final ValueSchemaColumn[] columns) {
-        this(null, columns);
+        if (!(factories[0] instanceof RowKeyValueFactory)) {
+            throw new IllegalArgumentException("Expecting a RowKeyValueFactory at factories[0]s.");
+        }
+        final ValueSchemaColumn[] columns = new ValueSchemaColumn[factories.length];
+        Arrays.setAll(columns,
+            i -> new ValueSchemaColumn(i == 0 ? null : sourceSpec.getColumnSpec(i - 1), factories[i]));
+        return columns;
     }
 
     // TODO (TP) TEMPORARY
     // TODO (TP) Debug stuff ... This is not intended for long-term use. If it turns out we need it, check for compatibility between columns and sourceSpec!
     //  ==> Don't check here. We assume callers have already made sure...
     DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
-        m_sourceSpec = new AtomicReference<>(sourceSpec);
-        m_factories = new ValueFactory[columns.length];
-        Arrays.setAll(m_factories, i -> columns[i].valueFactory());
-        m_columnSpecs = new DataColumnSpec[columns.length];
-        Arrays.setAll(m_columnSpecs, i -> columns[i].dataColumnSpec());
-        m_specs = new DataSpec[columns.length];
-        Arrays.setAll(m_specs, i -> columns[i].dataSpec());
-        m_traits = new DataTraits[columns.length];
-        Arrays.setAll(m_traits, i -> columns[i].dataTraits());
+        super(columns);
+        m_sourceSpec = Objects.requireNonNull(sourceSpec);
+        throw new UnsupportedOperationException("TODO? REMOVE?");
     }
 
     @Override
     public DataTableSpec getSourceSpec() {
-        final var spec = m_sourceSpec.get();
-        if (spec != null) {
-            return spec;
-        }
-        // TODO (TP): Revise. Eventually, we only want to support DataTableSpec for tables *with* a RowKey column.
-        final DataTableSpec sourceSpec;
-        if (m_columnSpecs[0] == null && m_factories[0] instanceof RowKeyValueFactory) {
-            // this is a ValueSchema *with* a RowKey column
-            sourceSpec = new DataTableSpec(Arrays.copyOfRange(m_columnSpecs, 1, m_columnSpecs.length));
-        } else {
-            // this is a ValueSchema *without* a RowKey column
-            sourceSpec = new DataTableSpec(m_columnSpecs);
-        }
-        m_sourceSpec.compareAndSet(null, sourceSpec);
-        return m_sourceSpec.get();
-    }
-
-    @Override
-    public DataColumnSpec getDataColumnSpec(final int index) {
-        return m_columnSpecs[index];
-    }
-
-    @Override
-    public int numColumns() {
-        return m_factories.length;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return (ValueFactory<R, W>)m_factories[boundsCheckedColumnIndex(index)];
-    }
-
-    private int boundsCheckedColumnIndex(final int index)
-    {
-        if (index < 0) {
-            throw new IndexOutOfBoundsException(String.format("Column index %d smaller than 0.", index));
-        } else if (index >= numColumns()) {
-            throw new IndexOutOfBoundsException(
-                String.format("Column index %d greater than largest column index (%d).", index, numColumns() - 1));
-        }
-        return index;
-    }
-
-    // -------- ColumnarSchema --------
-
-    @Override
-    public DataSpec getSpec(final int index) {
-        return m_specs[boundsCheckedColumnIndex(index)];
-    }
-
-    @Override
-    public DataTraits getTraits(final int index) {
-        return m_traits[boundsCheckedColumnIndex(index)];
-    }
-
-    @Override
-    public Stream<DataSpec> specStream() {
-        return Arrays.stream(m_specs);
-    }
-
-    @Override
-    public Iterator<DataSpec> iterator() {
-        return Arrays.stream(m_specs).iterator();
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(m_specs);
-    }
-
-    @Override
-    public boolean equals(final Object obj) {
-        if (!(obj instanceof ColumnarSchema)) { // NOSONAR
-            return false;
-        }
-        final ColumnarSchema other = (ColumnarSchema)obj;
-        if (numColumns() != other.numColumns()) {
-            return false;
-        }
-        return Iterators.elementsEqual(iterator(), other.iterator());
-    }
-
-    @Override
-    public String toString() {
-        return "Columns (" + m_specs.length + ") "
-            + StringUtils.join(specStream().map(Object::toString).iterator(), ",");
+        return m_sourceSpec;
     }
 }

@@ -132,7 +132,7 @@ public final class ValueSchemaUtils {
      * @since 5.5
      */
     public static final ValueSchema create(final ValueSchemaColumn[] columns) {
-        return new DefaultDataTableValueSchema(columns);
+        return new DefaultValueSchema(columns);
     }
 
     /**
@@ -214,8 +214,7 @@ public final class ValueSchemaUtils {
     }
 
     /**
-     * Updates the {@link DataTableSpec} of the passed source scheme with a new {@link DataTableSpec}, including the
-     * domains provided in the {@link Map}.
+     * Updates the {@link DataColumnSpec DataColumnSpecs} of the passed source scheme.
      *
      * @param schema schema to update
      * @param domainMap the domains used for update.
@@ -245,10 +244,10 @@ public final class ValueSchemaUtils {
                 for (final DataColumnMetaData element : metadata) {
                     creator.addMetaData(element, true);
                 }
-                updatedCols[i] = new ValueSchemaColumn(creator.createSpec(), column.valueFactory());
+                updatedCols[i] = column.with(creator.createSpec());
             }
         }
-        return new DefaultDataTableValueSchema(updatedCols);
+        return new DefaultValueSchema(updatedCols);
     }
 
     /**

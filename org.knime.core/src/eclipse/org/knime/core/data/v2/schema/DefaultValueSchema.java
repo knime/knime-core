@@ -48,96 +48,104 @@
  */
 package org.knime.core.data.v2.schema;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
+import org.knime.core.table.schema.ColumnarSchema;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
+
+import com.google.common.collect.Iterators;
 
 /**
  *
  * @author Tobias Pietzsch
  * @since 5.5
  */
-public class DefaultValueSchema implements ValueSchema {
+sealed class DefaultValueSchema implements ValueSchema permits DefaultDataTableValueSchema {
 
     private final ValueSchemaColumn[] m_columns;
 
     DefaultValueSchema(final ValueSchemaColumn[] columns)
     {
-        m_columns = columns;
+        m_columns = Objects.requireNonNull(columns);
     }
+
+    @Override
+    public ValueSchemaColumn getColumn(final int index) {
+        if (index < 0) {
+            throw new IndexOutOfBoundsException(String.format("Column index %d smaller than 0.", index));
+        } else if (index >= numColumns()) {
+            throw new IndexOutOfBoundsException(
+                String.format("Column index %d greater than largest column index (%d).", index, numColumns() - 1));
+        }
+        return m_columns[index];
+    }
+
+    @Override
+    public DataColumnSpec getDataColumnSpec(final int index) {
+        return getColumn(index).dataColumnSpec();
+    }
+
+    @Override
+    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
+        return getColumn(index).castValueFactory();
+    }
+
+    // -------- ColumnarSchema --------
 
     @Override
     public int numColumns() {
         return m_columns.length;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataSpec getSpec(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return getColumn(index).dataSpec();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Stream<DataSpec> specStream() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public DataTraits getTraits(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return getColumn(index).dataTraits();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public Stream<DataSpec> specStream() {
+        return Arrays.stream(m_columns).map(ValueSchemaColumn::dataSpec);
+    }
+
     @Override
     public Iterator<DataSpec> iterator() {
-        // TODO Auto-generated method stub
-        return null;
+        return specStream().iterator();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public DataColumnSpec getDataColumnSpec(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+    public int hashCode() {
+        // NB: The following computes the same hashCode as
+        //     Arrays.hashCode(specStream().toArray()) would,
+        //     but avoids the array creation overhead.
+        int result = 1;
+        for (ValueSchemaColumn col : m_columns) {
+            result = 31 * result + col.dataSpec().hashCode();
+        }
+        return result;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof ColumnarSchema)) { // NOSONAR
+            return false;
+        }
+        final ColumnarSchema other = (ColumnarSchema)obj;
+        if (numColumns() != other.numColumns()) {
+            return false;
+        }
+        return Iterators.elementsEqual(iterator(), other.iterator());
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ValueSchemaColumn getColumn(final int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }
