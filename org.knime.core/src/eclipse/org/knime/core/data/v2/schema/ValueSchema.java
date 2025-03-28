@@ -61,8 +61,9 @@ import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.traits.DataTraits;
 
 /**
- * Decorates a DataTableSpec with ValueFactories for all columns (including the RowKey).
+ * A {@link ColumnarSchema} with {@link DataColumnSpec DataColumnSpecs} and {@link ValueFactory ValueFactories} for all columns.
  *
+ * @author Tobias Pietzsch
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 4.5
  * @noreference This interface is not intended to be referenced by clients.
@@ -72,33 +73,25 @@ import org.knime.core.table.schema.traits.DataTraits;
 public interface ValueSchema extends ColumnarSchema {
 
     /**
-     * TODO (TP) javadoc
+     * Obtain the {@link DataColumnSpec} of the column at a given index. (Returns {@code null}, if the column at
+     * {@code index} is a RowKey).
      *
-     * @param index colunm index (rowkey is 0)
-     * @return
+     * @param index colunm index
+     * @return the DataColumnSpec of the column at the given index
      * @since 5.5
      */
     DataColumnSpec getDataColumnSpec(int index);
 
     /**
-     * TODO (TP) javadoc
-     *
-     * Find index of a (data) column by its name.
-     * (The RowKey column doesn't have a name.)
+     * Find a column by name.
      * <p>
-     * Finds first column with matching name
-     * <p>
-     * Returns -1 if not found.
+     * Returns the index of the first column with the specified name.
+     * Returns -1 if no such column is found.
      *
-     *
-     * @param columnName name of the column.
-     * @return
+     * @param columnName name of the column
+     * @return the index of the first column with the specified columnName
      * @since 5.5
      */
-    // TODO (TP) Make a (lazy?) lookup map, like DataTableSpec does?
-    //
-    // TODO (TP) Probably this should fail if column names are not unique?
-    //           So just lean on getSourceSpec() and add +1 (depending on whether hasRowKey)?
     default int findColumnIndex(final String columnName) {
         if (columnName != null) {
             for (int i = 0; i < numColumns(); ++i) {
@@ -112,24 +105,8 @@ public interface ValueSchema extends ColumnarSchema {
     }
 
     /**
-     * TODO (TP) javadoc
+     * Get the {@link ValueFactory} at a given column {@code index}.
      *
-     * Returns the {@link DataColumnSpec} of the column with the provided name.
-     * This method returns {@code null} if the argument is {@code null}.
-     *
-     * @param columnName the column name to find the {@code DataColumnSpec} for
-     * @return the column specification or {@code null} if not available
-     * @since 5.5
-     */
-    default DataColumnSpec getColumnSpec(final String columnName) {
-        int columnIndex = findColumnIndex(columnName);
-        if (columnIndex == -1) {
-            return null;
-        }
-        return getDataColumnSpec(columnIndex);
-    }
-
-    /**
      * @param <R> {@link ReadAccess} the returned {@link ValueFactory} expects
      * @param <W> {@link WriteAccess} the returned {@link ValueFactory} expects
      * @param index of the value factory to return
@@ -138,16 +115,23 @@ public interface ValueSchema extends ColumnarSchema {
     <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(int index);
 
     /**
+     * The {@link DataColumnSpec}, {@link ValueFactory}, {@link DataSpec}, and {@link DataTraits} of a single column.
+     *
      * @since 5.5
      */
     public record ValueSchemaColumn( //
         DataColumnSpec dataColumnSpec, //
         ValueFactory<?, ?> valueFactory, //
-        DataTraits dataTraits //
-    ) {
+        DataTraits dataTraits) {
+        /**
+         * Create a {@code ValueSchemaColumn}. The {@code dataColumnSpec} and {@code valueFactory} must be compatible.
+         * (The {@code dataColumnSpec} for a {@code RowKeyValueFactory} must be {@code null}.)
+         *
+         * @param dataColumnSpec
+         * @param valueFactory
+         * @param dataTraits
+         */
         public ValueSchemaColumn {
-            // TODO (TP): We should check whether dataColumnSpec.getType() matches valueFactory,
-            //            but I'm not sure how to do that.
             if (dataColumnSpec == null) {
                 if (!(valueFactory instanceof RowKeyValueFactory)) {
                     throw new IllegalArgumentException("if dataColumnSpec==null, then valueFactory must be a RowKeyValueFactory");
@@ -159,56 +143,67 @@ public interface ValueSchema extends ColumnarSchema {
             }
         }
 
+        /**
+         * Create a {@code ValueSchemaColumn}. The {@code dataColumnSpec} and {@code valueFactory} must be compatible.
+         * (The {@code dataColumnSpec} for a {@code RowKeyValueFactory} must be {@code null}.)
+         * <p>
+         * DataTraits are created via {@link ValueFactoryUtils#getTraits(ValueFactory)}.
+         *
+         * @param dataColumnSpec
+         * @param valueFactory
+         */
         public ValueSchemaColumn(final DataColumnSpec dataColumnSpec, final ValueFactory<?, ?> valueFactory) {
             this(dataColumnSpec, valueFactory, ValueFactoryUtils.getTraits(valueFactory));
         }
 
-        public ValueSchemaColumn with(final DataColumnSpec newDataColumnSpec) {
-            return new ValueSchemaColumn(newDataColumnSpec, valueFactory, dataTraits);
+        /**
+         * Get a ValueSchemaColumn with the given {@code DataColumnSpec} and otherwise the same properties as {@code this} one.
+         *
+         * @param columnSpec
+         * @return a ValueSchemaColumn with the given DataColumnSpec
+         */
+        public ValueSchemaColumn with(final DataColumnSpec columnSpec) {
+            return new ValueSchemaColumn(columnSpec, valueFactory, dataTraits);
         }
 
+        /**
+         * Get the {@code DataSpec} of this column.
+         *
+         * @return the DataSpec of this column
+         */
         public DataSpec dataSpec() {
             return valueFactory.getSpec();
         }
 
+        /**
+         * Get the {@code ValueFactory} of this column.
+         *
+         * @param <R> {@link ReadAccess} the returned {@link ValueFactory} expects
+         * @param <W> {@link WriteAccess} the returned {@link ValueFactory} expects
+         * @return the ValueFactory of this column
+         */
         @SuppressWarnings("unchecked")
         <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> castValueFactory() {
             return (ValueFactory<R, W>)valueFactory();
         }
 
+        /**
+         * Returns {@code true} if this column is a RowKey.
+         *
+         * @return {@code true} if this column is a RowKey
+         */
         public boolean isRowKey() {
             return dataColumnSpec == null && valueFactory instanceof RowKeyValueFactory;
         }
 
-        // TODO: This is unused. Remove?
-        public boolean isCompatibleWith(final ValueSchemaColumn column) {
-            if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
-                return false;
-            }
-            if (!dataSpec().equals(column.dataSpec())) {
-                return false;
-            }
-            //
-            // TODO (TP): what about dataTraits? Do they have to match too?
-            //
-            if (dataColumnSpec == null) {
-                return column.dataColumnSpec == null;
-            } else {
-                return dataColumnSpec.isCompatibleWith(column.dataColumnSpec);
-            }
-        }
-
-        // TODO: This only used in a test. Remove?
+        /**
+         * Returns {@code true}, if the {@link #dataColumnSpec()} of {@code this} and the given {@code column} have
+         * {@link DataColumnSpec#equalStructure} (or are both {@code null}).
+         *
+         * @param column
+         * @return true, if this and the given column have equal structure
+         */
         public boolean equalStructure(final ValueSchemaColumn column) {
-            if (!valueFactory.getClass().equals(column.valueFactory.getClass())) {
-                return false;
-            }
-            if (!dataSpec().equals(column.dataSpec())) {
-                return false;
-            }
-            //
-            // TODO (TP): what about dataTraits? Do they have to match too?
-            //
             if (dataColumnSpec == null) {
                 return column.dataColumnSpec == null;
             } else {
@@ -218,25 +213,18 @@ public interface ValueSchema extends ColumnarSchema {
     }
 
     /**
-     * TODO (TP): use this method to get info about a column, exclusively.
-     *            Instead of:
-     *              - getValueFactory
-     *              - getSpecWithTraits
-     *              - getTraits
-     *              - getSpec
-     *              - getDataColumnSpec
+     * Get the properties of the column at the given {@code index}.
      *
      * @param index
-     * @return
+     * @return column properties
      * @since 5.5
      */
     ValueSchemaColumn getColumn(int index);
 
     /**
-     * TODO (TP): decide contract: Does this method always return a copy or the internal array if it exists?
-     *              ==> Always return internal array if it exists. That is, clients need to make a copy if they want to modify it.
+     * Get properties of all columns.
      *
-     * @return
+     * @return column properties
      * @since 5.5
      */
     default ValueSchemaColumn[] getColumns() {

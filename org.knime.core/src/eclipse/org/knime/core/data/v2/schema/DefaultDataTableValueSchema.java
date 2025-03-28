@@ -58,12 +58,45 @@ import org.knime.core.data.v2.ValueFactory;
 /**
  * Default implementation of {@link DataTableValueSchema}.
  *
- * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @author Tobias Pietzsch
  */
-sealed class DefaultDataTableValueSchema extends DefaultValueSchema implements DataTableValueSchema permits SerializerFactoryValueSchema {
+sealed class DefaultDataTableValueSchema extends DefaultValueSchema implements DataTableValueSchema
+    permits SerializerFactoryValueSchema {
 
     private final DataTableSpec m_sourceSpec;
 
+    /**
+     * Create a {@link DefaultValueSchema}.
+     * <p>
+     * The DataTypes of the given {@code columns} must correspond to the DataTypes of the {@code sourceSpec}.
+     * {@code columns[0]} must be the RowKey.
+     *
+     * @param sourceSpec
+     * @param columns
+     */
+    DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
+        super(columns);
+        if (sourceSpec.getNumColumns() + 1 != columns.length) {
+            throw new IllegalArgumentException("Number of columns doesnn't match the sourceSpec.");
+        }
+        if (!columns[0].isRowKey()) {
+            throw new IllegalArgumentException("Expecting RowKey as column 0.");
+        }
+        for (int i = 1; i < columns.length; ++i) {
+            if (!sourceSpec.getColumnSpec(i - 1).equals(columns[i].dataColumnSpec())) {
+                throw new IllegalArgumentException(
+                    "sourceSpec and columns don't match at column " + i + "(index including RowKey at column 0)");
+            }
+        }
+        m_sourceSpec = Objects.requireNonNull(sourceSpec);
+    }
+
+    /**
+     * Create a {@link DefaultValueSchema}.
+     * <p>
+     * The given {@code factories} must correspond to the DataTypes of the {@code sourceSpec}. {@code factories[0]} must
+     * be the RowKey.
+     */
     DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueFactory<?, ?>[] factories) {
         super(createColumns(Objects.requireNonNull(sourceSpec), Objects.requireNonNull(factories)));
         m_sourceSpec = sourceSpec;
@@ -81,15 +114,6 @@ sealed class DefaultDataTableValueSchema extends DefaultValueSchema implements D
         Arrays.setAll(columns,
             i -> new ValueSchemaColumn(i == 0 ? null : sourceSpec.getColumnSpec(i - 1), factories[i]));
         return columns;
-    }
-
-    // TODO (TP) TEMPORARY
-    // TODO (TP) Debug stuff ... This is not intended for long-term use. If it turns out we need it, check for compatibility between columns and sourceSpec!
-    //  ==> Don't check here. We assume callers have already made sure...
-    DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
-        super(columns);
-        m_sourceSpec = Objects.requireNonNull(sourceSpec);
-        throw new UnsupportedOperationException("TODO? REMOVE?");
     }
 
     @Override

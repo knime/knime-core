@@ -55,17 +55,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 
 /**
- * TODO
- * The plan:
- * <p>
- * DataTableValueSchema extends ValueSchema and additionally has
- *    getSourceSpec()
- * (which is removed from ValueSchema).
- * <p>
- * Start plugging that into AbstractColumnarContainerTable (line 146).
- * See where we can get away with ValueSchema and where we actually need DataTableValueSchema.
+ * A {@link ValueSchema} with a matching {@link #getSourceSpec() DataTableSpec}.
  *
- * @author pietzsch
+ * @author Tobias Pietzsch
  * @since 5.5
  */
 public interface DataTableValueSchema extends ValueSchema {
@@ -83,6 +75,7 @@ public interface DataTableValueSchema extends ValueSchema {
      * @return
      */
     // TODO (TP) TEMPORARY. exploring API options.
+    // only used in VirtualTableExtensionTable constructor, line 295
     static DataTableValueSchema create(final DataTableSpec spec, final ValueSchema schema) {
         // need to check for spec/schema compatibility here
         DataColumnSpec[] cols = dataColumnSpecs(schema);
@@ -113,10 +106,7 @@ public interface DataTableValueSchema extends ValueSchema {
      */
     // TODO (TP) TEMPORARY. exploring API options.
     static DataTableValueSchema createWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
-        final DataTableSpec newSpec = new DataTableSpecCreator(spec) //
-                .dropAllColumns() //
-                .addColumns(dataColumnSpecs(schema)) //
-                .createSpec();
+        final DataTableSpec newSpec = createDataTableSpecWithInheritedMetadata(spec, schema);
         return new DefaultDataTableValueSchema(newSpec, schema.getColumns());
     }
 

@@ -64,9 +64,10 @@ import org.knime.core.table.schema.traits.DataTraits;
 import com.google.common.collect.Iterators;
 
 /**
+ * Default implementation of {@link ValueSchema}.
  *
  * @author Tobias Pietzsch
- * @since 5.5
+ * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  */
 sealed class DefaultValueSchema implements ValueSchema permits DefaultDataTableValueSchema {
 
