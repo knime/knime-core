@@ -48,11 +48,7 @@
  */
 package org.knime.core.data.v2.schema;
 
-import java.util.Arrays;
-
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTableSpecCreator;
 
 /**
  * A {@link ValueSchema} with a matching {@link #getSourceSpec() DataTableSpec}.
@@ -66,96 +62,4 @@ public interface DataTableValueSchema extends ValueSchema {
      * @return the underlying {@link DataTableSpec}.
      */
     DataTableSpec getSourceSpec();
-
-    /**
-     * TODO (TP) javadoc
-     *
-     * @param spec
-     * @param schema
-     * @return
-     */
-    // TODO (TP) TEMPORARY. exploring API options.
-    // only used in VirtualTableExtensionTable constructor, line 295
-    static DataTableValueSchema create(final DataTableSpec spec, final ValueSchema schema) {
-        // need to check for spec/schema compatibility here
-        DataColumnSpec[] cols = dataColumnSpecs(schema);
-        if (cols.length != spec.getNumColumns()) {
-            throw new IllegalArgumentException(
-                "schema has " + cols.length + " data columns, but spec has " + spec.getNumColumns());
-        }
-        for (int i = 0; i < cols.length; i++) {
-            if (!cols[i].equals(spec.getColumnSpec(i))) {
-                throw new IllegalArgumentException("column spec mismatch at column " + i + ": schema has " + cols[i]
-                    + ", spec has " + spec.getColumnSpec(i));
-            }
-        }
-        return new DefaultDataTableValueSchema(spec, schema.getColumns());
-    }
-
-    /**
-     * Creates a new {@code DataTableValueSchema} with the {@code DataColumnSpec}s of the provided {@code schema}. The
-     * {@code DataTableValueSchema} will have a {@code DataTableSpec} which uses the {@code DataColumnSpec}s of
-     * {@code schema} and the name and properties of the provided {@code spec}.
-     * <p>
-     * TODO (TP) javadoc
-     *
-     * @param dataTableSpec
-     * @param schema
-     * @return
-     * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
-     */
-    // TODO (TP) TEMPORARY. exploring API options.
-    static DataTableValueSchema createWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
-        final DataTableSpec newSpec = createDataTableSpecWithInheritedMetadata(spec, schema);
-        return new DefaultDataTableValueSchema(newSpec, schema.getColumns());
-    }
-
-    /**
-     * Creates a new {@code DataTableSpec} with the name and properties of {@code spec} and the {@code DataColumnSpec}s of {@code schema}.
-     * <p>
-     * TODO (TP) javadoc
-     *
-     * @param dataTableSpec
-     * @param schema
-     * @return
-     */
-    // TODO (TP) TEMPORARY. exploring API options.
-    static DataTableSpec createDataTableSpecWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
-        return new DataTableSpecCreator(spec) //
-            .dropAllColumns() //
-            .addColumns(dataColumnSpecs(schema)) //
-            .createSpec();
-    }
-
-    /**
-     * Creates a new {@code DataTableSpec} from {@code DataColumnSpec}s of {@code schema}.
-     * <p>
-     * TODO (TP) javadoc
-     *
-     * @param dataTableSpec
-     * @param schema
-     * @return
-     * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
-     */
-    // TODO (TP) TEMPORARY. exploring API options.
-    static DataTableSpec createDataTableSpec(final ValueSchema schema) {
-        return new DataTableSpec(dataColumnSpecs(schema));
-    }
-
-    /**
-     * Extract {@code DataColumnSpec[]} from {@code schema}. This does not include the RowKey, i.e. the returned array
-     * contains {@code schema.getColumn(1).dataColumnSpec()} at index 0. Note, that the {@code schema} must have RowKey
-     * at column 0, otherwise an {@code IllegalArgumentException} is thrown!
-     *
-     * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
-     */
-    private static DataColumnSpec[] dataColumnSpecs(final ValueSchema schema) {
-        if (schema.numColumns() < 1 || !schema.getColumn(0).isRowKey()) {
-            throw new IllegalArgumentException("expected schema with RowKey at column 0");
-        }
-        return Arrays.stream(schema.getColumns()) //
-            .skip(1) // skip RowKey column
-            .map(ValueSchemaColumn::dataColumnSpec) //
-            .toArray(DataColumnSpec[]::new);
-    }
 }
