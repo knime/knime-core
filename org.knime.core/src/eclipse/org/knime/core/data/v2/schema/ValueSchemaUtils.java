@@ -131,8 +131,7 @@ public final class ValueSchemaUtils {
             throw new IllegalArgumentException("Lengths of dataColumnSpecs and valueFactories must match");
         }
         final ValueSchemaColumn[] columns = new ValueSchemaColumn[valueFactories.length];
-        Arrays.setAll(columns,
-            i -> new ValueSchemaColumn(i == 0 ? null : dataColumnSpecs[i], valueFactories[i]));
+        Arrays.setAll(columns, i -> new ValueSchemaColumn(dataColumnSpecs[i], valueFactories[i]));
         return new DefaultValueSchema(columns);
     }
 
