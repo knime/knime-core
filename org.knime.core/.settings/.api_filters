@@ -536,4 +536,11 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/ThreadPool.java" type="org.knime.core.util.ThreadPool">
+        <filter comment="public scope - AP-23895" id="1227882500">
+            <message_arguments>
+                <message_argument value="getQueueSize()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

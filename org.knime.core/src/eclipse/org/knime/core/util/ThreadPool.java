@@ -807,7 +807,7 @@ public class ThreadPool {
      *
      * @return the queue size
      */
-    int getQueueSize() {
+    public int getQueueSize() { // made public in 5.4.4 and 5.5 (excluding @since tag on this branch), AP-23895
         return m_queuedFutures.size();
     }
 }
