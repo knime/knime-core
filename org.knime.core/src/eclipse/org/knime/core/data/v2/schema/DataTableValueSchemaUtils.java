@@ -52,7 +52,6 @@ import java.util.Arrays;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.v2.schema.ValueSchema.ValueSchemaColumn;
 
 /**
@@ -64,74 +63,34 @@ import org.knime.core.data.v2.schema.ValueSchema.ValueSchemaColumn;
  */
 public class DataTableValueSchemaUtils {
 
-
     /**
-     * TODO (TP) javadoc
+     * Create a {@link DataTableValueSchema}.
+     * <p>
+     * The DataTypes of the given {@code columns} must correspond to the DataTypes of the {@code sourceSpec}.
+     * {@code columns[0]} must be the RowKey.
      *
      * @param spec
-     * @param schema
+     * @param columns
      * @return
+     *
+     * @throws IllegalArgumentException if the given DataTableSpec and columns are not compatible
      */
-    // TODO (TP) TEMPORARY. exploring API options.
-    // only used in VirtualTableExtensionTable constructor, line 295
-    public static DataTableValueSchema create(final DataTableSpec spec, final ValueSchema schema) {
-        return new DefaultDataTableValueSchema(spec, schema.getColumns());
+    public static DataTableValueSchema create(final DataTableSpec spec, final ValueSchemaColumn[] columns)
+        throws IllegalArgumentException {
+        return new DefaultDataTableValueSchema(spec, columns);
     }
 
     /**
-     * Creates a new {@code DataTableValueSchema} with the {@code DataColumnSpec}s of the provided {@code schema}. The
-     * {@code DataTableValueSchema} will have a {@code DataTableSpec} which uses the {@code DataColumnSpec}s of
-     * {@code schema} and the name and properties of the provided {@code spec}.
-     * <p>
-     * TODO (TP) javadoc
+     * Creates a new {@code DataTableSpec} matching the given {@code schema}. The {@code schema} must have RowKey at
+     * column 0, otherwise an {@code IllegalArgumentException} is thrown!
      *
-     * @param dataTableSpec
-     * @param schema
-     * @return
+     * @param schema ValueSchema with RowKey in column 0
+     * @return DataTableSpec for the schema
+     *
      * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
      */
-    // TODO (TP) TEMPORARY. exploring API options.
-    // TODO (TP) probably we should inline this
-    public static DataTableValueSchema createWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
-        final DataTableSpec newSpec = createDataTableSpecWithInheritedMetadata(spec, schema);
-        return new DefaultDataTableValueSchema(newSpec, schema.getColumns());
-    }
-
-    /**
-     * Creates a new {@code DataTableSpec} from {@code DataColumnSpec}s of {@code schema}.
-     * <p>
-     * TODO (TP) javadoc
-     *
-     * @param dataTableSpec
-     * @param schema
-     * @return
-     * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
-     */
-    // TODO (TP): how often is this used? Maybe instead make dataColumnSpecs() public and inline this method?
-    // TODO (TP): should this be moved to ValueSchemaUtils?
-    public static DataTableSpec createDataTableSpec(final ValueSchema schema) {
+    public static DataTableSpec createDataTableSpec(final ValueSchema schema) throws IllegalArgumentException {
         return new DataTableSpec(dataColumnSpecs(schema));
-    }
-
-
-
-
-
-    /**
-     * Creates a new {@code DataTableSpec} with the name and properties of {@code spec} and the {@code DataColumnSpec}s
-     * of the given {@code schema}. The {@code schema} must have RowKey at column 0, otherwise an
-     * {@code IllegalArgumentException} is thrown!
-     *
-     * @param spec the DataTableSpec to extract name and propterties from
-     * @param schema the schema to extract DataColumnSpecs from
-     * @return a new DataTableSpec with the name and properties of the given spec and the columns of the given schema
-     */
-    // TODO (TP): how often is this used? Maybe instead make dataColumnSpecs() public and inline this method?
-    public static DataTableSpec createDataTableSpecWithInheritedMetadata(final DataTableSpec spec, final ValueSchema schema) {
-        return new DataTableSpecCreator(spec) //
-            .dropAllColumns() //
-            .addColumns(dataColumnSpecs(schema)) //
-            .createSpec();
     }
 
     /**
@@ -139,9 +98,12 @@ public class DataTableValueSchemaUtils {
      * contains {@code schema.getColumn(1).dataColumnSpec()} at index 0. Note, that the {@code schema} must have RowKey
      * at column 0, otherwise an {@code IllegalArgumentException} is thrown!
      *
+     * @param schema ValueSchema with RowKey in column 0
+     * @return extracted DataColumnSpecs (not including the RowKey)
+     *
      * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
      */
-    private static DataColumnSpec[] dataColumnSpecs(final ValueSchema schema) {
+    public static DataColumnSpec[] dataColumnSpecs(final ValueSchema schema) throws IllegalArgumentException {
         if (schema.numColumns() < 1 || !schema.getColumn(0).isRowKey()) {
             throw new IllegalArgumentException("expected schema with RowKey at column 0");
         }
@@ -150,5 +112,4 @@ public class DataTableValueSchemaUtils {
             .map(ValueSchemaColumn::dataColumnSpec) //
             .toArray(DataColumnSpec[]::new);
     }
-
 }

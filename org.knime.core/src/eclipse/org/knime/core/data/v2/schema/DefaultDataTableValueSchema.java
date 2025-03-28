@@ -66,15 +66,18 @@ sealed class DefaultDataTableValueSchema extends DefaultValueSchema implements D
     private final DataTableSpec m_sourceSpec;
 
     /**
-     * Create a {@link DefaultValueSchema}.
+     * Create a {@link DefaultDataTableValueSchema}.
      * <p>
      * The DataTypes of the given {@code columns} must correspond to the DataTypes of the {@code sourceSpec}.
      * {@code columns[0]} must be the RowKey.
      *
      * @param sourceSpec
      * @param columns
+     *
+     * @throws IllegalArgumentException if the given DataTableSpec and columns are not compatible
      */
-    DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns) {
+    DefaultDataTableValueSchema(final DataTableSpec sourceSpec, final ValueSchemaColumn[] columns)
+        throws IllegalArgumentException {
         super(columns);
         if (sourceSpec.getNumColumns() + 1 != columns.length) {
             throw new IllegalArgumentException("Number of columns doesnn't match the sourceSpec.");

@@ -52,6 +52,7 @@ import org.knime.core.data.DataTableSpec;
 
 /**
  * A {@link ValueSchema} with a matching {@link #getSourceSpec() DataTableSpec}.
+ * Always has a RowKey column as column 0.
  *
  * @author Tobias Pietzsch
  * @since 5.5

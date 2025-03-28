@@ -60,7 +60,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.meta.DataColumnMetaData;
 import org.knime.core.data.v2.RowKeyType;
-import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
 import org.knime.core.data.v2.schema.ValueSchema.ValueSchemaColumn;
@@ -80,7 +79,7 @@ import org.knime.core.table.schema.traits.LogicalTypeTrait;
 public final class ValueSchemaUtils {
 
     /**
-     * Creates a new {@link ValueSchema} based up-on the provided {@link DataTableSpec}.
+     * Creates a new {@link DataTableValueSchema} based up-on the provided {@link DataTableSpec}.
      *
      * @param spec the data table spec to derive the {@link ValueSchema} from.
      * @param rowKeyType type of the {@link RowKey}
@@ -88,6 +87,7 @@ public final class ValueSchemaUtils {
      * @return the value schema.
      * @since 5.5
      */
+    // TODO (TP): This makes sense. Should it move to DataTableValueSchemaUtils?
     public static final DataTableValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
         final var factories = new ValueFactory<?, ?>[spec.getNumColumns() + 1];
@@ -104,11 +104,13 @@ public final class ValueSchemaUtils {
      * factories}.
      *
      * @param spec the data table spec that the {@link ValueSchema} should wrap
-     * @param valueFactories one for the row key and one for each column in spec
+     * @param valueFactories one for the row key, and one for each column in spec
      * @return the value schema
      * @since 5.5
      */
-    public static final DataTableValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
+    // TODO (TP): This is used a lot, but I think in some places without a RowKeyValueFactory.
+    // TODO (TP): rename back to create. The "create1" is only so Eclipse finds callers...
+    public static final DataTableValueSchema create1(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
         return new DefaultDataTableValueSchema(spec, valueFactories);
     }
 
@@ -120,7 +122,8 @@ public final class ValueSchemaUtils {
      * @return
      * @since 5.5
      */
-    public static final ValueSchema create(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>... valueFactories) {
+    // TODO (TP): rename back to create. The "create2" is only so Eclipse finds callers...
+    public static final ValueSchema create2(final DataColumnSpec[] dataColumnSpecs, final ValueFactory<?, ?>... valueFactories) {
         if (dataColumnSpecs == null) {
             throw new NullPointerException();
         }
@@ -140,7 +143,8 @@ public final class ValueSchemaUtils {
      * @return
      * @since 5.5
      */
-    public static final ValueSchema create(final ValueSchemaColumn[] columns) {
+    // TODO (TP): rename back to create. The "create3" is only so Eclipse finds callers...
+    public static final ValueSchema create3(final ValueSchemaColumn... columns) {
         return new DefaultValueSchema(columns);
     }
 
@@ -150,6 +154,7 @@ public final class ValueSchemaUtils {
      * @param schema the ValueSchema to save.
      * @param settings the settings to save the ValueSchema to.
      */
+    // TODO (TP): should either take DataTableValueSchema or handle ValueSchema
     public static final void save(final ValueSchema schema, final NodeSettingsWO settings) {
         if (schema instanceof SerializerFactoryValueSchema) {
             SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
@@ -173,7 +178,7 @@ public final class ValueSchemaUtils {
     public static final DataTableValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
         throws InvalidSettingsException {
         if (hasTypeTraits(schema)) {
-            return create(schema, loadContext);
+            return createWithTypeTraits(schema, loadContext);
         } else {
             var source = loadContext.getTableSpec();
             var dataRepository = loadContext.getDataRepository();
@@ -187,15 +192,7 @@ public final class ValueSchemaUtils {
             .allMatch(t -> t.hasTrait(LogicalTypeTrait.class));
     }
 
-    /**
-     * Creates a ValueSchema given the provided {@link DataTableSpec} and {@link ColumnarSchema}.
-     *
-     * @param source KNIME table spec
-     * @param schema of the underlying batch store
-     * @param dataRepository used for resolving filestore cells
-     * @return a new ValueSchema with the provided {@link DataTableSpec} as source
-     */
-    private static DataTableValueSchema create(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
+    private static DataTableValueSchema createWithTypeTraits(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
         var source = loadContext.getTableSpec();
         var dataRepository = loadContext.getDataRepository();
         int numDataColumns = source.getNumColumns();
@@ -212,6 +209,7 @@ public final class ValueSchemaUtils {
      * @param schema to check
      * @return true if the schema was created before KNIME AP 4.5.0
      */
+    // TODO (TP): should either take DataTableValueSchema or handle ValueSchema
     public static boolean storesDataCellSerializersSeparately(final ValueSchema schema) {
         if (schema instanceof SerializerFactoryValueSchema) {
             return true;
@@ -223,7 +221,7 @@ public final class ValueSchemaUtils {
     }
 
     /**
-     * Updates the {@link DataColumnSpec DataColumnSpecs} of the passed source scheme.
+     * Updates the {@link DataColumnSpec DataColumnSpecs} of the given {@code ValueSchema}.
      *
      * @param schema schema to update
      * @param domainMap the domains used for update.
@@ -232,7 +230,7 @@ public final class ValueSchemaUtils {
      * @return the updated {@link ValueSchema}
      * @since 5.5
      */
-    public static final ValueSchema updateDataTableSpec(final ValueSchema schema,
+    public static final ValueSchema updateDataColumnSpecs(final ValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
 
         final int numCols = schema.numColumns();
@@ -270,17 +268,17 @@ public final class ValueSchemaUtils {
     public static ValueSchema selectColumns(final ValueSchema schema, final int... columnIndices) {
         var columns = new ValueSchemaColumn[columnIndices.length];
         Arrays.setAll(columns, i -> schema.getColumn(columnIndices[i]));
-        return create(columns);
+        return create3(columns);
     }
 
     /**
-     * Checks whether a schema includes a RowID column.
+     * Checks whether a schema has a RowKey as column 0.
      *
      * @param schema to check
      * @return true if the schema has a RowID column
      */
     public static final boolean hasRowID(final ValueSchema schema) {
-        return schema.numColumns() > 0 && schema.getValueFactory(0) instanceof RowKeyValueFactory;
+        return schema.numColumns() > 0 && schema.getColumn(0).isRowKey();
     }
 
     private ValueSchemaUtils() {
