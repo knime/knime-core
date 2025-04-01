@@ -574,9 +574,15 @@ public class NameFilterConfiguration implements Cloneable {
 
             for (String name : names) {
                 if (inclsHash.remove(name)) { // also remove from hash so that it contains only orphan items
-                    incls.add(name);
                     if (exclsHash.remove(name)) {
-                        LOGGER.coding("Item \"" + name + "\" appears in both the include and exclude list");
+                        LOGGER.debug("Item \"" + name + "\" appears in both the include and exclude list");
+                        if (enforceOption == EnforceOption.EnforceInclusion) {
+                            incls.add(name);
+                        } else {
+                            excls.add(name);
+                        }
+                    } else {
+                        incls.add(name);
                     }
                 } else if (exclsHash.remove(name)) {
                     excls.add(name);
