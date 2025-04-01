@@ -143,6 +143,21 @@ public final class WorkflowResourceCache {
         });
     }
 
+    public <T extends WorkflowResource> Optional<T> get2(final Class<T> clazz) {
+        CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
+        return Optional.ofNullable((T)m_classToInstanceMap.get(clazz));
+    }
+
+    public <T extends WorkflowResource> T computeIfAbsent2(final Class<T> clazz, final Supplier<T> supplier) {
+        CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
+        CheckUtils.checkArgumentNotNull(supplier, "Supplier must not be null.");
+        return (T)m_classToInstanceMap.computeIfAbsent(clazz, k -> {
+            final T value = CheckUtils.checkArgumentNotNull(supplier.get(), "Supplier returned null");
+            LOGGER.debugWithFormat("Added new cache entry for class '%s'", clazz);
+            return value;
+        });
+    }
+
     /**
      * Clear the cache. Additionally call the {@link WorkflowResource#dispose()} method on all cache entries that
      * implement the {@link WorkflowResource} interface.
