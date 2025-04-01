@@ -48,8 +48,8 @@
  */
 package org.knime.core.data.util.memory;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.knime.core.node.NodeLogger;
@@ -72,7 +73,7 @@ public class MemoryAlertSystemTest {
 
     // some JVMs even throw an "java.lang.OutOfMemoryError: Requested array size exceeds VM limit" for values below
     // Integer.MAX_VALUE
-    private static final int MAX_ARRAY_LENGTH = 1000000000;
+    private static final int MAX_ARRAY_LENGTH = (int)(128 * FileUtils.ONE_MB);
 
     private MemoryAlertSystem m_memSystem;
 
@@ -101,17 +102,10 @@ public class MemoryAlertSystemTest {
         forceGC();
     }
 
-    private static List<Integer> determineReserveSizeSplits() {
+    private static long determineMemoryToAllocate() {
         final long max = MemoryAlertSystem.getMaximumMemory();
         final long used = MemoryAlertSystem.getUsedMemory();
-        long reserveSize = (long)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD * (max - used));
-        final List<Integer> reserveSizeSplits = new ArrayList<>();
-        while (reserveSize > MAX_ARRAY_LENGTH) {
-            reserveSizeSplits.add(MAX_ARRAY_LENGTH);
-            reserveSize -= MAX_ARRAY_LENGTH;
-        }
-        reserveSizeSplits.add((int)reserveSize);
-        return reserveSizeSplits;
+        return (long)(MemoryAlertSystem.DEFAULT_USAGE_THRESHOLD * (max - used));
     }
 
     /**
@@ -121,8 +115,6 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testListener() throws Exception {
-        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
-
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
@@ -134,6 +126,7 @@ public class MemoryAlertSystemTest {
             }
         };
 
+        final long memToAllocate = determineMemoryToAllocate();
         m_memSystem.addListener(listener);
         try {
             forceGC();
@@ -141,17 +134,28 @@ public class MemoryAlertSystemTest {
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
-            final byte[][] bufs = new byte[reserveSizeSplits.size()][];
-            for (int i = 0; i < reserveSizeSplits.size(); i++) {
-                bufs[i] = new byte[reserveSizeSplits.get(i)];
-            }
+            final List<byte[]> allocated = allocateBytes(memToAllocate);
             forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(true));
+            // do something with the list so it isn't collected earlier
+            assertThat("We should have allocated something", allocated.size() > 0);
         } finally {
             m_memSystem.removeListener(listener);
         }
+    }
+
+    private static List<byte[]> allocateBytes(final long memToAllocate) {
+        final int numArrays = (int)((memToAllocate + MAX_ARRAY_LENGTH - 1) / MAX_ARRAY_LENGTH);
+        final List<byte[]> allocated = new ArrayList<>(numArrays);
+        long remaining = memToAllocate;
+        while (remaining > 0) {
+            final int size = (int)Math.min(remaining, MAX_ARRAY_LENGTH);
+            allocated.add(new byte[size]);
+            remaining -= size;
+        }
+        return allocated;
     }
 
     /**
@@ -161,8 +165,6 @@ public class MemoryAlertSystemTest {
      */
     @Test
     public void testAutoRemoveListener() throws Exception {
-        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
-
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
@@ -172,6 +174,7 @@ public class MemoryAlertSystemTest {
             }
         };
 
+        final long memToAllocate = determineMemoryToAllocate();
         m_memSystem.addListener(listener);
         try {
             forceGC();
@@ -179,10 +182,7 @@ public class MemoryAlertSystemTest {
             assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
                 listenerCalled.get(), is(false));
 
-            final byte[][] bufs = new byte[reserveSizeSplits.size()][];
-            for (int i = 0; i < reserveSizeSplits.size(); i++) {
-                bufs[i] = new byte[reserveSizeSplits.get(i)];
-            }
+            final List<byte[]> allocated = allocateBytes(memToAllocate);
             forceGC();
             Thread.sleep(1000);
             assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
@@ -190,6 +190,8 @@ public class MemoryAlertSystemTest {
 
             boolean removed = m_memSystem.removeListener(listener);
             assertThat("Listener was not removed automatically", removed, is(false));
+            // do something with the list so it isn't collected earlier
+            assertThat("We should have allocated something", allocated.size() > 0);
         } finally {
             m_memSystem.removeListener(listener);
         }
