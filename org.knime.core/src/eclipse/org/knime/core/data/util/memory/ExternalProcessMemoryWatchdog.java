@@ -235,7 +235,13 @@ public final class ExternalProcessMemoryWatchdog {
 
     private ExternalProcessMemoryWatchdog() {
         // We only track memory usage on Linux systems that support PSS measurements
-        if (PSSUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
+        Long maxMemoryFromSysProperty = Long.getLong("knime.externalprocesswatchdog.maxmemory");
+        if (maxMemoryFromSysProperty != null && maxMemoryFromSysProperty < 0) {
+            LOGGER.info(
+                "External process memory watchdog is disabled because 'knime.externalprocesswatchdog.maxmemory' is set to "
+                    + maxMemoryFromSysProperty);
+            m_watchdogRunning = false;
+        } else if (PSSUtil.supportsPSS() && MAX_EXTERNAL_MEMORY_KBYTES >= 0) {
             var timer = new Timer("KNIME External Process Watchdog", true); // Daemon thread
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
