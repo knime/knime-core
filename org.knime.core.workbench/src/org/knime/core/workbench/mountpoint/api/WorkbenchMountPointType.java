@@ -199,4 +199,8 @@ public final class WorkbenchMountPointType {
         return Collections.unmodifiableMap(result);
     }
 
+    @Override
+    public String toString() {
+        return "WorkbenchMountPointType[" + m_typeIdentifier + "]";
+    }
 }

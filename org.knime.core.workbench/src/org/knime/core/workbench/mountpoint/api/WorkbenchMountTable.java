@@ -279,7 +279,7 @@ public final class WorkbenchMountTable {
             // can't mount different providers with the same ID
             WorkbenchMountPoint existMp = MOUNTED.get(mountID);
             if (existMp != null) {
-                final WorkbenchMountPointType type = existMp.getDefinition();
+                final WorkbenchMountPointType type = existMp.getType();
                 if (Objects.equals(type, definition)) {
                     LOGGER.debug("The mount point definition with the specified type ({}) is already mounted with "
                             + "requested ID ({}).", definition.getTypeIdentifier(), mountID);
@@ -401,7 +401,7 @@ public final class WorkbenchMountTable {
      */
     public static boolean isMounted(final String providerID) {
         synchronized (MOUNTED) {
-            return MOUNTED.values().stream().anyMatch(mp -> mp.getDefinition().getTypeIdentifier().equals(providerID));
+            return MOUNTED.values().stream().anyMatch(mp -> mp.getType().getTypeIdentifier().equals(providerID));
         }
     }
 

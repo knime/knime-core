@@ -56,6 +56,7 @@ import org.knime.core.workbench.preferences.MountSettings;
 /**
  *
  * @author wiswedel
+ * @param <T> type of the mount point state
  */
 public interface WorkbenchMountPointStateFactory<T extends WorkbenchMountPointState> {
 

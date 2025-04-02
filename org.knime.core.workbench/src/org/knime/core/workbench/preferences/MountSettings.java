@@ -102,7 +102,7 @@ public final class MountSettings {
 
     private String m_factoryID;
 
-    private Map<String, String> m_customSettings;
+    private final Map<String, String> m_customSettings;
 
     private boolean m_active;
 
@@ -165,13 +165,14 @@ public final class MountSettings {
     public MountSettings(final WorkbenchMountPoint cp) {
         m_mountID = cp.getMountID();
         m_displayName = cp.getDisplayName();
-        final WorkbenchMountPointType definition = cp.getDefinition();
+        final WorkbenchMountPointType definition = cp.getType();
         m_factoryID = definition.getTypeIdentifier();
         m_defaultMountID = definition.getDefaultMountID().orElse(null);
         m_active = true;
 
         // New Mount Points Are always at the top of the table.
         m_mountPointNumber = 0;
+        m_customSettings = Map.of(); // TODO
     }
 
     /**

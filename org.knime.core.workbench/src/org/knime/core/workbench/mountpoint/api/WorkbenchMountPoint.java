@@ -79,7 +79,7 @@ public final class WorkbenchMountPoint {
     /**
      * @return the type
      */
-    public WorkbenchMountPointType getDefinition() {
+    public WorkbenchMountPointType getType() {
         return m_type;
     }
 
