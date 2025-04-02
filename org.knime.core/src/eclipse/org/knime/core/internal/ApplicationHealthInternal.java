@@ -114,7 +114,7 @@ public final class ApplicationHealthInternal {
             .addInterval(LoadAvgIntervals.FIVE_MIN, Duration.ofMinutes(5)) //
             .addInterval(LoadAvgIntervals.FIFTEEN_MIN, Duration.ofMinutes(15)) //
             .setIgnoreCloseInvocation(false) //
-            .start();
+            .start(KNIMEConstants.GLOBAL_THREAD_POOL.getRunningThreads());
 
     /**
      * Intervals tracked in the load tracker observing the queue length of {@link KNIMEConstants#GLOBAL_THREAD_POOL}.
@@ -134,7 +134,7 @@ public final class ApplicationHealthInternal {
             .addInterval(QueueLengthAvgIntervals.FIVE_MIN, Duration.ofMinutes(5)) //
             .addInterval(QueueLengthAvgIntervals.FIFTEEN_MIN, Duration.ofMinutes(15)) //
             .setIgnoreCloseInvocation(false) //
-            .start();
+            .start(KNIMEConstants.GLOBAL_THREAD_POOL.getQueueSize());
 
     private ApplicationHealthInternal() {
         // no op
