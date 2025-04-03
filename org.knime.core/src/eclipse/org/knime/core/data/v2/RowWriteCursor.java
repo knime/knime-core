@@ -66,6 +66,8 @@ public interface RowWriteCursor extends Closeable {
      * After this method returns, it is safe to re-use the {@code RowRead}, for example to set it to new values for the
      * next row to be committed.
      *
+     * @param row row to be committed
+     *
      * @since 5.4
      */
     void commit(RowRead row);
