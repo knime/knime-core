@@ -772,6 +772,13 @@ public final class SubNodeContainer extends SingleNodeContainer
         return (VirtualSubNodeInputNodeModel)getVirtualInNode().getNodeModel();
     }
 
+    Optional<VirtualSubNodeInputNodeModel> tryGetVirtualInNodeModel() {
+        return m_wfm.tryGetNodeContainer(getVirtualInNodeID()) //
+            .map(NativeNodeContainer.class::cast) //
+            .map(NativeNodeContainer::getNodeModel) //
+            .map(VirtualSubNodeInputNodeModel.class::cast);
+    }
+
     /** @return the outportNodeModel */
     NativeNodeContainer getVirtualOutNode() {
         return (NativeNodeContainer)m_wfm.getNodeContainer(getVirtualOutNodeID());
@@ -780,6 +787,13 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** @return the outportNodeModel */
     VirtualSubNodeOutputNodeModel getVirtualOutNodeModel() {
         return (VirtualSubNodeOutputNodeModel)getVirtualOutNode().getNodeModel();
+    }
+
+    Optional<VirtualSubNodeOutputNodeModel> tryGetVirtualOutNodeModel() {
+        return m_wfm.tryGetNodeContainer(getVirtualOutNodeID()) //
+            .map(NativeNodeContainer.class::cast) //
+            .map(NativeNodeContainer::getNodeModel) //
+            .map(VirtualSubNodeOutputNodeModel.class::cast);
     }
 
     /**
@@ -1676,8 +1690,10 @@ public final class SubNodeContainer extends SingleNodeContainer
     @Override
     void cleanup() {
         super.cleanup();
-        getVirtualInNodeModel().setSubNodeContainer(null);
-        getVirtualOutNodeModel().setSubNodeContainer(null);
+        // virtual in/out nodes can be absent in case of a clean-up because of
+        // a cancelled component loading process
+        tryGetVirtualInNodeModel().ifPresent(model -> model.setSubNodeContainer(null));
+        tryGetVirtualOutNodeModel().ifPresent(model -> model.setSubNodeContainer(null));
         m_wfm.removeNodeStateChangeListener(m_wfmStateChangeListener);
         m_wfm.removeListener(m_wfmListener);
         m_wfm.cleanup();
