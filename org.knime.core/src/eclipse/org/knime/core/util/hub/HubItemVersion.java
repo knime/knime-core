@@ -299,6 +299,6 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         if (version == null) {
             return null;
         }
-        return version.match(cs -> currentState(), mr -> latestVersion(), sv -> of(sv.version()));
+        return version.match(() -> currentState(), () -> latestVersion(), sv -> of(sv));
     }
 }

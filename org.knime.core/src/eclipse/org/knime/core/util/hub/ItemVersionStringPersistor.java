@@ -110,10 +110,10 @@ public final class ItemVersionStringPersistor {
      */
     private static ItemVersion fromString(final String versionString) throws InvalidSettingsException {
         if (CURRENT_STATE_LINK_TYPE.equals(versionString)) {
-            return new CurrentState();
+            return CurrentState.getInstance();
         }
         if (MOST_RECENT_LINK_TYPE.equals(versionString)) {
-            return new MostRecent();
+            return MostRecent.getInstance();
         }
         try {
             return new SpecificVersion(Integer.parseUnsignedInt(versionString));
