@@ -171,7 +171,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      * @param knimeUrl KNIME URL. Non-null.
      * @return the link type and item version. Item version is {@code null} for link types ≠ FIXED_VERSION
      * @throws IllegalArgumentException if the given URL is null or the version cannot be determined
-     * @see URLResolverUtil#parseVersion(URI)
+     * @see URLResolverUtil#parseVersion(String)
      */
     public static Optional<HubItemVersion> of(final URI knimeUrl) {
         CheckUtils.checkArgumentNotNull(knimeUrl);
@@ -190,7 +190,7 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
      * @param knimeUrl KNIME URL. Non-null.
      * @return the link type and item version. Item version is {@code null} for link types ≠ FIXED_VERSION
      * @throws IllegalArgumentException if the given URI is null or the version cannot be determined
-     * @see URLResolverUtil#parseVersion(URI)
+     * @see URLResolverUtil#parseVersion(String)
      */
     public static Optional<HubItemVersion> of(final URL knimeUrl) {
         CheckUtils.checkArgumentNotNull(knimeUrl);
@@ -318,6 +318,6 @@ public record HubItemVersion(LinkType linkType, Integer versionNumber) {
         if (version == null) {
             return null;
         }
-        return version.match(cs -> currentState(), mr -> latestVersion(), sv -> of(sv.version()));
+        return version.match(() -> currentState(), () -> latestVersion(), sv -> of(sv));
     }
 }

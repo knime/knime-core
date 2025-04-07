@@ -100,7 +100,7 @@ public final class TemplateUpdateUtil {
      * </ul>
      *
      * @since 5.0
-     * @deprecated prefer {@link ItemVersion} and {@link ItemVersionURIUtil} for working with Hub item versions
+     * @deprecated prefer {@link ItemVersion} for working with Hub item versions
      */
     @Deprecated(since = "5.5", forRemoval = true)
     public enum LinkType {
@@ -132,6 +132,13 @@ public final class TemplateUpdateUtil {
          */
         public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
 
+        /**
+         * Creates a link type.
+         *
+         * @param paramString function to create the query parameter for the numeric version
+         * @param identifier identifier to denote a non-numeric version
+         * @param legacyIdentifier legacy identifier (space versioning)
+         */
         LinkType(final Function<Integer, String> paramString, final String identifier, final String legacyIdentifier) {
             m_paramString = paramString;
             m_identifier = identifier;

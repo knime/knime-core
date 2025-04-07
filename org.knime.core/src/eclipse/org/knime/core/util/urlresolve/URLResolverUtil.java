@@ -58,9 +58,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.IntConsumer;
+import java.util.function.IntFunction;
 
+import org.apache.commons.lang3.function.FailableCallable;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
@@ -194,9 +195,9 @@ public final class URLResolverUtil {
     public static void addVersionQueryParameter(final ItemVersion version,
         final BiConsumer<String, String> parameterConsumer) {
         match(version, //
-            c -> { }, // nothing to do for current-state, like the old method
-            m -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, MOST_RECENT_IDENTIFIER), //
-            v -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, Integer.toString(v.version())) //
+            () -> { }, // nothing to do for current-state, like the old method
+            () -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, MOST_RECENT_IDENTIFIER), //
+            v -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, Integer.toString(v)) //
         );
     }
 
@@ -281,9 +282,9 @@ public final class URLResolverUtil {
      */
     private static Optional<String> getQueryParameterValue(final ItemVersion version) {
         return matchFn(version, //
-            c -> Optional.empty(), //
-            m -> Optional.of(MOST_RECENT_IDENTIFIER), //
-            v -> Optional.of(Integer.toString(v.version())) //
+            Optional::empty, //
+            () -> Optional.of(MOST_RECENT_IDENTIFIER), //
+            v -> Optional.of(Integer.toString(v)) //
         );
     }
 
@@ -292,37 +293,45 @@ public final class URLResolverUtil {
      *
      * @param <T> return type of the functions
      * @param version {@code null}able version to apply functions to
-     * @param currentStateFn function to apply if given current-state version
-     * @param mostRecentFn function to apply if given most-recent version
+     * @param currentState function to apply if given current-state version
+     * @param mostRecent function to apply if given most-recent version
      * @param versionFn function to apply if given fixed version number
      * @return function return value or {@code null} if version was {@code null}
      */
-    private static <T> T matchFn(final ItemVersion version, final Function<CurrentState, T> currentStateFn,
-        final Function<MostRecent, T> mostRecentFn, final Function<SpecificVersion, T> versionFn) {
+    private static <T, E extends Throwable> T matchFn(final ItemVersion version,
+        final FailableCallable<T, E> currentState, final FailableCallable<T, E> mostRecent,
+            final IntFunction<T> versionFn) throws E {
         CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
         // good candidate for pattern-matching switch in next Java version (preview in Java 17)
-        if (version instanceof CurrentState cs) {
-            return currentStateFn.apply(cs);
+        if (version instanceof CurrentState) {
+            return currentState.call();
         }
-        if (version instanceof MostRecent mr) {
-            return mostRecentFn.apply(mr);
+        if (version instanceof MostRecent) {
+            return mostRecent.call();
         }
         if (version instanceof SpecificVersion sv) {
-            return versionFn.apply(sv);
+            return versionFn.apply(sv.version());
         }
         throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
     }
 
-    private static void match(final ItemVersion version, final Consumer<CurrentState> currentStateFn,
-        final Consumer<MostRecent> mostRecentFn, final Consumer<SpecificVersion> versionFn) {
+    /**
+     * Matches one of the given callbacks with the given non-{@code null} version and runs it.
+     * @param version {@code null}able version to apply functions to
+     * @param currentState callback to run if given current-state version
+     * @param mostRecent callback to run if given most-recent version
+     * @param versionConsumer callback to run if given fixed version number
+     */
+    private static void match(final ItemVersion version, final Runnable currentState,
+        final Runnable mostRecent, final IntConsumer versionConsumer) {
         CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
         // good candidate for pattern-matching switch in next Java version (preview in Java 17)
-        if (version instanceof CurrentState cs) {
-            currentStateFn.accept(cs);
-        } else if (version instanceof MostRecent mr) {
-            mostRecentFn.accept(mr);
-        } else if (version instanceof SpecificVersion sv){
-            versionFn.accept(sv);
+        if (version instanceof CurrentState) {
+            currentState.run();
+        } else if (version instanceof MostRecent) {
+            mostRecent.run();
+        } else if (version instanceof SpecificVersion sv) {
+            versionConsumer.accept(sv.version());
         } else {
             throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
         }
@@ -337,8 +346,8 @@ public final class URLResolverUtil {
      */
     private static Optional<ItemVersion> matchVersionValue(final String itemVersionParamValue) {
         return switch (itemVersionParamValue) {
-            case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(new CurrentState());
-            case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(new MostRecent());
+            case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(CurrentState.getInstance());
+            case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(MostRecent.getInstance());
             default -> parseIntegerVersion(itemVersionParamValue);
         };
     }
