@@ -72,15 +72,12 @@ import org.knime.core.table.util.StringEncoder;
 public final class UnmodifiedLongUTFDataOutput implements DataOutput {
     private final DataOutput m_output;
 
-    private final StringEncoder m_encoder;
-
     private final ByteOrder m_byteOrder;
 
     private ByteBuffer m_byteBuffer;
 
     public UnmodifiedLongUTFDataOutput(final DataOutput output, final ByteOrder order) {
         m_output = output;
-        m_encoder = new StringEncoder();
         m_byteOrder = order;
     }
 
@@ -172,7 +169,7 @@ public final class UnmodifiedLongUTFDataOutput implements DataOutput {
 
     @Override
     public void writeUTF(final String s) throws IOException {
-        var b = m_encoder.encode(s);
+        var b = StringEncoder.encode(s);
         // TODO: allow string lengths > MAX_INTEGER https://knime-com.atlassian.net/browse/AP-19712
         final int length = b.limit();
         writeLong(length);
