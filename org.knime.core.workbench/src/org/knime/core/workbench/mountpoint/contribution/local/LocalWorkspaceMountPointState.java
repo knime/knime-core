@@ -48,27 +48,52 @@
  */
 package org.knime.core.workbench.mountpoint.contribution.local;
 
+import java.util.Map;
+import java.util.Optional;
+
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
  * State for local workspace.
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-public enum LocalWorkspaceMountPointState implements WorkbenchMountPointState {
-
-    /** Static singleton. */
-    INSTANCE;
+public final class LocalWorkspaceMountPointState implements WorkbenchMountPointState {
 
     /** The type of this mount point. */
-    private static final WorkbenchMountPointType TYPE =
-        WorkbenchActivator.getInstance().getMountPointTypeOrFail(LocalWorkspaceMountPointStateFactory.ID);
+    public static final WorkbenchMountPointType TYPE =
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail("org.knime.workbench.explorer.workspace");
 
-    @Override
-    public String getDisplayName() {
-        return "LOCAL";
+    /** Factory for the local workspace. */
+    public static final class Factory implements WorkbenchMountPointStateFactory<LocalWorkspaceMountPointState> {
+
+        @Override
+        public LocalWorkspaceMountPointState newInstance(final MountSettings settings) {
+            return new LocalWorkspaceMountPointState();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Local Workspace";
+        }
+
+        @Override
+        public Optional<Map<String, String>> getDefaultCustomSettings() {
+            return Optional.of(Map.of());
+        }
+
+        @Override
+        public String getContentDisplayString(final MountSettings mountSettings) {
+            // has always been redundant
+            return getDisplayName();
+        }
+    }
+
+    private LocalWorkspaceMountPointState() {
     }
 
     @Override

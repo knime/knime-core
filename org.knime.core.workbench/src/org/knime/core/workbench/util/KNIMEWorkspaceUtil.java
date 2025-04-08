@@ -81,7 +81,7 @@ public final class KNIMEWorkspaceUtil {
      *
      * @return The version.
      */
-    public synchronized static int getVersion() {
+    public static synchronized int getVersion() {
         final int version = DefaultScope.INSTANCE.getNode(PLUGIN_ID).getInt(WORKSPACE_VERSION, -1);
 
         if (version != -1) {
@@ -99,7 +99,7 @@ public final class KNIMEWorkspaceUtil {
      *
      * @param version The version in format 'yyyyMMdd'.
      */
-    public synchronized static void setVersion(final int version) {
+    public static synchronized void setVersion(final int version) {
         final IEclipsePreferences pref = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
 
         pref.putInt(WORKSPACE_VERSION, version);

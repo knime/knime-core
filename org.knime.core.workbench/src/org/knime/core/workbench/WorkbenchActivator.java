@@ -50,22 +50,39 @@ package org.knime.core.workbench;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+/**
+ * Activator for the Core Workbench plugin, access point for the {@link WorkbenchMountPointType} registry.
+ *
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ */
+@SuppressWarnings({
+    "java:S2696", // assignment to `instance` in instance methods
+})
 public final class WorkbenchActivator implements BundleActivator {
 
     private static WorkbenchActivator instance;
 
     private Map<String, WorkbenchMountPointType> m_mountPointTypeMap;
 
+    /**
+     * @return the activator instance of the currently activated plugin
+     * @throws NullPointerException if the plugin isn't activated
+     */
+    public static WorkbenchActivator getInstance() {
+        return Objects.requireNonNull(instance);
+    }
+
     @Override
     public void start(final BundleContext context) throws Exception {
         instance = this;
-        m_mountPointTypeMap = WorkbenchMountPointType.collectDefinitions();
+        m_mountPointTypeMap = WorkbenchMountPointType.collectMountPointTypes();
     }
 
     @Override
@@ -74,24 +91,32 @@ public final class WorkbenchActivator implements BundleActivator {
         instance = null;
     }
 
+    /**
+     * Returns all available mount point types.
+     *
+     * @return immutable collection of mount point types
+     */
     public Collection<WorkbenchMountPointType> getMountPointTypes() {
+        // the map is already immutable, no need to do anything here
         return m_mountPointTypeMap.values();
     }
 
     /**
+     * @param typeIdentifier mount point type identifier
      * @return mount point definition for a type registered in an extension point
      */
     public Optional<WorkbenchMountPointType> getMountPointType(final String typeIdentifier) {
         return Optional.ofNullable(m_mountPointTypeMap.get(typeIdentifier));
     }
 
+    /**
+     * @param typeIdentifier identifier of the mount point type to find
+     * @return corresponding {@link WorkbenchMountPointType}
+     * @throws IllegalStateException if the mount point type isn't known
+     */
     public WorkbenchMountPointType getMountPointTypeOrFail(final String typeIdentifier) {
         return getMountPointType(typeIdentifier)
             .orElseThrow(() -> new IllegalStateException(
                 String.format("No mount point definition found for \"%s\"", typeIdentifier)));
-    }
-
-    public static WorkbenchActivator getInstance() {
-        return instance;
     }
 }

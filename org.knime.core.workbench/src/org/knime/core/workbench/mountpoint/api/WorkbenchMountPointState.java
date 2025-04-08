@@ -50,11 +50,9 @@ package org.knime.core.workbench.mountpoint.api;
 
 /**
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public interface WorkbenchMountPointState {
-
-    String getDisplayName();
 
     WorkbenchMountPointType getType();
 }

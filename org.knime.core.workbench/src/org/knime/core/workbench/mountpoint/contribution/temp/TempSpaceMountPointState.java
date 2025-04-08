@@ -20,12 +20,16 @@ package org.knime.core.workbench.mountpoint.contribution.temp;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.User;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
  * Settings for the temp space mount point, moved content out of old (explorer-based) TempSpaceContentProvider.
@@ -36,8 +40,31 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
 
     /** The type of this mount point. */
     public static final WorkbenchMountPointType TYPE =
-        WorkbenchActivator.getInstance().getMountPointTypeOrFail(TempSpaceMountPointStateFactory.ID);
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail("com.knime.explorer.tempspace");
 
+    /** Factory for the temp space. */
+    public static final class Factory implements WorkbenchMountPointStateFactory<TempSpaceMountPointState> {
+
+        @Override
+        public TempSpaceMountPointState newInstance(final MountSettings settings) {
+            return new TempSpaceMountPointState();
+        }
+
+        @Override
+        public Optional<Map<String, String>> getDefaultCustomSettings() {
+            return Optional.of(Map.of());
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "KNIME Temp Space";
+        }
+
+        @Override
+        public String getContentDisplayString(final MountSettings mountSettings) {
+            return getDisplayName();
+        }
+    }
 
     /**
      * Supplier for temporary directories, obeying KNIME's customizable TEMP directory location.
@@ -60,9 +87,9 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
      * Initializes the temp space's root directory, must be called one before calls to {@link #getTempDir()}.
      *
      * @param tempDirSupplier supplier for a new temp directory
-     * @throws Exception if something went wrong
+     * @throws IOException if something went wrong
      */
-    public void initTempDir(final TempDirectorySupplier tempDirSupplier) throws Exception {
+    public void initTempDir(final TempDirectorySupplier tempDirSupplier) throws IOException {
         if (m_tempDir == null) {
             final var prefix = "knime_temp_space_" + User.getUsername() + "_";
             m_tempDir = tempDirSupplier.createTempDir(prefix);
@@ -75,12 +102,6 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
     public File getTempDir() {
         CheckUtils.checkState(m_tempDir != null, "`initTempDir(...)` must be called before `getTempDir()`");
         return m_tempDir;
-    }
-
-    @Override
-    public String getDisplayName() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override

@@ -54,9 +54,10 @@ import java.util.function.Function;
 import org.knime.core.workbench.preferences.MountSettings;
 
 /**
- * Represents a content tree in the KNIME Explorer.
+ * Represents an entry in the mount table.
  *
- * @author ohl, University of Konstanz
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public final class WorkbenchMountPoint {
 
@@ -83,37 +84,67 @@ public final class WorkbenchMountPoint {
         return m_type;
     }
 
+    /**
+     * @return the mount ID
+     */
     public String getMountID() {
         return m_settings.getMountID();
     }
 
-    public String getDisplayName() {
-        return m_state.getDisplayName();
-    }
-
+    /**
+     * @return the inner state of this mountpoint
+     */
     public WorkbenchMountPointState getState() {
         return m_state;
     }
 
+    /**
+     * @return this mount point's mount settings
+     */
     public MountSettings getSettings() {
         return m_settings;
     }
 
+    /**
+     * Retrieves the provider of the given type that's attached to this mount point or initializes it if not done
+     * previously.
+     *
+     * @param <T> provider type
+     * @param <S> mount point state type
+     * @param providerType class object representing the provider type
+     * @param providerFactory factory for creating a provider
+     * @return retrieved or newly created provider
+     */
     @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S2 extends WorkbenchMountPointState> T
-        getProvider(final Class<T> providerType, final Function<S2, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S2)m_state));
+    public <T extends MountPointProvider, S extends WorkbenchMountPointState> T getProvider(final Class<T> providerType,
+        final Function<S, T> providerFactory) {
+        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_state));
     }
 
+    /**
+     * Retrieves the provider of the given type if one has been attached to this mount point.
+     *
+     * @param <T> provider type
+     * @param providerType class object representing the provider type
+     * @return provider if it exists, {@link Optional#empty()} otherwise
+     */
     @SuppressWarnings("unchecked")
     public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
         return Optional.ofNullable((T)m_contentProviders.get(providerType));
     }
 
-    public void dispose(final Class<? extends MountPointProvider> cl) {
-        Optional.ofNullable(m_contentProviders.remove(cl)).ifPresent(MountPointProvider::dispose);
+    /**
+     * Disposes the provider of the given type if one is attached to this mount point.
+     *
+     * @param providerType class object representing the provider type
+     */
+    public void dispose(final Class<? extends MountPointProvider> providerType) {
+        Optional.ofNullable(m_contentProviders.remove(providerType)).ifPresent(MountPointProvider::dispose);
     }
 
+    /**
+     * Disposes all attached content providers.
+     */
     public void dispose() {
         m_contentProviders.values().forEach(MountPointProvider::dispose);
         m_contentProviders.clear();

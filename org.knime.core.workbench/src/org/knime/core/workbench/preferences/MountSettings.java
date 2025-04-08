@@ -63,29 +63,23 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Settings for an entry in the {@link WorkbenchMountTable}.
+ *
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
+ */
 public final class MountSettings {
-
-    /** The preference key used to store the MountSettings as XML in the IEclipsePreference nodes */
-    private static final String MOUNTPOINT_PREFERENCE_KEY = "mountpoint";
 
     /** Location for the MountSettings preference node. */
     private static final String MOUNTPOINT_PREFERENCE_LOCATION =
             WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID + "/mountpointNode";
-
-    /** Used for separating multiple mount settings in the preferences. */
-    private static final String SETTINGS_SEPARATOR = "\n";
-
-    private static final String VISIBILITY_SEPARATOR = "\t";
-
-    /** Used for separating the different setting elements. */
-    private static final String ELEMENTS_SEPARATOR = ":";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MountSettings.class);
 
@@ -108,73 +102,6 @@ public final class MountSettings {
     private boolean m_active;
 
     private int m_mountPointNumber;
-
-//    /**
-//     * Creates a new mount settings object based on the passed settings string.
-//     *
-//     * @param settings a settings string
-//     */
-//    @Deprecated
-//    public MountSettings(final String settings) {
-//        parse(settings);
-//    }
-
-//    /**
-//     * Creates a new mount settings object based on the passed NodeSettings object.
-//     *
-//     * @param settings a NodeSettings object
-//     * @throws InvalidSettingsException if settings can't be retrieved
-//     * @since 6.0
-//     */
-//    public MountSettings(final ConfigBaseRO settings) throws InvalidSettingsException {
-//        m_mountID = settings.getString("mountID");
-//        m_displayName = settings.getString("displayName");
-//        m_factoryID = settings.getString("factoryID");
-//        m_content = new Storage(settings.getString("content"));
-//        m_defaultMountID = settings.getString("defaultMountID");
-//        m_active = settings.getBoolean("active");
-//        if (settings.containsKey("mountPointNumber")) {
-//            m_mountPointNumber = settings.getInt("mountPointNumber");
-//        }
-//
-//    }
-
-//    /**
-//     * Creates a new mount settings object for the content provider.
-//     *
-//     * @param cp the content provider to create mount settings for
-//     */
-//    public MountSettings(final AbstractContentProvider cp) {
-//        m_mountID = cp.getMountID();
-//        m_displayName = m_mountID + " (" + cp.toString() + ")";
-//        m_factoryID = cp.getFactory().getID();
-//        m_content = cp.saveState();
-//        m_defaultMountID = cp.getFactory().getDefaultMountID();
-//        m_active = true;
-//
-//        String[] splitContent = m_content.storageString().split(";");
-//        m_useRest = splitContent.length >= 5 ? splitContent[4].equals("true") : false;
-//        // New Mount Points Are always at the top of the table.
-//        m_mountPointNumber = 0;
-//    }
-
-    /**
-     * Creates a new mount settings object for the content provider.
-     *
-     * @param cp the content provider to create mount settings for
-     */
-    public MountSettings(final WorkbenchMountPoint cp) {
-        m_mountID = cp.getMountID();
-        m_displayName = cp.getDisplayName();
-        final WorkbenchMountPointType definition = cp.getType();
-        m_factoryID = definition.getTypeIdentifier();
-        m_defaultMountID = definition.getDefaultMountID().orElse(null);
-        m_active = true;
-
-        // New Mount Points Are always at the top of the table.
-        m_mountPointNumber = 0;
-        m_customSettings = Map.of(); // TODO
-    }
 
     /**
      * Creates a new mount settings object from the given parameters.
@@ -205,9 +132,6 @@ public final class MountSettings {
         return m_displayName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return "MountSettings[mountId=%s, factoryId=%s, active=%s, customSettings=%s]" //
@@ -249,14 +173,8 @@ public final class MountSettings {
     }
 
     /**
-     * @return the state of the content provider stored as string
-     */
-//    public String getContent() {
-//        return m_content.storageString();
-//    }
-
-    /**
-     * @return
+     * @return the mount point type associated with these settings
+     * @throws IllegalStateException if the type is not registered
      */
     public WorkbenchMountPointType getWorkbenchMountPointTypeOrFail() {
         return WorkbenchActivator.getInstance().getMountPointTypeOrFail(getFactoryID());
@@ -288,106 +206,12 @@ public final class MountSettings {
         return m_mountPointNumber;
     }
 
+    /**
+     * @return a copy of the map of custom settings
+     */
     public Map<String, String> getCustomSettings() {
-        return Collections.unmodifiableMap(m_customSettings);
+        return new LinkedHashMap<>(m_customSettings);
     }
-
-//    /**
-//     * @param config the NodeSettings to save to
-//     */
-//    private void saveToNodeSettings(final ConfigBaseWO config) {
-//        config.addString("mountID", m_mountID);
-//        config.addString("displayName", m_displayName);
-//        config.addString("factoryID", m_factoryID);
-//        config.addString("content", m_content.storageString());
-//        config.addString("defaultMountID", m_defaultMountID);
-//        config.addBoolean("active", m_active);
-//        config.addBoolean("useRest", m_useRest);
-//    }
-//
-//    /**
-//     * @return the state of this mount settings as preference string
-//     */
-//    public String getSettingsString() {
-//        if (m_state == null) {
-//            m_state = getDisplayName() + VISIBILITY_SEPARATOR + m_mountID + ELEMENTS_SEPARATOR + m_factoryID
-//                + ELEMENTS_SEPARATOR + Boolean.toString(m_active) + ELEMENTS_SEPARATOR
-//                + (m_defaultMountID == null ? "" : m_defaultMountID) + ELEMENTS_SEPARATOR + m_content
-//                + ELEMENTS_SEPARATOR + m_useRest;
-//        }
-//        return m_state;
-//    }
-
-//    /**
-//     * Parses a settings string containing one or multiple settings in XML form or separated by
-//     * {@link MountSettings#SETTINGS_SEPARATOR}.
-//     *
-//     * @param settings the preference string to parse
-//     * @param excludeUnknownContentProviders true if resulting list should only contain displayable settings
-//     * @return the parsed list of mount settings
-//     * @since 6.2
-//     */
-//    public static List<MountSettings> parseSettings(final String settings,
-//        final boolean excludeUnknownContentProviders) {
-//        List<MountSettings> ms = new ArrayList<MountSettings>();
-//        if (settings == null || settings.isEmpty()) {
-//            return ms;
-//        }
-//        if (settings.startsWith("<?xml")) {
-//            try {
-//                SimpleConfig nodeSettings = new SimpleConfig("mount-settings");
-//                nodeSettings.load(new ByteArrayInputStream(settings.getBytes()));
-//                int numSettings = nodeSettings.getInt("numSettings");
-//                for (int i = 0; i < numSettings; i++) {
-//                    ConfigBaseRO singleSettings = nodeSettings.getConfigBase("mountSettings_" + i);
-//                    MountSettings singleMountSettings = new MountSettings(singleSettings);
-//                    if (!excludeUnknownContentProviders || isMountSettingsAddable(singleMountSettings)) {
-//                        ms.add(singleMountSettings);
-//                    }
-//                }
-//            } catch (Exception e) {
-//                throw new IllegalArgumentException("Error parsing mount settings. ", e);
-//            }
-//        } else {
-//            String[] split = settings.split(SETTINGS_SEPARATOR);
-//            for (String setting : split) {
-//                MountSettings singleMountSettings = new MountSettings(setting);
-//                if (!excludeUnknownContentProviders || isMountSettingsAddable(singleMountSettings)) {
-//                    ms.add(singleMountSettings);
-//                }
-//            }
-//        }
-//        return ms;
-//    }
-
-//    /**
-//     * @param mountSettings a list of MountSettings
-//     * @return an XML string representing the given list of MountSettings
-//     * @since 6.0
-//     */
-//    public static String getSettingsString(final List<MountSettings> mountSettings) {
-//        SimpleConfig nodeSettings = new SimpleConfig("mountSettings");
-//        for (int i = 0; i < mountSettings.size(); i++) {
-//            ConfigBaseWO singleSettings = nodeSettings.addConfigBase("mountSettings_" + i);
-//            mountSettings.get(i).saveToNodeSettings(singleSettings);
-//        }
-//        nodeSettings.addInt("numSettings", mountSettings.size());
-//        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-//        try {
-//            nodeSettings.saveToXML(out);
-//        } catch (IOException e) {
-//            throw new IllegalArgumentException("Error while saving mount settings to XML.", e);
-//        }
-//        return out.toString();
-//    }
-
-//    @Override
-//    public boolean equals(final Object obj) {
-//        if (!(obj instanceof MountSettings)) {
-//            return false;
-//        }
-//        return getSettingsString().equals(((MountSettings)obj).getSettingsString());
-//    }
 
     @Override
     public boolean equals(final Object obj) {
@@ -396,14 +220,14 @@ public final class MountSettings {
         }
         if (obj instanceof MountSettings oms) {
             return new EqualsBuilder() //
-                    .append(m_displayName, oms.m_displayName) //
-                    .append(m_mountID, oms.m_mountID) //
-                    .append(m_defaultMountID, oms.m_defaultMountID) //
-                    .append(m_factoryID, oms.m_factoryID) //
-                    .append(m_customSettings, oms.m_customSettings) //
-                    .append(m_active, oms.m_active) //
-                    .append(m_mountPointNumber, oms.m_mountPointNumber) //
-                    .isEquals();
+                .append(m_displayName, oms.m_displayName) //
+                .append(m_mountID, oms.m_mountID) //
+                .append(m_defaultMountID, oms.m_defaultMountID) //
+                .append(m_factoryID, oms.m_factoryID) //
+                .append(m_customSettings, oms.m_customSettings) //
+                .append(m_active, oms.m_active) //
+                .append(m_mountPointNumber, oms.m_mountPointNumber) //
+                .isEquals();
         }
         return false;
     }
@@ -429,7 +253,7 @@ public final class MountSettings {
      */
     public static List<MountSettings> loadSortedMountSettingsFromPreferenceNode() {
         // AP-8989 Switching to IEclipsePreferences
-        final List<MountSettings> mountSettings = new ArrayList<MountSettings>();
+        final List<MountSettings> mountSettings = new ArrayList<>();
         try {
             final List<MountSettings> defaultMountSettingsList = loadSortedMountSettingsFromDefaultPreferenceNode();
             final List<MountSettings> instanceMountSettingsList = new ArrayList<>();
@@ -464,8 +288,9 @@ public final class MountSettings {
         // exclude default mps that are not part of the preference if enforce exclusion is enabled.
         final List<String> excludedDefaultMPs = ExplorerPreferenceInitializer.getExcludedDefaultMountPoints();
 
-        return mountSettings.stream().filter(e -> !excludedDefaultMPs.contains(e.getDefaultMountID()))
-            .collect(Collectors.toList());
+        return mountSettings.stream() //
+                .filter(e -> !excludedDefaultMPs.contains(e.getDefaultMountID())) //
+                .collect(Collectors.toList());
     }
 
     private static List<MountSettings> getSortedMountSettingsFromNode(final IEclipsePreferences preferenceNode)
@@ -487,9 +312,11 @@ public final class MountSettings {
     }
 
     /**
-     * Loads the MountSettings from the DefaultInstance {@link ExplorerActivator#PLUGIN_ID} preference node.
+     * Loads the MountSettings from the DefaultInstance {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID}
+     * preference node.
      *
-     * @return The MountSettings read from the {@link ExplorerActivator#PLUGIN_ID} preference node
+     * @return The MountSettings read from the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID}
+     * preference node
      * @since 8.2
      */
     public static List<MountSettings> loadSortedMountSettingsFromDefaultPreferenceNode() {
@@ -504,13 +331,14 @@ public final class MountSettings {
     }
 
     /**
-     * Loads the MountSettings from either the {@link ExplorerActivator#PLUGIN_ID} preference node, or from the
-     * PreferenceStore, this ensures backwards compatibility.
+     * Loads the MountSettings from either the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID} preference
+     * node, or from the PreferenceStore, this ensures backwards compatibility.
      *
      * @param loadDefaultsIfEmpty If <code>true</code> and there were no prior settings, then the default mount
      *            settings are stored into the instance preference store.
      *
-     * @return The MountSettings read from the {@link ExplorerActivator#PLUGIN_ID} preference node
+     * @return The MountSettings read from the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID}
+     * preference node
      */
     public static List<MountSettings> loadSortedMountSettingsFromPreferences(final boolean loadDefaultsIfEmpty) {
         IEclipsePreferences mountPointsNode = getInstanceMountPointParentNode();
@@ -527,8 +355,8 @@ public final class MountSettings {
     }
 
     /**
-     * Saves the given mountSettings to the {@link ExplorerActivator#PLUGIN_ID) preference node. The preferences are
-     * saved in the mount point ordering of the given List.
+     * Saves the given mountSettings to the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID} preference node.
+     * The preferences are saved in the mount point ordering of the given List.
      *
      * @param mountSettings The MountSettings to be saved to the preference node
      * @since 8.2
@@ -621,7 +449,8 @@ public final class MountSettings {
     }
 
     /**
-     * Removes the given MountSettings from the {@link ExplorerActivator#PLUGIN_ID} preference node.
+     * Removes the given MountSettings from the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID} preference
+     * node.
      *
      * @param mountSettings The mounSettings to be removed from the preference node
      * @throws BackingStoreException if there is a failure in the backing store

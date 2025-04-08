@@ -54,8 +54,9 @@ import java.util.Optional;
 import org.knime.core.workbench.preferences.MountSettings;
 
 /**
+ * Factory for mount point states, registered via extension point.
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  * @param <T> type of the mount point state
  */
 public interface WorkbenchMountPointStateFactory<T extends WorkbenchMountPointState> {
@@ -70,5 +71,28 @@ public interface WorkbenchMountPointStateFactory<T extends WorkbenchMountPointSt
         return Optional.empty();
     }
 
-    T newInstance(MountSettings settings);
+    /**
+     * Create the mountpoint state for the given mount settings.
+     *
+     * @param settings mount settings
+     * @return mountpoint state instance
+     * @throws WorkbenchMountException if no instance can be created
+     */
+    T newInstance(MountSettings settings) throws WorkbenchMountException;
+
+    /**
+     * Creates a display string for the mountpoint represented by the given mount settings.
+     *
+     * @param mountSettings settings
+     * @return display string
+     * @throws WorkbenchMountException if the mount settings are incompatible
+     */
+    String getContentDisplayString(MountSettings mountSettings) throws WorkbenchMountException;
+
+    /**
+     * Returns the name of the mount point type.
+     *
+     * @return mount point type name
+     */
+    String getDisplayName();
 }

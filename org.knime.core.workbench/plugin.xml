@@ -6,13 +6,13 @@
          point="org.knime.core.workbench.MountPointType">
       <MountPointType
             defaultMountID="LOCAL"
-            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointStateFactory"
+            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointState$Factory"
             supportsMultipleInstances="false"
             typeIdentifier="org.knime.workbench.explorer.workspace">
       </MountPointType>
       <MountPointType
             defaultMountID="knime-temp-space"
-            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointStateFactory"
+            stateFactoryClass="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointState$Factory"
             supportsMultipleInstances="false"
             typeIdentifier="com.knime.explorer.tempspace">
       </MountPointType>

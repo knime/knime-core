@@ -50,7 +50,8 @@ package org.knime.core.workbench;
 
 /**
  *
- * @author wiswedel
+ *
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public final class WorkbenchConstants {
 
@@ -65,8 +66,11 @@ public final class WorkbenchConstants {
     /** Preference constant for mount points for the Explorer (xml format). */
     public static final String P_EXPLORER_MOUNT_POINT_XML = "knime.explorer.mountpoint.xml";
 
-    /** Preference constant for mount points for the Explorer. */
-    @Deprecated
+    /**
+     * Preference constant for mount points for the Explorer.
+     * @deprecated
+     */
+    @Deprecated(since = "2.9.1")
     public static final String P_EXPLORER_MOUNT_POINT = "knime.explorer.mountpoint";
 
     /**

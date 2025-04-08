@@ -47,7 +47,6 @@
  */
 package org.knime.core.workbench.mountpoint.api;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -62,19 +61,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.events.MountPointEvent;
 import org.knime.core.workbench.mountpoint.api.events.MountPointListener;
 import org.knime.core.workbench.preferences.MountSettings;
-import org.osgi.framework.FrameworkUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Static, AP-wide mount table.
  *
  * @author ohl, University of Konstanz
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  */
 public final class WorkbenchMountTable {
     /**
@@ -84,10 +86,7 @@ public final class WorkbenchMountTable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkbenchMountTable.class);
 
-    private static final String PLUGIN_ID = FrameworkUtil.getBundle(WorkbenchMountTable.class).getSymbolicName();
-
     private static final List<MountPointListener> CHANGE_LISTENER = new CopyOnWriteArrayList<>();
-
 
     // TODO move somewhere else
     /**
@@ -101,6 +100,7 @@ public final class WorkbenchMountTable {
      * must only contain a-z, A-Z, 0-9 and '.' or '-'. They must not start with
      * a number, dot or a hyphen and must not end with a dot or hyphen.
      */
+    @SuppressWarnings("java:S5867") // Unicode character classes are explicitly not wanted here
     private static final Pattern MOUNTID_PATTERN = Pattern.compile("^[a-zA-Z](?:[.a-zA-Z0-9-]*[a-zA-Z0-9])?$");
 
     private WorkbenchMountTable() {
@@ -116,7 +116,7 @@ public final class WorkbenchMountTable {
     /**
      * Adds a listener for mount point changes.
      *
-     * @param listener ...
+     * @param listener listener to add
      */
     public static void addListener(final MountPointListener listener) {
         CHANGE_LISTENER.add(listener); // NOSONAR (no performance hotspot)
@@ -125,7 +125,7 @@ public final class WorkbenchMountTable {
     /**
      * Removes the given listener.
      *
-     * @param listener ...
+     * @param listener listener to remove
      */
     public static void removeListener(final MountPointListener listener) {
         CHANGE_LISTENER.remove(listener); // NOSONAR (no performance hotspot)
@@ -140,23 +140,6 @@ public final class WorkbenchMountTable {
     }
 
     /**
-     * Creates a new instance of the specified content provider. May open a user
-     * dialog to get parameters needed by the provider factory. Returns null, if
-     * the user canceled.
-     *
-     * @param mountID name under which the content is mounted
-     * @param providerID the provider factory id
-     * @return a new content provider instance - or null if user canceled.
-     * @throws WorkbenchMountException if the mounting fails
-     */
-//    public static WorkbenchMountPoint mount(final String mountID, final String providerID) throws WorkbenchMountException {
-//        WorkbenchMountPointType definition =
-//            WorkbenchActivator.getInstance().getMountPointDefinition(providerID)
-//                .orElseThrow(() -> new WorkbenchMountException("No mount point definition found for " + providerID));
-//        return mountOrRestore(mountID, definition, WorkbenchMountPointStateFactory.EMPTY_STORAGE);
-//    }
-
-    /**
      * Valid mount IDs must comply with the hostname restrictions. That is, they
      * must only contain a-z, A-Z, 0-9 and '.' or '-'. They must not start with
      * a number, dot or a hyphen and must not end with a dot or hyphen.
@@ -165,16 +148,16 @@ public final class WorkbenchMountTable {
      * @return true if the id is valid (in terms of contained characters)
      *         independent of it may already be in use.
      */
+    @SuppressWarnings("java:S1166") // the exception is expected control flow
     public static boolean isValidMountID(final String id) {
-        if (id == null || id.isEmpty()) {
+        if (id == null || id.isEmpty() || id.startsWith("knime.") || !MOUNTID_PATTERN.matcher(id).find()) {
             return false;
         }
-        if (id.startsWith("knime.") || !MOUNTID_PATTERN.matcher(id).find()) {
-            return false;
-        }
+
         try {
             // this is the way we build URIs to reference server items - this must not choke.
-            new URI(SCHEME, id, "/test/path", null);
+            @SuppressWarnings("unused")
+            final var ignored = new URI(SCHEME, id, "/test/path", null);
             return true;
         } catch (URISyntaxException e) {
             return false;
@@ -243,13 +226,11 @@ public final class WorkbenchMountTable {
     }
 
     /**
-     * Creates a new instance of the specified content provider.
+     * Creates a mount point from the given settings.
      *
-     * @param mountID name under which the content is mounted
-     * @param providerID the provider factory id
-     * @param storage the stored data of the content provider
-     * @return a new content provider instance - or null if user canceled.
-     * @throws IOException if the mounting fails
+     * @param mountSettings mount settings
+     * @return created mount point
+     * @throws WorkbenchMountException if the mount point couldn't be created
      */
     public static WorkbenchMountPoint mount(final MountSettings mountSettings) throws WorkbenchMountException {
         final String factoryID = mountSettings.getFactoryID();
@@ -333,6 +314,9 @@ public final class WorkbenchMountTable {
         }
     }
 
+    /**
+     * @return all mount point types for which mount points can be added
+     */
     public static List<WorkbenchMountPointType> getAddableMountPointDefinitions() {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
@@ -341,6 +325,12 @@ public final class WorkbenchMountTable {
         }
     }
 
+    /**
+     * Checks whether a mount point of the type with the given ID can be added
+     *
+     * @param factoryID factory ID of the mount point type to be checked
+     * @return {@code true} if such a mount point can be added, {@code false} otherwise
+     */
     public static boolean isMountable(final String factoryID) {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
@@ -406,45 +396,45 @@ public final class WorkbenchMountTable {
     }
 
     /**
-     * Initializes the explorer mount table based on the preferences of the
-     * plugin's preference store.
+     * Initializes the explorer mount table based on the preferences of the plugin's preference store.
      */
     public static void init() {
         unmountAll();
         mountTempSpace();
         synchronized (MOUNTED) {
-            for (MountSettings ms : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
-                if (!ms.isActive()) {
+            for (MountSettings settings : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
+                if (!settings.isActive()) {
                     continue;
                 }
-                String mountID = ms.getMountID();
-                final String factID = ms.getFactoryID();
-
-                WorkbenchMountPointType definition =
-                        WorkbenchActivator.getInstance().getMountPointType(factID).orElse(null);
-                if (definition == null) {
-                    LOGGER.error("Unknown mount type \"{}\" stored, can't restore mount point \"{}\".", factID,
-                        mountID);
-                    continue;
-                }
-
-                try {
-                    if (mountOrRestore(definition, ms) == null) {
-                        LOGGER.error("Unable to restore mount point '{}' (from {}: returned null).", mountID, factID);
-                    }
-                } catch (Throwable t) {
-                    String msg = t.getMessage();
-                    if (msg == null || msg.isEmpty()) {
-                        msg = "<no details>";
-                    }
-                    LOGGER.atError().setCause(t).log("Unable to restore mount point '{}' (from {}): {}", mountID,
-                        factID, msg);
+                final WorkbenchMountPointType type =
+                        WorkbenchActivator.getInstance().getMountPointType(settings.getFactoryID()).orElse(null);
+                if (type != null) {
+                    tryToRestore(type, settings);
+                } else {
+                    LOGGER.error("Unknown mount type \"{}\" stored, can't restore mount point \"{}\".",
+                        settings.getFactoryID(), settings.getMountID());
                 }
             }
         }
     }
 
-    /* Mounts all hidden spaces that provide a default mount id. */
+    @SuppressWarnings("java:S1181") // we run code from unknown sources, so we have to catch all `Error`s
+    private static void tryToRestore(final WorkbenchMountPointType type, final MountSettings settings) {
+        try {
+            if (mountOrRestore(type, settings) == null) {
+                LOGGER.error("Unable to restore mount point '{}' (from {}: returned null).", settings.getMountID(),
+                    settings.getFactoryID());
+            }
+        } catch (Throwable t) {
+            if (t instanceof OutOfMemoryError oome) {
+                throw oome;
+            }
+            LOGGER.atError().setCause(t).log("Unable to restore mount point '{}' (from {}): {}", settings.getMountID(),
+                settings.getFactoryID(), StringUtils.defaultIfEmpty(t.getMessage(), "<no details>"));
+        }
+    }
+
+    /** Mounts all hidden spaces that provide a default mount id. */
     private static void mountTempSpace() {
         final var tempDefOptional =
                 WorkbenchActivator.getInstance().getMountPointType(WorkbenchConstants.TYPE_IDENTIFIER_TEMP_SPACE);
