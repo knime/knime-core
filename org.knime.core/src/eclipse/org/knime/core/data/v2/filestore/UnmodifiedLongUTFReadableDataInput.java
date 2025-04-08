@@ -72,13 +72,10 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
 
     private final ReadableDataInput m_input;
 
-    private final StringEncoder m_encoder;
-
     private final ByteOrder m_byteOrder;
 
     public UnmodifiedLongUTFReadableDataInput(final ReadableDataInput input, final ByteOrder order) {
         m_input = input;
-        m_encoder = new StringEncoder();
         m_byteOrder = order;
     }
 
@@ -180,7 +177,7 @@ public final class UnmodifiedLongUTFReadableDataInput implements ReadableDataInp
         }
         var bytes = new byte[(int)length];
         m_input.readFully(bytes);
-        return m_encoder.decode(bytes);
+        return StringEncoder.decode(bytes);
     }
 
     @Override
