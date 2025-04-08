@@ -61,6 +61,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
@@ -253,6 +254,13 @@ public final class MountSettings {
 //    public String getContent() {
 //        return m_content.storageString();
 //    }
+
+    /**
+     * @return
+     */
+    public WorkbenchMountPointType getWorkbenchMountPointTypeOrFail() {
+        return WorkbenchActivator.getInstance().getMountPointTypeOrFail(getFactoryID());
+    }
 
     /**
      * @return the active

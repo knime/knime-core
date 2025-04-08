@@ -48,7 +48,9 @@
  */
 package org.knime.core.workbench.mountpoint.contribution.local;
 
+import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 
 /**
  * State for local workspace.
@@ -60,8 +62,17 @@ public enum LocalWorkspaceMountPointState implements WorkbenchMountPointState {
     /** Static singleton. */
     INSTANCE;
 
+    /** The type of this mount point. */
+    private static final WorkbenchMountPointType TYPE =
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail(LocalWorkspaceMountPointStateFactory.ID);
+
     @Override
     public String getDisplayName() {
         return "LOCAL";
+    }
+
+    @Override
+    public WorkbenchMountPointType getType() {
+        return TYPE;
     }
 }

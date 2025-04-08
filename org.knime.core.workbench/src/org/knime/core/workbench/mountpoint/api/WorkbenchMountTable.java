@@ -270,32 +270,32 @@ public final class WorkbenchMountTable {
      * @param active
      * @return
      */
-    private static WorkbenchMountPoint mountOrRestore(final WorkbenchMountPointType definition,
+    private static WorkbenchMountPoint mountOrRestore(final WorkbenchMountPointType type,
         final MountSettings settings) throws WorkbenchMountException {
         final String mountID = settings.getMountID();
         checkMountID(mountID);
         WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
             // can't mount different providers with the same ID
-            WorkbenchMountPoint existMp = MOUNTED.get(mountID);
-            if (existMp != null) {
-                final WorkbenchMountPointType type = existMp.getType();
-                if (Objects.equals(type, definition)) {
+            WorkbenchMountPoint existingMountPoint = MOUNTED.get(mountID);
+            if (existingMountPoint != null) {
+                final WorkbenchMountPointType existingMountPointType = existingMountPoint.getType();
+                if (Objects.equals(existingMountPointType, type)) {
                     LOGGER.debug("The mount point definition with the specified type ({}) is already mounted with "
-                            + "requested ID ({}).", definition.getTypeIdentifier(), mountID);
-                    return existMp;
+                            + "requested ID ({}).", type.getTypeIdentifier(), mountID);
+                    return existingMountPoint;
                 }
                 throw new WorkbenchMountException(String.format("There is a different content mounted with the "
                     + "same mountID \"%s\" but different type: \"%s\" vs \"%s\"",
-                    mountID, definition.getTypeIdentifier(), type.getTypeIdentifier()));
+                    mountID, type.getTypeIdentifier(), existingMountPointType.getTypeIdentifier()));
             }
 
-            if (!definition.supportsMultipleInstances() && isMounted(definition.getTypeIdentifier())) {
+            if (!type.supportsMultipleInstances() && isMounted(type.getTypeIdentifier())) {
                 throw new WorkbenchMountException(
-                    String.format("Cannot mount %s multiple times.", definition.getTypeIdentifier()));
+                    String.format("Cannot mount %s multiple times.", type.getTypeIdentifier()));
             }
 
-            mp = definition.createMountPoint(settings);
+            mp = type.createMountPoint(settings);
             MOUNTED.put(mountID, mp);
         }
         notifyMountPointAdded(new MountPointEvent(mp));

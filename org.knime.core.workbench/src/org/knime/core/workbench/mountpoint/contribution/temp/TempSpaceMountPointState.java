@@ -23,7 +23,9 @@ import java.io.IOException;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.User;
+import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 
 /**
  * Settings for the temp space mount point, moved content out of old (explorer-based) TempSpaceContentProvider.
@@ -31,6 +33,11 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 public final class TempSpaceMountPointState implements WorkbenchMountPointState {
+
+    /** The type of this mount point. */
+    public static final WorkbenchMountPointType TYPE =
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail(TempSpaceMountPointStateFactory.ID);
+
 
     /**
      * Supplier for temporary directories, obeying KNIME's customizable TEMP directory location.
@@ -74,5 +81,10 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
     public String getDisplayName() {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    @Override
+    public WorkbenchMountPointType getType() {
+        return TYPE;
     }
 }

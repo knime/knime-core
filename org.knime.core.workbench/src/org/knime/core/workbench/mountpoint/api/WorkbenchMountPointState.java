@@ -55,4 +55,6 @@ package org.knime.core.workbench.mountpoint.api;
 public interface WorkbenchMountPointState {
 
     String getDisplayName();
+
+    WorkbenchMountPointType getType();
 }
