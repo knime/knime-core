@@ -47,19 +47,27 @@
  */
 package org.knime.core.util;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 
-/** Unsynchronized last recently used cache.
+/**
+ * Unsynchronized last recently used cache.
  *
  * @see LinkedHashMap#LinkedHashMap(int, float, boolean)
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  * @since 2.6
+ * @param <K> key type
+ * @param <V> value type
  */
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
     private final int m_maxHistory;
+
+    private final Set<BiConsumer<K, V>> m_onRemoveListeners = new HashSet<>();
 
     /**
      * @param initialCapacity the initial capacity of the cache
@@ -72,7 +80,6 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
             throw new IllegalArgumentException("max history must be larger 0: " + maxHistory);
         }
         m_maxHistory = maxHistory;
-
     }
 
     /**
@@ -82,10 +89,25 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
         this(16, maxHistory);
     }
 
+    /**
+     * Add a listener to be invoked when an entry is removed from the cache. This includes automatic eviction of the
+     * least recently used entry.
+     * 
+     * @param listener The listener to add.
+     * @since 5.5
+     */
+    public void addOnRemoveListener(final BiConsumer<K, V> listener) {
+        m_onRemoveListeners.add(listener);
+    }
+
     /** {@inheritDoc} */
     @Override
     protected boolean removeEldestEntry(final Map.Entry<K, V> e) {
-        return size() > m_maxHistory;
+        var shouldRemove = size() > m_maxHistory;
+        if (shouldRemove) {
+            m_onRemoveListeners.forEach(l -> l.accept(e.getKey(), e.getValue()));
+        }
+        return shouldRemove;
     }
 
 }
