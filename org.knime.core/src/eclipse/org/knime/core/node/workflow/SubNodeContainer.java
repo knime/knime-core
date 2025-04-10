@@ -71,6 +71,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -2711,73 +2712,64 @@ public final class SubNodeContainer extends SingleNodeContainer
         return inNNC != null && inNNC.isInactive();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     boolean setInactive() {
+        final Runnable inBackgroundCallable = this::executeAndWaitInactive;
+        final ThreadPool currentPool = ThreadPool.currentPool();
+        if (currentPool != null) {
+            // ordinary workflow execution
+            try {
+                currentPool.runInvisible(Executors.callable(inBackgroundCallable, null));
+            } catch (ExecutionException ee) {
+                LOGGER.error(ee.getCause().getClass().getSimpleName()
+                        + " while waiting for inner workflow to complete", ee);
+            } catch (final InterruptedException e) { // NOSONAR interrupted handled by workflow cancellation
+                m_wfm.cancelExecution();
+            }
+        } else {
+            // streaming execution
+            inBackgroundCallable.run();
+        }
+        // might not be executed (even when inactive) if there are unconnected nodes
+        return m_wfm.getInternalState().isExecuted();
+    }
+
+    /** Called by {@link #setInactive()} to run all nodes in the contained workflow. */
+    private void executeAndWaitInactive() {
         //collect all inner error node messages to set them again later after reset
         Map<NodeID, NodeMessage> innerNodeMessages = m_wfm.getNodeContainers().stream()
-            .filter(nc -> nc.getNodeMessage().getMessageType() == NodeMessage.Type.ERROR)
-            .collect(Collectors.toMap(nc -> nc.getID(), nc -> nc.getNodeMessage()));
+                .filter(nc -> nc.getNodeMessage().getMessageType() == NodeMessage.Type.ERROR)
+                .collect(Collectors.toMap(nc -> nc.getID(), nc -> nc.getNodeMessage()));
         m_isPerformingActionCalledFromParent = true;
         try (WorkflowLock lock = m_wfm.lock()) {
             m_subnodeScopeContext.inactiveScope(true);
             m_wfm.cancelExecution();
             //'execute' inner workflow manager locally to propagate inactive port states
-            {
-                // temporarily apply standard job manager
-                NodeExecutionJobManager jobManager = m_wfm.getJobManager();
-                m_wfm.setJobManager(ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance());
-                m_wfm.resetAndConfigureAll();
 
-                executeWorkflowAndWait(m_wfm);
+            // temporarily apply standard job manager
+            NodeExecutionJobManager jobManager = m_wfm.getJobManager();
+            m_wfm.setJobManager(ThreadNodeExecutionJobManagerFactory.INSTANCE.getInstance());
+            m_wfm.resetAndConfigureAll();
 
-                if (!m_wfm.getInternalState().isExecuted()) {
-                    cancelExecution();
-                    m_wfm.resetAndConfigureAll();
-                }
-                setVirtualOutputIntoOutport(m_wfm.getInternalState());
-                // restore job manager
-                m_wfm.setJobManager(jobManager);
+            try {
+                m_wfm.executeAllAndWaitUntilDoneInterruptibly();
+            } catch (InterruptedException e) { // NOSONAR interrupted handled by workflow cancellation
+                m_wfm.cancelExecution();
             }
+
+            if (!m_wfm.getInternalState().isExecuted()) {
+                cancelExecution();
+                m_wfm.resetAndConfigureAll();
+            }
+            setVirtualOutputIntoOutport(m_wfm.getInternalState());
+            // restore job manager
+            m_wfm.setJobManager(jobManager);
+
             //set inner node error messages
             innerNodeMessages.entrySet().stream()
                 .forEach(e -> m_wfm.getNodeContainer(e.getKey()).setNodeMessage(e.getValue()));
-            // might not be executed (even when inactive) if there are unconnected nodes
-            return m_wfm.getInternalState().isExecuted();
         } finally {
             m_isPerformingActionCalledFromParent = false;
-       }
-    }
-
-    @SuppressWarnings("java:S2142") // interrupts are handled via WFM#cancelExecution
-    /** Called by {@link #setInactive()} to run all nodes in the contained workflow. */
-    private static void executeWorkflowAndWait(final WorkflowManager wfm) {
-        Runnable inBackgroundRunner = () -> {
-            try {
-                wfm.executeAllAndWaitUntilDoneInterruptibly();
-            } catch (InterruptedException e) {
-                wfm.cancelExecution();
-            }
-        };
-        ThreadPool currentPool = ThreadPool.currentPool();
-        if (currentPool != null) {
-            // ordinary workflow execution
-            try {
-                currentPool.runInvisible(() -> {
-                    inBackgroundRunner.run();
-                    return null;
-                });
-            } catch (ExecutionException ee) {
-                LOGGER.error(ee.getCause().getClass().getSimpleName()
-                		+ " while waiting for inner workflow to complete", ee);
-            } catch (final InterruptedException e) {
-                wfm.cancelExecution();
-            }
-        } else {
-            // streaming execution
-            inBackgroundRunner.run();
         }
     }
 
