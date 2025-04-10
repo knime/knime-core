@@ -317,7 +317,8 @@ public class ThreadPool {
         m_maxThreads.set(maxThreads);
         m_parent = null;
         m_queuedFutures = new LinkedList<MyFuture<?>>();
-        m_availableWorkers = new ConcurrentLinkedQueue<Worker>();
+        m_availableWorkers = new ConcurrentLinkedQueue<>();
+        ThreadUtils.cleaner().register(this, new FinalizeRunnable(m_availableWorkers)); // NOSONAR (no fully init'ed)
     }
 
     /**
@@ -825,20 +826,27 @@ public class ThreadPool {
     }
 
     /**
-     * {@inheritDoc}
+     * Cleans up the pool. This method is called when the pool is collected by the GC (ported from a former
+     * {@link #finalize()} method.)
      */
-    @Override
-    protected void finalize() throws Throwable {
-        if (m_availableWorkers != null) {
+    private static class FinalizeRunnable implements Runnable {
+
+        private final Queue<Worker> m_availableWorkersInFinalize;
+
+        FinalizeRunnable(final Queue<Worker> availableWorkersInFinalize) {
+            m_availableWorkersInFinalize = availableWorkersInFinalize;
+        }
+
+        @Override
+        public void run() {
             while (true) {
-                Worker w = m_availableWorkers.poll();
+                Worker w = m_availableWorkersInFinalize.poll();
                 if (w == null) {
                     break;
                 }
                 w.interrupt();
             }
         }
-        super.finalize();
     }
 
     /**
