@@ -52,7 +52,11 @@ import static org.junit.Assert.assertThat;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.osgi.internal.framework.ContextFinder;
 import org.hamcrest.core.Is;
@@ -214,6 +218,102 @@ public class ThreadPoolTest extends TestCase {
         root.waitForTermination();
         assertEquals(0, m_running.get());
         assertEquals(loops, m_finished.get());
+    }
+
+    /**
+     * Tests that the invisible method blocks at the end to reacquire a free slot.
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws TimeoutException
+     */
+    public void testInvisibleBlocks() throws InterruptedException, ExecutionException, TimeoutException {
+        final var poolSize = 2;
+        final var pool = new ThreadPool(poolSize);
+
+        // three tasks for two workers, all blocking at their condition
+        final var task1 = submitTask(pool, false);
+        final var task2 = submitTask(pool, true);
+        final var task3 = submitTask(pool, false);
+        Thread.sleep(100);
+        assertEquals("Unexpected number of running workers", poolSize, pool.getRunningThreads());
+        assertEquals("Expected task 3 to be queued", 1, pool.getQueueSize());
+        // task 2 gets invisible, blocking on next condition
+        try {
+            task2.lock.lock();
+            task2.conditions[0].signal();
+        } finally {
+            task2.lock.unlock();
+        }
+        Thread.sleep(100);
+        // third task gets scheduled on additional worker
+        assertEquals("Unexpected number of running workers", poolSize, pool.getRunningThreads());
+        assertEquals("Expected no task to be queued", 0, pool.getQueueSize());
+        // invisible task finishes and wants to re-acquire slot
+        try {
+            task2.lock.lock();
+            task2.conditions[1].signal();
+        } finally {
+            task2.lock.unlock();
+        }
+        Thread.sleep(100);
+        assertFalse("Expected task 2 to not be finished", task2.task.isDone() || task2.task.isCancelled());
+        // worker with task 1 or 3 finishes and releases slot
+        try {
+            task1.lock.lock();
+            task1.conditions[0].signal();
+        } finally {
+            task1.lock.unlock();
+        }
+        // invisible task can reacquire slot and finish (return value)
+        assertTrue("Expected task2 to finish", task2.task.get(2, TimeUnit.SECONDS));
+        try {
+            task3.lock.lock();
+            task3.conditions[0].signal();
+        } finally {
+            task3.lock.unlock();
+        }
+
+        task1.task.cancel(true);
+        task3.task.cancel(true);
+
+        pool.waitForTermination();
+        pool.shutdown();
+    }
+
+    private record Task(Future<Boolean> task, ReentrantLock lock, Condition[] conditions) {}
+
+    /**
+     * Submits a task to the pool that blocks on the returned conditions in order, the second one being in an invisible
+     * portion.
+     *
+     * @param pool pool to submit to
+     * @return condition where the task blocks
+     * @throws InterruptedException
+     */
+    private static Task submitTask(final ThreadPool pool, final boolean invisible) throws InterruptedException {
+        final var lock = new ReentrantLock();
+        final var taskProceed = lock.newCondition();
+        final var taskInvis = lock.newCondition();
+        final var task = new Callable<Boolean> () {
+            @Override
+            public Boolean call() throws Exception {
+                lock.lock();
+                try {
+                    taskProceed.await();
+                    if (invisible) {
+                        pool.runInvisible(() -> {
+                            taskInvis.await();
+                            return true;
+                        });
+                    }
+                } finally {
+                    lock.unlock();
+                }
+                return true;
+            }
+        };
+        final var result = pool.enqueue(task);
+        return new Task(result, lock, invisible ? new Condition[]{taskProceed, taskInvis} : new Condition[]{taskProceed});
     }
 
     /**
