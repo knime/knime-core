@@ -47,10 +47,8 @@
  */
 package org.knime.core.util;
 
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 
 /**
@@ -67,7 +65,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
     private final int m_maxHistory;
 
-    private final Set<BiConsumer<K, V>> m_onRemoveListeners = new HashSet<>();
+    private transient BiConsumer<K, V> m_onRemoveListener;
 
     /**
      * @param initialCapacity the initial capacity of the cache
@@ -83,29 +81,31 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     }
 
     /**
+     * -
+     * 
+     * @param maxHistory maximum size of the cache before older elements are evicted on insertion of newer elements
+     * @param onRemoveListener a listener to be invoked when an entry is removed from the cache. This includes automatic
+     *            eviction of the least recently used entry.
+     * @since 5.5
+     */
+    public LRUCache(final int maxHistory, final BiConsumer<K, V> onRemoveListener) {
+        this(16, maxHistory);
+        m_onRemoveListener = onRemoveListener;
+    }
+
+    /**
      * @param maxHistory cache size
      */
     public LRUCache(final int maxHistory) {
         this(16, maxHistory);
     }
 
-    /**
-     * Add a listener to be invoked when an entry is removed from the cache. This includes automatic eviction of the
-     * least recently used entry.
-     * 
-     * @param listener The listener to add.
-     * @since 5.5
-     */
-    public void addOnRemoveListener(final BiConsumer<K, V> listener) {
-        m_onRemoveListeners.add(listener);
-    }
-
     /** {@inheritDoc} */
     @Override
     protected boolean removeEldestEntry(final Map.Entry<K, V> e) {
         var shouldRemove = size() > m_maxHistory;
-        if (shouldRemove) {
-            m_onRemoveListeners.forEach(l -> l.accept(e.getKey(), e.getValue()));
+        if (shouldRemove && m_onRemoveListener != null) {
+            m_onRemoveListener.accept(e.getKey(), e.getValue());
         }
         return shouldRemove;
     }
