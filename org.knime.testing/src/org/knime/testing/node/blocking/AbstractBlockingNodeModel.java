@@ -64,6 +64,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.Pointer;
+import org.knime.core.util.ThreadPool;
 import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
 
 /**
@@ -92,16 +93,18 @@ public abstract class AbstractBlockingNodeModel extends NodeModel {
             m_execContextPointer.notifyAll();
         }
         Lock lock = getLock(LockedMethod.EXECUTE).orElseGet(ReentrantLock::new);
-        lock.lockInterruptibly();
-        try {
-            return new PortObject[]{executeImplementation(inData[0])};
-        } finally {
-            synchronized (m_execContextPointer) {
-                m_execContextPointer.set(null);
-                m_execContextPointer.notifyAll();
+        return ThreadPool.currentPool().runInvisible(() -> { // NOSONAR (block slightly too long)
+            lock.lockInterruptibly();
+            try {
+                return new PortObject[]{executeImplementation(inData[0])};
+            } finally {
+                synchronized (m_execContextPointer) {
+                    m_execContextPointer.set(null);
+                    m_execContextPointer.notifyAll();
+                }
+                lock.unlock();
             }
-            lock.unlock();
-        }
+        });
     }
 
     /**

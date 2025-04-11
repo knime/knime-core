@@ -60,6 +60,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -71,6 +72,8 @@ import org.knime.testing.node.blocking.BlockingRepository.LockedMethod;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
+@DisabledIf(disabledReason = "test disabled since thread pool has fewer than 3 threads", 
+    value = "isThreadPoolSizeLessThan3")
 public class BugAP10548_ConcurrentLoadSaveInWFM extends WorkflowTestCase {
 
     private static final String LOCK_INSTANCE_1 = "AP-10548-instance1";
@@ -90,6 +93,10 @@ public class BugAP10548_ConcurrentLoadSaveInWFM extends WorkflowTestCase {
         BlockingRepository.put(LOCK_INSTANCE_3, LockedMethod.CONFIGURE, new ReentrantLock());
         BlockingRepository.put(LOCK_INSTANCE_2, LockedMethod.SAVE_INTERNALS, new ReentrantLock());
     }
+    
+    public static boolean isThreadPoolSizeLessThan3() {
+        return KNIMEConstants.GLOBAL_THREAD_POOL.getMaxThreads() < 3;
+    }
 
     @Test
     public void testLoadAllConcurrently() throws Exception {
@@ -107,17 +114,17 @@ public class BugAP10548_ConcurrentLoadSaveInWFM extends WorkflowTestCase {
         Future<WorkflowLoadResult> instance3Future;
         try {
             // this may yield thread exhaustion -- if it does the testing environment needs to be changed
-            instance1Future = KNIMEConstants.GLOBAL_THREAD_POOL.submit(() -> {
+            instance1Future = KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(() -> {
                 WorkflowLoadResult res = loadWorkflow(getWorkflowDirFor(1), new ExecutionMonitor());
                 m_instance1WFM = res.getWorkflowManager();
                 return res;
             });
-            instance2Future = KNIMEConstants.GLOBAL_THREAD_POOL.submit(() -> {
+            instance2Future = KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(() -> {
                 WorkflowLoadResult res = loadWorkflow(getWorkflowDirFor(2), new ExecutionMonitor());
                 m_instance2WFM = res.getWorkflowManager();
                 return res;
             });
-            instance3Future = KNIMEConstants.GLOBAL_THREAD_POOL.submit(() -> {
+            instance3Future = KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(() -> {
                 WorkflowLoadResult res = loadWorkflow(getWorkflowDirFor(3), new ExecutionMonitor());
                 m_instance3WFM = res.getWorkflowManager();
                 return res;

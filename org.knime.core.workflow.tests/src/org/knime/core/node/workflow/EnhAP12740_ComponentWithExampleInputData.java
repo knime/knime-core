@@ -76,6 +76,9 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
 
 	@TempDir
     private File m_workflowDir;
+	
+	@TempDir
+	private File m_componentDir;
 
     private NodeID m_component_10;
 
@@ -109,14 +112,14 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
     @Test
     public void testSaveAndOpenComponent() throws Exception {
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
-        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        getManager().executePredecessorsAndWait(component.getID());
 
         /* extract and open with example input data */
         PortObject[] inputData = component.fetchInputDataFromParent();
-        component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
+        component.saveAsTemplate(m_componentDir, new ExecutionMonitor(), inputData);
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
-                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
-        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+                WorkflowContextV2.forTemporaryWorkflow(m_componentDir.toPath(), null));
+        MetaNodeLinkUpdateResult loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 8); //nodes are expected to change state their from IDLE to CONFIGURED on load
         final SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
         WorkflowManager wfm = componentProject.getWorkflowManager();
@@ -129,8 +132,8 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
                 is(InternalNodeContainerState.EXECUTED)));
 
         /* save and open without example input data */
-        component.saveAsTemplate(componentDir, new ExecutionMonitor());
-        loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+        component.saveAsTemplate(m_componentDir, new ExecutionMonitor());
+        loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
         assertComponentLoadingResult(loadResult, 0); //no state changes expected since no example data available
         final SubNodeContainer componentProject2 = (SubNodeContainer)loadResult.getLoadedInstance();
         NativeNodeContainer componentInput = componentProject2.getVirtualInNode();
@@ -150,15 +153,16 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
     public void testSaveAsAndOpenComponent() throws Exception {
         /* save a component */
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
-        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        getManager().executePredecessorsAndWait(component.getID());
+
         PortObject[] inputData = component.fetchInputDataFromParent();
-        component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
+        component.saveAsTemplate(m_componentDir, new ExecutionMonitor(), inputData);
 
         /* load and save a component project with data to another location, re-load and execute */
         //first load
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
-                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
-        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+                WorkflowContextV2.forTemporaryWorkflow(m_componentDir.toPath(), null));
+        MetaNodeLinkUpdateResult loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
         //save as
@@ -187,14 +191,15 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
      */
     @Test
     public void testChangesTrackerForComponentProject() throws Exception {
-        /* save a component and load a copmonent project */
+        /* save a component and load a component project */
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
-        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
+        getManager().executePredecessorsAndWait(component.getID());
+
         PortObject[] inputData = component.fetchInputDataFromParent();
-        component.saveAsTemplate(componentDir, new ExecutionMonitor(), inputData);
+        component.saveAsTemplate(m_componentDir, new ExecutionMonitor(), inputData);
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
-                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
-        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+                WorkflowContextV2.forTemporaryWorkflow(m_componentDir.toPath(), null));
+        MetaNodeLinkUpdateResult loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
         /* the actual tests */
@@ -213,17 +218,17 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //save
-        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //should reset the changes tracker
+        componentProject.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null); //should reset the changes tracker
         assertFalse(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "no node state changes expected");
 
         //reset all
-        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        componentProject.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.resetAndConfigureAll();
         assertFalse(componentProject.getTrackedChanges().get().hasOtherChanges(), "no other changes expected");
 
         NodeID stringManipulation_9 = new NodeID(wfm.getID(), 9);
         //change node settings
-        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        componentProject.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null); //reset changes tracker
         NodeSettings settings = new NodeSettings("settings");
         wfm.getNodeContainer(stringManipulation_9).saveSettings(settings);
         wfm.loadNodeSettings(stringManipulation_9, settings);
@@ -231,14 +236,14 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
         assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //delete connection
-        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        componentProject.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.removeConnection(wfm.getConnection(new ConnectionID(stringManipulation_9, 1)));
         assertTrue(componentProject.getTrackedChanges().get().hasOtherChanges(), "other changes expected");
         //node state changes expected to IDLE
         assertTrue(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "node state changes expected");
 
         //delete node
-        componentProject.saveAsTemplate(componentDir, new ExecutionMonitor(), null); //reset changes tracker
+        componentProject.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null); //reset changes tracker
         wfm.removeNode(stringManipulation_9);
         assertTrue(componentProject.getTrackedChanges().get().hasOtherChanges(), "other changes expected");
         assertFalse(componentProject.getTrackedChanges().get().hasNodeStateChanges(), "no node state changes expected");
@@ -253,11 +258,10 @@ public class EnhAP12740_ComponentWithExampleInputData extends WorkflowTestCase {
     public void testActionsOnComponentProjectWorkflow() throws Exception {
         // save and open component project
         SubNodeContainer component = (SubNodeContainer)getManager().getNodeContainer(m_component_10);
-        File componentDir = FileUtil.createTempDir(getClass().getSimpleName());
-        component.saveAsTemplate(componentDir, new ExecutionMonitor(), null);
+        component.saveAsTemplate(m_componentDir, new ExecutionMonitor(), null);
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true, true,
-                WorkflowContextV2.forTemporaryWorkflow(componentDir.toPath(), null));
-        MetaNodeLinkUpdateResult loadResult = loadComponent(componentDir, new ExecutionMonitor(), loadHelper);
+                WorkflowContextV2.forTemporaryWorkflow(m_componentDir.toPath(), null));
+        MetaNodeLinkUpdateResult loadResult = loadComponent(m_componentDir, new ExecutionMonitor(), loadHelper);
         SubNodeContainer componentProject = (SubNodeContainer)loadResult.getLoadedInstance();
 
         // bug NXT-355: NPE when calling wfm.canCancelAll()

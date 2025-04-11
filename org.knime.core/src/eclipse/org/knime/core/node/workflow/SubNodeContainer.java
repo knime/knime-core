@@ -2693,7 +2693,7 @@ public final class SubNodeContainer extends SingleNodeContainer
 
     @Override
     boolean setInactive() {
-        LOGGER.assertLog(!m_wfm.isLockedByCurrentThread(), "Must not executed inactively while locked");
+        LOGGER.assertLog(!m_wfm.isLockedByCurrentThread(), "Must not be executed inactively while locked");
         final Runnable inBackgroundCallable = this::executeAndWaitInactively;
         final ThreadPool currentPool = ThreadPool.currentPool();
         if (currentPool != null) {
