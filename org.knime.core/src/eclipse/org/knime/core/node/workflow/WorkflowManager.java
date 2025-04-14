@@ -1016,7 +1016,8 @@ public final class WorkflowManager extends NodeContainer
      *            same original type
      * @param transferNodeSettingsAndLabel whether to transfer the (matching) node settings and node label (aka node
      *            annotation) from one node to the other
-     * @param portMapping two maps identifying how port indices change
+     * @param portMapping two maps identifying how port indices change. If {@code null}, ports will be matched based on
+     *            order, see implementation.
      * @return a result that contains all information necessary to undo the operation
      * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
      *             node-creation-config is provided)

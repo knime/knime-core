@@ -253,7 +253,9 @@ public final class ReplaceNodeResult {
          * @return the modified mapping
          */
         PortMapping reAddIndex(final int indexToAdd) {
-            m_map.put(indexToAdd, indexToAdd);
+            // any connection pointing to port p on the replaced node should point to port p+1 on the replacing node
+            //  (on which port p is now the re-added port)
+            m_map.put(indexToAdd, indexToAdd + 1);
             IntStream.range(indexToAdd + 1, m_map.size()).forEach(i -> m_map.put(i, i + 1));
             return this;
         }
