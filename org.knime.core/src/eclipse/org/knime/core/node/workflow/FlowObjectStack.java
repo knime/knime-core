@@ -729,13 +729,15 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
             flowObjectsOwnedByThis = Collections.emptyList();
             variablesForRemovalSet = Collections.emptySet();
         } else {
-            flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(ownerID, Scope.Local, Scope.Hide);
-            variablesForRemovalSet = outgoingStack.m_stack.stream() //
-                    .filter(fv -> fv instanceof FlowVariable f && f.getScope() == Scope.Hide) //
-                    .map(FlowVariable.class::cast)
-                    .filter(fv -> fv.getVariableType().equals(VariableType.StringType.INSTANCE)) //
-                    .map(FlowVariable::getValueAsString) //
-                    .collect(Collectors.toSet());
+            synchronized (outgoingStack.m_stack) {
+                flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(ownerID, Scope.Local, Scope.Hide);
+                variablesForRemovalSet = outgoingStack.m_stack.stream() //
+                        .filter(fv -> fv instanceof FlowVariable f && f.getScope() == Scope.Hide) //
+                        .map(FlowVariable.class::cast)
+                        .filter(fv -> fv.getVariableType().equals(VariableType.StringType.INSTANCE)) //
+                        .map(FlowVariable::getValueAsString) //
+                        .collect(Collectors.toSet());
+            }
         }
         final FlowObjectStack finalStack = new FlowObjectStack(ownerID, st);
         if (isPopToTopmostScopeContext) {
