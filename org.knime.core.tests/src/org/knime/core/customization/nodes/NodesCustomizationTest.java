@@ -61,7 +61,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
- * Tests for {@link UICustomization}.
+ * Tests for {@link NodesCustomization}.
  */
 public class NodesCustomizationTest {
 

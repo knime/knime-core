@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.customization.kai.KAICustomization;
+import org.knime.core.customization.mountpoint.MountPointCustomization;
 import org.knime.core.customization.nodes.NodesCustomization;
 import org.knime.core.customization.ui.UICustomization;
 import org.knime.core.customization.workflow.WorkflowCustomization;
@@ -65,7 +66,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Represents the customization settings for the KNIME AP, currently only determining which nodes are allowed for use
  * and listing in the node repository.
  *
- * Instances of this class are not created directly, only restored from yaml that looks similar to this:
+ * Instances of this class are not created directly, only restored from YAML that looks similar to this:
  *
  * <pre>
  * version: 'customization-v1.0'
@@ -86,6 +87,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *   disablePasswordSaving: true
  * kai:
  *   suggestExtensions: true
+ * mountpoint:
+ *   filter:
+ *     - rule: allow
+ *       predicate:
+ *         type: pattern
+ *         patterns:
+ *           - .+\\.hub\\.knime\\.com
+ *         isRegex: true
  * </pre>
  *
  * @since 5.3
@@ -118,7 +127,7 @@ public final class APCustomization {
             CheckUtils.checkArgument(StringUtils.startsWith(str, VERSION_PREFIX),
                 "Version string does not start with \"%s\", e.g. \"%s\": \"%s\")", //
                 VERSION_PREFIX, VERSION_PREFIX + V1.m_versionSuffix, str);
-            final String versionSuffix = StringUtils.removeStart(str, VERSION_PREFIX);
+            final var versionSuffix = StringUtils.removeStart(str, VERSION_PREFIX);
             CheckUtils.checkArgument(StringUtils.isNotBlank(versionSuffix),
                 "Version string must not be empty after removing prefix \"%s\": \"%s\"", VERSION_PREFIX, str);
             final CustomizationVersion version = Stream.of(values())
@@ -139,8 +148,13 @@ public final class APCustomization {
     /**
      * Default (no) customization.
      */
-    public static final APCustomization DEFAULT = new APCustomization(CustomizationVersion.V1.fullVersion(),
-        NodesCustomization.DEFAULT, UICustomization.DEFAULT, WorkflowCustomization.DEFAULT, KAICustomization.DEFAULT);
+    public static final APCustomization DEFAULT = new APCustomization(CustomizationVersion.V1.fullVersion(), //
+        NodesCustomization.DEFAULT, //
+        UICustomization.DEFAULT, //
+        WorkflowCustomization.DEFAULT, //
+        KAICustomization.DEFAULT, //
+        MountPointCustomization.DEFAULT //
+    );
 
     private final NodesCustomization m_nodesCustomization;
 
@@ -149,6 +163,8 @@ public final class APCustomization {
     private final WorkflowCustomization m_workflowCustomization;
 
     private final KAICustomization m_kaiCustomization;
+
+    private final MountPointCustomization m_mountpointCustomization;
 
     /**
      * Only used for deserialization.
@@ -159,12 +175,15 @@ public final class APCustomization {
         @JsonProperty("nodes") final NodesCustomization nodesCustomization,
         @JsonProperty("ui") final UICustomization uiCustomization,
         @JsonProperty("workflow") final WorkflowCustomization workflowCustomization,
-        @JsonProperty("kai") final KAICustomization kaiCustomization) {
+        @JsonProperty("kai") final KAICustomization kaiCustomization,
+        @JsonProperty("mountpoint") final MountPointCustomization mountpointCustomization) {
         CustomizationVersion.of(version); // just to check if version is known
         m_nodesCustomization = Objects.requireNonNullElse(nodesCustomization, NodesCustomization.DEFAULT);
         m_uiCustomization = Objects.requireNonNullElse(uiCustomization, UICustomization.DEFAULT);
         m_workflowCustomization = Objects.requireNonNullElse(workflowCustomization, WorkflowCustomization.DEFAULT);
         m_kaiCustomization = Objects.requireNonNullElse(kaiCustomization, KAICustomization.DEFAULT);
+        m_mountpointCustomization =
+            Objects.requireNonNullElse(mountpointCustomization, MountPointCustomization.DEFAULT);
     }
 
     /**
@@ -195,9 +214,20 @@ public final class APCustomization {
         return m_kaiCustomization;
     }
 
+    /**
+     * @return customization for mountpoints
+     * @since 5.5
+     */
+    public MountPointCustomization mountpoint() {
+        return m_mountpointCustomization;
+    }
+
     @Override
     public String toString() {
-        return String.format("APCustomization{nodesCustomization=%s, uiCustomization=%s}", m_nodesCustomization,
-            m_uiCustomization);
+        return String.format(
+            "APCustomization{nodesCustomization=%s, uiCustomization=%s, workflowCustomization=%s, kaiCustomization=%s, "
+                + "mountpointCustomization=%s}",
+            m_nodesCustomization, m_uiCustomization, m_workflowCustomization, m_kaiCustomization,
+            m_mountpointCustomization);
     }
 }
