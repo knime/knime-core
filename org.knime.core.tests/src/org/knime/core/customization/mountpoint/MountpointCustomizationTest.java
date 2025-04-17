@@ -46,12 +46,14 @@
  * History
  *   May 23, 2024 (wiswedel): created
  */
-package org.knime.core.customization.nodes;
+package org.knime.core.customization.mountpoint;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.URI;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.customization.APCustomization;
@@ -61,118 +63,111 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
- * Tests for {@link NodesCustomization}.
+ * Tests for {@link MountPointCustomization}.
  */
-public class NodesCustomizationTest {
+public class MountpointCustomizationTest {
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     @Test
-    void testViewAllow() throws Exception {
+    void testIDAllow() throws Exception {
         String ymlInput = """
                 version: 'customization-v1.0'
-                nodes:
+                mountpoint:
                   filter:
-                    - scope: view
+                    - property: id
                       rule: allow
                       predicate:
                         type: pattern
                         patterns:
-                          - org\\.knime\\..+
-                          - com\\.knime\\..+
+                          - My\\-KNIME\\-.+
+                          - Trusted\\-.+
                         isRegex: true
                                 """;
 
-        var nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
-        assertTrue(
-            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isViewAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        final var customization = mapper.readValue(ymlInput, APCustomization.class);
+        final var mountpointCustomization = customization.mountpoint();
+        assertTrue(mountpointCustomization.isMountIDAllowed("My-KNIME-Hub"));
+        assertTrue(mountpointCustomization.isMountIDAllowed("Trusted-ID"));
+        assertFalse(mountpointCustomization.isMountIDAllowed("Untrusted-ID"));
+        assertNotNull(mountpointCustomization.toString());
 
-        assertTrue(
-            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("com.knime.extension.package.KNIMENodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
-        assertNotNull(nodesCustomization.toString());
+        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION.
+        assertEquals(UICustomization.DEFAULT, customization.ui());
     }
 
     @Test
-    void testViewDeny() throws Exception {
+    void testIDDeny() throws Exception {
         String ymlInput = """
                 version: 'customization-v1.0'
-                nodes:
+                mountpoint:
                   filter:
-                    - scope: view
+                    - property: id
                       rule: deny
                       predicate:
                         type: pattern
                         patterns:
-                          - org\\.community\\.somepackage\\..+
+                          - Untrusted\\-.+
                         isRegex: true
                                 """;
 
-        var nodesCustomization = mapper.readValue(ymlInput, APCustomization.class).nodes();
-        assertTrue(
-            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        final var customization = mapper.readValue(ymlInput, APCustomization.class);
+        final var mountpointCustomization = customization.mountpoint();
+        assertTrue(mountpointCustomization.isMountIDAllowed("My-KNIME-Hub"));
+        assertFalse(mountpointCustomization.isMountIDAllowed("Untrusted-ID"));
+        assertNotNull(mountpointCustomization.toString());
 
-        assertTrue(
-            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertTrue(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION.
+        assertEquals(UICustomization.DEFAULT, customization.ui());
     }
 
     @Test
-    void testUseDeny() throws Exception {
+    void testHostAllow() throws Exception {
         String ymlInput = """
                 version: 'customization-v1.0'
-                nodes:
+                mountpoint:
                   filter:
-                    - scope: use
-                      rule: deny
-                      predicate:
-                        type: pattern
-                        patterns:
-                          - org\\.community\\.somepackage\\..+
-                        isRegex: true
-                                """;
-
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        assertTrue(customization.nodes()
-            .isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.nodes().isViewAllowed("org.community.somepackage.BetterNodeFactory"));
-
-        assertTrue(customization.nodes()
-            .isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(customization.nodes().isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
-    }
-
-    @Test
-    void testUseAllow() throws Exception {
-        String ymlInput = """
-                version: 'customization-v1.0'
-                nodes:
-                  filter:
-                    - scope: use
+                    - property: host
                       rule: allow
                       predicate:
                         type: pattern
                         patterns:
-                          - org\\.knime\\..+
-                          - com\\.knime\\..+
+                          - api\\.hub\\.knime\\.com
+                          - .+\\.trusted\\.org
                         isRegex: true
                                 """;
 
-        APCustomization customization = mapper.readValue(ymlInput, APCustomization.class);
-        var nodesCustomization = customization.nodes();
-        assertTrue(
-            nodesCustomization.isViewAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(nodesCustomization.isViewAllowed("org.community.somepackage.BetterNodeFactory"));
+        final var customization = mapper.readValue(ymlInput, APCustomization.class);
+        final var mountpointCustomization = customization.mountpoint();
+        assertTrue(mountpointCustomization.isRemoteHostAllowed(URI.create("https://api.hub.knime.com")));
+        assertTrue(mountpointCustomization.isRemoteHostAllowed(URI.create("https://nodes.trusted.org")));
+        assertFalse(mountpointCustomization.isRemoteHostAllowed(URI.create("https://thirdparty.net")));
 
-        assertTrue(
-            nodesCustomization.isUsageAllowed("org.knime.base.node.io.filehandling.csv.reader.FileReaderNodeFactory"));
-        assertFalse(nodesCustomization.isUsageAllowed("org.community.somepackage.BetterNodeFactory"));
+        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION.
+        assertEquals(UICustomization.DEFAULT, customization.ui());
+    }
 
-        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION
+    @Test
+    void testHostDeny() throws Exception {
+        String ymlInput = """
+                version: 'customization-v1.0'
+                mountpoint:
+                  filter:
+                    - property: host
+                      rule: deny
+                      predicate:
+                        type: pattern
+                        patterns:
+                          - thirdparty.net
+                        isRegex: false
+                                """;
+
+        final var customization = mapper.readValue(ymlInput, APCustomization.class);
+        final var mountpointCustomization = customization.mountpoint();
+        assertTrue(mountpointCustomization.isRemoteHostAllowed(URI.create("https://api.hub.knime.com")));
+        assertFalse(mountpointCustomization.isRemoteHostAllowed(URI.create("https://thirdparty.net")));
+
+        // Assert that the loaded UICustomization is identical to NO_UI_CUSTOMIZATION.
         assertEquals(UICustomization.DEFAULT, customization.ui());
     }
 
