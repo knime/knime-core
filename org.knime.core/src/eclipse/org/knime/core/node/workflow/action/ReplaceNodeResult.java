@@ -51,7 +51,6 @@ package org.knime.core.node.workflow.action;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -167,8 +166,7 @@ public final class ReplaceNodeResult {
      * Performs the undo.
      */
     public void undo() {
-        var portChange = Optional.ofNullable(m_portMappings);
-        var portMappings = portChange.isPresent() ? getPortMappingsForPortRemovalUndo() : null;
+        var portMappings = m_portMappings == null ? null : getPortMappingsForPortRemovalUndo();
         m_wfm.replaceNode(m_replacedNodeID, m_nodeCreationConfig, m_originalNodeFactory, false, portMappings);
         m_removedConnections.stream()
             .filter(c -> m_wfm.canAddConnection(c.getSource(), c.getSourcePort(), c.getDest(), c.getDestPort()))

@@ -128,7 +128,8 @@ class DefaultPortsConfiguration implements PortsConfiguration {
                 var portGroupConfig = entry.getValue();
                 final int nrPortsInGroup = getNrPorts.apply(portGroupConfig);
                 if (nrPortsInGroup != 0) {
-                    portLocation.put(portGroupId, IntStream.range(position.get() + 0, position.get() + nrPortsInGroup).toArray());
+                    portLocation.put(portGroupId,
+                        IntStream.range(position.get() + 0, position.get() + nrPortsInGroup).toArray());
                 }
                 position.addAndGet(nrPortsInGroup);
             });//
