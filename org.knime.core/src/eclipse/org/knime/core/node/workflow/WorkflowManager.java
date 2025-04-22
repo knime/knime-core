@@ -949,48 +949,112 @@ public final class WorkflowManager extends NodeContainer
     }
 
     /**
-     * Replaces a node by another type of node.
+     * Replaces a node with same type of node but another {@link NodeCreationConfiguration}, e.g. in order to change the
+     * ports.
      *
-     * @see WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean, Pair)
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * Node settings and annotation will be transfered to the new node. Incoming and outgoing connections will be kept
+     * as far as possible (if the respective input and output port is still there and compatible).
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param portMapping two maps identifying how port indices change. If {@code null}, ports will be matched based on
+     *            order, see implementation.
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
+     *             node-creation-config is provided)
+     * @throws IllegalArgumentException if there is no node for the given id
      * @since 5.5
      */
-    @SuppressWarnings({"java:S1176", "MissingJavadoc", "javadoc"}) // javadoc
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
-        return replaceNode(id, newCreationConfig, null, true, portChangeMapping);
+        final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portMapping) {
+        return replaceNode(id, newCreationConfig, null, true, portMapping);
     }
 
     /**
-     * Replaces a node by another type of node.
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
      *
-     * @see WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean, Pair)
-     * @since 5.5
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * The node annotation will be transfered to the new node. Incoming and outgoing connections will be kept as far as
+     * possible (if the respective input and output port is still there and compatible). Node settings will only be
+     * transfered if the respective parameter says so.
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
+     *            order, see implementation.
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
+     *             node-creation-config is provided)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 5.1
      */
-    @SuppressWarnings({"java:S1176", "MissingJavadoc", "javadoc"}) // javadoc
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory) {
         return replaceNode(id, newCreationConfig, factory, true, null);
     }
 
     /**
-     * Replaces a node by another type of node.
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
      *
-     * @see WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean, Pair)
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * The node annotation will be transfered to the new node. Incoming and outgoing connections will be kept as far as
+     * possible (if the respective input and output port is still there and compatible). Node settings will only be
+     * transfered if the respective parameter says so.
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
+     * @param portMapping two maps identifying how port indices change. If {@code null}, ports will be matched based on
+     *            order, see implementation.
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
+     *             node-creation-config is provided)
+     * @throws IllegalArgumentException if there is no node for the given id
      * @since 5.5
      */
-    @SuppressWarnings({"java:S1176", "MissingJavadoc", "javadoc"}) // javadoc
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
-        final NodeFactory<?> factory, final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portChangeMapping) {
-        return replaceNode(id, newCreationConfig, factory, true, portChangeMapping);
+        final NodeFactory<?> factory, final Pair<Map<Integer, Integer>, Map<Integer, Integer>> portMapping) {
+        return replaceNode(id, newCreationConfig, factory, true, portMapping);
     }
 
     /**
-     * Replaces a node by another type of node.
+     * Replaces a node by another type of node (optionally with an additional {@link NodeCreationConfiguration}, e.g. in
+     * order to change the ports of the new node).
      *
-     * @see WorkflowManager#replaceNode(NodeID, ModifiableNodeCreationConfiguration, NodeFactory, boolean, Pair)
-     * @since 5.5
+     * Operation is only applicable for {@link NativeNodeContainer}s. Otherwise an {@link IllegalStateException} will be
+     * thrown.
+     *
+     * The node annotation will be transfered to the new node. Incoming and outgoing connections will be kept as far as
+     * possible (if the respective input and output port is still there and compatible). Node settings will only be
+     * transfered if the respective parameter says so.
+     *
+     * @param id the id of the node to replace
+     * @param newCreationConfig node creation configuration to create the new node, can be <code>null</code> iff a node
+     *            factory is explicitly provided
+     * @param factory node factory of the new node; if <code>null</code> the node will be replaced with a node of the
+     *            same original type
+     * @param transferNodeSettingsAndLabel whether to transfer the (matching) node settings and node label (aka node
+     *            annotation) from one node to the other
+     * @return a result that contains all information necessary to undo the operation
+     * @throws IllegalStateException if the node cannot be replaced (e.g. because there are executing successors or no
+     *             node-creation-config is provided)
+     * @throws IllegalArgumentException if there is no node for the given id
+     * @since 5.2
      */
-    @SuppressWarnings({"java:S1176", "MissingJavadoc", "javadoc"}) // javadoc
     public ReplaceNodeResult replaceNode(final NodeID id, final ModifiableNodeCreationConfiguration newCreationConfig,
         final NodeFactory<?> factory, final boolean transferNodeSettingsAndLabel) {
         return replaceNode(id, newCreationConfig, factory, transferNodeSettingsAndLabel, null);
@@ -1124,13 +1188,13 @@ public final class WorkflowManager extends NodeContainer
     /**
      * Fallback logic to map ports before and after node replacement in case such a port mapping is not already given by
      * the caller. This is used by the Eclipse RCP UI ("Classic"), where only the last port in a group could be removed.
-     * 
+     *
      * @param oldCreationConfig configuration of the replaced node
      * @param newCreationConfig configuration of the replacing node
      * @return see
      *         {@link org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration#mapInputPorts(PortsConfiguration)},
      *         {@link org.knime.core.node.context.ports.impl.DefaultModifiablePortsConfiguration#mapOutputPorts(PortsConfiguration)}
-     */ 
+     */
     private static Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortConfigMapping(
         final ModifiableNodeCreationConfiguration oldCreationConfig,
         final ModifiableNodeCreationConfiguration newCreationConfig) {
@@ -1149,23 +1213,24 @@ public final class WorkflowManager extends NodeContainer
 
     private List<ConnectionContainer> reconnect(final NodeID newId,
         final ModifiableNodeCreationConfiguration oldCreationConfig,
-        final ModifiableNodeCreationConfiguration newCreationConfig,
-final Set<ConnectionContainer> incomingConnections,
+        final ModifiableNodeCreationConfiguration newCreationConfig, final Set<ConnectionContainer> incomingConnections,
         final Set<ConnectionContainer> outgoingConnections,
         final Pair<Map<Integer, Integer>, Map<Integer, Integer>> customPortMapping) {
 
         List<ConnectionContainer> removedConnections = new ArrayList<>();
         var portMappings = Optional.ofNullable(customPortMapping) //
-                .orElseGet(() -> getPortConfigMapping(oldCreationConfig, newCreationConfig));
+            .orElseGet(() -> getPortConfigMapping(oldCreationConfig, newCreationConfig));
         var inputPortMapping = portMappings.getFirst();
         var outputPortMapping = portMappings.getSecond();
 
         for (final var originalConnection : incomingConnections) {
             // mapping does not contain added ports -- but these cannot be connected yet
-            var destPort = inputPortMapping != null ? inputPortMapping.get(originalConnection.getDestPort()) : originalConnection.getDestPort();
+            var destPort = inputPortMapping != null ? inputPortMapping.get(originalConnection.getDestPort())
+                : originalConnection.getDestPort();
             // canAddConnection fails for destPort < 0  (interpreted as being removed)
             if (canAddConnection(originalConnection.getSource(), originalConnection.getSourcePort(), newId, destPort)) {
-                final var newConnection = addConnection(originalConnection.getSource(), originalConnection.getSourcePort(), newId, destPort);
+                final var newConnection =
+                    addConnection(originalConnection.getSource(), originalConnection.getSourcePort(), newId, destPort);
                 newConnection.setUIInfo(originalConnection.getUIInfo());
             } else {
                 removedConnections.add(originalConnection);
@@ -1174,9 +1239,11 @@ final Set<ConnectionContainer> incomingConnections,
 
         // set outgoing connections
         for (final var originalConnection : outgoingConnections) {
-            var sourcePort = outputPortMapping != null ? outputPortMapping.get(originalConnection.getSourcePort()) : originalConnection.getSourcePort();
+            var sourcePort = outputPortMapping != null ? outputPortMapping.get(originalConnection.getSourcePort())
+                : originalConnection.getSourcePort();
             if (canAddConnection(newId, sourcePort, originalConnection.getDest(), originalConnection.getDestPort())) {
-                final var newConnection = addConnection(newId, sourcePort, originalConnection.getDest(), originalConnection.getDestPort());
+                final var newConnection =
+                    addConnection(newId, sourcePort, originalConnection.getDest(), originalConnection.getDestPort());
                 newConnection.setUIInfo(originalConnection.getUIInfo());
             } else {
                 removedConnections.add(originalConnection);
