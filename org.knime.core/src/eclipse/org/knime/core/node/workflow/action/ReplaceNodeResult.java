@@ -193,13 +193,13 @@ public final class ReplaceNodeResult {
      * map current port indices (after removal) to new indices (after removal undo)
      */
     private Pair<Map<Integer, Integer>, Map<Integer, Integer>> getPortMappingsForPortRemovalUndo() {
-        return new Pair<>(
-                getUndoPortMapping(m_portMappings.getFirst()).toMap(),
-                getUndoPortMapping(m_portMappings.getSecond()).toMap()
+        return new Pair<>( //
+            getUndoPortMapping(m_portMappings.getFirst()), //
+            getUndoPortMapping(m_portMappings.getSecond()) //
         );
     }
 
-    private static PortMapping getUndoPortMapping(final Map<Integer, Integer> originalMapping) {
+    private static Map<Integer, Integer> getUndoPortMapping(final Map<Integer, Integer> originalMapping) {
         var removedPort = false;
         var incomingPortIndex = -1;
         //check if an input port has previously been removed by finding value -1
@@ -209,63 +209,16 @@ public final class ReplaceNodeResult {
                 incomingPortIndex = entry.getKey();
             }
         }
-        var mapping = PortMapping.identity(originalMapping.size());
+
+        var map = new HashMap<Integer, Integer>();
+        IntStream.range(0, originalMapping.size()).forEach(i -> map.put(i, i));
         if (removedPort) {
-            mapping.reAddIndex(incomingPortIndex);
-        }
-        return mapping;
-    }
-
-
-    /**
-     * Maps ports on the replaced node to ports on the replacing node for recreating connections.
-     * Counts across all ports, including implicit flow variable port if present
-     */
-    public static class PortMapping {
-
-        private final HashMap<Integer, Integer> m_map = new HashMap<>();
-
-        /**
-         * Obtain an identity mapping
-         * @param totalNumberOfPorts The total number of ports, including implicit flow variable port at native nodes.
-         * @return An identity mapping
-         */
-        public static PortMapping identity(final int totalNumberOfPorts) {
-            var portMapping = new PortMapping();
-            IntStream.range(0, totalNumberOfPorts).forEach(i -> portMapping.m_map.put(i, i));
-            return portMapping;
-        }
-
-        /**
-         * Set an index to removed (map to {@code -1}) and shift all succeeding indices.
-         * @param indexToRemove The index to set to removed
-         * @return the modified mapping
-         */
-        public PortMapping removeIndex(final int indexToRemove) {
-            m_map.put(indexToRemove, -1);
-            IntStream.range(indexToRemove + 1, m_map.size()).forEach(i -> m_map.put(i, i - 1));
-            return this;
-        }
-
-        /**
-         * Re-add a previously removed index. This is different from adding a new port.
-         * @param indexToAdd The index to re-add
-         * @return the modified mapping
-         */
-        PortMapping reAddIndex(final int indexToAdd) {
             // any connection pointing to port p on the replaced node should point to port p+1 on the replacing node
             //  (on which port p is now the re-added port)
-            m_map.put(indexToAdd, indexToAdd + 1);
-            IntStream.range(indexToAdd + 1, m_map.size()).forEach(i -> m_map.put(i, i + 1));
-            return this;
+            map.put(incomingPortIndex, incomingPortIndex + 1);
+            IntStream.range(incomingPortIndex + 1, map.size()).forEach(i -> map.put(i, i + 1));
         }
-
-        /**
-         * Obtain the mapping
-         * @return -
-         */
-        public Map<Integer, Integer> toMap() {
-            return m_map;
-        }
+        return map;
     }
+
 }
