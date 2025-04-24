@@ -54,6 +54,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -159,33 +160,38 @@ final class DelegatingLogger {
 
     public void log(final Level level, final Supplier<Object> supplier, final Throwable cause,
         final boolean considerWFDirAppenders) {
-        final var internalLogger = getLoggerInternal(considerWFDirAppenders);
-        if (internalLogger.isEnabledFor(level)) {
-            internalLogger.log(level, toKNIMELogMessage(internalLogger, supplier.get(),
-                considerWFDirAppenders), cause);
-        }
+        getLoggerInternal(level, considerWFDirAppenders) //
+            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, supplier.get(), considerWFDirAppenders), cause));
     }
 
     public void log(final Level level, final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        final var internalLogger = getLoggerInternal(considerWFDirAppenders);
-        internalLogger.log(level, toKNIMELogMessage(internalLogger, o, considerWFDirAppenders), cause);
+        getLoggerInternal(level, considerWFDirAppenders) //
+            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, o, considerWFDirAppenders), cause));
     }
 
     /**
      * Use this method whenever you want to log a message. It ensures that the right logger is used and that all
      * required appenders are added to it e.g. workflow directory appender (if node context is considered).
+     * <p>
+     * Returns an optional, indicating whether the internal logger is enabled for the given {@link Level}.
+     * If so, it attaches WF-specific appenders (blocking operation!).
+     * </p>
      *
+     * @param level the log level to check the internal logger for
      * @param considerWFDirAppenders set to {@code false} in order to ignore {@link #LOG_IN_WF_DIR} and not set up
      *     workflow dir appenders on this call
      *
      * @return the correct logger to use and ensures that any workflow relative log file appenders are registered
-     * properly
+     * properly, or {@link Optional#empty()} if the logger is not enabled for this level
      */
-    private Logger getLoggerInternal(final boolean considerWFDirAppenders) {
+    private Optional<Logger> getLoggerInternal(final Level level, final boolean considerWFDirAppenders) {
+        if (!m_logger.isEnabledFor(level)) {
+            return Optional.empty();
+        }
         if (considerWFDirAppenders && logInWFDir) {
             addWorkflowDirAppender();
         }
-        return m_logger;
+        return Optional.of(m_logger);
     }
 
     /**
