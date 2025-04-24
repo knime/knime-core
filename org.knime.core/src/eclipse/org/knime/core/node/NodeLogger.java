@@ -877,7 +877,9 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void info(final Object o) {
-        getLoggerInternal().info(getLogObject(o));
+        if (isEnabledFor(LEVEL.INFO)) {
+            getLoggerInternal().info(getLogObject(o));
+        }
     }
 
     /**
@@ -898,7 +900,9 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void error(final Object o) {
-        getLoggerInternal().error(getLogObject(o));
+        if (isEnabledFor(LEVEL.ERROR)) {
+            getLoggerInternal().error(getLogObject(o));
+        }
     }
 
     /**
@@ -919,7 +923,9 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void fatal(final Object o) {
-        getLoggerInternal().fatal(getLogObject(o));
+        if (isEnabledFor(LEVEL.FATAL)) {
+            getLoggerInternal().fatal(getLogObject(o));
+        }
     }
 
     /**
@@ -941,7 +947,9 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void warn(final Object o, final Throwable t) {
-        getLoggerInternal().warn(getLogObject(o), t);
+        if (isEnabledFor(LEVEL.WARN)) {
+            getLoggerInternal().warn(getLogObject(o), t);
+        }
     }
 
     /**
@@ -964,7 +972,9 @@ public final class NodeLogger {
      * @param t The exception to log, including its stack trace.
      */
     public void debug(final Object o, final Throwable t) {
-        getLoggerInternal().debug(getLogObject(o), t);
+        if (isEnabledFor(LEVEL.DEBUG)) {
+            getLoggerInternal().debug(getLogObject(o), t);
+        }
     }
 
     /**
@@ -987,7 +997,9 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void info(final Object o, final Throwable t) {
-        getLoggerInternal().info(getLogObject(o), t);
+        if (isEnabledFor(LEVEL.INFO)) {
+            getLoggerInternal().info(getLogObject(o), t);
+        }
     }
 
     /**
@@ -1010,7 +1022,9 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void error(final Object o, final Throwable t) {
-        getLoggerInternal().error(getLogObject(o), t);
+        if (isEnabledFor(LEVEL.ERROR)) {
+            getLoggerInternal().error(getLogObject(o), t);
+        }
     }
 
     /**
@@ -1141,7 +1155,9 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void fatal(final Object o, final Throwable t) {
-        getLoggerInternal().fatal(getLogObject(o), t);
+        if (isEnabledFor(LEVEL.FATAL)) {
+            getLoggerInternal().fatal(getLogObject(o), t);
+        }
     }
 
     /**
@@ -1344,7 +1360,9 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isDebugEnabled() {
-        return getLoggerInternal().isDebugEnabled();
+        // Check the enabled level here on the raw `org.apache.log4j.Logger` object,
+        // in order to avoid unnecessarily attaching WF-specific appenders (blocking action!).
+        return m_logger.isDebugEnabled();
     }
 
     /**
@@ -1354,7 +1372,9 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isInfoEnabled() {
-        return getLoggerInternal().isInfoEnabled();
+        // Check the enabled level here on the raw `org.apache.log4j.Logger` object,
+        // in order to avoid unnecessarily attaching WF-specific appenders (blocking action!).
+        return m_logger.isInfoEnabled();
     }
 
     /**
@@ -1366,7 +1386,9 @@ public final class NodeLogger {
      *         <code>false</code>
      */
     public boolean isEnabledFor(final LEVEL level) {
-        return getLoggerInternal().isEnabledFor(NodeLoggerConfig.translateKnimeToLog4JLevel(level));
+        // Check the enabled level here on the raw `org.apache.log4j.Logger` object,
+        // in order to avoid unnecessarily attaching WF-specific appenders (blocking action!).
+        return m_logger.isEnabledFor(NodeLoggerConfig.translateKnimeToLog4JLevel(level));
     }
 
     /**
