@@ -8,6 +8,30 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.ui.converter.JsonFormsDialogBuilder">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.ui.converter.JsonFormsDialogBuilder"/>
+                <message_argument value="org.knime.core_5.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.ui.converter.UiComponentConverter">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.ui.converter.UiComponentConverter"/>
+                <message_argument value="org.knime.core_5.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.util.ui.converter.UiComponentConverterRegistry">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.ui.converter.UiComponentConverterRegistry"/>
+                <message_argument value="org.knime.core_5.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/customization/kai/KAICustomization.java" type="org.knime.core.customization.kai.KAICustomization">
         <filter comment="no external API, jackson is backward compatible (new field)" id="338722907">
             <message_arguments>

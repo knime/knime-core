@@ -2095,10 +2095,11 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @param node The node itself - for querying its {@link DialogNode#getParameterName() parameter name}.
      * @param id The id of the node, not null - the suffix is always appended to avoid duplicates
      * @return The parameter name, not null.
+     * @since 5.5
      */
-    public static final String getDialogNodeParameterName(final DialogNode<?, ?> node, final NodeID id) {
+    public static String getDialogNodeParameterName(final DialogNode<?, ?> node, final NodeID id) {
         final String parameterName = node.getParameterName();
-        return (!StringUtils.isEmpty(parameterName) ? parameterName + "-" : "") + id.getIndex();
+        return (!StringUtils.isEmpty(parameterName) ? (parameterName + "-") : "") + id.getIndex();
     }
 
     /** {@inheritDoc} */
