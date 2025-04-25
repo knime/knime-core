@@ -53,8 +53,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -87,31 +89,31 @@ import org.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.XMLConfig;
+import org.knime.core.node.util.CheckUtils;
 import org.xml.sax.SAXException;
 
 /**
- * Supports a mechanism to save settings by their type and a key. Furthermore,
- * it provides a method to recursively add new sub <code>Config</code> objects
- * to this Config object, which then results in a tree-like structure.
+ * Supports a mechanism to save settings by their type and a key. Furthermore, it provides a method to recursively add
+ * new sub <code>Config</code> objects to this Config object, which then results in a tree-like structure.
  * <p>
- * This class inherits all types from its super class ConfigBase and in addition
- * DataCell, DataType, RowKey, and Config objects. For these supported elements,
- * methods to add either a single or an  array or retrieve them back by throwing
- * an <code>InvalidSettingsException</code> or passing a default valid in
- * advance have been implemented.
+ * This class inherits all types from its super class ConfigBase and in addition DataCell, DataType, RowKey, and Config
+ * objects. For these supported elements, methods to add either a single or an array or retrieve them back by throwing
+ * an <code>InvalidSettingsException</code> or passing a default valid in advance have been implemented.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class Config extends ConfigBase
-        implements ConfigRO, ConfigWO {
+public abstract class Config extends ConfigBase implements ConfigRO, ConfigWO {
 
     private static final long serialVersionUID = -1823858289784818403L;
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
 
     private static final String CFG_ARRAY_SIZE = "array-size";
-    private static final String CFG_IS_NULL    = "is_null";
-    private static final String CFG_DATA_CELL  = "datacell";
+
+    private static final String CFG_IS_NULL = "is_null";
+
+    private static final String CFG_DATA_CELL = "datacell";
+
     private static final String CFG_DATA_CELL_SER = "datacell_serialized";
 
     /**
@@ -120,12 +122,15 @@ public abstract class Config extends ConfigBase
     interface DataCellEntry {
         /**
          * Save this <code>DataCell</code> to the given <code>Config</code>.
+         *
          * @param cell The <code>DataCell</code> to save.
          * @param config To this <code>Config</code>.
          */
         void saveToConfig(DataCell cell, Config config);
+
         /**
          * Create <code>DataCell</code> on given <code>Config</code>.
+         *
          * @param config Used to read <code>DataCell</code> from.
          * @return A new <code>DataCell</code> object.
          * @throws InvalidSettingsException If the cell could not be loaded.
@@ -135,322 +140,255 @@ public abstract class Config extends ConfigBase
         /**
          * <code>BooleanCell</code> entry.
          */
-        public static final class BooleanCellEntry implements DataCellEntry {
+        final class BooleanCellEntry implements DataCellEntry {
             /**
              * <code>BooleanCell.class</code>.
              */
             public static final Class<BooleanCell> CLASS = BooleanCell.class;
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addBoolean(CLASS.getSimpleName(),
-                        ((BooleanCell) cell).getBooleanValue());
+                config.addBoolean(CLASS.getSimpleName(), ((BooleanCell)cell).getBooleanValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-            throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 boolean b = config.getBoolean(CLASS.getSimpleName());
                 return b ? BooleanCell.TRUE : BooleanCell.FALSE;
             }
-        };
+        }
 
         /**
          * <code>StringCell</code> entry.
          */
-        public static final class StringCellEntry implements DataCellEntry {
+        final class StringCellEntry implements DataCellEntry {
             /**
              * <code>StringCell.class</code>.
              */
             public static final Class<StringCell> CLASS = StringCell.class;
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addString(CLASS.getSimpleName(),
-                        ((StringCell) cell).getStringValue());
+                config.addString(CLASS.getSimpleName(), ((StringCell)cell).getStringValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return new StringCell(config.getString(CLASS.getSimpleName()));
             }
-        };
+        }
 
         /**
          * <code>DoubleCell</code> entry.
          */
-        public static final class DoubleCellEntry implements DataCellEntry {
+        final class DoubleCellEntry implements DataCellEntry {
             /**
              * <code>DoubleCell.class</code>.
              */
             public static final Class<DoubleCell> CLASS = DoubleCell.class;
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addDouble(CLASS.getSimpleName(),
-                        ((DoubleCell) cell).getDoubleValue());
+                config.addDouble(CLASS.getSimpleName(), ((DoubleCell)cell).getDoubleValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return new DoubleCell(config.getDouble(CLASS.getSimpleName()));
             }
-        };
+        }
 
         /**
          * <code>LongCell</code> entry.
          */
-        public static final class LongCellEntry implements DataCellEntry {
+        final class LongCellEntry implements DataCellEntry {
             /**
              * <code>LongCell.class</code>.
              */
             public static final Class<LongCell> CLASS = LongCell.class;
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addLong(CLASS.getSimpleName(),
-                        ((LongCell) cell).getLongValue());
+                config.addLong(CLASS.getSimpleName(), ((LongCell)cell).getLongValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-            throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return new LongCell(config.getLong(CLASS.getSimpleName()));
             }
-        };
+        }
 
         /**
          * <code>IntCell</code> entry.
          */
-        public static final class IntCellEntry implements DataCellEntry {
+        final class IntCellEntry implements DataCellEntry {
             /**
              * <code>IntCell.class</code>.
              */
             public static final Class<IntCell> CLASS = IntCell.class;
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                config.addInt(CLASS.getSimpleName(),
-                        ((IntCell) cell).getIntValue());
+                config.addInt(CLASS.getSimpleName(), ((IntCell)cell).getIntValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return new IntCell(config.getInt(CLASS.getSimpleName()));
             }
-        };
+        }
 
         /**
          * <code>DateAndTimeCell</code> entry.
          */
-        public static final class DateAndTimeCellEntry implements DataCellEntry {
+        @SuppressWarnings("deprecation")
+        final class DateAndTimeCellEntry implements DataCellEntry {
             /**
              * <code>DateAndTimeCell.class</code>.
              */
-            public static final Class<DateAndTimeCell> CLASS =
-                DateAndTimeCell.class;
-            /**
-             * {@inheritDoc}
-             */
+            public static final Class<DateAndTimeCell> CLASS = DateAndTimeCell.class;
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 ((DateAndTimeCell)cell).save(config);
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-            throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return DateAndTimeCell.load(config);
             }
-        };
+        }
 
         /**
          * Entry for missing <code>DataCell</code>.
          */
-        public static final class MissingCellEntry implements DataCellEntry {
+        final class MissingCellEntry implements DataCellEntry {
             /**
              * <code>DataType.getMissingCell().getClass()</code>.
              */
-            public static final Class<? extends DataCell> CLASS =
-                DataType.getMissingCell().getClass();
-            /**
-             * {@inheritDoc}
-             */
+            public static final Class<? extends DataCell> CLASS = DataType.getMissingCell().getClass();
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
                 // nothing to save here
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 return DataType.getMissingCell();
             }
-        };
+        }
 
         /**
          * <code>ComplexNumberCell</code> entry.
          */
-        public static final class ComplexNumberCellEntry
-                implements DataCellEntry {
+        final class ComplexNumberCellEntry implements DataCellEntry {
             private static final String CFG_REAL = "real";
             private static final String CFG_IMAG = "imaginary";
+
             /**
              * <code>ComplexNumberCell.class</code>.
              */
-            public static final Class<ComplexNumberCell> CLASS =
-                ComplexNumberCell.class;
-            /**
-             * {@inheritDoc}
-             */
+            public static final Class<ComplexNumberCell> CLASS = ComplexNumberCell.class;
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                ComplexNumberCell ocell = (ComplexNumberCell) cell;
+                ComplexNumberCell ocell = (ComplexNumberCell)cell;
                 config.addDouble(CFG_REAL, ocell.getRealValue());
                 config.addDouble(CFG_IMAG, ocell.getImaginaryValue());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 double r = config.getDouble(CFG_REAL);
                 double i = config.getDouble(CFG_IMAG);
                 return new ComplexNumberCell(r, i);
             }
-        };
+        }
 
         /**
          * <code>FuzzyIntervalCell</code> entry.
          */
-        public static final class FuzzyIntervalCellEntry
-                implements DataCellEntry {
+        final class FuzzyIntervalCellEntry implements DataCellEntry {
             private static final String CFG_MIN_SUPP = "min_supp";
             private static final String CFG_MIN_CORE = "min_core";
             private static final String CFG_MAX_CORE = "max_core";
             private static final String CFG_MAX_SUPP = "max_supp";
+
             /** <code>FuzzyIntervalCell.class</code>. */
-            public static final Class<FuzzyIntervalCell> CLASS =
-                FuzzyIntervalCell.class;
-            /**
-             * {@inheritDoc}
-             */
+            public static final Class<FuzzyIntervalCell> CLASS = FuzzyIntervalCell.class;
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                FuzzyIntervalCell ocell =
-                    (FuzzyIntervalCell) cell;
+                FuzzyIntervalCell ocell = (FuzzyIntervalCell)cell;
                 config.addDouble(CFG_MIN_SUPP, ocell.getMinSupport());
                 config.addDouble(CFG_MIN_CORE, ocell.getMinCore());
                 config.addDouble(CFG_MAX_CORE, ocell.getMaxCore());
                 config.addDouble(CFG_MAX_SUPP, ocell.getMaxSupport());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
                 double minSupp = config.getDouble(CFG_MIN_SUPP);
                 double minCore = config.getDouble(CFG_MIN_CORE);
                 double maxCore = config.getDouble(CFG_MAX_CORE);
                 double maxSupp = config.getDouble(CFG_MAX_SUPP);
-                return new FuzzyIntervalCell(
-                        minSupp, minCore, maxCore, maxSupp);
+                return new FuzzyIntervalCell(minSupp, minCore, maxCore, maxSupp);
             }
-        };
+        }
 
         /**
          * <code>FuzzyNumberCell</code> entry.
          */
-        public static final class FuzzyNumberCellEntry
-                implements DataCellEntry {
+        final class FuzzyNumberCellEntry implements DataCellEntry {
             private static final String CFG_LEFT = "left";
+
             private static final String CFG_CORE = "core";
+
             private static final String CFG_RIGHT = "right";
+
             /** <code>FuzzyNumberCell.class</code>. */
-            public static final Class<FuzzyNumberCell> CLASS =
-                FuzzyNumberCell.class;
-            /**
-             * {@inheritDoc}
-             */
+            public static final Class<FuzzyNumberCell> CLASS = FuzzyNumberCell.class;
+
             @Override
             public void saveToConfig(final DataCell cell, final Config config) {
-                FuzzyNumberCell ocell = (FuzzyNumberCell) cell;
-                config.addDouble(CFG_LEFT,  ocell.getMinSupport());
-                config.addDouble(CFG_CORE,  ocell.getMinCore());
-                assert ocell.getMinCore() == ocell.getMaxCore();
+                FuzzyNumberCell ocell = (FuzzyNumberCell)cell;
+                config.addDouble(CFG_LEFT, ocell.getMinSupport());
+                config.addDouble(CFG_CORE, ocell.getMinCore());
                 config.addDouble(CFG_RIGHT, ocell.getMaxSupport());
             }
-            /**
-             * {@inheritDoc}
-             */
+
             @Override
-            public DataCell createCell(final ConfigRO config)
-                    throws InvalidSettingsException {
-                double left  = config.getDouble(CFG_LEFT);
-                double core  = config.getDouble(CFG_CORE);
+            public DataCell createCell(final ConfigRO config) throws InvalidSettingsException {
+                double left = config.getDouble(CFG_LEFT);
+                double core = config.getDouble(CFG_CORE);
                 double right = config.getDouble(CFG_RIGHT);
                 return new FuzzyNumberCell(left, core, right);
             }
-        };
+        }
     }
 
     /**
-     * Keeps all registered <code>DataCell</code> objects which are mapped
-     * to <code>DataCellEntry</code> values in order to save and load them.
+     * Keeps all registered <code>DataCell</code> objects which are mapped to <code>DataCellEntry</code> values in order
+     * to save and load them.
      */
-    private static final HashMap<String, DataCellEntry> DATACELL_MAP
-        = new HashMap<String, DataCellEntry>();
+    private static final Map<String, DataCellEntry> DATACELL_MAP;
 
     static {
-        DATACELL_MAP.put(BooleanCellEntry.CLASS.getName(),
-                new BooleanCellEntry());
-        DATACELL_MAP.put(StringCellEntry.CLASS.getName(),
-                new StringCellEntry());
-        DATACELL_MAP.put(DoubleCellEntry.CLASS.getName(),
-                new DoubleCellEntry());
-        DATACELL_MAP.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
-        DATACELL_MAP.put(LongCellEntry.CLASS.getName(), new LongCellEntry());
-        DATACELL_MAP.put(DateAndTimeCellEntry.CLASS.getName(),
-                new DateAndTimeCellEntry());
+        Map<String, DataCellEntry> dataCellMap = new HashMap<>();
+        dataCellMap.put(BooleanCellEntry.CLASS.getName(), new BooleanCellEntry());
+        dataCellMap.put(StringCellEntry.CLASS.getName(), new StringCellEntry());
+        dataCellMap.put(DoubleCellEntry.CLASS.getName(), new DoubleCellEntry());
+        dataCellMap.put(IntCellEntry.CLASS.getName(), new IntCellEntry());
+        dataCellMap.put(LongCellEntry.CLASS.getName(), new LongCellEntry());
+        dataCellMap.put(DateAndTimeCellEntry.CLASS.getName(), new DateAndTimeCellEntry());
         // missing cell was moved to separate class in 2.7 -- this is the backward compatible version
-        DATACELL_MAP.put("org.knime.core.data.DataType$MissingCell", new MissingCellEntry());
-        DATACELL_MAP.put(MissingCellEntry.CLASS.getName(),
-                new MissingCellEntry());
-        DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(),
-                new ComplexNumberCellEntry());
-        DATACELL_MAP.put(FuzzyIntervalCellEntry.CLASS.getName(),
-                new FuzzyIntervalCellEntry());
-        DATACELL_MAP.put(FuzzyNumberCellEntry.CLASS.getName(),
-                new FuzzyNumberCellEntry());
+        dataCellMap.put("org.knime.core.data.DataType$MissingCell", new MissingCellEntry());
+        dataCellMap.put(MissingCellEntry.CLASS.getName(), new MissingCellEntry());
+        dataCellMap.put(ComplexNumberCellEntry.CLASS.getName(), new ComplexNumberCellEntry());
+        dataCellMap.put(FuzzyIntervalCellEntry.CLASS.getName(), new FuzzyIntervalCellEntry());
+        dataCellMap.put(FuzzyNumberCellEntry.CLASS.getName(), new FuzzyNumberCellEntry());
+        DATACELL_MAP = Collections.unmodifiableMap(dataCellMap);
     }
 
     /**
@@ -481,22 +419,20 @@ public abstract class Config extends ConfigBase
     public final Config addConfig(final String key) {
         final Config config = getInstance(key);
         put(config);
+
         return config;
     }
 
     /**
-     * Appends the given Config to this Config which has to directly derived
-     * from this class.
+     * Appends the given Config to this Config which has to directly derived from this class.
      *
      * @param config The Config to append.
      * @throws NullPointerException If <code>config</code> is null.
-     * @throws IllegalArgumentException If <code>config</code> is not instance
-     *         of this class.
+     * @throws IllegalArgumentException If <code>config</code> is not instance of this class.
      */
     protected final void addConfig(final Config config) {
         if (getClass() != config.getClass()) {
-            throw new IllegalArgumentException("This " + getClass()
-                    + " is not equal to " + config.getClass());
+            throw new IllegalArgumentException("This " + getClass() + " is not equal to " + config.getClass());
         }
         put(config);
     }
@@ -509,19 +445,14 @@ public abstract class Config extends ConfigBase
      * @throws InvalidSettingsException If the key is not available.
      */
     @Override
-    public final Config getConfig(final String key)
-            throws InvalidSettingsException {
+    public final Config getConfig(final String key) throws InvalidSettingsException {
         Object o = get(key);
-        if (o == null || !(o instanceof Config)) {
-            throw new InvalidSettingsException(
-                    "Config for key \"" + key + "\" not found.");
-        }
-        return (Config) o;
+        return CheckUtils.checkCast(o, Config.class, InvalidSettingsException::new,
+            "Config for key \"%s\" not found.", key);
     }
 
     /**
-     * Adds this DataCell object to the Config by the given key. The cell can be
-     * null.
+     * Adds this DataCell object to the Config by the given key. The cell can be null.
      *
      * @param key The key.
      * @param cell The DataCell to add.
@@ -535,27 +466,24 @@ public abstract class Config extends ConfigBase
             String className = cell.getClass().getName();
             Object o = DATACELL_MAP.get(className);
             if (o != null) {
-               config.addString(CFG_DATA_CELL, className);
-               DataCellEntry e = (DataCellEntry) o;
-               Config cellConfig = config.addConfig(className);
-               e.saveToConfig(cell, cellConfig);
+                config.addString(CFG_DATA_CELL, className);
+                DataCellEntry e = (DataCellEntry)o;
+                Config cellConfig = config.addConfig(className);
+                e.saveToConfig(cell, cellConfig);
             } else {
                 try {
                     // serialize DataCell
                     config.addString(CFG_DATA_CELL, className);
-                    config.addString(CFG_DATA_CELL_SER,
-                            Config.writeObject(cell));
+                    config.addString(CFG_DATA_CELL_SER, Config.writeObject(cell));
                 } catch (IOException ioe) {
-                    LOGGER.warn("Could not write DataCell: " + cell);
-                    LOGGER.debug("", ioe);
+                    LOGGER.warn("Could not write DataCell: " + cell, ioe);
                 }
             }
         }
     }
 
     /**
-     * Adds this DataType object value to the Config by the given key. The type
-     * can be null.
+     * Adds this DataType object value to the Config by the given key. The type can be null.
      *
      * @param key The key.
      * @param type The DataType object to add.
@@ -579,19 +507,16 @@ public abstract class Config extends ConfigBase
      * @throws InvalidSettingsException If the key is not available.
      */
     @Override
-    public DataCell getDataCell(final String key)
-            throws InvalidSettingsException {
+    public DataCell getDataCell(final String key) throws InvalidSettingsException {
         ConfigRO config = getConfig(key);
         String className = config.getString(CFG_DATA_CELL);
         if (className == null) {
             return null;
         }
 
-
         Object o = null;
         if (className.startsWith("de.unikn.knime.")) {
-            o = DATACELL_MAP.get(className.replace("de.unikn.knime.",
-                    "org.knime."));
+            o = DATACELL_MAP.get(className.replace("de.unikn.knime.", "org.knime."));
             // this may fail, e.g for de.unikn.knime.altanaexp, thus
             // the fallback is also tried
         }
@@ -599,10 +524,9 @@ public abstract class Config extends ConfigBase
             o = DATACELL_MAP.get(className);
         }
 
-
         if (o != null) {
             Config cellConfig = config.getConfig(className);
-            DataCellEntry e = (DataCellEntry) o;
+            DataCellEntry e = (DataCellEntry)o;
             return e.createCell(cellConfig);
         } else {
             // deserialize DataCell
@@ -613,13 +537,8 @@ public abstract class Config extends ConfigBase
                 } else {
                     return (DataCell)Config.readDataCell(className, serString);
                 }
-            } catch (IOException ioe) {
-                LOGGER.warn("Could not read DataCell: " + className);
-                LOGGER.debug("", ioe);
-                return null;
-            } catch (ClassNotFoundException cnfe) {
-                LOGGER.warn("Could not read DataCell: " + className);
-                LOGGER.debug("", cnfe);
+            } catch (IOException | ClassNotFoundException ex) {
+                LOGGER.warn("Could not read DataCell: " + className, ex);
                 return null;
             }
         }
@@ -633,8 +552,7 @@ public abstract class Config extends ConfigBase
      * @throws InvalidSettingsException If the key is not available.
      */
     @Override
-    public DataType getDataType(final String key)
-            throws InvalidSettingsException {
+    public DataType getDataType(final String key) throws InvalidSettingsException {
         Config config = getConfig(key);
         boolean isNull = config.getBoolean(CFG_IS_NULL);
         if (isNull) {
@@ -644,8 +562,7 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Return a DataCell which can be null, or the default value if the key is
-     * not available.
+     * Return a DataCell which can be null, or the default value if the key is not available.
      *
      * @param key The key.
      * @param def The default value, returned id the key is not available.
@@ -655,14 +572,13 @@ public abstract class Config extends ConfigBase
     public DataCell getDataCell(final String key, final DataCell def) {
         try {
             return getDataCell(key);
-        } catch (InvalidSettingsException ise) {
+        } catch (InvalidSettingsException ise) { // NOSONAR
             return def;
         }
     }
 
     /**
-     * Return a DataType elements or null for key, or the default value if not
-     * available.
+     * Return a DataType elements or null for key, or the default value if not available.
      *
      * @param key The key.
      * @param def Returned if no value available for the given key.
@@ -672,7 +588,7 @@ public abstract class Config extends ConfigBase
     public DataType getDataType(final String key, final DataType def) {
         try {
             return getDataType(key);
-        } catch (InvalidSettingsException ise) {
+        } catch (InvalidSettingsException ise) { // NOSONAR
             return def;
         }
     }
@@ -685,12 +601,11 @@ public abstract class Config extends ConfigBase
      * @throws InvalidSettingsException If the the key is not available.
      */
     @Override
-    public DataCell[] getDataCellArray(final String key)
-            throws InvalidSettingsException {
+    public DataCell[] getDataCellArray(final String key) throws InvalidSettingsException {
         Config config = this.getConfig(key);
         int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
-            return null;
+            return null; // NOSONAR null is a (legacy) API contract
         }
         DataCell[] ret = new DataCell[size];
         for (int i = 0; i < ret.length; i++) {
@@ -700,19 +615,17 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Return DataCell array which can be null for key, or the default array if
-     * the key is not available.
+     * Return DataCell array which can be null for key, or the default array if the key is not available.
      *
      * @param key The key.
      * @param def The default array returned if the key is not available.
      * @return A char array.
      */
     @Override
-    public DataCell[] getDataCellArray(final String key,
-            final DataCell... def) {
+    public DataCell[] getDataCellArray(final String key, final DataCell... def) {
         try {
             return getDataCellArray(key);
-        } catch (InvalidSettingsException ise) {
+        } catch (InvalidSettingsException ise) { // NOSONAR
             return def;
         }
     }
@@ -726,9 +639,6 @@ public abstract class Config extends ConfigBase
         return (rk == null ? null : new RowKey(rk));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public RowKey getRowKey(final String key, final RowKey def) {
         String rk;
@@ -740,36 +650,26 @@ public abstract class Config extends ConfigBase
         return (rk == null ? null : new RowKey(rk));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addRowKey(final String key, final RowKey rowKey) {
         if (rowKey == null) {
             addString(key, null);
         } else {
-           addString(key, rowKey.getString());
+            addString(key, rowKey.getString());
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public RowKey[] getRowKeyArray(final String key)
-            throws InvalidSettingsException {
+    public RowKey[] getRowKeyArray(final String key) throws InvalidSettingsException {
         String[] strs = getStringArray(key);
         return RowKey.toRowKeys(strs);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public RowKey[] getRowKeyArray(final String key, final RowKey... def) {
         String[] strs;
         if (def == null) {
-            strs = getStringArray(key, (String[]) null);
+            strs = getStringArray(key, (String[])null);
         } else {
             String[] defStrs = RowKey.toStrings(def);
             strs = getStringArray(key, defStrs);
@@ -777,34 +677,28 @@ public abstract class Config extends ConfigBase
         return (strs == null ? null : RowKey.toRowKeys(strs));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addRowKeyArray(final String key, final RowKey... rowKey) {
         if (rowKey == null) {
-            addStringArray(key, (String[]) null);
+            addStringArray(key, (String[])null);
         } else {
-           addStringArray(key, RowKey.toStrings(rowKey));
+            addStringArray(key, RowKey.toStrings(rowKey));
         }
     }
-
 
     /**
      * Returns an array of DataType objects which can be null.
      *
      * @param key The key.
      * @return An array of DataType objects.
-     * @throws InvalidSettingsException The the object is not available for the
-     *             given key.
+     * @throws InvalidSettingsException The the object is not available for the given key.
      */
     @Override
-    public DataType[] getDataTypeArray(final String key)
-            throws InvalidSettingsException {
+    public DataType[] getDataTypeArray(final String key) throws InvalidSettingsException {
         Config config = this.getConfig(key);
         int size = config.getInt(CFG_ARRAY_SIZE, -1);
         if (size == -1) {
-            return null;
+            return null; // NOSONAR null is a (legacy) API contract
         }
         DataType[] ret = new DataType[size];
         for (int i = 0; i < ret.length; i++) {
@@ -814,8 +708,7 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Returns the array of DataType objects for the given key or if not
-     * available the given array.
+     * Returns the array of DataType objects for the given key or if not available the given array.
      *
      * @param key The key.
      * @param v The default array, returned if no entry available for the key.
@@ -825,14 +718,13 @@ public abstract class Config extends ConfigBase
     public DataType[] getDataTypeArray(final String key, final DataType... v) {
         try {
             return getDataTypeArray(key);
-        } catch (InvalidSettingsException ise) {
+        } catch (InvalidSettingsException ise) { // NOSONAR
             return v;
         }
     }
 
     /**
-     * Adds an array of DataCell objects to this Config. The array and all
-     * elements can be null.
+     * Adds an array of DataCell objects to this Config. The array and all elements can be null.
      *
      * @param key The key.
      * @param values The data cells, elements can be null.
@@ -849,8 +741,7 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Adds an array of DataType objects to this Config. The array and all
-     * elements can be null.
+     * Adds an array of DataType objects to this Config. The array and all elements can be null.
      *
      * @param key The key.
      * @param values The data types, elements can be null.
@@ -876,9 +767,6 @@ public abstract class Config extends ConfigBase
         put(entry);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return super.getKey();
@@ -887,15 +775,13 @@ public abstract class Config extends ConfigBase
     /* --- write and read from file --- */
 
     /**
-     * Creates new Config from the given file using the serialized object
-     * stream.
+     * Creates new Config from the given file using the serialized object stream.
      *
      * @param ois Read Config from this stream.
      * @return The new Config.
      * @throws IOException Problem opening the file or content is not a Config.
      */
-    protected static Config readFromFile(
-            final ObjectInputStream ois) throws IOException {
+    protected static Config readFromFile(final ObjectInputStream ois) throws IOException {
         try {
             Config config = (Config)ois.readObject();
             ois.close();
@@ -908,53 +794,40 @@ public abstract class Config extends ConfigBase
     }
 
     /**
-     * Reads Config from XML into a new Config object. The stream will be closed
-     * by this call.
+     * Reads Config from XML into a new Config object. The stream will be closed by this call.
      *
-     * @param config Depending on the readRoot, we write into this Config and
-     *            return it.
+     * @param config Depending on the readRoot, we write into this Config and return it.
      * @param in The stream to read XML Config from.
      * @return A new Config filled with the content read from XML.
      * @throws IOException If the Config could not be load from stream.
      */
-    protected static Config loadFromXML(final Config config,
-            final InputStream in) throws IOException {
-        if (in == null) {
-            throw new NullPointerException();
-        }
-        config.load(in);
+    @SuppressWarnings("resource")
+    protected static Config loadFromXML(final Config config, final InputStream in) throws IOException {
+        config.load(CheckUtils.checkArgumentNotNull(in, "InputStream must not be null"));
         return config;
     }
 
     /**
      * Read config entries from an XML file into this object.
+     *
      * @param is The XML inputstream storing the configuration to read
      * @throws IOException If the stream could not be read.
      */
     @Override
     public void load(final InputStream is) throws IOException {
-        try {
+        try (is) {
             XMLConfig.load(this, is);
-        } catch (SAXException se) {
-            IOException ioe = new IOException(se.getMessage());
-            ioe.initCause(se);
-            throw ioe;
-        } catch (ParserConfigurationException pce) {
-            IOException ioe = new IOException(pce.getMessage());
-            ioe.initCause(pce);
-            throw ioe;
-        } finally {
-            is.close();
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new IOException(e.getMessage(), e);
         }
     }
 
     /* --- serialize objects --- */
 
     /**
-     * List of never serialized objects (java.lang.Class), used to print
-     * warning.
+     * List of never serialized objects (java.lang.Class), used to print warning.
      */
-    private static final Set<Class<?>> UNSUPPORTED = new HashSet<Class<?>>();
+    private static final Set<Class<?>> UNSUPPORTED = new HashSet<>();
 
     /**
      * Serializes the given object to space-separated integer.
@@ -967,14 +840,13 @@ public abstract class Config extends ConfigBase
         // print unsupported Object message
         if (o != null && !UNSUPPORTED.contains(o.getClass())) {
             UNSUPPORTED.add(o.getClass());
-            LOGGER.debug("Class " + o.getClass()
-                    + " not yet supported in Config, serializing it.");
+            LOGGER.debug("Class " + o.getClass() + " not yet supported in Config, serializing it.");
         }
         // serialize object
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(o);
-        oos.close();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(o);
+        }
         return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
@@ -984,12 +856,10 @@ public abstract class Config extends ConfigBase
      * @param string The serialized object's stream.
      * @return A new instance of this object.
      * @throws IOException if an I/O error occurs during reading the object
-     * @throws ClassNotFoundException if the class of the serialized object
-     *  cannot be found.
+     * @throws ClassNotFoundException if the class of the serialized object cannot be found.
      */
-    private static final Object readDataCell(final String className,
-            final String serString)
-            throws IOException, ClassNotFoundException {
+    private static final Object readDataCell(final String className, final String serString)
+        throws IOException, ClassNotFoundException {
         byte[] bytes = Base64.getDecoder().decode(serString);
         ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
         ObjectInputStream ois;
@@ -1009,16 +879,16 @@ public abstract class Config extends ConfigBase
                     //if the class to be loaded is not a DataCell
                     try {
                         return Class.forName(desc.getName(), true, dataCellClass.getClassLoader());
-                    } catch (ClassNotFoundException cnfe) {
+                    } catch (ClassNotFoundException cnfe) { // NOSONAR
                         // ignore and let super try to do it.
                     }
                     return super.resolveClass(desc);
                 }
             };
         }
-        Object o = ois.readObject();
-        ois.close();
-        return o;
+        try (ois) {
+            return ois.readObject();
+        }
     }
 
 }
