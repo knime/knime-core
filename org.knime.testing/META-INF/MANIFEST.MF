@@ -16,7 +16,8 @@ Export-Package: org.knime.testing,
  org.knime.testing.node.executioncount,
  org.knime.testing.node.runtime,
  org.knime.testing.stacktracedumper,
- org.knime.testing.util
+ org.knime.testing.util,
+ org.knime.testing.workflow
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  org.knime.core.pmml;bundle-version="[5.5.0,6.0.0)",
  org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
