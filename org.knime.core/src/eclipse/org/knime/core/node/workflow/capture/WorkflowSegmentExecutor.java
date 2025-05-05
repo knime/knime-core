@@ -230,7 +230,7 @@ public final class WorkflowSegmentExecutor {
         NativeNodeContainer virtualInNode = ((NativeNodeContainer)m_wfm.getNodeContainer(m_virtualStartID));
         DefaultVirtualPortObjectInNodeModel inNM = (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
 
-        m_flowVirtualScopeContext.registerHostNodeForPortObjectPersistence(m_hostNode, exec);
+        m_flowVirtualScopeContext.registerHostNode(m_hostNode, exec);
 
         inNM.setVirtualNodeInput(
             new VirtualNodeInput(inputData, collectOutputFlowVariablesFromUpstreamNodes(m_hostNode)));
