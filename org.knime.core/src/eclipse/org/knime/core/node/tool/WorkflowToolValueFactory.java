@@ -112,7 +112,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         @Override
         public WorkflowToolCell getDataCell() {
-            return new WorkflowToolCell();
+            throw new UnsupportedOperationException();
         }
 
         @Override

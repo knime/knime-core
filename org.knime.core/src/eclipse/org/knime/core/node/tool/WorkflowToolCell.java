@@ -51,6 +51,7 @@ package org.knime.core.node.tool;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.capture.WorkflowSegment;
 
 /**
  *
@@ -63,34 +64,62 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
      */
     public static final DataType TYPE = DataType.getType(WorkflowToolCell.class);
 
+    private final String m_name;
+
+    private final String m_description;
+
+    private final String m_parameterSchema;
+
+    private final Input[] m_inputs;
+
+    private final Output[] m_outputs;
+
+    private final WorkflowSegment m_workflowSegment;
+
+    /**
+     * TODO
+     *
+     * @param name
+     * @param description
+     * @param parameterSchema
+     * @param inputs
+     * @param outputs
+     * @param workflowSegment
+     */
+    public WorkflowToolCell(final String name, final String description, final String parameterSchema,
+        final Input[] inputs, final Output[] outputs, final WorkflowSegment workflowSegment) {
+        m_name = name;
+        m_description = description;
+        m_parameterSchema = parameterSchema;
+        m_inputs = inputs;
+        m_outputs = outputs;
+        m_workflowSegment = workflowSegment;
+
+    }
+
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_name;
     }
 
     @Override
     public String getDescription() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_description;
     }
 
     @Override
     public String getParameterSchema() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_parameterSchema;
     }
 
     @Override
     public Input[] getInputs() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_inputs;
     }
 
     @Override
     public Output[] getOutputs() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outputs;
     }
 
     @Override

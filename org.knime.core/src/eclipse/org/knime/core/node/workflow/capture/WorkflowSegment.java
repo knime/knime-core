@@ -51,7 +51,6 @@ package org.knime.core.node.workflow.capture;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -63,7 +62,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataTableSpec;
@@ -85,13 +83,10 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LoadVersion;
 import org.knime.core.util.LockFailedException;
-import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.Version;
 
 /**
@@ -231,7 +226,7 @@ public final class WorkflowSegment {
 
     WorkflowManager loadWorkflowInternal(final Consumer<WorkflowLoadResult> loadResultCallback) {
         try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
-            final var tmpDir = newTempDirWithName(getName());
+            final var tmpDir = BuildWorkflowsUtil.newTempDirWithName(getName());
             FileUtil.unzip(in, tmpDir, 1);
             var loadHelper = createWorkflowLoadHelper(tmpDir, LOGGER::warn);
             final WorkflowLoadResult loadResult =
@@ -247,16 +242,6 @@ public final class WorkflowSegment {
             // should never happen
             throw new IllegalStateException("Failed loading workflow port object", ex);
         }
-    }
-
-    /**
-     * @return a new empty temporary directory called according to the <code>name</code> (workflow name)
-     * @throws IOException Failing to creating the folder
-     */
-    // added as part of AP-21997
-    static File newTempDirWithName(final String name) throws IOException {
-        final String sanitizedName = FileUtil.ILLEGAL_FILENAME_CHARS_PATTERN.matcher(name).replaceAll("_");
-        return new File(FileUtil.createTempDir("workflow_segment"), sanitizedName);
     }
 
     /**
@@ -283,35 +268,9 @@ public final class WorkflowSegment {
      */
     public void serializeAndDisposeWorkflow() throws IOException {
         if (m_wfm != null && m_wfmStream == null) {
-            m_wfmStream = wfmToStream(m_wfm);
+            m_wfmStream = BuildWorkflowsUtil.wfmToStream(m_wfm);
         }
         disposeWorkflow();
-    }
-
-    private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        var tmpDir = newTempDirWithName(wfm.getName());
-        try {
-            return wfmToStream(wfm, tmpDir);
-        } finally {
-            FileUtil.deleteRecursively(tmpDir.getParentFile());
-        }
-    }
-
-    static byte[] wfmToStream(final WorkflowManager wfm, final File tmpDir) throws IOException {
-        try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
-            var saveHelper = new WorkflowSaveHelper(false, false);
-            wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
-            FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
-                @Override
-                public boolean include(final File f) {
-                    return !f.getName().equals(VMFileLocker.LOCK_FILE);
-                }
-            }, null);
-            bos.flush();
-            return bos.toByteArray();
-        } catch (LockFailedException | CanceledExecutionException | IOException e) {
-            throw new IOException("Failed saving workflow port object", e);
-        }
     }
 
     void loadWorkflowData(final ZipInputStream in) throws IOException {
@@ -333,7 +292,7 @@ public final class WorkflowSegment {
                 //and #disposeWorkflow() is called before #save(...)
                 throw new IllegalStateException("Can't save workflow segment. Workflow has been disposed already.");
             }
-            m_wfmStream = wfmToStream(m_wfm);
+            m_wfmStream = BuildWorkflowsUtil.wfmToStream(m_wfm);
         }
         out.putNextEntry(new ZipEntry("workflow.bin"));
         out.write(m_wfmStream);
