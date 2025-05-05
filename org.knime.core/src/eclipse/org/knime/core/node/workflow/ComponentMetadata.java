@@ -399,53 +399,35 @@ public final class ComponentMetadata extends NodeContainerMetadata {
     }
 
     /**
-     * Reorder ports in component metadata such that the one given by index is at the end
+     * Remove an output port from component metadata
      * Used for component port removal only, when removing a port other than the last one
-     * Eventually the port at the very end of the list will be truncated, this ensures it is the correct one
+     * Otherwise the port at the very end of the list will be truncated
      *
      * @param index the index of the port that should be removed and therefore moved to the end
      * @return updated {@code ComponentMetadata}
      * @since 5.5
      */
-    public ComponentMetadata reorderInputPorts(final int index) {
-        List<Port> inPorts = new ArrayList<>(m_inPorts.size());
-        for (var i = 0; i < m_inPorts.size(); i++) {
-            if (i < index) {
-                inPorts.add(m_inPorts.get(i));
-            } else if (i == m_inPorts.size() - 1) {
-                inPorts.add(m_inPorts.get(index));
-            } else {
-                inPorts.add(m_inPorts.get(i + 1));
-            }
-        }
-
+    public ComponentMetadata removeOutputPort(final int index) {
+        List<Port> outPorts = new ArrayList<>(m_outPorts);
+        outPorts.remove(index);
         return new ComponentMetadata(m_contentType, m_lastModified, m_created, m_author, m_description, m_links,
-            m_tags, m_nodeType, m_icon, inPorts, m_outPorts);
+            m_tags, m_nodeType, m_icon, m_inPorts, outPorts);
     }
 
     /**
-     * Reorder ports in component metadata such that the one given by index is at the end
+     * Remove an input port from component metadata
      * Used for component port removal only, when removing a port other than the last one
-     * Eventually the port at the very end of the list will be truncated, this ensures it is the correct one
+     * Otherwise the port at the very end of the list will be truncated
      *
      * @param index the index of the port that should be removed and therefore moved to the end
      * @return updated {@code ComponentMetadata}
      * @since 5.5
      */
-    public ComponentMetadata reorderOutputPorts(final int index) {
-        List<Port> outPorts = new ArrayList<>(m_outPorts.size());
-        for (var i = 0; i < m_outPorts.size(); i++) {
-            if (i < index) {
-                outPorts.add(m_outPorts.get(i));
-            } else if (i == m_outPorts.size() - 1) {
-                outPorts.add(m_outPorts.get(index));
-            } else {
-                outPorts.add(m_outPorts.get(i + 1));
-            }
-        }
-
+    public ComponentMetadata removeInputPort(final int index) {
+        List<Port> inPorts = new ArrayList<>(m_inPorts);
+        inPorts.remove(index);
         return new ComponentMetadata(m_contentType, m_lastModified, m_created, m_author, m_description, m_links,
-            m_tags, m_nodeType, m_icon, m_inPorts, outPorts);
+            m_tags, m_nodeType, m_icon, inPorts, m_outPorts);
     }
 
     /**
