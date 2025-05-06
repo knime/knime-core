@@ -66,6 +66,7 @@ import org.knime.core.table.schema.VarBinaryDataSpec;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.5
  */
 public final class WorkflowToolValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
 
