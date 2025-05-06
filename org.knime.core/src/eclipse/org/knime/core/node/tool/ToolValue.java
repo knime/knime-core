@@ -57,6 +57,7 @@ import org.knime.core.node.port.PortType;
  * A ToolValue that represents a tool that can be used by an AI Agent.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.5
  */
 public interface ToolValue extends DataValue {
 
