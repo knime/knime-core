@@ -53,6 +53,9 @@ import java.io.IOException;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.capture.BuildWorkflowsUtil;
@@ -61,8 +64,14 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 /**
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
+ * @since 5.5
  */
 public final class WorkflowToolCell extends DataCell implements ToolValue {
+
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
     /**
      * Data type of the {@link WorkflowToolCell}.
@@ -167,6 +176,29 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
     public int hashCode() {
         // TODO
         return HashCodeBuilder.reflectionHashCode(this);
+    }
+
+    // TODO needed for the registry to properly register the cell type. Looks more like a bug in the registry, though.
+    public static final class WorkflowToolCellSerializer implements DataCellSerializer<WorkflowToolCell> {
+        @Override
+        public void serialize(final WorkflowToolCell cell, final DataCellDataOutput output) throws IOException {
+            output.writeUTF(cell.getName());
+            output.writeUTF(cell.getDescription());
+            output.writeUTF(cell.getParameterSchema());
+            var wfBytes = cell.getWorkflow();
+            output.writeInt(wfBytes.length);
+            output.write(wfBytes);
+        }
+
+        @Override
+        public WorkflowToolCell deserialize(final DataCellDataInput input) throws IOException {
+            final String name = input.readUTF();
+            final String description = input.readUTF();
+            final String parameterSchema = input.readUTF();
+            final byte[] workflow = new byte[input.readInt()];
+            input.readFully(workflow);
+            return new WorkflowToolCell(name, description, parameterSchema, new Input[0], new Output[0], workflow);
+        }
     }
 
 }
