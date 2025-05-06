@@ -600,6 +600,13 @@
                valueFactoryClass="org.knime.core.data.v2.value.StringValueFactory">
          </ValueFactory>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.node.tool.WorkflowToolCell">
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.node.tool.WorkflowToolValueFactory">
+         </ValueFactory>
+      </DataType>
    </extension>
    <extension
          point="org.knime.core.PortType">
