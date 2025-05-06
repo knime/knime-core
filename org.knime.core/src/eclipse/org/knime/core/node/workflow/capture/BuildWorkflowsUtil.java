@@ -68,6 +68,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
+import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
+import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.FileUtil.ZipFileFilter;
 import org.knime.core.util.LockFailedException;
@@ -238,10 +240,13 @@ public final class BuildWorkflowsUtil {
      *
      * @param wfmStream
      * @param workflowName
+     * @param inputs
+     * @param outputs
      * @return
      */
-    public static WorkflowSegment createWorkflowSegment(final byte[] wfmStream, final String workflowName) {
-        return new WorkflowSegment(wfmStream, workflowName, List.of() /*TODO*/, List.of() /*TODO*/, Set.of());
+    public static WorkflowSegment createWorkflowSegment(final byte[] wfmStream, final String workflowName,
+        final List<Input> inputs, final List<Output> outputs) {
+        return new WorkflowSegment(wfmStream, workflowName, inputs, outputs, Set.of());
     }
 
     /**
