@@ -48,9 +48,12 @@
  */
 package org.knime.core.node.tool;
 
+import java.io.IOException;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.capture.BuildWorkflowsUtil;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 
 /**
@@ -74,7 +77,7 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
 
     private final Output[] m_outputs;
 
-    private final WorkflowSegment m_workflowSegment;
+    private final byte[] m_workflow;
 
     /**
      * TODO
@@ -93,7 +96,11 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
         m_parameterSchema = parameterSchema;
         m_inputs = inputs;
         m_outputs = outputs;
-        m_workflowSegment = workflowSegment;
+        try {
+            m_workflow = BuildWorkflowsUtil.wfmToStream(workflowSegment.loadWorkflow());
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
 
     }
 
@@ -120,6 +127,10 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
     @Override
     public Output[] getOutputs() {
         return m_outputs;
+    }
+
+    byte[] getWorkflow() {
+        return m_workflow;
     }
 
     @Override

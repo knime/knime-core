@@ -148,7 +148,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
     }
 
-    interface WorkflowToolWriteValue extends WriteValue<ToolValue> {
+    interface WorkflowToolWriteValue extends WriteValue<WorkflowToolCell> {
 
     }
 
@@ -167,11 +167,11 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         }
 
         @Override
-        public void setValue(final ToolValue value) {
-            m_name.setStringValue(value.getName());
-            m_description.setStringValue(value.getDescription());
-            m_parameterSchema.setStringValue(value.getParameterSchema());
-            // TODO m_binaryRepresentation.setObject(value);
+        public void setValue(final WorkflowToolCell cell) {
+            m_name.setStringValue(cell.getName());
+            m_description.setStringValue(cell.getDescription());
+            m_parameterSchema.setStringValue(cell.getParameterSchema());
+            m_binaryRepresentation.setByteArray(cell.getWorkflow());
         }
 
     }
