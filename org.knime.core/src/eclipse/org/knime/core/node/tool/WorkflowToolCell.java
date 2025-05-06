@@ -50,6 +50,8 @@ package org.knime.core.node.tool;
 
 import java.io.IOException;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObject;
@@ -151,8 +153,8 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
 
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
-        return null;
+        // TODO
+        return ToStringBuilder.reflectionToString(this);
     }
 
     @Override
@@ -163,8 +165,8 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
 
     @Override
     public int hashCode() {
-        // TODO Auto-generated method stub
-        return 0;
+        // TODO
+        return HashCodeBuilder.reflectionHashCode(this);
     }
 
 }
