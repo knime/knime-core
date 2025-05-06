@@ -205,6 +205,10 @@ public class ThreadPool {
 
         private boolean m_stopped;
 
+        /** Set (and unset) by {@link ThreadPool#runInvisible(Callable)}, remembers if this worker is currently
+         * executing tasks invisibly. */
+        private boolean m_isCurrentlyInvisible;
+
         // set context class loader after each runnable#run -- we had problems with some cxf web service client that
         // hijacked the current thread and subsequent runnables were using some URL class loader set by cxf
         private final ClassLoader m_contextClassLoaderAtInit;
@@ -633,10 +637,19 @@ public class ThreadPool {
                         + "not taken out of this thread pool");
             }
             return thisWorker.m_startedFrom.runInvisible(r);
+        } else if (thisWorker.m_isCurrentlyInvisible) {
+            try {
+                return r.call();
+            } catch (final InterruptedException e) {
+                throw e;
+            } catch (final Exception ex) {
+                throw new ExecutionException(ex);
+            }
         } else {
             m_invisibleThreads.incrementAndGet();
             checkQueue();
             var interruptInCallable = false;
+            thisWorker.m_isCurrentlyInvisible = true;
             try {
                 return r.call();
             } catch (final InterruptedException e) {
@@ -646,6 +659,7 @@ public class ThreadPool {
                 throw new ExecutionException(ex);
             } finally {
                 reacquireSlot(interruptInCallable);
+                thisWorker.m_isCurrentlyInvisible = false;
             }
         }
     }

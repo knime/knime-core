@@ -48,6 +48,8 @@ package org.knime.core.node.workflow;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.Node;
@@ -57,6 +59,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.util.ThreadPool;
 
 /** Runnable that represents the execution of a node. This abstract class
  * defines the overall procedure of an execution including setup (e.g. to copy
@@ -213,29 +216,16 @@ public abstract class NodeExecutionJob implements Runnable {
             status = NodeContainerExecutionStatus.FAILURE;
             logError(throwable);
         }
-        try (WorkflowLock lock = m_nc.getParent().lock()) {
+        final Runnable runnable = new AfterRunRunnable(executeInactive, status);
+        final ThreadPool pool = ThreadPool.currentPool();
+        if (pool != null) {
             try {
-                // node might have been canceled meanwhile
-                m_nc.getProgressMonitor().checkCanceled();
-            } catch (CanceledExecutionException cee) {
-                status = NodeContainerExecutionStatus.FAILURE;
-            }
-            try {
-                // sets state POSTEXECUTE
-                m_nc.notifyParentPostExecuteStart(status);
-                if (!executeInactive) {
-                    afterExecute();
-                }
-            } catch (Throwable throwable) {
-                status = NodeContainerExecutionStatus.FAILURE;
-                logError(throwable);
-            }
-            try {
-                // sets state EXECUTED
-                m_nc.notifyParentExecuteFinished(status);
-            } catch (Exception e) {
+                pool.runInvisible(Executors.callable(runnable));
+            } catch (ExecutionException | InterruptedException e) { // NOSONAR exceptions not thrown but API demands it
                 logError(e);
             }
+        } else {
+            runnable.run();
         }
     }
 
@@ -355,6 +345,49 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     boolean isSavedForDisconnect() {
         return m_isSavedForDisconnect;
+    }
+
+    /**
+     * A runnable that executes the afterExecute method and notifies the parent node container of the execution result.
+     * Isolated in a separate class due to workflow locking and thread pool invisibility (see AP-24224).
+     */
+    private final class AfterRunRunnable implements Runnable {
+        private final boolean m_executeInactive;
+        private final NodeContainerExecutionStatus m_status;
+
+        private AfterRunRunnable(final boolean executeInactive, final NodeContainerExecutionStatus status) {
+            m_executeInactive = executeInactive;
+            m_status = status;
+        }
+
+        @Override
+        public void run() {
+            NodeContainerExecutionStatus updateStatus = m_status;
+            try (WorkflowLock lock = m_nc.getParent().lock()) {
+                try {
+                    // node might have been canceled meanwhile
+                    m_nc.getProgressMonitor().checkCanceled();
+                } catch (CanceledExecutionException cee) { // NOSONAR handled separately in postexecute below
+                    updateStatus = NodeContainerExecutionStatus.FAILURE;
+                }
+                try {
+                    // sets state POSTEXECUTE
+                    m_nc.notifyParentPostExecuteStart(updateStatus);
+                    if (!m_executeInactive) {
+                        afterExecute();
+                    }
+                } catch (Throwable throwable) { // NOSONAR - calling client (3rd party code)
+                    updateStatus = NodeContainerExecutionStatus.FAILURE;
+                    logError(throwable);
+                }
+                try {
+                    // sets state EXECUTED
+                    m_nc.notifyParentExecuteFinished(updateStatus);
+                } catch (Exception e) {
+                    logError(e);
+                }
+            }
+        }
     }
 
 }
