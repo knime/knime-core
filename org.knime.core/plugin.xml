@@ -602,6 +602,10 @@
       </DataType>
       <DataType
             cellClass="org.knime.core.node.tool.WorkflowToolCell">
+         <serializer
+               cellClass="org.knime.core.node.tool.WorkflowToolCell"
+               serializerClass="org.knime.core.node.tool.WorkflowToolCell$WorkflowToolCellSerializer">
+         </serializer>
          <ValueFactory
                deprecated="false"
                valueFactoryClass="org.knime.core.node.tool.WorkflowToolValueFactory">
