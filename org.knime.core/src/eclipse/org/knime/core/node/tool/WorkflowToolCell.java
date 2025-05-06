@@ -48,7 +48,9 @@
  */
 package org.knime.core.node.tool;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -58,7 +60,6 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.capture.BuildWorkflowsUtil;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 
 /**
@@ -106,8 +107,9 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
     }
 
     private static byte[] serializeWorkflowSegment(final WorkflowSegment workflowSegment) {
-        try {
-            return BuildWorkflowsUtil.wfmToStream(workflowSegment.loadWorkflow());
+        try (var byteOut = new ByteArrayOutputStream(); var zipOut = new ZipOutputStream(byteOut)) {
+            workflowSegment.save(zipOut);
+            return byteOut.toByteArray();
         } catch (IOException ex) {
             // TODO
             throw new RuntimeException(ex);

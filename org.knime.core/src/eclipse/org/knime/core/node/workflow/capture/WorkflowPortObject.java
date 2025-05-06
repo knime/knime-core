@@ -267,7 +267,7 @@ public class WorkflowPortObject extends AbstractPortObject implements IsPortObje
         wfmTransformer.accept(wfmCopy);
         byte[] wfmStream;
         try {
-            wfmStream = BuildWorkflowsUtil.wfmToStream(wfmCopy, wfmCopy.getNodeContainerDirectory().getFile());
+            wfmStream = WorkflowSegment.wfmToStream(wfmCopy, wfmCopy.getNodeContainerDirectory().getFile());
         } finally {
             WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeNode(wfmCopy.getID());
         }

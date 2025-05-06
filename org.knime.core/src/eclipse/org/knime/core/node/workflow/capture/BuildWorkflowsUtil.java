@@ -48,33 +48,18 @@
  */
 package org.knime.core.node.workflow.capture;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
-import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.WorkflowSaveHelper;
-import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
-import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.util.FileUtil;
-import org.knime.core.util.FileUtil.ZipFileFilter;
-import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
-import org.knime.core.util.VMFileLocker;
 
 /**
  * Utility methods for 'build-workflow' functionality.
@@ -234,63 +219,5 @@ public final class BuildWorkflowsUtil {
         }
         return wfm;
     }
-
-    /**
-     * TODO
-     *
-     * @param wfmStream
-     * @param workflowName
-     * @param inputs
-     * @param outputs
-     * @return
-     */
-    public static WorkflowSegment createWorkflowSegment(final byte[] wfmStream, final String workflowName,
-        final List<Input> inputs, final List<Output> outputs) {
-        return new WorkflowSegment(wfmStream, workflowName, inputs, outputs, Set.of());
-    }
-
-    /**
-     * TODO
-     *
-     * @param wfm
-     * @return
-     * @throws IOException
-     */
-    public static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
-        var tmpDir = newTempDirWithName(wfm.getName());
-        try {
-            return wfmToStream(wfm, tmpDir);
-        } finally {
-            FileUtil.deleteRecursively(tmpDir.getParentFile());
-        }
-    }
-
-    /**
-     * @return a new empty temporary directory called according to the <code>name</code> (workflow name)
-     * @throws IOException Failing to creating the folder
-     */
-    // added as part of AP-21997
-    static File newTempDirWithName(final String name) throws IOException {
-        final String sanitizedName = FileUtil.ILLEGAL_FILENAME_CHARS_PATTERN.matcher(name).replaceAll("_");
-        return new File(FileUtil.createTempDir("workflow_segment"), sanitizedName);
-    }
-
-    static byte[] wfmToStream(final WorkflowManager wfm, final File tmpDir) throws IOException {
-        try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
-            var saveHelper = new WorkflowSaveHelper(false, false);
-            wfm.save(tmpDir, saveHelper, new ExecutionMonitor());
-            FileUtil.zipDir(out, Collections.singleton(tmpDir), new ZipFileFilter() {
-                @Override
-                public boolean include(final File f) {
-                    return !f.getName().equals(VMFileLocker.LOCK_FILE);
-                }
-            }, null);
-            bos.flush();
-            return bos.toByteArray();
-        } catch (LockFailedException | CanceledExecutionException | IOException e) {
-            throw new IOException("Failed saving workflow port object", e);
-        }
-    }
-
 
 }
