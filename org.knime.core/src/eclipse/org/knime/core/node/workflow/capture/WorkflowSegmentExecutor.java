@@ -49,11 +49,14 @@
 package org.knime.core.node.workflow.capture;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -65,6 +68,7 @@ import java.util.stream.Stream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
@@ -94,8 +98,12 @@ import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeFacto
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.util.JsonUtil;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
+
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
 
 /**
  * Represents an executable {@link WorkflowSegment}. The execution is done by embedding the workflow segment as a
@@ -213,6 +221,30 @@ public final class WorkflowSegmentExecutor {
 
     private static PortType getNonOptionalType(final PortType p) {
         return PortTypeRegistry.getInstance().getPortType(p.getPortObjectClass());
+    }
+
+    /**
+     * TODO
+     *
+     * @param parameters
+     * @throws InvalidSettingsException
+     * @throws JsonException
+     */
+    public void configureWorkflow(final String parameters) throws JsonException, InvalidSettingsException {
+        var jsonObject = JsonUtil.getProvider().createReader(new StringReader(parameters)).readObject();
+        configureWorkflow(jsonObject.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+    }
+
+    /**
+     * TODO
+     *
+     * @throws InvalidSettingsException
+     * @throws JsonException
+     */
+    public void configureWorkflow(final Map<String, JsonValue> parameters)
+        throws JsonException, InvalidSettingsException {
+        checkWfmNonNull();
+        m_wfm.setConfigurationNodes(parameters);
     }
 
     /**
