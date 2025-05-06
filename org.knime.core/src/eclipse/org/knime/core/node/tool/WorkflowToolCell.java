@@ -91,17 +91,26 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
      */
     public WorkflowToolCell(final String name, final String description, final String parameterSchema,
         final Input[] inputs, final Output[] outputs, final WorkflowSegment workflowSegment) {
+        this(name, description, parameterSchema, inputs, outputs, serializeWorkflowSegment(workflowSegment));
+    }
+
+    private static byte[] serializeWorkflowSegment(final WorkflowSegment workflowSegment) {
+        try {
+            return BuildWorkflowsUtil.wfmToStream(workflowSegment.loadWorkflow());
+        } catch (IOException ex) {
+            // TODO
+            throw new RuntimeException(ex);
+        }
+    }
+
+    WorkflowToolCell(final String name, final String description, final String parameterSchema, final Input[] inputs,
+        final Output[] outputs, final byte[] workflow) {
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
         m_inputs = inputs;
         m_outputs = outputs;
-        try {
-            m_workflow = BuildWorkflowsUtil.wfmToStream(workflowSegment.loadWorkflow());
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
+        m_workflow = workflow;
     }
 
     @Override
