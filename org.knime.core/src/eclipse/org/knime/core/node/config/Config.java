@@ -53,10 +53,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -64,7 +66,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataTypeRegistry;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterFactory;
+import org.knime.core.data.convert.datacell.JavaToDataCellConverterRegistry;
+import org.knime.core.data.convert.java.DataCellToJavaConverterFactory;
+import org.knime.core.data.convert.java.DataCellToJavaConverterRegistry;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.ComplexNumberCell;
@@ -74,6 +81,7 @@ import org.knime.core.data.def.FuzzyNumberCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config.DataCellEntry.BooleanCellEntry;
@@ -462,24 +470,62 @@ public abstract class Config extends ConfigBase implements ConfigRO, ConfigWO {
         ConfigWO config = addConfig(key);
         if (cell == null) {
             config.addString(CFG_DATA_CELL, null);
-        } else {
-            String className = cell.getClass().getName();
-            Object o = DATACELL_MAP.get(className);
-            if (o != null) {
-                config.addString(CFG_DATA_CELL, className);
-                DataCellEntry e = (DataCellEntry)o;
-                Config cellConfig = config.addConfig(className);
-                e.saveToConfig(cell, cellConfig);
-            } else {
-                try {
-                    // serialize DataCell
-                    config.addString(CFG_DATA_CELL, className);
-                    config.addString(CFG_DATA_CELL_SER, Config.writeObject(cell));
-                } catch (IOException ioe) {
-                    LOGGER.warn("Could not write DataCell: " + cell, ioe);
-                }
+            return;
+        }
+
+        String className = cell.getClass().getName();
+        Object o = DATACELL_MAP.get(className);
+        if (o != null) {
+            config.addString(CFG_DATA_CELL, className);
+            DataCellEntry e = (DataCellEntry)o;
+            Config cellConfig = config.addConfig(className);
+            e.saveToConfig(cell, cellConfig);
+            return;
+        }
+
+        DataCellToJavaConverterFactory<? extends DataValue, String> toStringConverter =
+            getDataCellToStringConverter(cell).orElse(null);
+        if (toStringConverter != null) {
+            // use the converter to convert the DataCell to String
+            config.addString(CFG_DATA_CELL, className);
+            String str;
+            try {
+                str = toStringConverter.create().convertUnsafe(cell);
+                config.addString(CFG_DATA_CELL_SER, str);
+            } catch (Exception ex) {
+                LOGGER.error("Could not write DataCell: " + cell, ex);
+            }
+            return;
+        }
+
+        try {
+            config.addString(CFG_DATA_CELL, className);
+            config.addString(CFG_DATA_CELL_SER, Config.writeObject(cell));
+        } catch (IOException ioe) {
+            LOGGER.warn("Could not write DataCell: " + cell, ioe);
+        }
+    }
+
+    private static Optional<DataCellToJavaConverterFactory<? extends DataValue, String>>
+        getDataCellToStringConverter(final DataCell cell) {
+        final Optional<DataCellToJavaConverterFactory<? extends DataValue, String>> toJavaConverter =
+            DataCellToJavaConverterRegistry.getInstance().getPreferredConverterFactory(cell.getType(), String.class);
+        if (toJavaConverter.isPresent()) {
+            Collection<JavaToDataCellConverterFactory<?>> toCellConverter =
+                    JavaToDataCellConverterRegistry.getInstance().getFactories(String.class, cell.getType());
+            if (toCellConverter.size() == 1) {
+                return toJavaConverter;
             }
         }
+        return Optional.empty();
+    }
+
+    private static Optional<JavaToDataCellConverterFactory<String>>
+        getStringToDataCellConverter(final Class<? extends DataCell> cellClass) {
+        return JavaToDataCellConverterRegistry.getInstance().getFactoriesForSourceType(String.class).stream() //
+            .filter(c -> c.getDestinationType().getCellClass().equals(cellClass)) //
+            .map(c -> (JavaToDataCellConverterFactory<String>)c) //
+            .findFirst();
     }
 
     /**
@@ -529,6 +575,17 @@ public abstract class Config extends ConfigBase implements ConfigRO, ConfigWO {
             DataCellEntry e = (DataCellEntry)o;
             return e.createCell(cellConfig);
         } else {
+            Optional<JavaToDataCellConverterFactory<String>> toDataCellConverter =
+                DataTypeRegistry.getInstance().getCellClass(className).flatMap(Config::getStringToDataCellConverter);
+            if (toDataCellConverter.isPresent()) {
+                try {
+                    return toDataCellConverter.get().create((ExecutionContext)null)
+                        .convert(config.getString(CFG_DATA_CELL_SER, null));
+                } catch (Exception ex) {
+                    LOGGER.warn("Could not read DataCell: " + className, ex);
+                    return null;
+                }
+            }
             // deserialize DataCell
             try {
                 String serString = config.getString(CFG_DATA_CELL_SER, null);
