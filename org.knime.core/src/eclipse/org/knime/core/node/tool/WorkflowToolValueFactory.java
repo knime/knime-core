@@ -91,6 +91,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
     interface WorkflowToolReadValue extends ReadValue, ToolValue {
 
+        byte[] getWorkflow();
+
     }
 
     private static final class DefaultWorkflowToolReadValue implements WorkflowToolReadValue {
@@ -143,6 +145,12 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             // TODO Auto-generated method stub
             return null;
         }
+
+        @Override
+        public byte[] getWorkflow() {
+            return m_binaryRepresentation.getByteArray();
+        }
+
         @Override
         public ToolResult execute(final String parameters, final PortObject[] inputs) {
             return getDataCell().execute(parameters, inputs);
@@ -150,7 +158,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
     }
 
-    interface WorkflowToolWriteValue extends WriteValue<WorkflowToolCell> {
+    interface WorkflowToolWriteValue extends WriteValue<ToolValue> {
 
     }
 
@@ -169,7 +177,9 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         }
 
         @Override
-        public void setValue(final WorkflowToolCell cell) {
+        public void setValue(final ToolValue value) {
+            // TODO figure out how to do this without casting
+            var cell = (WorkflowToolReadValue)value;
             m_name.setStringValue(cell.getName());
             m_description.setStringValue(cell.getDescription());
             m_parameterSchema.setStringValue(cell.getParameterSchema());
