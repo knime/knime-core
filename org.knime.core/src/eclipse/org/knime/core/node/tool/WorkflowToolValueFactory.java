@@ -179,11 +179,20 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         @Override
         public void setValue(final ToolValue value) {
             // TODO figure out how to do this without casting
-            var cell = (WorkflowToolReadValue)value;
-            m_name.setStringValue(cell.getName());
-            m_description.setStringValue(cell.getDescription());
-            m_parameterSchema.setStringValue(cell.getParameterSchema());
-            m_binaryRepresentation.setByteArray(cell.getWorkflow());
+            if (value instanceof WorkflowToolCell cell) {
+                m_name.setStringValue(cell.getName());
+                m_description.setStringValue(cell.getDescription());
+                m_parameterSchema.setStringValue(cell.getParameterSchema());
+                m_binaryRepresentation.setByteArray(cell.getWorkflow());
+            } else if (value instanceof WorkflowToolReadValue cell) {
+                m_name.setStringValue(cell.getName());
+                m_description.setStringValue(cell.getDescription());
+                m_parameterSchema.setStringValue(cell.getParameterSchema());
+                m_binaryRepresentation.setByteArray(cell.getWorkflow());
+            } else {
+                throw new IllegalArgumentException("Cannot set value of type " + value.getClass().getName() + " to WorkflowToolCell");
+            }
+
         }
 
     }
