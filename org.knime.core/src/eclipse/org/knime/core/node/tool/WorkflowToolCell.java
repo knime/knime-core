@@ -67,7 +67,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.5
  */
-public final class WorkflowToolCell extends DataCell implements ToolValue {
+public final class WorkflowToolCell extends DataCell implements WorkflowToolValue {
 
     /**
      *
@@ -151,7 +151,8 @@ public final class WorkflowToolCell extends DataCell implements ToolValue {
         return m_outputs;
     }
 
-    byte[] getWorkflow() {
+    @Override
+    public byte[] getWorkflow() {
         return m_workflow;
     }
 
