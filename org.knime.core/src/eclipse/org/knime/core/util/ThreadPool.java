@@ -66,6 +66,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Implements a sophisticated thread pool.
@@ -667,8 +669,18 @@ public class ThreadPool {
     private void reacquireSlot(final boolean interruptInCallable) throws InterruptedException {
         synchronized (m_runningWorkers) {
             try {
+
+                // discussed as part of AP-24224: we are more picky to not oversubscribe the thread pool after
+                // leaving 'runInvisible' but some nodes secretly call it during configuration (which is when the
+                // workflow is locked) -- special case here but log
+                final boolean isLockedWorkflow = NodeContext.getContextOptional() //
+                    .flatMap(ctx -> ctx.getContextObjectForClass(WorkflowManager.class)) //
+                    .map(WorkflowManager::isLockedByCurrentThread).orElse(Boolean.FALSE);
+                NodeLogger.getLogger(ThreadPool.class).assertLog(!isLockedWorkflow,
+                    "ThreadPool.runInvisible() called while workflow is locked");
+
                 // no need to re-acquire a slot if we want to pass on the callable interrupt
-                if (!interruptInCallable) {
+                if (!interruptInCallable && !isLockedWorkflow) {
                     // reacquire a "slot" among visible workers
                     // Getting interrupted here can trigger a special case (see below in finally block)
                     while (!hasFreeWorkerSlot()) {
