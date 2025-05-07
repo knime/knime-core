@@ -47,7 +47,11 @@
  */
 package org.knime.core.util;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -60,16 +64,15 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.osgi.internal.framework.ContextFinder;
 import org.hamcrest.core.Is;
+import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeLogger;
-
-import junit.framework.TestCase;
 
 /**
  * Testcase for the thread pool.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class ThreadPoolTest extends TestCase {
+public final class ThreadPoolTest {
     private static final int LOOPS = 20;
     private static final int LOOPS_MODULO = LOOPS / 5;
     /** A counter for the Testers. */
@@ -88,7 +91,7 @@ public class ThreadPoolTest extends TestCase {
          *
          * @param pool a thread pool
          */
-        public Tester(final ThreadPool pool) {
+        Tester(final ThreadPool pool) {
             m_pool = pool;
         }
 
@@ -127,7 +130,8 @@ public class ThreadPoolTest extends TestCase {
      * Tests the root pool.
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testRootPool() throws InterruptedException {
+    @Test
+    void testRootPool() throws InterruptedException {
         ThreadPool root = new ThreadPool(3);
         final int loops = LOOPS;
 
@@ -173,7 +177,8 @@ public class ThreadPoolTest extends TestCase {
      *
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testRootInvisible() throws InterruptedException {
+    @Test
+    void testRootInvisible() throws InterruptedException {
         final ThreadPool root = new ThreadPool(3);
         final int loops = LOOPS;
 
@@ -226,7 +231,8 @@ public class ThreadPoolTest extends TestCase {
      * @throws ExecutionException
      * @throws TimeoutException
      */
-    public void testInvisibleBlocks() throws InterruptedException, ExecutionException, TimeoutException {
+    @Test
+    void testInvisibleBlocks() throws InterruptedException, ExecutionException, TimeoutException {
         final var poolSize = 2;
         final var pool = new ThreadPool(poolSize);
 
@@ -235,8 +241,8 @@ public class ThreadPoolTest extends TestCase {
         final var task2 = submitTask(pool, true);
         final var task3 = submitTask(pool, false);
         Thread.sleep(100);
-        assertEquals("Unexpected number of running workers", poolSize, pool.getRunningThreads());
-        assertEquals("Expected task 3 to be queued", 1, pool.getQueueSize());
+        assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
+        assertEquals(1, pool.getQueueSize(), "Expected task 3 to be queued");
         // task 2 gets invisible, blocking on next condition
         try {
             task2.lock.lock();
@@ -246,8 +252,8 @@ public class ThreadPoolTest extends TestCase {
         }
         Thread.sleep(100);
         // third task gets scheduled on additional worker
-        assertEquals("Unexpected number of running workers", poolSize, pool.getRunningThreads());
-        assertEquals("Expected no task to be queued", 0, pool.getQueueSize());
+        assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
+        assertEquals(0, pool.getQueueSize(), "Expected no task to be queued");
         // invisible task finishes and wants to re-acquire slot
         try {
             task2.lock.lock();
@@ -256,7 +262,7 @@ public class ThreadPoolTest extends TestCase {
             task2.lock.unlock();
         }
         Thread.sleep(100);
-        assertFalse("Expected task 2 to not be finished", task2.task.isDone() || task2.task.isCancelled());
+        assertFalse(task2.task.isDone() || task2.task.isCancelled(), "Expected task 2 to not be finished");
         // worker with task 1 or 3 finishes and releases slot
         try {
             task1.lock.lock();
@@ -265,7 +271,7 @@ public class ThreadPoolTest extends TestCase {
             task1.lock.unlock();
         }
         // invisible task can reacquire slot and finish (return value)
-        assertTrue("Expected task2 to finish", task2.task.get(2, TimeUnit.SECONDS));
+        assertTrue(task2.task.get(2, TimeUnit.SECONDS), "Expected task2 to finish");
         try {
             task3.lock.lock();
             task3.conditions[0].signal();
@@ -320,7 +326,8 @@ public class ThreadPoolTest extends TestCase {
      * Tests the sub pools.
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testSubPools() throws InterruptedException {
+    @Test
+    void testSubPools() throws InterruptedException {
         ThreadPool root = new ThreadPool(20);
         ThreadPool[] pools = new ThreadPool[4];
 
@@ -358,7 +365,8 @@ public class ThreadPoolTest extends TestCase {
      *
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testSubInvisible() throws InterruptedException {
+    @Test
+    void testSubInvisible() throws InterruptedException {
         final ThreadPool root = new ThreadPool(10);
         final ThreadPool sub1 = root.createSubPool(6);
         final ThreadPool sub2 = root.createSubPool(6);
@@ -417,7 +425,8 @@ public class ThreadPoolTest extends TestCase {
      * Tests if the root pool handles submit and enqueue correctly.
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testRootEnqueue() throws InterruptedException {
+    @Test
+    void testRootEnqueue() throws InterruptedException {
         ThreadPool root = new ThreadPool(3);
         final int loops = LOOPS;
 
@@ -474,7 +483,8 @@ public class ThreadPoolTest extends TestCase {
      * Tests if sub pools handle submit and enqueue correctly.
      * @throws InterruptedException if the thread is interrupted
      */
-    public void testSubEnqueue() throws InterruptedException {
+    @Test
+    void testSubEnqueue() throws InterruptedException {
         ThreadPool root = new ThreadPool(20);
         ThreadPool[] pools = new ThreadPool[4];
 
@@ -517,7 +527,8 @@ public class ThreadPoolTest extends TestCase {
      *
      * @throws Exception if an error occurs
      */
-    public void testContextClassloader() throws Exception {
+    @Test
+    void testContextClassloader() throws Exception {
         ThreadPool root = new ThreadPool(1);
 
         Callable<ClassLoader> callable = new Callable<ClassLoader>() {
@@ -537,5 +548,17 @@ public class ThreadPoolTest extends TestCase {
         } finally {
             Thread.currentThread().setContextClassLoader(cl);
         }
+    }
+
+    /** Basic test that nested calls of runInvisible work, at least throw no unexpected exceptions. */
+    @Test
+    void testNestedRunInvisible() throws Exception {
+        ThreadPool root = new ThreadPool(1);
+        Callable<Integer> intCallable = () -> root.runInvisible(() -> root.runInvisible(() -> 42));
+        assertEquals(42, root.submit(intCallable).get());
+
+        Callable<Integer> innerFailCallable = () -> { throw new RuntimeException(); };
+        Callable<Integer> failCallable = () -> root.runInvisible(() -> root.runInvisible(innerFailCallable));
+        assertThrows(ExecutionException.class, () -> root.submit(failCallable).get());
     }
 }
