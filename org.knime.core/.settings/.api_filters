@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="5.5.0"/>
+                <message_argument value="5.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver">
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
@@ -37,6 +45,31 @@
             <message_arguments>
                 <message_argument value="org.knime.core.customization.kai.KAICustomization"/>
                 <message_argument value="KAICustomization(boolean, KAIHubCustomization)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataType.java" type="org.knime.core.data.DataType">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="toLegacyPrettyString()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="toLegacyString()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/ExtensibleUtilityFactory.java" type="org.knime.core.data.ExtensibleUtilityFactory">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="getLegacyNames()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -175,6 +208,15 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.container.filter.TableFilter"/>
                 <message_argument value="fromSelection(Selection)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/convert/map/IdentifiableType.java" type="org.knime.core.data.convert.map.IdentifiableType">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.data.convert.map.IdentifiableType"/>
             </message_arguments>
         </filter>
     </resource>
@@ -321,6 +363,33 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/DataTableSpecExtractor.java" type="org.knime.core.data.util.DataTableSpecExtractor">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="setTypeNameFormat(DataTableSpecExtractor.TypeNameFormat)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/DataTableSpecExtractor.java" type="org.knime.core.data.util.DataTableSpecExtractor$TypeNameFormat">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="TypeNameFormat"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/InstanceCounter.java" type="org.knime.core.data.util.memory.InstanceCounter">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="getName()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/RowContainer.java" type="org.knime.core.data.v2.RowContainer">
         <filter comment="AP-21999: All RowContainer implementation know the schema, this method just exposed it. This is needed for the RowContainer::createRowBuffer method" id="403804204">
             <message_arguments>
@@ -392,11 +461,38 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/internal/ApplicationHealthInternal.java" type="org.knime.core.internal.ApplicationHealthInternal">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.internal.ApplicationHealthInternal"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/internal/CorePlugin.java" type="org.knime.core.internal.CorePlugin">
         <filter comment="new field, not sure why @since is not enough (binary incompatible?)" id="336658481">
             <message_arguments>
                 <message_argument value="org.knime.core.internal.CorePlugin"/>
                 <message_argument value="PLUGIN_SYMBOLIC_NAME"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/monitor/ExternalProcessType.java" type="org.knime.core.monitor.ExternalProcessType">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.monitor.ExternalProcessType"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/monitor/ProcessWatchdog.java" type="org.knime.core.monitor.ProcessWatchdog">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.monitor.ProcessWatchdog"/>
             </message_arguments>
         </filter>
     </resource>
@@ -407,12 +503,53 @@
                 <message_argument value="DEFAULT_CANCEL_MESSAGE"/>
             </message_arguments>
         </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="CanceledExecutionException(Message)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="DEFAULT_CANCEL_MESSAGE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/DefaultNodeProgressMonitor.java" type="org.knime.core.node.DefaultNodeProgressMonitor">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="setExecuteCanceled(Message)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="PROPERTY_TEMP_DIR_MIN_SPACE_MB"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
         <filter comment="Remove static field, previously tagged with @noreference" id="338755678">
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeModel.java" type="org.knime.core.node.NodeModel">
+        <filter id="1192230914">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="INSTANCE_COUNTER"/>
             </message_arguments>
         </filter>
     </resource>
@@ -482,11 +619,29 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/tool/ToolValue.java" type="org.knime.core.node.tool.ToolValue">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.node.tool.ToolValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FlowTryCatchContext.java" type="org.knime.core.node.workflow.FlowTryCatchContext">
         <filter comment="removed public method, no API" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FlowTryCatchContext"/>
                 <message_argument value="setError(String, String, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
+        <filter id="1192230914">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="INSTANCE_COUNTER"/>
             </message_arguments>
         </filter>
     </resource>
@@ -503,6 +658,29 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getNodesInScopeOLD(SingleNodeContainer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="checkFreeSpace(File)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="copy(InputStream, OutputStream, long, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1225785346">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="openStreamWithTimeout(URL, int, int)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -549,6 +727,88 @@
             <message_arguments>
                 <message_argument value="org.knime.core.util.IEarlyStartup"/>
                 <message_argument value="NO_AUTOSTART_APPLICATIONS"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/LRUCache.java" type="org.knime.core.util.LRUCache">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="LRUCache(int, BiConsumer&lt;K,V&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/ThreadPool.java" type="org.knime.core.util.ThreadPool">
+        <filter id="1225785346">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="getQueueSize()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/hub/HubItemVersion.java" type="org.knime.core.util.hub.HubItemVersion">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="convert(HubItemVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="convert(ItemVersion)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/hub/ItemVersionStringPersistor.java" type="org.knime.core.util.hub.ItemVersionStringPersistor">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.util.hub.ItemVersionStringPersistor"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/urlresolve/URLQueryParamUtil.java" type="org.knime.core.util.urlresolve.URLQueryParamUtil">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="org.knime.core.util.urlresolve.URLQueryParamUtil"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/urlresolve/URLResolverUtil.java" type="org.knime.core.util.urlresolve.URLResolverUtil">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="addVersionQueryParameter(ItemVersion, BiConsumer&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="applyTo(ItemVersion, List&lt;NameValuePair&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="migrateFromSpaceVersion(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.5"/>
+                <message_argument value="6.0"/>
+                <message_argument value="parseVersion(String)"/>
             </message_arguments>
         </filter>
     </resource>
