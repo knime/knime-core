@@ -159,7 +159,9 @@ final class SerializationUtil {
                 Config portConf = outputConf.addConfig("connected_port");
                 savePortID(portConf, connectedPort.get());
             }
-            outputConf.addString("id", outputIDs.get(i));
+            if (outputIDs != null) {
+                outputConf.addString("id", outputIDs.get(i));
+            }
         }
     }
 
