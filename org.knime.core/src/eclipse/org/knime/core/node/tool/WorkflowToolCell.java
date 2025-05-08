@@ -85,9 +85,9 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private final String m_parameterSchema;
 
-    private final Input[] m_inputs;
+    private final ToolPort[] m_inputs;
 
-    private final Output[] m_outputs;
+    private final ToolPort[] m_outputs;
 
     private final byte[] m_workflow;
 
@@ -102,7 +102,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      * @param workflowSegment
      */
     public WorkflowToolCell(final String name, final String description, final String parameterSchema,
-        final Input[] inputs, final Output[] outputs, final WorkflowSegment workflowSegment) {
+        final ToolPort[] inputs, final ToolPort[] outputs, final WorkflowSegment workflowSegment) {
         this(name, description, parameterSchema, inputs, outputs, serializeWorkflowSegment(workflowSegment));
     }
 
@@ -116,8 +116,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         }
     }
 
-    WorkflowToolCell(final String name, final String description, final String parameterSchema, final Input[] inputs,
-        final Output[] outputs, final byte[] workflow) {
+    WorkflowToolCell(final String name, final String description, final String parameterSchema, final ToolPort[] inputs,
+        final ToolPort[] outputs, final byte[] workflow) {
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
@@ -142,12 +142,12 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     }
 
     @Override
-    public Input[] getInputs() {
+    public ToolPort[] getInputs() {
         return m_inputs;
     }
 
     @Override
-    public Output[] getOutputs() {
+    public ToolPort[] getOutputs() {
         return m_outputs;
     }
 
@@ -200,7 +200,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             final String parameterSchema = input.readUTF();
             final byte[] workflow = new byte[input.readInt()];
             input.readFully(workflow);
-            return new WorkflowToolCell(name, description, parameterSchema, new Input[0], new Output[0], workflow);
+            return new WorkflowToolCell(name, description, parameterSchema, new ToolPort[0], new ToolPort[0], workflow);
         }
     }
 
