@@ -83,9 +83,6 @@ class BufferedDataContainerRowOutput extends RowOutput {
         m_dataContainer = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void push(final DataRow row) throws InterruptedException {
         if (m_dataContainer == null) {
@@ -95,9 +92,6 @@ class BufferedDataContainerRowOutput extends RowOutput {
         m_dataContainer.addRowToTable(row);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() throws InterruptedException {
         m_closeCalled = true;
@@ -121,9 +115,15 @@ class BufferedDataContainerRowOutput extends RowOutput {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public void setInactive() {
+        super.setInactive();
+        if (m_dataContainer != null) {
+            m_dataContainer.close();
+        }
+        m_closeCalled = true;
+    }
+
     @Override
     public void setFully(final BufferedDataTable table) throws InterruptedException {
         m_dataContainer = null;
