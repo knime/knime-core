@@ -50,8 +50,6 @@ package org.knime.core.node.tool;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 
 /**
  * A ToolValue that represents a tool that can be used by an AI Agent.
@@ -78,15 +76,15 @@ public interface ToolValue extends DataValue {
     /**
      * @return data inputs of the tool which the agent has to provide in {@link #execute(String, PortObject[])}
      */
-    Input[] getInputs();
+    ToolPort[] getInputs();
 
     /**
      * @return data outputs that the tool produces in {@link #execute(String, PortObject[])}
      */
-    Output[] getOutputs();
+    ToolPort[] getOutputs();
 
     /**
-     * Represents a data input of the tool. Data inputs are the inputs that the agent has to provide in order
+     * Represents a port of the tool. Data inputs are the inputs that the agent has to provide in order
      * to execute the tool.
      *
      * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
@@ -95,19 +93,8 @@ public interface ToolValue extends DataValue {
      * @param description the description of the port which the agent can use to pick the port
      * @param spec optional spec of the port if available which gives more context to the agent
      */
-    record Input(PortType type, String name, String description, PortObjectSpec spec) {}
+    record ToolPort(String type, String name, String description, String spec) {}
 
-    /**
-     * Represents data output of the tool. Data outputs are the outputs that the tool produces during
-     * execute and that the agent can use to execute subsequent tools with.
-     *
-     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     * @param type the type of the port
-     * @param name the name of the port which the agent can use to identify the port
-     * @param description the description of the port which the agent can use to pick the port
-     * @param spec optional spec of the port if available which gives more context to the agent
-     */
-    record Output(PortType type, String name, String description, PortObjectSpec spec) {}
 
     /**
      * Represents the result of executing a tool. The result contains a message that is presented to the agent,

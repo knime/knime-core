@@ -48,10 +48,15 @@
  */
 package org.knime.core.node.tool;
 
+import java.util.stream.IntStream;
+
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.tool.ToolValue.ToolPort;
+import org.knime.core.table.access.ListAccess.ListReadAccess;
+import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
@@ -59,6 +64,7 @@ import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StringDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec;
@@ -82,22 +88,29 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
     @Override
     public DataSpec getSpec() {
-        return new StructDataSpec(
-            StringDataSpec.INSTANCE,// name
-            StringDataSpec.INSTANCE,// description
-            StringDataSpec.INSTANCE,// parameter schema
-            VarBinaryDataSpec.INSTANCE); // binary representation
+        return new StructDataSpec(StringDataSpec.INSTANCE, // name
+            StringDataSpec.INSTANCE, // description
+            StringDataSpec.INSTANCE, // parameter schema
+            VarBinaryDataSpec.INSTANCE, // binary representation
+            new ListDataSpec(portDataSpec()), // input ports
+            new ListDataSpec(portDataSpec()) // output ports
+        );
+    }
+
+    private static DataSpec portDataSpec() {
+        return new StructDataSpec(//
+            StringDataSpec.INSTANCE, // name
+            StringDataSpec.INSTANCE, // description
+            StringDataSpec.INSTANCE, // type
+            StringDataSpec.INSTANCE // optional spec
+        );
     }
 
     interface WorkflowToolReadValue extends ReadValue, WorkflowToolValue {
 
-        @Override
-        byte[] getWorkflow();
-
     }
 
     private static final class DefaultWorkflowToolReadValue implements WorkflowToolReadValue {
-
 
         private final StringReadAccess m_name;
 
@@ -107,17 +120,24 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private final VarBinaryReadAccess m_binaryRepresentation;
 
+        private final ListReadAccess m_inputPorts;
+
+        private final ListReadAccess m_outputPorts;
+
         private DefaultWorkflowToolReadValue(final StructReadAccess access) {
             m_name = access.getAccess(0);
             m_description = access.getAccess(1);
             m_parameterSchema = access.getAccess(2);
             m_binaryRepresentation = access.getAccess(3);
+            m_inputPorts = access.getAccess(4);
+            m_outputPorts = access.getAccess(5);
         }
 
         @Override
         public WorkflowToolCell getDataCell() {
             return new WorkflowToolCell(m_name.getStringValue(), m_description.getStringValue(),
-                m_parameterSchema.getStringValue(), new Input[0], new Output[0], m_binaryRepresentation.getByteArray());
+                m_parameterSchema.getStringValue(), new ToolPort[0], new ToolPort[0],
+                m_binaryRepresentation.getByteArray());
         }
 
         @Override
@@ -136,15 +156,29 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         }
 
         @Override
-        public Input[] getInputs() {
-            // TODO Auto-generated method stub
-            return null;
+        public ToolPort[] getInputs() {
+            return readToolPorts(m_inputPorts);
+        }
+
+        private static ToolPort[] readToolPorts(final ListReadAccess access) {
+            final StructReadAccess portAccess = access.getAccess();
+            return IntStream.range(0, access.size())//
+                .mapToObj(i -> readToolPort(portAccess))//
+                .toArray(ToolPort[]::new);
+        }
+
+        private static ToolPort readToolPort(final StructReadAccess access) {
+            final String name = access.<StringReadAccess> getAccess(0).getStringValue();
+            final String description = access.<StringReadAccess> getAccess(1).getStringValue();
+            final String type = access.<StringReadAccess> getAccess(2).getStringValue();
+            var specAccess = access.<StringReadAccess> getAccess(3);
+            final String spec = specAccess.isMissing() ? null : specAccess.getStringValue();
+            return new ToolPort(type, name, description, spec);
         }
 
         @Override
-        public Output[] getOutputs() {
-            // TODO Auto-generated method stub
-            return null;
+        public ToolPort[] getOutputs() {
+            return readToolPorts(m_outputPorts);
         }
 
         @Override
@@ -166,23 +200,72 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
     private static final class DefaultWorkflowToolWriteValue implements WorkflowToolWriteValue {
 
         private final StringWriteAccess m_name;
+
         private final StringWriteAccess m_description;
+
         private final StringWriteAccess m_parameterSchema;
+
         private final VarBinaryWriteAccess m_binaryRepresentation;
+
+        private final ListWriteAccess m_inputPorts;
+
+        private final ListWriteAccess m_outputPorts;
 
         private DefaultWorkflowToolWriteValue(final StructWriteAccess access) {
             m_name = access.getWriteAccess(0);
             m_description = access.getWriteAccess(1);
             m_parameterSchema = access.getWriteAccess(2);
             m_binaryRepresentation = access.getWriteAccess(3);
+            m_inputPorts = access.getWriteAccess(4);
+            m_outputPorts = access.getWriteAccess(5);
         }
 
         @Override
         public void setValue(final WorkflowToolValue value) {
-                m_name.setStringValue(value.getName());
-                m_description.setStringValue(value.getDescription());
-                m_parameterSchema.setStringValue(value.getParameterSchema());
-                m_binaryRepresentation.setByteArray(value.getWorkflow());
+            if (value instanceof DefaultWorkflowToolReadValue readValue) {
+                setFromAccesses(readValue);
+            } else {
+                setFromValue(value);
+            }
+        }
+
+        private void setFromValue(final WorkflowToolValue value) {
+            m_name.setStringValue(value.getName());
+            m_description.setStringValue(value.getDescription());
+            m_parameterSchema.setStringValue(value.getParameterSchema());
+            m_binaryRepresentation.setByteArray(value.getWorkflow());
+            writeToolPorts(m_inputPorts, value.getInputs());
+            writeToolPorts(m_outputPorts, value.getOutputs());
+        }
+
+        private void setFromAccesses(final DefaultWorkflowToolReadValue value) {
+            m_name.setFrom(value.m_name);
+            m_description.setFrom(value.m_description);
+            m_parameterSchema.setFrom(value.m_parameterSchema);
+            m_binaryRepresentation.setFrom(value.m_binaryRepresentation);
+            m_inputPorts.setFrom(value.m_inputPorts);
+            m_outputPorts.setFrom(value.m_outputPorts);
+        }
+
+        private static void writeToolPorts(final ListWriteAccess access, final ToolPort[] ports) {
+            final StructWriteAccess portAccess = access.getWriteAccess();
+            for (int i = 0; i < ports.length; i++) {
+                final ToolPort port = ports[i];
+                access.setWriteIndex(i);
+                writeToolPort(portAccess, port);
+            }
+        }
+
+        private static void writeToolPort(final StructWriteAccess access, final ToolPort port) {
+            access.<StringWriteAccess> getWriteAccess(0).setStringValue(port.name());
+            access.<StringWriteAccess> getWriteAccess(1).setStringValue(port.description());
+            access.<StringWriteAccess> getWriteAccess(2).setStringValue(port.type());
+            var specAccess = access.<StringWriteAccess> getWriteAccess(3);
+            if (port.spec() == null) {
+                specAccess.setMissing();
+            } else {
+                specAccess.setStringValue(port.spec());
+            }
         }
 
     }
