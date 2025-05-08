@@ -136,7 +136,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         @Override
         public WorkflowToolCell getDataCell() {
             return new WorkflowToolCell(m_name.getStringValue(), m_description.getStringValue(),
-                m_parameterSchema.getStringValue(), new ToolPort[0], new ToolPort[0],
+                m_parameterSchema.getStringValue(), readToolPorts(m_inputPorts), readToolPorts(m_outputPorts),
                 m_binaryRepresentation.getByteArray());
         }
 
