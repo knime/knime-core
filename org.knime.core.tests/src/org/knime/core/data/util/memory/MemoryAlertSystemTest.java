@@ -48,8 +48,7 @@
  */
 package org.knime.core.data.util.memory;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -70,9 +69,9 @@ import org.knime.core.node.NodeLogger;
  */
 public class MemoryAlertSystemTest {
 
-    // some JVMs even throw an "java.lang.OutOfMemoryError: Requested array size exceeds VM limit" for values below
-    // Integer.MAX_VALUE
-    private static final int MAX_ARRAY_LENGTH = 1000000000;
+    // some JVMs even throw an "java.lang.OutOfMemoryError: Requested array size exceeds VM limit"
+    // for values below Integer.MAX_VALUE, reduced to 100M in AP-22242
+    private static final int MAX_ARRAY_LENGTH = 100000000;
 
     private MemoryAlertSystem m_memSystem;
 
@@ -93,8 +92,9 @@ public class MemoryAlertSystemTest {
             forceGC();
             Thread.sleep(1000);
         }
-        assertThat("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage(),
-            MemoryAlertSystem.getInstance().isMemoryLow(), is(false));
+        assertThat(MemoryAlertSystem.getInstance().isMemoryLow()) //
+            .as("Cannot test because memory usage is already above threshold: " + MemoryAlertSystem.getUsage()) //
+            .isFalse();
         m_memSystem = MemoryAlertSystem.getInstance();
         NodeLogger.getLogger(getClass()).debug("Memory usage: " + MemoryAlertSystem.getUsedMemory() + "/"
             + MemoryAlertSystem.getMaximumMemory() + " => " + MemoryAlertSystem.getUsage());
@@ -115,14 +115,12 @@ public class MemoryAlertSystemTest {
     }
 
     /**
-     * Checks whether listeners are notified correctly.
+     * Checks whether listeners are notified correctly, and removed automatically.
      *
      * @throws Exception if an error occurs
      */
     @Test
     public void testListener() throws Exception {
-        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
-
         final AtomicBoolean listenerCalled = new AtomicBoolean();
         MemoryAlertListener listener = new MemoryAlertListener() {
             @Override
@@ -130,44 +128,7 @@ public class MemoryAlertSystemTest {
                 NodeLogger.getLogger(MemoryAlertSystemTest.class)
                     .debug("Memory listener called, current usage is " + MemoryAlertSystem.getUsage());
                 listenerCalled.set(true);
-                return false;
-            }
-        };
-
-        m_memSystem.addListener(listener);
-        try {
-            forceGC();
-            Thread.sleep(1000);
-            assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
-                listenerCalled.get(), is(false));
-
-            final byte[][] bufs = new byte[reserveSizeSplits.size()][];
-            for (int i = 0; i < reserveSizeSplits.size(); i++) {
-                bufs[i] = new byte[reserveSizeSplits.get(i)];
-            }
-            forceGC();
-            Thread.sleep(1000);
-            assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
-                listenerCalled.get(), is(true));
-        } finally {
-            m_memSystem.removeListener(listener);
-        }
-    }
-
-    /**
-     * Checks whether listeners are removed automatically.
-     *
-     * @throws Exception if an error occurs
-     */
-    @Test
-    public void testAutoRemoveListener() throws Exception {
-        final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
-
-        final AtomicBoolean listenerCalled = new AtomicBoolean();
-        MemoryAlertListener listener = new MemoryAlertListener() {
-            @Override
-            protected boolean memoryAlert(final MemoryAlert alert) {
-                listenerCalled.set(true);
+                // remove this listener after alerting once
                 return true;
             }
         };
@@ -176,20 +137,26 @@ public class MemoryAlertSystemTest {
         try {
             forceGC();
             Thread.sleep(1000);
-            assertThat("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage(),
-                listenerCalled.get(), is(false));
+            assertThat(listenerCalled.get()) //
+                .as("Alert listener called although usage is below threshold: " + MemoryAlertSystem.getUsage())
+                .isFalse(); //
 
+            // allocate memory such that alert is triggered, calling `determineReserveSizeSplits()`
+            // immediately before allocation to ensure we do not overshoot and cause OOMs (AP-22242)
+            final List<Integer> reserveSizeSplits = determineReserveSizeSplits();
             final byte[][] bufs = new byte[reserveSizeSplits.size()][];
             for (int i = 0; i < reserveSizeSplits.size(); i++) {
                 bufs[i] = new byte[reserveSizeSplits.get(i)];
             }
+
             forceGC();
             Thread.sleep(1000);
-            assertThat("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage(),
-                listenerCalled.getAndSet(false), is(true));
+            assertThat(listenerCalled.get()) //
+                .as("Alert listener not called although usage is above threshold: " + MemoryAlertSystem.getUsage()) //
+                .isTrue();
 
-            boolean removed = m_memSystem.removeListener(listener);
-            assertThat("Listener was not removed automatically", removed, is(false));
+            final var removed = m_memSystem.removeListener(listener);
+            assertThat(removed).as("Listener was not removed automatically").isFalse();
         } finally {
             m_memSystem.removeListener(listener);
         }
