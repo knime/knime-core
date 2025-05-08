@@ -249,6 +249,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private static void writeToolPorts(final ListWriteAccess access, final ToolPort[] ports) {
             final StructWriteAccess portAccess = access.getWriteAccess();
+            access.create(ports.length);
             for (int i = 0; i < ports.length; i++) {
                 final ToolPort port = ports[i];
                 access.setWriteIndex(i);
