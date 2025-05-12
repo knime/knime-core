@@ -53,6 +53,7 @@
 				<module>org.knime.rsyntaxtextarea</module>
 				<module>org.knime.features.core</module>
 				<module>org.knime.core.workflow.tests</module>
+				<module>org.knime.core.workbench.tests</module>
 				<module>org.knime.slf4j.binding</module>
 				<module>org.knime.slf4j.binding.tests</module>
 				<module>org.knime.log4j2.tests</module>

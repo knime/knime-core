@@ -62,7 +62,7 @@ public final class WorkbenchMountException extends Exception {
      * Creates a new exception.
      * @param message The message
      */
-    public WorkbenchMountException(final String message) {
+    WorkbenchMountException(final String message) {
         super(message);
     }
 
@@ -72,7 +72,7 @@ public final class WorkbenchMountException extends Exception {
      * @param message The message
      * @param cause The cause
      */
-    public WorkbenchMountException(final String message, final Throwable cause) {
+    WorkbenchMountException(final String message, final Throwable cause) {
         super(message, cause);
     }
 

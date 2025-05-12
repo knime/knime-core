@@ -51,6 +51,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -102,6 +103,12 @@ public final class WorkbenchMountTable {
      */
     @SuppressWarnings("java:S5867") // Unicode character classes are explicitly not wanted here
     private static final Pattern MOUNTID_PATTERN = Pattern.compile("^[a-zA-Z](?:[.a-zA-Z0-9-]*[a-zA-Z0-9])?$");
+
+    /**
+     * Helps to sort mount point types in the mount point definition dialog.
+     */
+    private static final Comparator<WorkbenchMountPointType> DESC_PRIO =
+        Comparator.comparingInt(WorkbenchMountPointType::getSortPriority).reversed();
 
     private WorkbenchMountTable() {
         // hiding constructor of utility class
@@ -321,6 +328,7 @@ public final class WorkbenchMountTable {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                 .filter(mpDef -> mpDef.supportsMultipleInstances() || !(isMounted(mpDef.getTypeIdentifier()))) //
+                .sorted(DESC_PRIO) //
                 .toList();
         }
     }
@@ -356,6 +364,7 @@ public final class WorkbenchMountTable {
      * @param mountID the mount point
      * @return null, if no content is mounted with the specified ID
      */
+    // TODO change to Optional return type
     public static WorkbenchMountPoint getMountPoint(final String mountID) {
         synchronized (MOUNTED) {
             return MOUNTED.get(mountID);

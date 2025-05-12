@@ -44,24 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 30, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.api;
+package org.knime.core.workbench;
+
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
- * A state represents the content of a mount point, stuff that any of the providers (MUI, CUI, ...) use commonly, e.g.
- * log-in information for hub connection.
- *
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  */
-public interface WorkbenchMountPointState {
+public final class TestMountPointState implements WorkbenchMountPointState {
 
-    /** @return The type the state is associated with. This is immutable and often hard-coded. */
-    WorkbenchMountPointType getType();
+    /** The type of this mount point. */
+    static final WorkbenchMountPointType TYPE =
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail("test-provider");
 
-    /** @return If this mount point is a server or hub mount point. */
-    default boolean isRemote() {
-        return false;
+    /** Factory class. */
+    public static final class Factory implements WorkbenchMountPointStateFactory<TestMountPointState> {
+
+        @Override
+        public TestMountPointState newInstance(final MountSettings settings) {
+            return new TestMountPointState();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Test Mountpoint";
+        }
+
+        @Override
+        public String getContentDisplayString(final MountSettings mountSettings) {
+            return "TEST";
+        }
+    }
+
+    private TestMountPointState() {
+    }
+
+    @Override
+    public WorkbenchMountPointType getType() {
+        return TYPE;
     }
 }

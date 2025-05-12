@@ -150,6 +150,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
             // hard to read? If enforceExclusion is true, we want to filter/exclude all mount points
             isADefaultMountPointPredicate = mountID -> !enforceExclusion;
         } else {
+            // this ignores the enforceExclusion flag, it's evaluated later when populating the mount table
             final Set<String> defaultMountPoints = Arrays.stream(mpSetting.split("\\,")) //
                     .map(String::trim) //
                     .filter(StringUtils::isNotEmpty) //
@@ -163,7 +164,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
                         return type.getDefaultSettings();
                     } catch (WorkbenchMountException e) {
                         LOGGER.atError().setCause(e).log(
-                            "Failed to create mount point for default mount point " + "with id '{}'",
+                            "Failed to create mount point for default mount point with id '{}'",
                             type.getDefaultMountID().orElse("<unknown>"));
                         return Optional.<MountSettings> empty();
                     }
@@ -176,7 +177,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
     /**
      * @return a list with all default mount point IDs that shall be excluded.
      */
-    public static List<String> getExcludedDefaultMountIDs() {
+    static List<String> getExcludedDefaultMountIDs() {
         if (DefaultScope.INSTANCE.getNode(MOUNTPOINT_PREFERENCE_LOCATION).getBoolean(ENFORCE_EXCLUSION, false)) {
             final List<String> includedMountPoints = getIncludedDefaultMountPoints().stream() //
                     .map(MountSettings::getDefaultMountID) //
