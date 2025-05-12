@@ -49,7 +49,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.knime.core.workbench.preferences.MountSettings;
 
@@ -113,27 +113,14 @@ public final class WorkbenchMountPoint {
      * previously.
      *
      * @param <T> provider type
-     * @param <S> mount point state type
      * @param providerType class object representing the provider type
-     * @param providerFactory factory for creating a provider
+     * @param providerFactory factory to create a provider
      * @return retrieved or newly created provider
      */
     @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider, S extends WorkbenchMountPointState> T getProvider(final Class<T> providerType,
-        final Function<S, T> providerFactory) {
-        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.apply((S)m_state));
-    }
-
-    /**
-     * Retrieves the provider of the given type if one has been attached to this mount point.
-     *
-     * @param <T> provider type
-     * @param providerType class object representing the provider type
-     * @return provider if it exists, {@link Optional#empty()} otherwise
-     */
-    @SuppressWarnings("unchecked")
-    public <T extends MountPointProvider> Optional<T> getProvider(final Class<T> providerType) {
-        return Optional.ofNullable((T)m_contentProviders.get(providerType));
+    public <T extends MountPointProvider> T getProvider(final Class<T> providerType,
+        final Supplier<T> providerFactory) {
+        return (T)m_contentProviders.computeIfAbsent(providerType, k -> providerFactory.get());
     }
 
     /**
@@ -148,8 +135,10 @@ public final class WorkbenchMountPoint {
     /**
      * Disposes all attached content providers.
      */
-    public void dispose() {
-        m_contentProviders.values().forEach(MountPointProvider::dispose);
-        m_contentProviders.clear();
+    void dispose() {
+        synchronized (m_contentProviders) {
+            m_contentProviders.values().forEach(MountPointProvider::dispose);
+            m_contentProviders.clear();
+        }
     }
 }

@@ -59,4 +59,9 @@ public interface WorkbenchMountPointState {
 
     /** @return The type the state is associated with. This is immutable and often hard-coded. */
     WorkbenchMountPointType getType();
+
+    /** @return If this mount point is a server or hub mount point. */
+    default boolean isRemote() {
+        return false;
+    }
 }

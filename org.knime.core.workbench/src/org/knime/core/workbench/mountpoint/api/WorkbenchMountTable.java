@@ -51,18 +51,21 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableFunction;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.events.MountPointEvent;
@@ -102,6 +105,12 @@ public final class WorkbenchMountTable {
      */
     @SuppressWarnings("java:S5867") // Unicode character classes are explicitly not wanted here
     private static final Pattern MOUNTID_PATTERN = Pattern.compile("^[a-zA-Z](?:[.a-zA-Z0-9-]*[a-zA-Z0-9])?$");
+
+    /**
+     * Helps to sort mount point types in the mount point definition dialog.
+     */
+    private static final Comparator<WorkbenchMountPointType> DESC_PRIO =
+        Comparator.comparingInt(WorkbenchMountPointType::getSortPriority).reversed();
 
     private WorkbenchMountTable() {
         // hiding constructor of utility class
@@ -161,22 +170,6 @@ public final class WorkbenchMountTable {
             return true;
         } catch (URISyntaxException e) {
             return false;
-        }
-    }
-
-    /**
-     * Throws an exception, if the specified id is not a valid mount id (in
-     * terms of contained characters). (@see {@link #isValidMountID(String)})
-     *
-     * @param id to test
-     * @throws IllegalArgumentException if the specified id is not a valid mount
-     *             id (in terms of contained characters). (@see
-     *             {@link #isValidMountID(String)})
-     */
-    public static void checkMountID(final String id)
-            throws IllegalArgumentException {
-        if (!isValidMountID(id)) {
-            throw new IllegalArgumentException(id);
         }
     }
 
@@ -254,7 +247,8 @@ public final class WorkbenchMountTable {
     private static WorkbenchMountPoint mountOrRestore(final WorkbenchMountPointType type,
         final MountSettings settings) throws WorkbenchMountException {
         final String mountID = settings.getMountID();
-        checkMountID(mountID);
+        CheckUtils.check(isValidMountID(mountID), WorkbenchMountException::new, "Mount ID %s is invalid.", mountID);
+
         WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
             // can't mount different providers with the same ID
@@ -303,39 +297,14 @@ public final class WorkbenchMountTable {
     }
 
     /**
-     * Unmounts all mount points, ignoring whether unmount was successful or not.
-     */
-    public static void unmountAll() {
-        synchronized (MOUNTED) {
-            List<String> ids = getAllMountedIDs();
-            for (String id : ids) {
-                unmount(id);
-            }
-        }
-    }
-
-    /**
      * @return all mount point types for which mount points can be added
      */
     public static List<WorkbenchMountPointType> getAddableMountPointDefinitions() {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                 .filter(mpDef -> mpDef.supportsMultipleInstances() || !(isMounted(mpDef.getTypeIdentifier()))) //
+                .sorted(DESC_PRIO) //
                 .toList();
-        }
-    }
-
-    /**
-     * Checks whether a mount point of the type with the given ID can be added
-     *
-     * @param factoryID factory ID of the mount point type to be checked
-     * @return {@code true} if such a mount point can be added, {@code false} otherwise
-     */
-    public static boolean isMountable(final String factoryID) {
-        synchronized (MOUNTED) {
-            return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
-                .anyMatch(mpType -> Objects.equals(mpType.getTypeIdentifier(), factoryID)
-                    && (mpType.supportsMultipleInstances() || !isMounted(mpType.getTypeIdentifier())));
         }
     }
 
@@ -354,11 +323,11 @@ public final class WorkbenchMountTable {
      * the specified ID - or null if the ID is not used as mount point.
      *
      * @param mountID the mount point
-     * @return null, if no content is mounted with the specified ID
+     * @return The mount point or an empty Optional if not mounted or unknown.
      */
-    public static WorkbenchMountPoint getMountPoint(final String mountID) {
+    public static Optional<WorkbenchMountPoint> getMountPoint(final String mountID) {
         synchronized (MOUNTED) {
-            return MOUNTED.get(mountID);
+            return Optional.ofNullable(MOUNTED.get(mountID));
         }
     }
 
@@ -399,10 +368,14 @@ public final class WorkbenchMountTable {
      * Initializes the explorer mount table based on the preferences of the plugin's preference store.
      */
     public static void init() {
-        unmountAll();
-        mountTempSpace();
         synchronized (MOUNTED) {
-            for (MountSettings settings : MountSettings.loadSortedMountSettingsFromPreferences(false)) {
+            // unmount all mount points
+            List<String> ids = getAllMountedIDs();
+            for (String id : ids) {
+                unmount(id);
+            }
+            mountTempSpace();
+            for (MountSettings settings : MountSettings.loadSortedMountSettingsFromPreferences(true)) {
                 if (!settings.isActive()) {
                     continue;
                 }

@@ -56,11 +56,18 @@
          <attribute name="stateFactoryClass" type="string" use="required">
             <annotation>
                <documentation>
-                  asdf
+                  The fully qualified class definting the factory for the state.
                </documentation>
                <appinfo>
                   <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory"/>
                </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="sortPriority" type="string" use="default" value="1">
+            <annotation>
+               <documentation>
+                  Sort priority of mount point types in the &quot;new mount point&quot; editor dialog. Default is 1 but some types (hub mount points) are more imporant than others and will set a higher value. Valid values are integer strings between 1 and 100, incl.
+               </documentation>
             </annotation>
          </attribute>
       </complexType>

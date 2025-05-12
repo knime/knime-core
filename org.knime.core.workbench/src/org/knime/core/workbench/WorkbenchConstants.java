@@ -56,9 +56,6 @@ package org.knime.core.workbench;
  */
 public final class WorkbenchConstants {
 
-    /** The plug-in ID. */
-    public static final String PLUGIN_ID = "org.knime.core.workbench";
-
     /** The plug-in which historically has hosted the preferences. Preferences are read/written under this root. */
     public static final String WORKBENCH_PREFERENCES_PLUGIN_ID = "org.knime.workbench.explorer.view";
 
@@ -69,19 +66,9 @@ public final class WorkbenchConstants {
     public static final String P_EXPLORER_MOUNT_POINT_XML = "knime.explorer.mountpoint.xml";
 
     /**
-     * Preference constant for mount points for the Explorer.
-     * @deprecated
-     */
-    @Deprecated(since = "2.9.1")
-    public static final String P_EXPLORER_MOUNT_POINT = "knime.explorer.mountpoint"; // NOSONAR (deprecation)
-
-    /**
      * Pref constant to link the original meta node to a newly defined template.
      */
     public static final String P_EXPLORER_LINK_ON_NEW_TEMPLATE = "knime.explorer.link_on_new_template";
-
-    /** Copied value of org.eclipse.jface.dialogs.MessageDialogWithToggle.PROMPT. */
-    public static final String P_DEFAULT_PROMPT_ACTION = "prompt";
 
     /** Preference constant for showing a warning dialog when connecting to an older server */
     public static final String P_SHOW_OLDER_SERVER_WARNING_DIALOG = "knime.explorer.show_older_server_warning";

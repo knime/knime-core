@@ -202,6 +202,7 @@ public final class MountSettings {
         if (obj == this) {
             return true;
         }
+        // mount point number is not part of equals
         if (obj instanceof MountSettings oms) {
             return new EqualsBuilder() //
                 .append(m_displayName, oms.m_displayName) //
@@ -210,7 +211,6 @@ public final class MountSettings {
                 .append(m_factoryID, oms.m_factoryID) //
                 .append(m_customSettings, oms.m_customSettings) //
                 .append(m_active, oms.m_active) //
-                .append(m_mountPointNumber, oms.m_mountPointNumber) //
                 .isEquals();
         }
         return false;
@@ -225,7 +225,6 @@ public final class MountSettings {
             .append(m_factoryID) //
             .append(m_customSettings) //
             .append(m_active) //
-            .append(m_mountPointNumber) //
             .toHashCode();
     }
 
@@ -264,7 +263,7 @@ public final class MountSettings {
         }
 
         // exclude default mps that are not part of the preference if enforce exclusion is enabled.
-        final List<String> excludedDefaultMPs = MountPointsPreferenceInitializer.getExcludedDefaultMountIDs();
+        final List<String> excludedDefaultMPs = MountPointsPreferencesUtil.getExcludedDefaultMountIDs();
 
         return mountSettings.stream()
                 .filter(e -> !excludedDefaultMPs.contains(e.getDefaultMountID())) //
@@ -327,7 +326,7 @@ public final class MountSettings {
             LOGGER.atError().setCause(ex).log("Unable to read mount point preferences: {}", ex.getMessage());
         }
         if ((childNodes == null || childNodes.length == 0) && loadDefaultsIfEmpty) {
-            MountPointsPreferenceInitializer.loadDefaultMountPoints();
+            return MountPointsPreferencesUtil.loadDefaultMountPoints();
         }
         return loadSortedMountSettingsFromPreferenceNode();
     }

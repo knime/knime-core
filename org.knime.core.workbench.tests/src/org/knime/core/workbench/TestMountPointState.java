@@ -44,42 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 18, 2024 (wiswedel): created
+ *   Oct 31, 2024 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.api.events;
+package org.knime.core.workbench;
 
-import java.util.EventObject;
-
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPoint;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import org.knime.core.workbench.preferences.MountSettings;
 
 /**
- * Event object for mount point changes.
- *
- * @author wiswedel
- * @since 5.5
+ * @author Leonard Wörteler, KNIME GmbH, Konstanz, Germany
  */
-@SuppressWarnings("serial")
-public final class MountPointEvent extends EventObject {
+public final class TestMountPointState implements WorkbenchMountPointState {
 
-    /**
-     * Constructs a new MountPointEvent.
-     *
-     * @param mountPoint mount point associated with this event
-     */
-    public MountPointEvent(final WorkbenchMountPoint mountPoint) {
-        super(mountPoint);
+    /** The type of this mount point. */
+    static final WorkbenchMountPointType TYPE =
+        WorkbenchActivator.getInstance().getMountPointTypeOrFail("test-provider");
+
+    /** Factory class. */
+    public static final class Factory implements WorkbenchMountPointStateFactory<TestMountPointState> {
+
+        @Override
+        public TestMountPointState newInstance(final MountSettings settings) {
+            return new TestMountPointState();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Test Mountpoint";
+        }
+
+        @Override
+        public String getContentDisplayString(final MountSettings mountSettings) {
+            return "TEST";
+        }
+    }
+
+    private TestMountPointState() {
     }
 
     @Override
-    public WorkbenchMountPoint getSource() {
-        return (WorkbenchMountPoint)super.getSource();
+    public WorkbenchMountPointType getType() {
+        return TYPE;
     }
-
-    /**
-     * @return the mount point associated with this event
-     */
-    public WorkbenchMountPoint getMountPoint() {
-        return getSource();
-    }
-
 }

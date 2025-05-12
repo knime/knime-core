@@ -44,7 +44,6 @@
  */
 package org.knime.core.workbench.preferences;
 
-import static org.knime.core.workbench.WorkbenchConstants.P_DEFAULT_PROMPT_ACTION;
 import static org.knime.core.workbench.WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID;
 
 import java.util.ArrayList;
@@ -58,13 +57,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.workbench.WorkbenchActivator;
-import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountException;
 import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
@@ -76,9 +73,9 @@ import org.slf4j.LoggerFactory;
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  * @since 5.5
  */
-public final class MountPointsPreferenceInitializer extends AbstractPreferenceInitializer {
+public final class MountPointsPreferencesUtil {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MountPointsPreferenceInitializer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MountPointsPreferencesUtil.class);
 
     private static final String MOUNTPOINT_PREFERENCE_LOCATION =
         WORKBENCH_PREFERENCES_PLUGIN_ID + "/defaultMountpoint";
@@ -87,38 +84,17 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
 
     private static final String ENFORCE_EXCLUSION = "enforceExclusion";
 
-    @Override
-    public void initializeDefaultPreferences() {
-        IEclipsePreferences defaultPrefStore = DefaultScope.INSTANCE.getNode(WORKBENCH_PREFERENCES_PLUGIN_ID);
-
-        // Set the default behavior of "Do you want to link this metanode".
-        defaultPrefStore.put(WorkbenchConstants.P_EXPLORER_LINK_ON_NEW_TEMPLATE, P_DEFAULT_PROMPT_ACTION);
-
-        // Set the default behavior of "Should a warning dialog appear when you connect to an older server".
-        defaultPrefStore.putBoolean(WorkbenchConstants.P_SHOW_OLDER_SERVER_WARNING_DIALOG,
-            WorkbenchConstants.P_DEFAULT_SHOW_OLDER_SERVER_WARNING_DIALOG);
+    private MountPointsPreferencesUtil() {
     }
 
-    static void loadDefaultMountPoints() {
+    static List<MountSettings> loadDefaultMountPoints() {
         final List<MountSettings> defaultMountPoints = new ArrayList<>(getIncludedDefaultMountPoints());
 
         // sort the default mount points so that the KNIME Hub mount point is always at the top
         defaultMountPoints.sort(Comparator.<MountSettings, Boolean> comparing( //
             e -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(e.getDefaultMountID())) //
             .reversed());
-
-        MountSettings.saveMountSettings(defaultMountPoints);
-    }
-
-    /**
-     * @return true, if mount settings have been stored in XML yet
-     * @since 6.2
-     */
-    public static boolean existsMountPreferencesXML() {
-        IEclipsePreferences preferences =
-                InstanceScope.INSTANCE.getNode(WORKBENCH_PREFERENCES_PLUGIN_ID);
-        String mpSettings = preferences.get(WorkbenchConstants.P_EXPLORER_MOUNT_POINT_XML, null);
-        return StringUtils.isNotEmpty(mpSettings);
+        return defaultMountPoints;
     }
 
     /**
@@ -150,6 +126,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
             // hard to read? If enforceExclusion is true, we want to filter/exclude all mount points
             isADefaultMountPointPredicate = mountID -> !enforceExclusion;
         } else {
+            // this ignores the enforceExclusion flag, it's evaluated later when populating the mount table
             final Set<String> defaultMountPoints = Arrays.stream(mpSetting.split("\\,")) //
                     .map(String::trim) //
                     .filter(StringUtils::isNotEmpty) //
@@ -163,7 +140,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
                         return type.getDefaultSettings();
                     } catch (WorkbenchMountException e) {
                         LOGGER.atError().setCause(e).log(
-                            "Failed to create mount point for default mount point " + "with id '{}'",
+                            "Failed to create mount point for default mount point with id '{}'",
                             type.getDefaultMountID().orElse("<unknown>"));
                         return Optional.<MountSettings> empty();
                     }
@@ -176,7 +153,7 @@ public final class MountPointsPreferenceInitializer extends AbstractPreferenceIn
     /**
      * @return a list with all default mount point IDs that shall be excluded.
      */
-    public static List<String> getExcludedDefaultMountIDs() {
+    static List<String> getExcludedDefaultMountIDs() {
         if (DefaultScope.INSTANCE.getNode(MOUNTPOINT_PREFERENCE_LOCATION).getBoolean(ENFORCE_EXCLUSION, false)) {
             final List<String> includedMountPoints = getIncludedDefaultMountPoints().stream() //
                     .map(MountSettings::getDefaultMountID) //

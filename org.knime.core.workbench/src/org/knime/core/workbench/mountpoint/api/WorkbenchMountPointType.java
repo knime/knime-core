@@ -51,6 +51,7 @@ package org.knime.core.workbench.mountpoint.api;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -89,20 +90,27 @@ public final class WorkbenchMountPointType {
 
     private static final String EXT_ATT_SETTINGS_HANDLER_CLASS = "stateFactoryClass";
 
+    private static final String EXT_ATT_SORT_PRIORITY = "sortPriority";
+
+    private static final int DEFAULT_SORT_PRIO = 1;
+
     private final String m_typeIdentifier;
 
     private final boolean m_supportsMultipleInstances;
+
+    private final int m_sortPriority;
 
     private final String m_defaultMountID;
 
     private final LazyInitializer<WorkbenchMountPointStateFactory<?>> m_stateFactoryInitializer;
 
     private WorkbenchMountPointType(final String typeIdentifier, final String defaultMountID,
-        final boolean supportsMultipleInstances,
+        final boolean supportsMultipleInstances, final int sortPriority,
         final FailableSupplier<WorkbenchMountPointStateFactory<?>, Exception> initializer) {
         m_typeIdentifier = typeIdentifier;
         m_defaultMountID = defaultMountID;
         m_supportsMultipleInstances = supportsMultipleInstances;
+        m_sortPriority = sortPriority;
         m_stateFactoryInitializer =
                 LazyInitializer.<WorkbenchMountPointStateFactory<?>>builder().setInitializer(initializer).get();
     }
@@ -132,6 +140,14 @@ public final class WorkbenchMountPointType {
      */
     public boolean supportsMultipleInstances() {
         return m_supportsMultipleInstances;
+    }
+
+    /**
+     * @return the sort priority of this mount point type (at which position in the "new mount point dialog" the type is
+     *         offered). The higher the number, the higher the priority.
+     */
+    public int getSortPriority() {
+        return m_sortPriority;
     }
 
     /**
@@ -169,7 +185,7 @@ public final class WorkbenchMountPointType {
      * @return created mount point
      * @throws WorkbenchMountException if mount point creation failed
      */
-    public WorkbenchMountPoint createMountPoint(final MountSettings settings) throws WorkbenchMountException {
+    WorkbenchMountPoint createMountPoint(final MountSettings settings) throws WorkbenchMountException {
         CheckUtils.check(m_typeIdentifier.equals(settings.getFactoryID()), WorkbenchMountException::new, //
             () -> "Mount point type mismatch: '%s vs. '%s'".formatted(m_typeIdentifier, settings.getFactoryID()));
         final WorkbenchMountPointStateFactory<?> stateFactory = instantiateStateFactory();
@@ -240,10 +256,30 @@ public final class WorkbenchMountPointType {
         final boolean supportsMultipleInstances =
                 Boolean.parseBoolean(element.getAttribute(EXT_ATT_SUPPORTS_MULTIPLE_INSTANCES));
 
+        final int sortPriority = readSortPriority(element, contributorName);
+
         // init lazily to avoid 3rd party bundle activation until needed
         return Optional.of(new WorkbenchMountPointType(identifier, defaultMountID, supportsMultipleInstances,
-                () -> (WorkbenchMountPointStateFactory<?>)element
-                    .createExecutableExtension(EXT_ATT_SETTINGS_HANDLER_CLASS)));
+            sortPriority, () -> (WorkbenchMountPointStateFactory<?>)element
+                .createExecutableExtension(EXT_ATT_SETTINGS_HANDLER_CLASS)));
+    }
+
+    private static int readSortPriority(final IConfigurationElement element, final String contributorName) {
+        final String attribute = Objects.requireNonNullElse(element.getAttribute(EXT_ATT_SORT_PRIORITY),
+            Integer.toString(DEFAULT_SORT_PRIO));
+        int sortPriority;
+        try {
+            sortPriority = Integer.parseInt(attribute);
+        } catch (NumberFormatException e) {
+            LOGGER.error("Invalid {} \"{}\" in extension {}", EXT_ATT_SORT_PRIORITY, attribute, contributorName);
+            return DEFAULT_SORT_PRIO;
+        }
+        if (sortPriority < 0 || sortPriority > 100) {
+            LOGGER.error("Invalid {} \"{}\" in extension {}, value must be [1, 100]", EXT_ATT_SORT_PRIORITY, attribute,
+                contributorName);
+            return DEFAULT_SORT_PRIO;
+        }
+        return sortPriority;
     }
 
     @Override
