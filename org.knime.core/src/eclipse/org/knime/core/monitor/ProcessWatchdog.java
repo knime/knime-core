@@ -193,8 +193,11 @@ public final class ProcessWatchdog {
      */
     public SafeCloseable registerResourceAlertListener(final ResourceAlertListener resourceAlertListener) {
         if (m_shouldCallResourceAlertListeners) {
+            var warningMessage = "KNIME AP process is using " + humanReadableByteCount(KNIME_PROCESS_RSS.get()) //
+                + " of the available " + humanReadableByteCount(MAX_MEMORY_KBYTES * 1024);
+
             resourceAlertListener.alert(
-                Message.fromSummaryWithResolution("System is low on resources", DEFAULT_LOW_RESOURCE_RESOLUTION));
+                Message.fromSummaryWithResolution(warningMessage, DEFAULT_LOW_RESOURCE_RESOLUTION));
         }
 
         m_resourceAlertListeners.put(resourceAlertListener, resourceAlertListener);
