@@ -63,6 +63,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongConsumer;
 
+import com.sun.jna.Library;
+import com.sun.jna.Native;
 import org.apache.commons.lang3.SystemUtils;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.message.Message;
@@ -104,6 +106,9 @@ public final class ProcessWatchdog {
      */
     private static final long CONTAINER_RESERVED_MEMORY_KBYTES =
         Long.getLong("knime.processwatchdog.containerreservedkbytes", 128);
+
+    /** The interval for periodic malloc_trim in milliseconds. 0 disables periodic trimming. Default is 1 minute */
+    private static final long MEMORY_TRIM_INTERVAL_MS = Long.getLong("knime.processwatchdog.memorytrimintervalms", 60_000);
 
     private static long getMaxMemoryKBytes() {
         var max = Long.getLong("knime.processwatchdog.maxmemory");
@@ -259,6 +264,7 @@ public final class ProcessWatchdog {
             }, 0, POLLING_INTERVAL_MS);
             m_watchdogRunning = true;
 
+            startPeriodicMemoryTrimming();
         } else if (MAX_MEMORY_KBYTES < 0) {
             LOGGER.info("External process memory watchdog is disabled, because the memory limit is set to "
                 + MAX_MEMORY_KBYTES);
@@ -269,6 +275,23 @@ public final class ProcessWatchdog {
             m_watchdogRunning = false;
         } else {
             m_watchdogRunning = false;
+        }
+    }
+
+    private void startPeriodicMemoryTrimming() {
+        if (MEMORY_TRIM_INTERVAL_MS > 0) {
+            var trimTimer = new Timer("KNIME Native Memory Trimmer", true);
+            trimTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        MallocTrim.INSTANCE.malloc_trim(0);
+                        LOGGER.info("Trimming native memory.");
+                    } catch (Throwable t) {
+                        LOGGER.debug("Failed to trim native memory.", t);
+                    }
+                }
+            }, MEMORY_TRIM_INTERVAL_MS, MEMORY_TRIM_INTERVAL_MS);
         }
     }
 
@@ -350,6 +373,13 @@ public final class ProcessWatchdog {
             + " of the available " + humanReadableByteCount(MAX_MEMORY_KBYTES * 1024);
 
         if (knimeMemory > MAX_MEMORY_KBYTES * 0.80) {
+            try {
+                LOGGER.info("Trimming native memory because the KNIME process uses more than 80% of the system RAM.");
+                MallocTrim.INSTANCE.malloc_trim(0);
+            } catch (Throwable t) {
+                LOGGER.debug("Failed to trim native memory.", t);
+            }
+
             if (m_shouldWarnAboutKnimeProcessMemory) {
                 m_shouldWarnAboutKnimeProcessMemory = false;
 
@@ -522,5 +552,33 @@ public final class ProcessWatchdog {
         }
     }
 
+    /**
+     * Interface to access the native {@code malloc_trim} function from the C standard library.
+     * <p>
+     * This interface uses JNA (Java Native Access) to load the C library and expose the
+     * {@code malloc_trim} function, which can be used to release free memory from the heap
+     * back to the operating system.
+     * </p>
+     * <p>
+     * The {@code malloc_trim(int pad)} method attempts to release as much free memory as possible,
+     * optionally leaving {@code pad} bytes untrimmed at the top of the heap. This can help reduce
+     * the memory footprint of the process after large allocations have been freed.
+     * </p>
+     * <p>
+     * Usage example:
+     * <pre>
+     *     int result = MallocTrim.INSTANCE.malloc_trim(0);
+     * </pre>
+     * </p>
+     * <p>
+     * Note: This function is only available on Linux, so INSTANCE if instance is accessed on
+     * another platform, it will fail.
+     * </p>
+     */
+    private interface MallocTrim extends Library {
+        
+        MallocTrim INSTANCE = Native.load("c", MallocTrim.class);
+        int malloc_trim(int pad);
+    }
     //#endregion
 }
