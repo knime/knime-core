@@ -305,6 +305,16 @@ public final class WorkflowSegmentExecutor {
             recursivelyExtractNodeMessages(m_wfm));
     }
 
+    /**
+     * TODO
+     *
+     * @return
+     */
+    public WorkflowManager getWorkflowManager() {
+        checkWfmNonNull();
+        return m_wfm;
+    }
+
     private void checkWfmNonNull() {
         if (m_wfm == null) {
             throw new IllegalStateException(
