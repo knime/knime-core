@@ -445,6 +445,8 @@ public final class WorkflowManager extends NodeContainer
      */
     private File m_tmpDir = null;
 
+    private boolean m_isWriteProtected;
+
     static {
         IEarlyStartup.runBeforeWFMClassLoaded();
     }
@@ -7649,6 +7651,16 @@ public final class WorkflowManager extends NodeContainer
         return result;
     }
 
+    /**
+     * Set this WFM to be write-protected.
+     *
+     * @param isWriteProtected the new value
+     * @since 5.5
+     */
+    public void setWriteProtected(final boolean isWriteProtected) {
+        m_isWriteProtected = isWriteProtected;
+    }
+
     ////////////////////////
     // WFM template handling
     ////////////////////////
@@ -7661,10 +7673,11 @@ public final class WorkflowManager extends NodeContainer
         if (this == ROOT) {
             return false;
         }
+
         try (WorkflowLock lock = lock()) {
-            final boolean isWriteProtected = getDirectNCParent().isWriteProtected();
+            final boolean parentIsWriteProtected = getDirectNCParent().isWriteProtected();
             final boolean isLink = Role.Link == getTemplateInformation().getRole();
-            return isWriteProtected || m_isWorkflowDirectoryReadonly || isLink;
+            return parentIsWriteProtected || m_isWorkflowDirectoryReadonly || isLink || m_isWriteProtected;
         }
     }
 

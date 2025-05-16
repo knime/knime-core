@@ -117,10 +117,11 @@ public interface NodeContainerParent {
      */
     public boolean isLockedByCurrentThread();
 
-    /** Is this workflow represents a linked metanode (locked for edit). This
-     * flag is only a hint for the UI -- non of the add/remove operations will
-     * read this flag.
-     * @return Whether edit operations are not permitted. */
+    /**
+     * This flag is only a hint for the UI -- none of the add/remove operations will read this flag.
+     *
+     * @return Whether edit operations are not permitted.
+     */
     public boolean isWriteProtected();
 
     /** Private routine which assembles a stack of workflow variables all
