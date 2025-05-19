@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.capture;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -67,10 +68,14 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.CheckUtils;
@@ -286,6 +291,48 @@ public final class WorkflowSegment {
             m_wfmStream = wfmToStream(m_wfm);
         }
         disposeWorkflow();
+    }
+
+    /**
+     * Saves the workflow segment to a zip stream.
+     *
+     * @param out -
+     * @throws IOException -
+     * @since 5.5
+     */
+    public void save(final ZipOutputStream out) throws IOException {
+        out.putNextEntry(new ZipEntry("metadata.xml"));
+        final var metadata = new ModelContent("metadata.xml");
+        SharedSaveLoadLogic.saveMetadata(this, metadata);
+        try (final var zout = new NonClosableOutputStream.Zip(out)) {
+            metadata.saveToXML(zout);
+        }
+        saveWorkflowData(out);
+    }
+
+    /**
+     * Restores a workflow segment from a zip stream.
+     *
+     * @param in -
+     * @return the new workflow segment instance
+     * @throws IOException -
+     * @since 5.5
+     */
+    public static WorkflowSegment load(final ZipInputStream in) throws IOException {
+        ZipEntry entry = in.getNextEntry();
+        if (!entry.getName().equals("metadata.xml")) {
+            throw new IOException("Expected metadata.xml file in stream, got " + entry.getName());
+        }
+
+        try (InputStream noneCloseIn = new NonClosableInputStream.Zip(in)) {
+            ModelContentRO model = ModelContent.loadFromXML(noneCloseIn);
+            var metadata = SharedSaveLoadLogic.loadMetadata(model);
+            var ws = new WorkflowSegment(metadata.name(), metadata.inputs(), metadata.outputs(), metadata.refNodeIds());
+            ws.loadWorkflowData(in);
+            return ws;
+        } catch (InvalidSettingsException e) {
+            throw new IOException("Failed loading workflow port object", e);
+        }
     }
 
     private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {

@@ -600,6 +600,17 @@
                valueFactoryClass="org.knime.core.data.v2.value.StringValueFactory">
          </ValueFactory>
       </DataType>
+      <DataType
+            cellClass="org.knime.core.node.agentic.tool.WorkflowToolCell">
+         <serializer
+               cellClass="org.knime.core.node.agentic.tool.WorkflowToolCell"
+               serializerClass="org.knime.core.node.agentic.tool.WorkflowToolCell$WorkflowToolCellSerializer">
+         </serializer>
+         <ValueFactory
+               deprecated="false"
+               valueFactoryClass="org.knime.core.node.agentic.tool.WorkflowToolValueFactory">
+         </ValueFactory>
+      </DataType>
    </extension>
    <extension
          point="org.knime.core.PortType">
