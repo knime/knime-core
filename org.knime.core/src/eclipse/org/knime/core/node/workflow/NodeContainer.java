@@ -955,7 +955,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     protected void notifyStateChangeListeners(final NodeStateEvent e) {
         for (NodeStateChangeListener l : m_stateChangeListeners) {
-            l.stateChanged(e);
+            NodeStateChangeListener.callStateChanged(l, e);
         }
         findChangesTracker().ifPresent(ChangesTracker::nodeStateChange);
     }

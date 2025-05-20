@@ -48,7 +48,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.io.File;
@@ -96,11 +96,11 @@ public class BugNXT2146_UnsetDirtyChildWorkflowsOfComponent extends WorkflowTest
 
 		// save component and check that everything is clean again and the respective
 		// events have been emitted
-		var componentWorkflowListener = mock(WorkflowListener.class);
+		var componentWorkflowListener = spy(WorkflowListener.class);
 		m_componentProject.getWorkflowManager().addListener(componentWorkflowListener);
-		var nestedMetanodeWorkflowListener = mock(WorkflowListener.class);
+		var nestedMetanodeWorkflowListener = spy(WorkflowListener.class);
 		nestedMetanode.addListener(nestedMetanodeWorkflowListener);
-		var nestedComponentWorkflowListener = mock(WorkflowListener.class);
+		var nestedComponentWorkflowListener = spy(WorkflowListener.class);
 		nestedComponent.getWorkflowManager().addListener(nestedComponentWorkflowListener);
 		m_componentProject.saveTemplate(new ExecutionMonitor()); // save
 		assertDirtyState(false, m_componentProject, m_componentProject.getWorkflowManager(), nestedMetanode,

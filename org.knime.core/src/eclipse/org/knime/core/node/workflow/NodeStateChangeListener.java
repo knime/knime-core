@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.NodeLogger;
+
 /**
  * Interface for clients that are interested in notifications about state
  * changes of a node.
@@ -52,13 +54,38 @@ package org.knime.core.node.workflow;
  */
 public interface NodeStateChangeListener {
 
-
     /**
      * Callback from node, indicating that the given node has changed its state.
      * Clients may observe the node in order to get the current state.
      *
      * @param state Indicates the change of this node.
      */
-    public void stateChanged(final NodeStateEvent state);
+    void stateChanged(final NodeStateEvent state);
+
+    /**
+     * Callback from node, indicating that the given node has changed its state.
+     * Clients may observe the node in order to get the current state.
+     * <p>
+     * Catches *all* {@link RuntimeException}s that are thrown by the
+     * {@link #stateChanged(NodeStateEvent)}. Use this with caution!
+     * </p>
+     *
+     * @param listener {@link NodeStateChangeListener} instance to notify about state change
+     * @param state Indicates the change of this node.
+     * @since 5.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    static void callStateChanged(final NodeStateChangeListener listener, final NodeStateEvent state) {
+        if (listener == null) {
+            return;
+        }
+        try {
+            listener.stateChanged(state);
+        } catch (RuntimeException rex) {
+            NodeLogger.getLogger(NodeStateChangeListener.class) //
+                .error("Caught an exception while notifying node state listeners, "
+                    + "skipping throwing to preserve the state change", rex);
+        }
+    }
 
 }

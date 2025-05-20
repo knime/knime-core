@@ -8355,7 +8355,7 @@ public final class WorkflowManager extends NodeContainer
      *
      * @param evt event
      */
-    final void notifyWorkflowListeners(final WorkflowEvent evt) {
+    void notifyWorkflowListeners(final WorkflowEvent evt) {
         if (!evt.getType().equals(WorkflowEvent.Type.WORKFLOW_DIRTY)) {
             findChangesTracker().ifPresent(ct -> ct.otherChange());
         }
@@ -8369,13 +8369,14 @@ public final class WorkflowManager extends NodeContainer
         final var syncListeners = partitionedListeners.get(Boolean.FALSE);
 
         // invoke sync listeners
-        syncListeners.forEach(sync -> sync.listener().workflowChanged(evt));
+        syncListeners.forEach(sync -> WorkflowListener.callWorkflowChanged(sync.listener(), evt));
 
         // invoke async listeners
         // the stream is based on the current(!) set of listeners (problem was: during load the addNodeContainer method
         // fired an event by using this method - the event got delivered at a point where the workflow editor was
         // registered and marked the flow as being dirty although it was freshly loaded)
-        WORKFLOW_NOTIFIER.execute(() -> asyncListeners.forEach(async -> async.listener().workflowChanged(evt)));
+        WORKFLOW_NOTIFIER.execute(
+            () -> asyncListeners.forEach(async -> WorkflowListener.callWorkflowChanged(async.listener(), evt)));
     }
 
     // bug fix 1810, notify children about possible job manager changes

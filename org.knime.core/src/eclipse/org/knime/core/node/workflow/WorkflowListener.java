@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,24 +41,52 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.04.2005 (georg): created
  *   12.01.2006 (mb): clean up for code review
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.NodeLogger;
+
 /**
  * Interface for listeners that receive workflow events.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public interface WorkflowListener { 
+public interface WorkflowListener {
+
     /**
      * Called from the manager if something changed.
-     * 
+     *
      * @param event the event that occurred
      */
-    public void workflowChanged(final WorkflowEvent event);
+    void workflowChanged(final WorkflowEvent event);
+
+    /**
+     * Called from the manager if something changed.
+     * <p>
+     * Catches *all* {@link RuntimeException}s that are thrown by the
+     * {@link #workflowChanged(WorkflowEvent)}. Use this with caution!
+     * </p>
+     *
+     * @param listener {@link WorkflowListener} instance to notify about state change
+     * @param event the event that occurred
+     * @since 5.5
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    static void callWorkflowChanged(final WorkflowListener listener, final WorkflowEvent event) {
+        if (listener == null) {
+            return;
+        }
+        try {
+            listener.workflowChanged(event);
+        } catch (RuntimeException rex) {
+            NodeLogger.getLogger(WorkflowListener.class) //
+                .error("Caught an exception while notifying workflow state listeners, "
+                    + "skipping throwing to preserve the state change", rex);
+        }
+    }
 
 }

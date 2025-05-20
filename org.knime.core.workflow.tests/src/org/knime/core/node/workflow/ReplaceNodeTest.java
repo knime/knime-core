@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -98,7 +98,7 @@ public class ReplaceNodeTest extends WorkflowTestCase {
 
 	private Integer m_nodePortsChangedEventCounter;
 
-	private final WorkflowListener m_workflowListener = mock(WorkflowListener.class);
+	private final WorkflowListener m_workflowListener = spy(WorkflowListener.class);
 
 	/**
 	 * Load workflow.
