@@ -61,9 +61,9 @@ class BufferedDataContainerRowOutput extends RowOutput {
 
     private BufferedDataContainer m_dataContainer;
 
-    private BufferedDataTable m_setFullyTable = null;
+    private BufferedDataTable m_setFullyTable;
 
-    private boolean m_closeCalled = false;
+    private boolean m_closeCalled;
 
     /**
      * Constructor.
@@ -83,23 +83,19 @@ class BufferedDataContainerRowOutput extends RowOutput {
         m_dataContainer = null;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void push(final DataRow row) throws InterruptedException {
         if (m_dataContainer == null) {
             throw new IllegalStateException(
-                "Table can only be set by the 'setFully'-method. Rows can not be added individually. Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
+                "Table can only be set by the 'setFully'-method. "
+                + "Rows can not be added individually. "
+                + "Possible reason: DataTableSpec==null at configure-time (must be non-null for streamable ports).");
         }
         m_dataContainer.addRowToTable(row);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void close() throws InterruptedException {
+    public void close() {
         m_closeCalled = true;
     }
 
@@ -121,9 +117,6 @@ class BufferedDataContainerRowOutput extends RowOutput {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setFully(final BufferedDataTable table) throws InterruptedException {
         m_dataContainer = null;
