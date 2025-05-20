@@ -118,6 +118,12 @@ class BufferedDataContainerRowOutput extends RowOutput {
     }
 
     @Override
+    public void setInactive() {
+        super.setInactive();
+        this.close();
+    }
+
+    @Override
     public void setFully(final BufferedDataTable table) throws InterruptedException {
         m_dataContainer = null;
         m_setFullyTable = table;
