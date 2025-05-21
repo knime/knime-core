@@ -124,12 +124,12 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
         throws ToolIncompatibleWorkflowException {
         final var partiallyExecuted = wfm.canResetAll() && !wfm.getNodeContainers().isEmpty();
-        if (!partiallyExecuted) {
+        if (partiallyExecuted) {
             throw new ToolIncompatibleWorkflowException(
                 "Tool can't be created from an executed or partially executed workflow");
         }
         final var executing = wfm.canCancelAll();
-        if (!executing) {
+        if (executing) {
             throw new ToolIncompatibleWorkflowException("Tool can't be created from an executing workflow");
         }
     }
