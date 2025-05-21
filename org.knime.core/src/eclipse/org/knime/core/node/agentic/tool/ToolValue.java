@@ -49,6 +49,7 @@
 package org.knime.core.node.agentic.tool;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.node.port.PortObject;
 
 /**
@@ -59,6 +60,15 @@ import org.knime.core.node.port.PortObject;
  * @since 5.5
  */
 public interface ToolValue extends DataValue {
+
+    @SuppressWarnings("javadoc")
+    UtilityFactory UTILITY = new ExtensibleUtilityFactory(ToolValue.class) {
+
+        @Override
+        public String getName() {
+            return "Tool";
+        }
+    };
 
     /**
      * @return Name of the tool used by an AI Agent to pick a tool.
