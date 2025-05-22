@@ -194,14 +194,14 @@ final class LogBuffer {
             final var total = current + evicted;
             final var countMessages = total > 1 ? "%d messages were".formatted(total) : "1 message was";
             logger.log(Level.DEBUG, () -> "%s logged before logging was initialized; see below..."
-                .formatted(countMessages), null, false);
+                .formatted(countMessages), null);
             if (evicted > 0) {
                 logger.log(m_logBuffer.m_levelForEvictionMessage,
                     () -> "[*** Log incomplete: log buffer did wrap around -- "
-                            + "%d messages were evicted from buffer in total ***]".formatted(evicted), null, false);
+                            + "%d messages were evicted from buffer in total ***]".formatted(evicted), null);
             }
             m_logBuffer.drainingIterator().forEachRemaining(consumer);
-            logger.log(Level.DEBUG, "End of buffered log messages", null, false);
+            logger.log(Level.DEBUG, "End of buffered log messages", null);
         }
     }
 

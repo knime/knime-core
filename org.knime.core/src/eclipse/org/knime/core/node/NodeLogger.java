@@ -221,7 +221,7 @@ public final class NodeLogger {
      * @since 3.1
      */
     public void debugWithoutContext(final Object o) {
-        log(Level.DEBUG, o, null, false);
+        log(Level.DEBUG, o, null);
     }
 
 
@@ -233,19 +233,18 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void debugWithoutContext(final Supplier<Object> supplier) {
-        log(Level.DEBUG, supplier, null, false);
+        log(Level.DEBUG, supplier, null);
     }
-
 
     /**
      * Log the given object at the given level.
      *
      * @param level level to log at
-     * @param o object to log
+     * @param logObject object to log
      * @param cause nullable cause
      */
     private void log(final Level level, final Object o, final Throwable cause) {
-        log(level, o, cause, true);
+        m_logger.log(level, o, cause);
     }
 
     /**
@@ -256,33 +255,15 @@ public final class NodeLogger {
      * @param cause nullable cause
      */
     private void log(final Level level, final Supplier<Object> supplier, final Throwable cause) {
-        log(level, supplier, cause, true);
+        m_logger.log(level, supplier, cause);
     }
 
-    /**
-     * Log the given object at the given level.
-     *
-     * @param level level to log at
-     * @param logObject object to log
-     * @param cause nullable cause
-     * @param considerWFDirAppenders whether to consider setting up workflow dir appenders
-     */
-    private void log(final Level level, final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        m_logger.log(level, o, cause, considerWFDirAppenders);
+    private void logCoding(final Object o, final Throwable cause) {
+        m_logger.logCoding(o, cause);
     }
 
-    private void log(final Level level, final Supplier<Object> supplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
-        m_logger.log(level, supplier, cause, considerWFDirAppenders);
-    }
-
-    private void logCoding(final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        m_logger.logCoding(o, cause, considerWFDirAppenders);
-    }
-
-    private void logCoding(final Supplier<Object> supplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
-        m_logger.logCoding(supplier, cause, considerWFDirAppenders);
+    private void logCoding(final Supplier<Object> supplier, final Throwable cause) {
+        m_logger.logCoding(supplier, cause);
     }
 
     /**
@@ -495,7 +476,7 @@ public final class NodeLogger {
      * @param o the message to print
      */
     public void coding(final Object o) {
-        logCoding(o, null, true);
+        logCoding(o, null);
     }
 
     /**
@@ -506,7 +487,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void coding(final Supplier<Object> supplier) {
-        logCoding(supplier.get(), null, true);
+        logCoding(supplier.get(), null);
     }
 
     /**
@@ -517,7 +498,7 @@ public final class NodeLogger {
      * @param t the exception to log at debug level, including its stack trace
      */
     public void coding(final Object o, final Throwable t) {
-        logCoding(o, t, true);
+        logCoding(o, t);
     }
 
     /**
@@ -529,7 +510,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void coding(final Supplier<Object> supplier, final Throwable t) {
-        logCoding(supplier.get(), t, true);
+        logCoding(supplier.get(), t);
     }
 
     /**
@@ -540,7 +521,7 @@ public final class NodeLogger {
      * @since 4.3
      */
     public void codingWithoutContext(final Object o) {
-        logCoding(o, null, false);
+        logCoding(o, null);
     }
 
     /**
@@ -551,7 +532,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void codingWithoutContext(final Supplier<Object> supplier) {
-        logCoding(supplier, null, false);
+        logCoding(supplier, null);
     }
 
     /**
@@ -650,7 +631,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void codingWithFormat(final String format, final Object... args) {
-        logCoding((Supplier<Object>)() -> String.format(format, args), null, true);
+        logCoding((Supplier<Object>)() -> String.format(format, args), null);
     }
 
     /**

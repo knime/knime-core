@@ -49,11 +49,9 @@
 package org.knime.core.node.logging;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -70,17 +68,12 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.RendererSupport;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.knime.core.eclipseUtil.OSGIHelper;
-import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.NodeLoggerPatternLayout;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowEvent;
-import org.knime.core.node.workflow.WorkflowEvent.Type;
-import org.knime.core.node.workflow.WorkflowListener;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2.ExecutorType;
 import org.knime.core.util.LogfileAppender;
@@ -92,13 +85,6 @@ import org.knime.core.util.User;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
 final class DelegatingLogger {
-
-    private static final Map<String, Appender> WF_APPENDER = new HashMap<>();
-
-    /**
-     * Listens to workflow changes e.g. when a workflow is closed to unregister all related workflow directory logger.
-     * */
-    private MyWorkflowListener m_listener;
 
     /** Default log file appender. */
     private static Appender logFileAppender;
@@ -158,15 +144,14 @@ final class DelegatingLogger {
         }
     }
 
-    public void log(final Level level, final Supplier<Object> supplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
-        getLoggerInternal(level, considerWFDirAppenders) //
-            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, supplier.get(), considerWFDirAppenders), cause));
+    public void log(final Level level, final Supplier<Object> supplier, final Throwable cause) {
+        getLoggerInternal(level) //
+            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, supplier.get()), cause));
     }
 
-    public void log(final Level level, final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        getLoggerInternal(level, considerWFDirAppenders) //
-            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, o, considerWFDirAppenders), cause));
+    public void log(final Level level, final Object o, final Throwable cause) {
+        getLoggerInternal(level) //
+            .ifPresent(l -> l.log(level, toKNIMELogMessage(l, o), cause));
     }
 
     /**
@@ -178,18 +163,13 @@ final class DelegatingLogger {
      * </p>
      *
      * @param level the log level to check the internal logger for
-     * @param considerWFDirAppenders set to {@code false} in order to ignore {@link #LOG_IN_WF_DIR} and not set up
-     *     workflow dir appenders on this call
      *
      * @return the correct logger to use and ensures that any workflow relative log file appenders are registered
      * properly, or {@link Optional#empty()} if the logger is not enabled for this level
      */
-    private Optional<Logger> getLoggerInternal(final Level level, final boolean considerWFDirAppenders) {
+    private Optional<Logger> getLoggerInternal(final Level level) {
         if (!m_logger.isEnabledFor(level)) {
             return Optional.empty();
-        }
-        if (considerWFDirAppenders && logInWFDir) {
-            addWorkflowDirAppender();
         }
         return Optional.of(m_logger);
     }
@@ -226,33 +206,30 @@ final class DelegatingLogger {
      * @return a KNIMELogMessage that not only contains the log message but also the information about the workflow
      * and node that belong to the log message if applicable
      */
-    private static Object toKNIMELogMessage(final Logger logger, final Object message,
-        final boolean withNodeContext) {
+    private static Object toKNIMELogMessage(final Logger logger, final Object message) {
         if (!logNodeId && !logInWFDir && !logWFDir && !logJobId) {
             return message;
         }
         NodeContextInformation nodeContext = null;
         File workflowDir = null;
         UUID jobID = null;
-        if (withNodeContext) {
-            final var context = NodeContext.getContext();
-            if (context != null) {
-                if (logNodeId) {
-                    //retrieve and store the node id only if the user has requested to log it
-                    final var nodeContainer = context.getNodeContainer();
-                    if (nodeContainer != null) {
-                        nodeContext = new NodeContextInformation(nodeContainer.getID(), nodeContainer.getName());
-                    }
+        final var context = NodeContext.getContext();
+        if (context != null) {
+            if (logNodeId) {
+                //retrieve and store the node id only if the user has requested to log it
+                final var nodeContainer = context.getNodeContainer();
+                if (nodeContainer != null) {
+                    nodeContext = new NodeContextInformation(nodeContainer.getID(), nodeContainer.getName());
                 }
-                if (logInWFDir || logWFDir || logJobId) {
-                    final var workflowManager = context.getWorkflowManager();
-                    if (workflowManager != null) {
-                        final var wc = workflowManager.getContextV2();
-                        if (wc != null) {
-                            workflowDir = wc.getExecutorInfo().getLocalWorkflowPath().toFile();
-                            jobID = wc.getExecutorType() != ExecutorType.ANALYTICS_PLATFORM
-                                    ? ((JobExecutorInfo)wc.getExecutorInfo()).getJobId() : null;
-                        }
+            }
+            if (logInWFDir || logWFDir || logJobId) {
+                final var workflowManager = context.getWorkflowManager();
+                if (workflowManager != null) {
+                    final var wc = workflowManager.getContextV2();
+                    if (wc != null) {
+                        workflowDir = wc.getExecutorInfo().getLocalWorkflowPath().toFile();
+                        jobID = wc.getExecutorType() != ExecutorType.ANALYTICS_PLATFORM
+                                ? ((JobExecutorInfo)wc.getExecutorInfo()).getJobId() : null;
                     }
                 }
             }
@@ -261,58 +238,21 @@ final class DelegatingLogger {
     }
 
     /**
-     * Adds a new workflow dir appender based on the current node context if it is available.
-     */
-    private void addWorkflowDirAppender() {
-        final var context = NodeContext.getContext();
-        if (context != null) {
-            final var workflowManager = context.getWorkflowManager();
-            if (workflowManager != null) {
-                final var workflowContext = workflowManager.getContextV2();
-                if (workflowContext != null) {
-                    addWorkflowDirAppender(workflowContext.getExecutorInfo().getLocalWorkflowPath().toFile());
-                }
-            }
-        }
-    }
-
-    /**
      * Adds a new workflow directory logger for the given workflow directory if it doesn't exists yet.
      * @param workflowDir the directory of the workflow that should be logged to
      */
-    private void addWorkflowDirAppender(final File workflowDir) {
+    static void addWorkflowLogAppender(final Path workflowDir) {
         if (workflowDir == null) {
             //if the workflowDir is null we do not need to append an extra log appender
             return;
         }
-        final String workflowDirPath = workflowDir.getPath();
-        if (workflowDirPath == null) {
-            return;
-        }
-        //in this method we have to use the logger directly to prevent a deadlock!!!
-        final var logger = m_logger;
-        var wfAppender = WF_APPENDER.get(workflowDirPath);
-        if (wfAppender != null) {
-            logger.addAppender(wfAppender);
-            return;
-        }
-        //we do the getAppender twice to prevent the synchronize block on subsequent calls!!!
-        synchronized (WF_APPENDER) {
-            //we need a synchronize block otherwise we might create a second appender that opens a file handle
-            //which never get closed and thus the copying of a full log file to the zip file fails
-            wfAppender = WF_APPENDER.get(workflowDirPath);
-            if (wfAppender == null) {
-                final var fileAppender = createWorkflowLogAppender(workflowDirPath, workflowDir);
-                //we have to call this function to activate the writer!!!
-                fileAppender.activateOptions();
-                logger.addAppender(fileAppender);
-                WF_APPENDER.put(workflowDirPath, fileAppender);
-                if (m_listener == null) {
-                    m_listener = new MyWorkflowListener();
-                    WorkflowManager.ROOT.addListener(m_listener);
-                }
-            }
-        }
+        final var fileAppender = createWorkflowLogAppender(workflowDir.toString(), workflowDir);
+        fileAppender.activateOptions(); // activate writer
+        Logger.getRootLogger().addAppender(fileAppender);
+    }
+
+    static void removeWorkflowLogAppender(final Path workflowDir) {
+        Logger.getRootLogger().removeAppender(workflowDir.toString());
     }
 
     /**
@@ -323,10 +263,11 @@ final class DelegatingLogger {
      * @param workflowDir workflow directory to create knime.log file in
      * @return log file appender for the given workflow directory
      */
-    private static LogfileAppender createWorkflowLogAppender(final String appenderName, final File workflowDir) {
-      //use the KNIME specific LogfileAppender that moves larger log files into a separate zip file
+    private static LogfileAppender createWorkflowLogAppender(final String appenderName, final Path workflowDirPath) {
+        //use the KNIME specific LogfileAppender that moves larger log files into a separate zip file
         //and that implements equals and hash code to ensure that two LogfileAppender
         //with the same name are considered equal to prevent duplicate appender registration
+        final var workflowDir = workflowDirPath.toFile();
         final var fileAppender = new LogfileAppender(workflowDir);
         fileAppender.setLayout(workflowDirLogfileLayout);
         fileAppender.setName(appenderName);
@@ -336,19 +277,20 @@ final class DelegatingLogger {
         final var workflowDirFilter = new Filter() {
             @Override
             public int decide(final LoggingEvent event) {
-                final Object msg = event.getMessage();
-                // decide if this local appender should process any message at all
-                if ((logGlobalInWFDir || logInWFDir) && msg instanceof KNIMELogMessage kmsg) {
-                    final var messageDirectory = kmsg.workflowDir(); //can be null
-                    // global log messages are not associated with a workflow directory
-                    if ((logGlobalInWFDir && messageDirectory == null)
-                        || (logInWFDir && workflowDir.equals(messageDirectory))) {
-                        // let the next filter in the chain decide
-                        return Filter.NEUTRAL;
-                    }
+                // DENY cuts off filtering early and not consult the next filter
+                if (!(logInWFDir && event.getMessage() instanceof KNIMELogMessage kmsg)) {
+                    // if workflow logs are disabled, we don't need to check the rest
+                    // we only log our custom KNIMELogMessage-wrapped messages
+                    return Filter.DENY;
                 }
-                // this will cut off filtering early and not consult the next filter
-                return Filter.DENY;
+                // no workflow dir means it's a "global" message
+                final var isGlobal = kmsg.workflowDir() == null;
+                if (isGlobal) {
+                    return logGlobalInWFDir ? Filter.NEUTRAL : Filter.DENY;
+                }
+                // some "local" message
+                // now comes the more expensive test
+                return workflowDir.equals(kmsg.workflowDir()) ? Filter.NEUTRAL : Filter.DENY;
             }
         };
         // this builds a filter chain (equivalent to calling `setNext` on `workflowDirFilter` and then adding
@@ -357,55 +299,6 @@ final class DelegatingLogger {
         fileAppender.addFilter(levelFilter != null ? levelFilter : logFileAppender.getFilter());
 
         return fileAppender;
-    }
-
-    /**
-     * Removes any extra workflow directory appender if it exists.
-     * @param workflowDir the directory of the workflow that should no longer be logged
-     */
-    private static void removeWorkflowDirAppender(final File workflowDir) {
-        if (workflowDir == null) {
-            //if the workflowDir is null we do not need to remove the extra log appender
-            return;
-        }
-        final String workflowDirPath = workflowDir.getPath();
-        if (workflowDirPath != null) {
-            synchronized (WF_APPENDER) {
-                final var appender = WF_APPENDER.remove(workflowDirPath);
-                if (appender != null) {
-                    //Remove the appender from all open node loggers
-                    @SuppressWarnings("unchecked")
-                    final Enumeration<Logger> allLoggers =
-                            Logger.getRootLogger().getLoggerRepository().getCurrentLoggers();
-                    while (allLoggers.hasMoreElements()) {
-                        allLoggers.nextElement().removeAppender(appender);
-                    }
-                    // AP-10222: must happen after it is removed from all appenders,
-                    // otherwise it will produce "log4j:ERROR Attempted to append to closed appender"
-                    appender.close();
-                }
-            }
-        }
-    }
-
-    /**
-     * Listener that calls {@link NodeLogger#removeWorkflowDirAppender(File)} on workflow closing to
-     * remove all workflow relative log file appender.
-     * @author Tobias Koetter, KNIME.com
-     */
-    private static class MyWorkflowListener implements WorkflowListener {
-        @Override
-        public void workflowChanged(final WorkflowEvent event) {
-            if (event != null && Type.NODE_REMOVED == event.getType()) {
-                final Object val = event.getOldValue();
-                if (val instanceof WorkflowManager wm) {
-                    final ReferencedFile workflowWorkingDir = wm.getWorkingDir();
-                    if (workflowWorkingDir != null) {
-                        removeWorkflowDirAppender(workflowWorkingDir.getFile());
-                    }
-                }
-            }
-        }
     }
 
     static void setWorkflowDirLogfileLayout(final Layout layout) {

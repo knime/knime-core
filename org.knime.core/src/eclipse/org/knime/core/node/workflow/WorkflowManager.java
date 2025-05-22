@@ -151,6 +151,7 @@ import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
@@ -186,6 +187,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowResourceCache.WorkflowResource;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
 import org.knime.core.node.workflow.action.InteractiveWebViewsResult;
@@ -503,6 +505,10 @@ public final class WorkflowManager extends NodeContainer
                 .withLastModifiedNow() //
                 .withDescription("") //
                 .build();
+            final var path = registerWorkflowLog(m_workflowContext);
+            if (path != null) {
+                m_workflowResourceCache.put(WorkflowLogCleanup.class, new WorkflowLogCleanup(path));
+            }
         } else {
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -521,6 +527,20 @@ public final class WorkflowManager extends NodeContainer
             lock.queueCheckForNodeStateChangeNotification(false); // get default state right
         }
         LOGGER.debug(() -> String.format("Created subworkflow %s", this.getID()));
+    }
+
+    private static final class WorkflowLogCleanup implements WorkflowResource {
+
+        private final WorkflowContextV2 m_ctx;
+
+        WorkflowLogCleanup(final WorkflowContextV2 ctx) {
+            m_ctx = ctx;
+        }
+
+        @Override
+        public void dispose() {
+            KNIMELogger.unregisterWorkflowLog(m_ctx);
+        }
     }
 
     private NodeContainerParent assertParentAssignments(final NodeContainerParent directNCParent,
@@ -634,6 +654,10 @@ public final class WorkflowManager extends NodeContainer
             }
             m_tableBackendSettings = Optional.ofNullable(persistor.getWorkflowTableBackendSettings()) //
                 .orElseGet(WorkflowTableBackendSettings::new);
+            final var path = registerWorkflowLog(workflowContext);
+            if (path != null) {
+                m_workflowResourceCache.put(WorkflowLogCleanup.class, new WorkflowLogCleanup(path));
+            }
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -682,6 +706,7 @@ public final class WorkflowManager extends NodeContainer
             // TODO  m_workflowContext derived from save location (see old persistor constructor)
             if (isProject) {
                 //TODO m_metadata = ...;
+                // TODO workflow log registration
             }
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -8664,6 +8689,20 @@ public final class WorkflowManager extends NodeContainer
             }
             m_tmpDir = tempFolder.toFile();
         }
+    }
+
+    /**
+     * Registers a workflow log for the given context, if it is not {@code null}.
+     *
+     * @param context context to derive location for workflow log from
+     * @return non-{@code null} context for which the workflow log was registered, {@code null} otherwise
+     */
+    private static WorkflowContextV2 registerWorkflowLog(final WorkflowContextV2 context) {
+        if (context == null) {
+            return null;
+        }
+        KNIMELogger.registerWorkflowLog(context);
+        return context;
     }
 
     /** {@inheritDoc} */

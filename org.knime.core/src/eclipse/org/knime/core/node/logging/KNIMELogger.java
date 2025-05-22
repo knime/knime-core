@@ -94,6 +94,8 @@ import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.NodeLogger.NodeContextInformation;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.IEarlyStartup;
@@ -246,7 +248,8 @@ public final class KNIMELogger {
         CheckUtils.checkState(!isInitialized(), "Logging was already initialized");
         if (!Boolean.getBoolean(KNIMEConstants.PROPERTY_DISABLE_LOG4J_CONFIG)) {
             initLog4J();
-            // init root logger
+
+            // the root logger has the list of configured appenders through the log4j config
             final var root = Logger.getRootLogger();
             final var appender = root.getAppender(NodeLogger.LOGFILE_APPENDER);
             if (appender != null) {
@@ -338,6 +341,10 @@ public final class KNIMELogger {
         updateLog4JKNIMELoggerLevelInternal();
     }
 
+
+    /**
+     * Ensures that all log4j logger instances' minimum level matches the minimum level of all appenders in use.
+     */
     private static void updateLog4JKNIMELoggerLevelInternal() {
         final var rootLogger = LogManager.getRootLogger();
         var minimumLevel = rootLogger.getLevel(); // by default this is 'ERROR' but may be changed in log4j.xml
@@ -455,6 +462,36 @@ public final class KNIMELogger {
     }
 
     /**
+     * Registers the workflow, identified by its given context, for a "workflow log".
+     *
+     * <i>Called by {@link WorkflowManager} when a project is opened.</i>
+     *
+     * @param workflowContext {@code null}able context of the workflow
+     */
+    public static void registerWorkflowLog(final WorkflowContextV2 workflowContext) {
+        if (workflowContext == null) {
+            return;
+        }
+        final var path = workflowContext.getExecutorInfo().getLocalWorkflowPath();
+        DelegatingLogger.addWorkflowLogAppender(path);
+    }
+
+    /**
+     * Unregisters the workflow, identified by its given context, from "workflow logging".
+     *
+     * <i>Called by {@link WorkflowManager} when a project is closed.</i>
+     *
+     * @param workflowContext {@code null}able context of the workflow
+     */
+    public static void unregisterWorkflowLog(final WorkflowContextV2 workflowContext) {
+        if (workflowContext == null) {
+            return;
+        }
+        final var path = workflowContext.getExecutorInfo().getLocalWorkflowPath();
+        DelegatingLogger.removeWorkflowLogAppender(path);
+    }
+
+    /**
      * Allows to enable/disable logging in the workflow directory. If enabled log messages that belong to workflow
      * are logged into a log file within the workflow directory itself in addition to the global KNIME log file.
      *
@@ -466,7 +503,12 @@ public final class KNIMELogger {
     public static void setLogInWorkflowDir(final boolean enable) {
         DelegatingLogger.logInWFDir = enable;
         // null this filter since we will follow the global log again
-        DelegatingLogger.levelFilter = null;
+        if (!enable) {
+            DelegatingLogger.levelFilter = null;
+            // since we removed the workflow-log custom filter and follow the global KNIME log file filter
+            // again, we need to update the log4j logger levels based on the new minimum obtained from that filter
+            updateLog4JKNIMELoggerLevelInternal();
+        }
     }
 
 
@@ -877,10 +919,8 @@ public final class KNIMELogger {
      * @param level level to log under
      * @param messageSupplier supplier for the message
      * @param cause optional cause for the log message
-     * @param considerWFDirAppenders whether or not to consider workflow directory appenders
      */
-    public void log(final Level level, final Supplier<Object> messageSupplier,
-            final Throwable cause, final boolean considerWFDirAppenders) {
+    public void log(final Level level, final Supplier<Object> messageSupplier, final Throwable cause) {
         // we double-check to avoid expensive locking
         if (!isInitialized()) {
             synchronized(BUFFER) {
@@ -892,7 +932,7 @@ public final class KNIMELogger {
                 }
             }
         }
-        m_logger.log(level, messageSupplier, cause, considerWFDirAppenders);
+        m_logger.log(level, messageSupplier, cause);
     }
 
     /**
@@ -901,10 +941,8 @@ public final class KNIMELogger {
      * @param level level to log under
      * @param message nullable message to log
      * @param cause optional cause for the log message
-     * @param considerWFDirAppenders whether or not to consider workflow directory appenders
      */
-    public void log(final Level level, final Object message, final Throwable cause,
-        final boolean considerWFDirAppenders) {
+    public void log(final Level level, final Object message, final Throwable cause) {
         // we double-check to avoid expensive locking
         if (!isInitialized()) {
             synchronized(BUFFER) {
@@ -914,7 +952,7 @@ public final class KNIMELogger {
                 }
             }
         }
-        m_logger.log(level, message, cause, considerWFDirAppenders);
+        m_logger.log(level, message, cause);
     }
 
 
@@ -925,12 +963,10 @@ public final class KNIMELogger {
      *
      * @param messageSupplier supplier for the message
      * @param cause optional cause for the log message
-     * @param considerWFDirAppenders whether or not to consider workflow directory appenders
      */
-    public void logCoding(final Supplier<Object> messageSupplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
+    public void logCoding(final Supplier<Object> messageSupplier, final Throwable cause) {
         if (isToLogCodingMessages()) {
-            log(Level.ERROR, () -> CODING_PROBLEM_PREFIX + messageSupplier.get(), cause, considerWFDirAppenders);
+            log(Level.ERROR, () -> CODING_PROBLEM_PREFIX + messageSupplier.get(), cause);
         }
     }
 
@@ -940,12 +976,10 @@ public final class KNIMELogger {
      *
      * @param message message to log
      * @param cause optional cause for the log message
-     * @param considerWFDirAppenders whether or not to consider workflow directory appenders
      */
-    public void logCoding(final Object message, final Throwable cause,
-        final boolean considerWFDirAppenders) {
+    public void logCoding(final Object message, final Throwable cause) {
         if (isToLogCodingMessages()) {
-            log(Level.ERROR, CODING_PROBLEM_PREFIX + message, cause, considerWFDirAppenders);
+            log(Level.ERROR, CODING_PROBLEM_PREFIX + message, cause);
         }
     }
 
@@ -961,4 +995,5 @@ public final class KNIMELogger {
         }
         return Optional.empty();
     }
+
 }
