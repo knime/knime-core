@@ -56,7 +56,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -76,7 +75,7 @@ import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeMode
  * description below) and there is a mechanism that allows one to keep and store selected port objects with the node
  * model that controls the virtual workflow execution (called 'host node'): Right before the virtual workflow is
  * executed,
- * {@link FlowVirtualScopeContext#registerHostNodeForPortObjectPersistence(org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.ExecutionContext)}
+ * {@link FlowVirtualScopeContext#registerHostNode(org.knime.core.node.workflow.NativeNodeContainer, org.knime.core.node.ExecutionContext)}
  * needs to be called with 'host node' as parameter. As a result, some port objects (which port objects exactly is not
  * controlled by the 'host node') are automatically added to the list of port objects of the host node (via
  * {@link AbstractPortObjectRepositoryNodeModel#addPortObject(UUID, PortObject)}) and subsequently managed (i.e. saved
@@ -113,39 +112,36 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
     }
 
     /**
-     * Allows one to register a node (whose node model is of type {@link AbstractPortObjectRepositoryNodeModel}) with
-     * this virtual scope context. This registered node is used to persist (and thus keep) port objects which would have
-     * otherwise be gone once the virtual execution of the underlying workflow is finished successfully.
+     * Allows one to register a node with this virtual scope context. This registered node is, among other things, used
+     * to persist (and thus keep) port objects which would have otherwise be gone once the virtual execution of the
+     * underlying workflow is finished successfully.
      *
      * This method needs to be called right before the nodes of this virtual scope are executed.
      *
-     * @param hostNode the node used for persistence of selected port objects and to provide a file store handler (its
-     *            node model needs to be of type {@link AbstractPortObjectRepositoryNodeModel})
+     * @param hostNode the node the virtual scope is associated with; the node is, e.g., used for persistence of
+     *            selected port objects and to provide a file store handler (its node model needs to be of type
+     *            {@link AbstractPortObjectRepositoryNodeModel} in that case)
      * @param exec the host node's execution context, mainly used to copy port objects (which are then made available
      *            via the {@link PortObjectRepository})
      */
-    public void registerHostNodeForPortObjectPersistence(final NativeNodeContainer hostNode,
-        final ExecutionContext exec) {
-        CheckUtils.checkArgument(hostNode.getNodeModel() instanceof AbstractPortObjectRepositoryNodeModel,
-            "The host node model is not of type %s", AbstractPortObjectRepositoryNodeModel.class.getSimpleName());
-
+    public void registerHostNode(final NativeNodeContainer hostNode, final ExecutionContext exec) {
         m_nc = hostNode;
         m_exec = exec;
     }
 
     /**
      * Adds a port object to the {@link PortObjectRepository} (to be available to downstream nodes) and the host node
-     * (whose node model is of type {@link AbstractPortObjectRepositoryNodeModel}) for persistence.
+     * (assuming its node model is of type {@link AbstractPortObjectRepositoryNodeModel}) for persistence.
      *
-     * The host node is registered via
-     * {@link #registerHostNodeForPortObjectPersistence(NativeNodeContainer, ExecutionContext)}.
+     * The host node is registered via {@link #registerHostNode(NativeNodeContainer, ExecutionContext)}.
      *
      * @param po the port object to be added to the {@link PortObjectRepository} and published to the host node
      * @return the id of the port object in the {@link PortObjectRepository}
      * @throws CanceledExecutionException
      * @throws IOException
      *
-     * @throws IllegalStateException if there is no host node associated with the virtual scope
+     * @throws IllegalStateException if there is no host node associated with the virtual scope or host node's node
+     *             model is not a {@link AbstractPortObjectRepositoryNodeModel}
      */
     public UUID addPortObjectToRepositoryAndHostNode(final PortObject po)
         throws IOException, CanceledExecutionException {
@@ -153,9 +149,15 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
             throw new IllegalStateException("No host node to forward the port objects to set");
         }
 
-        UUID id = PortObjectRepository.addCopy(po, m_exec);
-        ((AbstractPortObjectRepositoryNodeModel)m_nc.getNodeModel()).addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
-        return id;
+        if (m_nc.getNodeModel() instanceof AbstractPortObjectRepositoryNodeModel poRepoNodeModel) {
+            UUID id = PortObjectRepository.addCopy(po, m_exec);
+            poRepoNodeModel.addPortObject(id, PortObjectRepository.get(id).get()); // NOSONAR
+            return id;
+        } else {
+            throw new IllegalStateException(
+                "Host node's node model is not a " + AbstractPortObjectRepositoryNodeModel.class.getSimpleName());
+        }
+
     }
 
     /**
@@ -167,7 +169,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      * set.
      *
      * The node container is set via
-     * {@link #registerHostNodeForPortObjectPersistence(NativeNodeContainer, ExecutionContext)}.
+     * {@link #registerHostNode(NativeNodeContainer, ExecutionContext)}.
      *
      * @return the node associated with this virtual scope or an empty optional if there is no node associated.
      */

@@ -506,6 +506,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/virtual/parchunk/FlowVirtualScopeContext.java" type="org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext"/>
+                <message_argument value="registerHostNodeForPortObjectPersistence(NativeNodeContainer, ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/HubStatistics.java" type="org.knime.core.util.HubStatistics">
         <filter comment="AP-22870 Distinguish between community and non-community hubs" id="336658481">
             <message_arguments>

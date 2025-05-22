@@ -53,8 +53,11 @@ import java.util.stream.IntStream;
 import org.knime.core.data.v2.ReadValue;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.WriteValue;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.agentic.tool.ToolValue.ToolPort;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.table.access.IntAccess.IntReadAccess;
+import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
 import org.knime.core.table.access.ListAccess.ListWriteAccess;
 import org.knime.core.table.access.StringAccess.StringReadAccess;
@@ -64,6 +67,7 @@ import org.knime.core.table.access.StructAccess.StructWriteAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
 import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
+import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StringDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
@@ -94,7 +98,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             StringDataSpec.INSTANCE, // parameter schema
             VarBinaryDataSpec.INSTANCE, // binary representation
             new ListDataSpec(portDataSpec()), // input ports
-            new ListDataSpec(portDataSpec()) // output ports
+            new ListDataSpec(portDataSpec()), // output ports
+            IntDataSpec.INSTANCE // message output port index
         );
     }
 
@@ -125,6 +130,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private final ListReadAccess m_outputPorts;
 
+        private final IntReadAccess m_messageOutputPortIndex;
+
         private DefaultWorkflowToolReadValue(final StructReadAccess access) {
             m_name = access.getAccess(0);
             m_description = access.getAccess(1);
@@ -132,13 +139,15 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             m_binaryRepresentation = access.getAccess(3);
             m_inputPorts = access.getAccess(4);
             m_outputPorts = access.getAccess(5);
+            m_messageOutputPortIndex = access.getAccess(6);
+
         }
 
         @Override
         public WorkflowToolCell getDataCell() {
             return new WorkflowToolCell(m_name.getStringValue(), m_description.getStringValue(),
                 m_parameterSchema.getStringValue(), readToolPorts(m_inputPorts), readToolPorts(m_outputPorts),
-                m_binaryRepresentation.getByteArray());
+                m_messageOutputPortIndex.getIntValue(), m_binaryRepresentation.getByteArray());
         }
 
         @Override
@@ -183,13 +192,19 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         }
 
         @Override
+        public int getMessageOutputPortIndex() {
+            return m_messageOutputPortIndex.getIntValue();
+        }
+
+        @Override
         public byte[] getWorkflow() {
             return m_binaryRepresentation.getByteArray();
         }
 
         @Override
-        public ToolResult execute(final String parameters, final PortObject[] inputs) {
-            return getDataCell().execute(parameters, inputs);
+        public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
+            final String... executionHints) {
+            return getDataCell().execute(parameters, inputs, exec, executionHints);
         }
 
     }
@@ -212,6 +227,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private final ListWriteAccess m_outputPorts;
 
+        private final IntWriteAccess m_messageOutputPortIndex;
+
         private DefaultWorkflowToolWriteValue(final StructWriteAccess access) {
             m_name = access.getWriteAccess(0);
             m_description = access.getWriteAccess(1);
@@ -219,6 +236,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             m_binaryRepresentation = access.getWriteAccess(3);
             m_inputPorts = access.getWriteAccess(4);
             m_outputPorts = access.getWriteAccess(5);
+            m_messageOutputPortIndex = access.getWriteAccess(6);
         }
 
         @Override
@@ -237,6 +255,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             m_binaryRepresentation.setByteArray(value.getWorkflow());
             writeToolPorts(m_inputPorts, value.getInputs());
             writeToolPorts(m_outputPorts, value.getOutputs());
+            m_messageOutputPortIndex.setIntValue(value.getMessageOutputPortIndex());
         }
 
         private void setFromAccesses(final DefaultWorkflowToolReadValue value) {
@@ -246,6 +265,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             m_binaryRepresentation.setFrom(value.m_binaryRepresentation);
             m_inputPorts.setFrom(value.m_inputPorts);
             m_outputPorts.setFrom(value.m_outputPorts);
+            m_messageOutputPortIndex.setFrom(value.m_messageOutputPortIndex);
         }
 
         private static void writeToolPorts(final ListWriteAccess access, final ToolPort[] ports) {

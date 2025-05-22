@@ -56,4 +56,9 @@ package org.knime.core.node.agentic.tool;
 interface WorkflowToolValue extends ToolValue {
 
     byte[] getWorkflow();
+
+    /**
+     * @return -1 if the tool does not have a message output port
+     */
+    int getMessageOutputPortIndex();
 }

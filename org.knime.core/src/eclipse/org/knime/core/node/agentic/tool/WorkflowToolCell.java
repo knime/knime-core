@@ -50,16 +50,23 @@ package org.knime.core.node.agentic.tool;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataCell;
@@ -69,6 +76,8 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.dialog.ContentType;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
@@ -79,6 +88,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -86,9 +96,12 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentExecutionResult;
 import org.knime.core.util.JsonUtil;
 
 import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 
 /**
  * Implementation of a {@link ToolValue} where the tool is a KNIME workflow.
@@ -144,6 +157,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private final ToolPort[] m_outputs;
 
+    private final int m_messageOutputPortIndex;
+
     private final byte[] m_workflow;
 
     private WorkflowToolCell(final WorkflowManager wfm) throws ToolIncompatibleWorkflowException {
@@ -152,7 +167,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         var toolInputs = new ArrayList<ToolPort>();
         var toolOutputs = new ArrayList<ToolPort>();
         try (var unused = wfm.lock()) {
-            removeAndCollectInputsAndOutputs(wfm, wsInputs, wsOutputs, toolInputs, toolOutputs);
+            m_messageOutputPortIndex =
+                removeAndCollectInputsAndOutputs(wfm, wsInputs, wsOutputs, toolInputs, toolOutputs);
         }
         var ws = new WorkflowSegment(wfm, wsInputs, wsOutputs, Set.of());
         m_name = wfm.getName();
@@ -164,12 +180,13 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     }
 
     WorkflowToolCell(final String name, final String description, final String parameterSchema, final ToolPort[] inputs,
-        final ToolPort[] outputs, final byte[] workflow) {
+        final ToolPort[] outputs, final int messageOutputPortIndex, final byte[] workflow) {
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
         m_inputs = inputs;
         m_outputs = outputs;
+        m_messageOutputPortIndex = messageOutputPortIndex;
         m_workflow = workflow;
     }
 
@@ -203,26 +220,31 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         }
     }
 
-    private static void removeAndCollectInputsAndOutputs(final WorkflowManager wfm,
+    private WorkflowSegment deserializeWorkflowSegment() {
+        try (var byteIn = new ByteArrayInputStream(m_workflow); var zipIn = new ZipInputStream(byteIn)) {
+            return WorkflowSegment.load(zipIn);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Problem loading workflow", ex);
+        }
+    }
+
+    private static int removeAndCollectInputsAndOutputs(final WorkflowManager wfm,
         final List<WorkflowSegment.Input> wsInputs, final List<WorkflowSegment.Output> wsOutputs,
         final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs) throws ToolIncompatibleWorkflowException {
         List<NodeID> nodesToRemove = new ArrayList<>();
-        var messageOutput = new AtomicReference<Output>();
+        var messageOutputPortIndex = new AtomicInteger(-1);
         for (NodeContainer nc : wfm.getNodeContainers()) {
             if (nc instanceof NativeNodeContainer nnc && (collectInputs(wfm, wsInputs, toolInputs, nnc)
-                || collectOutputs(wfm, wsOutputs, messageOutput, toolOutputs, nnc))) {
+                || collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc))) {
                 nodesToRemove.add(nnc.getID());
             }
         }
-        // the message output is always at position 0
-        if (messageOutput.get() != null) {
-            wsOutputs.add(0, messageOutput.get());
-        }
         nodesToRemove.forEach(wfm::removeNode);
+        return messageOutputPortIndex.get();
     }
 
     private static boolean collectOutputs(final WorkflowManager wfm, final List<WorkflowSegment.Output> wsOutputs,
-        final AtomicReference<Output> messageOutput, final List<ToolPort> toolOutputs, final NativeNodeContainer nnc)
+        final AtomicInteger messageOutputPortIndex, final List<ToolPort> toolOutputs, final NativeNodeContainer nnc)
         throws ToolIncompatibleWorkflowException {
         if (nnc.getNodeModel() instanceof OutputNode outputNode) {
             var cc = wfm.getConnection(new ConnectionID(nnc.getID(), 1));
@@ -233,10 +255,11 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             var wsOutput = new Output(outPort.getPortType(), null,
                 new PortID(NodeIDSuffix.create(wfm.getID(), cc.getSource()), cc.getSourcePort()));
             if (isToolMessageOutput(outputNode)) {
-                if (messageOutput.get() != null) {
+                if (messageOutputPortIndex.get() != -1) {
                     throw new ToolIncompatibleWorkflowException("Multiple tool message outputs defined");
                 }
-                messageOutput.set(wsOutput);
+                messageOutputPortIndex.set(wsOutputs.size());
+                wsOutputs.add(wsOutput);
                 return true;
             } else if (isWorkflowOutput(outputNode)) {
                 var outputData = outputNode.getExternalOutput();
@@ -330,14 +353,81 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     }
 
     @Override
+    public int getMessageOutputPortIndex() {
+        return m_messageOutputPortIndex;
+    }
+
+    @Override
     public byte[] getWorkflow() {
         return m_workflow;
     }
 
     @Override
-    public ToolResult execute(final String parameters, final PortObject[] inputs) {
-        // TODO AP-24362
-        throw new UnsupportedOperationException("Not implemented yet");
+    public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
+        final String... executionHints) {
+        var ws = deserializeWorkflowSegment();
+        var name = ws.loadWorkflow().getName();
+        var hostNode = NodeContext.getContext().getNodeContainer();
+        WorkflowSegmentExecutor wsExecutor = null;
+        var isDebugMode = contains("debug", executionHints);
+        boolean executionFailed = false;
+        try {
+            wsExecutor = new WorkflowSegmentExecutor(ws, name, hostNode, isDebugMode, warning -> {
+            });
+            if (!StringUtils.isBlank(parameters)) {
+                wsExecutor.configureWorkflow(parseParameters(parameters));
+            }
+            var result = wsExecutor.executeWorkflowAndCollectNodeMessages(inputs, exec);
+            executionFailed = result.portObjectCopies() == null;
+            return new ToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()));
+        } catch (Exception ex) {
+            var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
+            NodeLogger.getLogger(getClass()).error(message, ex);
+            executionFailed = true;
+            return new ToolResult(message, null);
+        } finally {
+            if (wsExecutor != null && !(isDebugMode && executionFailed)) {
+                wsExecutor.dispose();
+            }
+        }
+    }
+
+    private static Map<String, JsonValue> parseParameters(final String parameters) {
+        try (var reader = JsonUtil.getProvider().createReader(new StringReader(parameters))) {
+            var jsonObject = reader.readObject();
+            return jsonObject.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        }
+    }
+
+    private static boolean contains(final String value, final String... strings) {
+        return Arrays.stream(strings).anyMatch(h -> h.equals(value));
+    }
+
+    private PortObject[] removeMessageOutput(final PortObject[] outputs) {
+        if (outputs == null) {
+            return null;
+        }
+        if (m_messageOutputPortIndex == -1) {
+            return outputs;
+        }
+        return ArrayUtils.remove(outputs, m_messageOutputPortIndex);
+    }
+
+    private String extractMessage(final WorkflowSegmentExecutionResult result) {
+        var outputs = result.portObjectCopies();
+        if (outputs == null) {
+            return "Tool execution failed with: " + result.compileSingleErrorMessage();
+        }
+        if (m_messageOutputPortIndex == -1) {
+            return "Tool executed successfully (no custom tool message output)";
+        }
+        var messageTable = (BufferedDataTable)outputs[m_messageOutputPortIndex];
+        if (messageTable.size() == 0 || messageTable.getDataTableSpec().getNumColumns() == 0) {
+            return "Tool executed successfully (empty custom tool message)";
+        }
+        try (var cursor = messageTable.cursor()) {
+            return cursor.forward().getAsDataCell(0).toString();
+        }
     }
 
     @Override
@@ -427,6 +517,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             for (var toolPort : cell.getOutputs()) {
                 writeToolPort(toolPort, output);
             }
+            output.writeInt(cell.getMessageOutputPortIndex());
             var wfBytes = cell.getWorkflow();
             output.writeInt(wfBytes.length);
             output.write(wfBytes);
@@ -452,9 +543,11 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             for (int i = 0; i < outputs.length; i++) {
                 outputs[i] = readToolPort(input);
             }
+            final int messageOutputPortIndex = input.readInt();
             final byte[] workflow = new byte[input.readInt()];
             input.readFully(workflow);
-            return new WorkflowToolCell(name, description, parameterSchema, inputs, outputs, workflow);
+            return new WorkflowToolCell(name, description, parameterSchema, inputs, outputs, messageOutputPortIndex,
+                workflow);
         }
 
         private static ToolPort readToolPort(final DataCellDataInput input) throws IOException {

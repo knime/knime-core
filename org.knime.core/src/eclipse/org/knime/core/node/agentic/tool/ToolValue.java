@@ -50,6 +50,7 @@ package org.knime.core.node.agentic.tool;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
 
 /**
@@ -115,18 +116,21 @@ public interface ToolValue extends DataValue {
      *
      * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
      * @param message the message that is presented to the agent (e.g. success or error message)
-     * @param outputs the output data that the agent can use to execute subsequent tools with
+     * @param outputs the output data that the agent can use to execute subsequent tools with, {@code null} if the
+     *            execution failed
      */
     record ToolResult(String message, PortObject[] outputs) {
     }
 
     /**
-     * TODO
+     * Executes the tool with the given parameters and inputs.
      *
-     * @param parameters JSON representation of the parameter configuration the agent produced for the tool
-     * @param inputs data inputs of the tool which the agent chose
-     * @return the result of executing the tool
+     * @param parameters the parameters to use for the tool execution
+     * @param inputs
+     * @param exec the execution context for cancellation and to create tables
+     * @param executionHints optional hints controlling the tool execution - doesn't need to be respected by the
+     *            implementation
+     * @return the tool result
      */
-    // TODO AP-24362
-    ToolResult execute(String parameters, PortObject[] inputs);
+    ToolResult execute(String parameters, PortObject[] inputs, ExecutionContext exec, String... executionHints);
 }

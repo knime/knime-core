@@ -54,6 +54,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -63,9 +64,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
@@ -96,6 +100,9 @@ import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
+
+import jakarta.json.JsonException;
+import jakarta.json.JsonValue;
 
 /**
  * Represents an executable {@link WorkflowSegment}. The execution is done by embedding the workflow segment as a
@@ -216,6 +223,20 @@ public final class WorkflowSegmentExecutor {
     }
 
     /**
+     * Sets the configuration of the (config) nodes referenced by the given parameter name. Only considers nodes on the
+     * top level (cp. {@link WorkflowManager#setConfigurationNodes(Map)}).
+     *
+     * @param parameters a map of parameter names to the new to be set configuration value as json
+     * @throws JsonException
+     * @throws InvalidSettingsException
+     */
+    public void configureWorkflow(final Map<String, JsonValue> parameters)
+        throws JsonException, InvalidSettingsException {
+        checkWfmNonNull();
+        m_wfm.setConfigurationNodes(parameters);
+    }
+
+    /**
      * Executes the workflow segment.
      *
      * @param inputData the input data to be used for execution
@@ -230,7 +251,7 @@ public final class WorkflowSegmentExecutor {
         NativeNodeContainer virtualInNode = ((NativeNodeContainer)m_wfm.getNodeContainer(m_virtualStartID));
         DefaultVirtualPortObjectInNodeModel inNM = (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
 
-        m_flowVirtualScopeContext.registerHostNodeForPortObjectPersistence(m_hostNode, exec);
+        m_flowVirtualScopeContext.registerHostNode(m_hostNode, exec);
 
         inNM.setVirtualNodeInput(
             new VirtualNodeInput(inputData, collectOutputFlowVariablesFromUpstreamNodes(m_hostNode)));
@@ -320,7 +341,7 @@ public final class WorkflowSegmentExecutor {
      * Represents the result of the executed workflow including a hierarchical list of the error and warning messages
      * of all nodes.
      *
-     * @param portObjectCopies the resulting port objects
+     * @param portObjectCopies the resulting port objects or {@code null} if the execution failed
      * @param flowVariables the resulting flow variables
      * @param nodeMessages a hierarchical list of the error and warning messages of all nodes
      *
@@ -359,6 +380,74 @@ public final class WorkflowSegmentExecutor {
                     ", flowVariables=" + flowVariables +
                     ", nodeMessages=" + nodeMessages +
                     '}';
+        }
+
+        /**
+         * Helper to aggregate a single error message based on the node error message in execution result.
+         *
+         * @return the compiled error message
+         *
+         * @since 5.5
+         */
+        public String compileSingleErrorMessage() {
+            var errorMessages =
+                nodeMessages.stream().filter(msg -> msg.message().getMessageType() == Type.ERROR).toList();
+            // determine the number of failed nodes that are not containers
+            List<WorkflowSegmentNodeMessage> leafErrorMessages = new ArrayList<>();
+            for (WorkflowSegmentNodeMessage message : errorMessages) {
+                recursivelyExtractLeafNodeErrorMessages(message, leafErrorMessages);
+            }
+            return constructErrorMessage(leafErrorMessages.size(), errorMessages);
+        }
+
+        private static void recursivelyExtractLeafNodeErrorMessages(final WorkflowSegmentNodeMessage message,
+            final List<WorkflowSegmentNodeMessage> result) {
+            if (message.message().getMessageType() != Type.ERROR) {
+                return;
+            }
+            if (message.recursiveMessages().isEmpty()) {
+                result.add(message);
+            } else {
+                for (WorkflowSegmentNodeMessage nestedMessage : message.recursiveMessages()) {
+                    recursivelyExtractLeafNodeErrorMessages(nestedMessage, result);
+                }
+            }
+        }
+
+        private static String constructErrorMessage(final int numberOfFailedNodes,
+            final List<WorkflowSegmentNodeMessage> errorMessages) {
+            String iNodes;
+            if (numberOfFailedNodes == 1) {
+                iNodes = "one node";
+            } else {
+                iNodes = String.valueOf(numberOfFailedNodes) + " nodes";
+            }
+            return String.format("Workflow contains %s with execution failure:%n%s",
+                iNodes,
+                errorMessages.stream()//
+                    .map(msg -> recursivelyConstructErrorMessage(msg, ""))//
+                    .collect(Collectors.joining(",\n")));
+        }
+
+        private static String recursivelyConstructErrorMessage(final WorkflowSegmentNodeMessage message,
+            final String prefix) {
+            if (message.recursiveMessages().isEmpty()) {
+                return prefix + message.nodeName() + " #" + message.nodeID().getIndex() + ": "
+                    + removeErrorPrefix(message.message().getMessage());
+            } else {
+                String newPrefix = prefix + message.nodeName() + " #" + message.nodeID().getIndex() + " > ";
+                return message.recursiveMessages().stream().filter(msg -> msg.message().getMessageType() == Type.ERROR)
+                    .map(ms -> recursivelyConstructErrorMessage(ms, newPrefix))
+                    .collect(Collectors.joining(",\n"));
+                // WorkflowSegmentNodeMessage of type ERROR can contain messages of type WARNING
+            }
+        }
+
+        private static String removeErrorPrefix(final String msg) {
+            if (msg.startsWith(Node.EXECUTE_FAILED_PREFIX)) {
+                return StringUtils.removeStart(msg, Node.EXECUTE_FAILED_PREFIX);
+            }
+            return msg;
         }
     }
 
