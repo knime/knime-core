@@ -48,19 +48,31 @@
  */
 package org.knime.core.node.workflow;
 
+
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.Filter;
+import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.RootLogger;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+
 import org.knime.core.node.NodeLoggerConfig;
 import org.knime.core.node.logging.KNIMELogger;
 import org.knime.core.util.Pair;
+
+import org.knime.core.node.logging.KNIMELogger;
 
 
 /**
@@ -71,6 +83,8 @@ import org.knime.core.util.Pair;
 public final class EnhAP22429_WorkflowLoggingTest extends WorkflowTestCase {
 
     private static final String LOGGER_NAME = EnhAP22429_WorkflowLoggingTest.class.getName();
+
+    private static final String TEST_MSG = "Global DEBUG message from WorkflowTestCase";
 
     @Before
     public void clearLog() throws Exception {
@@ -83,25 +97,72 @@ public final class EnhAP22429_WorkflowLoggingTest extends WorkflowTestCase {
         final var logger = NodeLogger.getLogger(LOGGER_NAME);
         logger.debug("GLOBAL message before workflow loading");
 
-        final var workflowLogFile = getWorkflowLog();
-        assertFalse("No workflow logfile should exist yet", Files.exists(workflowLogFile));
-
-        final var baseID = loadAndSetWorkflow();
-        // the workflow contains a Java Snippet node that prints a single debug log statement
-        final var javaSnippetNode = baseID.createChild(1);
-        checkState(javaSnippetNode, InternalNodeContainerState.CONFIGURED);
-
-        // enable per-workflow logs with detached levels
+        // enable per-workflow logs with detached levels _before_ creating it (i.e. by loading the workflow)
+        // otherwise we would follow the "global" logfile filter (levels)
         NodeLogger.logInWorkflowDir(LEVEL.DEBUG, LEVEL.FATAL);
 
-        executeAllAndWait();
-        checkState(javaSnippetNode, InternalNodeContainerState.EXECUTED);
+        final var workflowLogFile = getWorkflowLog();
+        assertFalse("No workflow logfile should exist yet at \"%s\"".formatted(workflowLogFile), 
+        		Files.exists(workflowLogFile));
 
-        assertTrue("Workflow logfile should now exist", Files.exists(workflowLogFile));
-        assertTrue("Logfile should now contain some content", Files.lines(workflowLogFile).count() > 0);
-        // check for specific log message emitted from JavaSnippet node
-        assertTrue("DEBUG message from JavaSnippet is present", 
-            Files.lines(workflowLogFile).anyMatch(logLine -> logLine.contains("DEBUG message from JavaSnippet")));
+        // we know the workflow log appender will be called like the workflow directory (parent folder of the knime.log)
+        final var appenderName = workflowLogFile.getParent().toString();
+        // the appender gets set up when loading the workflow
+        final var baseID = loadAndSetWorkflow();
+
+        final var hasReceivedMessages = new AtomicBoolean();
+        final var hasReceivedGlobalTestMsg = new AtomicBoolean();
+
+        assertNotNull("Missing main %s appender".formatted(NodeLogger.LOG_FILE), 
+        		Logger.getRootLogger().getAppender(NodeLogger.LOGFILE_APPENDER));
+
+        // create overlapping registration for the same workflow log (needs reference counting to be correct)
+        try (final var secondRegistration = KNIMELogger.registerForWorkflowLog(getManager().getContextV2())) {
+
+            // the workflow contains a Java Snippet node that prints a single debug log statement
+            final var javaSnippetNode = baseID.createChild(1);
+            checkState(javaSnippetNode, InternalNodeContainerState.CONFIGURED);
+
+            final var appender = RootLogger.getRootLogger().getAppender(appenderName);
+            assertNotNull("Workflow log appender should have been created under name \"%s\""
+                    .formatted(workflowLogFile.toString()), appender);
+            appender.addFilter(new Filter() {
+                @Override
+                public int decide(final LoggingEvent event) {
+                    hasReceivedMessages.set(true);
+                    if (TEST_MSG.equals(event.getRenderedMessage())) {
+                        hasReceivedGlobalTestMsg.set(true);
+                    }
+                    return Filter.NEUTRAL;
+                }
+            });
+
+            // briefly enable global msg to workflow log routing
+            NodeLogger.logGlobalMsgsInWfDir(true);
+            NodeLogger.getLogger(LOGGER_NAME).debug(TEST_MSG);
+            NodeLogger.logGlobalMsgsInWfDir(false);
+
+            // log statements from the Java Snippet node have a node context and should go into the workflow log
+            executeAllAndWait();
+            checkState(javaSnippetNode, InternalNodeContainerState.EXECUTED);
+
+            // close workflow before exiting try-with-resource to ensure that reference counting of workflow log 
+            // appender works
+            closeWorkflow();
+        }
+
+		assertTrue("Expected dummy appender to have received messages", hasReceivedMessages.get());
+		assertTrue("Expected dummy appender to have received the global DEBUG test message",
+				hasReceivedGlobalTestMsg.get());
+		assertTrue("Workflow logfile should now exist at \"%s\"".formatted(workflowLogFile),
+				Files.exists(workflowLogFile));
+		assertTrue("Logfile should now contain some content at \"%s\"".formatted(workflowLogFile),
+				Files.lines(workflowLogFile).count() > 0);
+		assertTrue("DEBUG message from JavaSnippet is present",
+				Files.lines(workflowLogFile).anyMatch(logLine -> logLine.contains("DEBUG message from JavaSnippet")));
+		final var expectedNullAppender = RootLogger.getRootLogger().getAppender(appenderName);
+		assertNull("Workflow log appender should have been removed after workflow close", expectedNullAppender);
+        // TODO assert fileappender closed by appending to closed appender and seeing "log4j:ERROR" pop up on stdout
     }
 
     private final Path getWorkflowLog() throws Exception {
