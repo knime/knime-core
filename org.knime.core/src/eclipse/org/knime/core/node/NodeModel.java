@@ -406,13 +406,17 @@ public abstract class NodeModel implements ViewableModel {
     final void cleanup() {
         if (!m_views.isEmpty()) {
             m_logger.debugWithFormat("Removing all (%d) views from model.", m_views.size());
-            for (AbstractNodeView<?> view : m_views) {
-                view.closeView();
-            }
-            m_views.clear();
+            closeViews();
         }
         clearLoopContext();
         m_warningListeners.clear();
+    }
+
+    final void closeViews() {
+        for (AbstractNodeView<?> view : m_views) {
+            view.closeView();
+        }
+        m_views.clear();
     }
 
     /**
