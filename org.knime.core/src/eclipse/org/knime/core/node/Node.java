@@ -2849,6 +2849,16 @@ public final class Node {
     }
 
     /**
+     * Widens scope of {@link NodeModel#closeViews()} method.
+     * @param model The NodeModel whose views are to be closed.
+     *
+     * @since 5.5
+     */
+    public static void invokeNodeModelCloseViews(final NodeModel model) {
+        model.closeViews();
+    }
+
+    /**
      * Widens scope of {@link NodeFactory#setIsDeprecated(boolean)} so that the method isn't public API and easily
      * discovered by node extensions.
      *
