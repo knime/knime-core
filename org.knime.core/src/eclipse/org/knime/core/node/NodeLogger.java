@@ -160,7 +160,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void warn(final Object o) {
-        log(Level.WARN, o, null);
+        log(Level.WARN, o, false, null);
     }
 
     /**
@@ -170,7 +170,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void warn(final Supplier<Object> supplier) {
-        log(Level.WARN, supplier, null);
+        log(Level.WARN, supplier, false, null);
     }
 
     /**
@@ -179,7 +179,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void debug(final Object o) {
-        log(Level.DEBUG, o, null);
+        log(Level.DEBUG, o, false, null);
     }
 
     /**
@@ -189,7 +189,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void debug(final Supplier<Object> supplier) {
-        log(Level.DEBUG, supplier, null);
+        log(Level.DEBUG, supplier, false, null);
     }
 
 
@@ -201,7 +201,7 @@ public final class NodeLogger {
      * @since 3.1
      */
     public void debugWithoutContext(final Object o) {
-        log(Level.DEBUG, o, null, false);
+        log(Level.DEBUG, o, true, null);
     }
 
 
@@ -213,30 +213,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void debugWithoutContext(final Supplier<Object> supplier) {
-        log(Level.DEBUG, supplier, null, false);
-    }
-
-
-    /**
-     * Log the given object at the given level.
-     *
-     * @param level level to log at
-     * @param o object to log
-     * @param cause nullable cause
-     */
-    private void log(final Level level, final Object o, final Throwable cause) {
-        log(level, o, cause, true);
-    }
-
-    /**
-     * Log the given object at the given level.
-     *
-     * @param level level to log at
-     * @param supplier supplier for object to log
-     * @param cause nullable cause
-     */
-    private void log(final Level level, final Supplier<Object> supplier, final Throwable cause) {
-        log(level, supplier, cause, true);
+        log(Level.DEBUG, supplier, true, null);
     }
 
     /**
@@ -244,25 +221,32 @@ public final class NodeLogger {
      *
      * @param level level to log at
      * @param logObject object to log
+     * @param omitContext {@code true} to omit the context information for the log message
      * @param cause nullable cause
-     * @param considerWFDirAppenders whether to consider setting up workflow dir appenders
      */
-    private void log(final Level level, final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        m_logger.log(level, o, cause, considerWFDirAppenders);
+    private void log(final Level level, final Object o, final boolean omitContext, final Throwable cause) {
+        m_logger.log(level, o, omitContext, cause);
     }
 
-    private void log(final Level level, final Supplier<Object> supplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
-        m_logger.log(level, supplier, cause, considerWFDirAppenders);
+    /**
+     * Log the given object at the given level.
+     *
+     * @param level level to log at
+     * @param supplier supplier for object to log
+     * @param omitContext {@code true} to omit the context information for the log message
+     * @param cause nullable cause
+     */
+    private void log(final Level level, final Supplier<Object> supplier, final boolean omitContext,
+            final Throwable cause) {
+        m_logger.log(level, supplier, omitContext, cause);
     }
 
-    private void logCoding(final Object o, final Throwable cause, final boolean considerWFDirAppenders) {
-        m_logger.logCoding(o, cause, considerWFDirAppenders);
+    private void logCoding(final Object o, final boolean omitContext, final Throwable cause) {
+        m_logger.logCoding(o, omitContext, cause);
     }
 
-    private void logCoding(final Supplier<Object> supplier, final Throwable cause,
-        final boolean considerWFDirAppenders) {
-        m_logger.logCoding(supplier, cause, considerWFDirAppenders);
+    private void logCoding(final Supplier<Object> supplier, final boolean omitContext, final Throwable cause) {
+        m_logger.logCoding(supplier, omitContext, cause);
     }
 
     /**
@@ -271,7 +255,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void info(final Object o) {
-        log(Level.INFO, o, null);
+        log(Level.INFO, o, false, null);
     }
 
     /**
@@ -281,7 +265,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void info(final Supplier<Object> supplier) {
-        log(Level.INFO, supplier, null);
+        log(Level.INFO, supplier, false, null);
     }
 
     /**
@@ -290,7 +274,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void error(final Object o) {
-        log(Level.ERROR, o, null);
+        log(Level.ERROR, o, false, null);
     }
 
     /**
@@ -300,7 +284,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void error(final Supplier<Object> supplier) {
-        log(Level.ERROR, supplier, null);
+        log(Level.ERROR, supplier, false, null);
     }
 
     /**
@@ -309,7 +293,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void fatal(final Object o) {
-        log(Level.FATAL, o, null);
+        log(Level.FATAL, o, false, null);
     }
 
     /**
@@ -319,7 +303,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void fatal(final Supplier<Object> supplier) {
-        log(Level.FATAL, supplier, null);
+        log(Level.FATAL, supplier, false, null);
     }
 
     /**
@@ -329,7 +313,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void warn(final Object o, final Throwable t) {
-        log(Level.WARN, o, t);
+        log(Level.WARN, o, false, t);
     }
 
     /**
@@ -340,7 +324,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void warn(final Supplier<Object> supplier, final Throwable t) {
-        log(Level.WARN, supplier, t);
+        log(Level.WARN, supplier, false, t);
     }
 
     /**
@@ -350,7 +334,7 @@ public final class NodeLogger {
      * @param t The exception to log, including its stack trace.
      */
     public void debug(final Object o, final Throwable t) {
-        log(Level.DEBUG, o, t);
+        log(Level.DEBUG, o, false, t);
     }
 
     /**
@@ -361,7 +345,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void debug(final Supplier<Object> supplier, final Throwable t) {
-        log(Level.DEBUG, supplier, t);
+        log(Level.DEBUG, supplier, false, t);
     }
 
     /**
@@ -371,7 +355,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void info(final Object o, final Throwable t) {
-        log(Level.INFO, o, t);
+        log(Level.INFO, o, false, t);
     }
 
     /**
@@ -382,7 +366,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void info(final Supplier<Object> supplier, final Throwable t) {
-        log(Level.INFO, supplier, t);
+        log(Level.INFO, supplier, false, t);
     }
 
     /**
@@ -392,7 +376,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void error(final Object o, final Throwable t) {
-        log(Level.ERROR, o, t);
+        log(Level.ERROR, o, false, t);
     }
 
     /**
@@ -403,7 +387,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void error(final Supplier<Object> supplier, final Throwable t) {
-        log(Level.ERROR, supplier, t);
+        log(Level.ERROR, supplier, false, t);
     }
 
     /**
@@ -414,7 +398,7 @@ public final class NodeLogger {
      */
     public void assertLog(final boolean b, final String m) {
         if (KNIMEConstants.ASSERTIONS_ENABLED && !b) {
-            log(Level.ERROR, "ASSERT " + m, new AssertionError(m));
+            log(Level.ERROR, "ASSERT " + m, false, new AssertionError(m));
         }
     }
 
@@ -429,11 +413,11 @@ public final class NodeLogger {
             final AssertionError e) {
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
             if (!b) {
-                log(Level.ERROR, "ASSERT " + m, null);
+                log(Level.ERROR, "ASSERT " + m, false, null);
             }
             // for stacktrace
             if (!b && e != null) {
-                log(Level.ERROR, "ASSERT\t " + m, e);
+                log(Level.ERROR, "ASSERT\t " + m, false, e);
             }
         }
     }
@@ -445,7 +429,7 @@ public final class NodeLogger {
      * @param o the message to print
      */
     public void coding(final Object o) {
-        logCoding(o, null, true);
+        logCoding(o, false, null);
     }
 
     /**
@@ -456,7 +440,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void coding(final Supplier<Object> supplier) {
-        logCoding(supplier.get(), null, true);
+        logCoding(supplier.get(), false, null);
     }
 
     /**
@@ -467,7 +451,7 @@ public final class NodeLogger {
      * @param t the exception to log at debug level, including its stack trace
      */
     public void coding(final Object o, final Throwable t) {
-        logCoding(o, t, true);
+        logCoding(o, false, t);
     }
 
     /**
@@ -479,7 +463,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void coding(final Supplier<Object> supplier, final Throwable t) {
-        logCoding(supplier.get(), t, true);
+        logCoding(supplier.get(), false, t);
     }
 
     /**
@@ -490,7 +474,7 @@ public final class NodeLogger {
      * @since 4.3
      */
     public void codingWithoutContext(final Object o) {
-        logCoding(o, null, false);
+        logCoding(o, /*omit context*/true, null);
     }
 
     /**
@@ -501,7 +485,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void codingWithoutContext(final Supplier<Object> supplier) {
-        logCoding(supplier, null, false);
+        logCoding(supplier, /*omit context*/true, null);
     }
 
     /**
@@ -511,7 +495,7 @@ public final class NodeLogger {
      * @param t The exception to log at debug level, including its stack trace.
      */
     public void fatal(final Object o, final Throwable t) {
-        log(Level.FATAL, o, t);
+        log(Level.FATAL, o, false, t);
     }
 
     /**
@@ -522,7 +506,7 @@ public final class NodeLogger {
      * @since 5.2
      */
     public void fatal(final Supplier<Object> supplier, final Throwable t) {
-        log(Level.FATAL, supplier, t);
+        log(Level.FATAL, supplier, false, t);
     }
 
     /**
@@ -535,7 +519,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void warnWithFormat(final String format, final Object... args) {
-        log(Level.WARN, (Supplier<Object>)() -> String.format(format, args), null);
+        log(Level.WARN, (Supplier<Object>)() -> String.format(format, args), false, null);
     }
 
     /**
@@ -548,7 +532,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void debugWithFormat(final String format, final Object... args) {
-        log(Level.DEBUG, (Supplier<Object>)() -> String.format(format, args), null);
+        log(Level.DEBUG, (Supplier<Object>)() -> String.format(format, args), false, null);
     }
 
     /**
@@ -561,7 +545,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void infoWithFormat(final String format, final Object... args) {
-        log(Level.INFO, (Supplier<Object>)() -> String.format(format, args), null);
+        log(Level.INFO, (Supplier<Object>)() -> String.format(format, args), false, null);
     }
 
     /**
@@ -574,7 +558,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void errorWithFormat(final String format, final Object... args) {
-        log(Level.ERROR, (Supplier<Object>)() -> String.format(format, args), null);
+        log(Level.ERROR, (Supplier<Object>)() -> String.format(format, args), false, null);
     }
 
     /**
@@ -587,7 +571,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void fatalWithFormat(final String format, final Object... args) {
-        log(Level.FATAL, (Supplier<Object>)() -> String.format(format, args), null);
+        log(Level.FATAL, (Supplier<Object>)() -> String.format(format, args), false, null);
     }
 
     /**
@@ -600,7 +584,7 @@ public final class NodeLogger {
      * @since 2.10
      */
     public void codingWithFormat(final String format, final Object... args) {
-        logCoding((Supplier<Object>)() -> String.format(format, args), null, true);
+        logCoding((Supplier<Object>)() -> String.format(format, args), /*omitContext*/false, null);
     }
 
     /**

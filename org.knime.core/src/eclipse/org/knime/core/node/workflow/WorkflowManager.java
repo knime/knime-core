@@ -149,6 +149,8 @@ import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReExecutable;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.logging.KNIMELogger;
+import org.knime.core.node.logging.KNIMELogger.WorkflowLogCloseable;
 import org.knime.core.node.message.Message;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
@@ -380,6 +382,11 @@ public final class WorkflowManager extends NodeContainer
 
     private WorkflowContextV2 m_workflowContext;
 
+    /**
+     * Resource describing the workflow log appender.
+     */
+    private WorkflowLogCloseable m_workflowLogAppender;
+
     private DataContainerSettings m_dataContainerSettings;
 
     /** Non-null object to check if successor execution is allowed - usually it is except for wizard execution. */
@@ -477,6 +484,8 @@ public final class WorkflowManager extends NodeContainer
                     .withLastModifiedNow() //
                     .withDescription("") //
                     .build();
+
+            m_workflowLogAppender = registerWorkflowLog(m_workflowContext);
         } else {
             // ...synchronize across border
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -603,6 +612,7 @@ public final class WorkflowManager extends NodeContainer
             }
             m_tableBackendSettings = Optional.ofNullable(persistor.getWorkflowTableBackendSettings()) //
                     .orElseGet(WorkflowTableBackendSettings::new);
+            m_workflowLogAppender = registerWorkflowLog(workflowContext);
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
             m_dataRepository = workflowDataRepository;
@@ -650,6 +660,7 @@ public final class WorkflowManager extends NodeContainer
             // TODO  m_workflowContext derived from save location (see old persistor constructor)
             if (isProject) {
                 //TODO m_metadata = ...;
+                // TODO workflow log registration
             }
         } else {
             m_workflowLock = new WorkflowLock(this, m_directNCParent);
@@ -3102,7 +3113,7 @@ public final class WorkflowManager extends NodeContainer
                 return; // stop here, too! Fixes bug #4175 (new in 2.7.3)
             } else {
                 // ...but first check if it's not the stopping type!
-                if ((nc instanceof NativeNodeContainer) && !((SingleNodeContainer)nc).isInactive()) {
+                if ((nc instanceof NativeNodeContainer) && !nc.isInactive()) {
                     // the node itself is not yet marked/executed - mark it
                     NativeNodeContainer nnc = (NativeNodeContainer)nc;
                     // if current nodeModel is of class nodeModelClass and not filtered
@@ -8500,6 +8511,15 @@ public final class WorkflowManager extends NodeContainer
         }
     }
 
+    /**
+     * Registers a workflow log for the given context, if it is not {@code null}.
+     *
+     * @param context context to derive location for workflow log from
+     */
+    private static WorkflowLogCloseable registerWorkflowLog(final WorkflowContextV2 context) {
+        return KNIMELogger.registerForWorkflowLog(context);
+    }
+
     /** {@inheritDoc} */
     @Override
     public WorkflowExecutionResult createExecutionResult(final ExecutionMonitor exec)
@@ -9680,7 +9700,7 @@ public final class WorkflowManager extends NodeContainer
             if (nc instanceof WorkflowManager) {
                 ((WorkflowManager)nc).setDirtyAll();
             } else if (nc instanceof SubNodeContainer) {
-                ((SubNodeContainer)nc).setDirty();
+                nc.setDirty();
                 ((SubNodeContainer)nc).getWorkflowManager().setDirtyAll();
             } else {
                 nc.setDirty();
@@ -10079,6 +10099,10 @@ public final class WorkflowManager extends NodeContainer
                 nc.cleanup();
             }
             getConnectionContainers().stream().forEach(c -> c.cleanup());
+            if (m_workflowLogAppender != null) {
+                m_workflowLogAppender.close();
+                m_workflowLogAppender = null;
+            }
             if (m_tmpDir != null) {
                 // delete the flow temp dir that we created
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
@@ -10710,7 +10734,7 @@ public final class WorkflowManager extends NodeContainer
                     // data available) but are not yet executed
                     it.remove();
                 } else if (nc instanceof SingleNodeContainer) {
-                    if (((SingleNodeContainer)nc).isInactive()) {
+                    if (nc.isInactive()) {
                         // also remove inactive nodes:
                         it.remove();
                     }
