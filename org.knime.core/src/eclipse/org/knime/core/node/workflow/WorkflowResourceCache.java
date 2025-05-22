@@ -144,6 +144,24 @@ public final class WorkflowResourceCache {
     }
 
     /**
+     * Registers a new workflow resource with this workflow. The resource is associated with the given class.
+     * An existing value is returned or {@code null} if the class was previously not associated with a resource.
+     *
+     * @param <T> Type of resource (extension dependent)
+     * @param clazz The class of {@code T}
+     * @param value The resource instance to register
+     * @return The previous value associated with the class or {@code null} if no such value existed
+     */
+    @SuppressWarnings("unchecked")
+    synchronized <T extends WorkflowResource> T put(final Class<T> clazz, final T value) {
+        CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
+        CheckUtils.checkArgumentNotNull(value, "Value must not be null.");
+        CheckUtils.checkState(!m_isDisposed, "Cache is disposed.");
+        LOGGER.debugWithFormat("Added new cache entry for class \"%s\"", clazz);
+        return (T)m_classToInstanceMap.put(clazz, value);
+    }
+
+    /**
      * Clear the cache. Additionally call the {@link WorkflowResource#dispose()} method on all cache entries that
      * implement the {@link WorkflowResource} interface.
      */
