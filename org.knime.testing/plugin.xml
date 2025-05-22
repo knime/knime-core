@@ -39,6 +39,7 @@
             factory-class="org.knime.testing.node.executioncount.ExecutionCountNodeFactory"
             >
       </node>
+      <node category-path="/testing" factory-class="org.knime.testing.node.logging.LoggerNodeFactory" />
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
