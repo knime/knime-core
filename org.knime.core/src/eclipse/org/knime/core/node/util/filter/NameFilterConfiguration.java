@@ -60,6 +60,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
@@ -98,6 +99,20 @@ public class NameFilterConfiguration implements Cloneable {
     /** Settings key for type of filter. */
     private static final String KEY_FILTER_TYPE = "filter-type";
 
+    /**
+     * @since 5.5
+     *
+     *        "Correctly" means "respecting the enforce option" here.
+     *
+     *        Key added with 5.5 to fix UIEXT-2375 while still keeping backwards compatibility wrt. previous versions.
+     *        When the included names or excluded names are not set via the dialog but are overwritten via flow variable
+     *        it can occur that a name is both included and excluded. The correct behavior would be to ignore it on the
+     *        side which is not enforced. Previous behavior: The value was always added as included and not as excluded.
+     *
+     */
+    private static final String KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY =
+        "handle-both-included-and-excluded-names-correctly" + SettingsModel.CFGKEY_INTERNAL;
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NameFilterConfiguration.class);
 
     private final String m_configRootName;
@@ -109,6 +124,8 @@ public class NameFilterConfiguration implements Cloneable {
     private String[] m_removedFromIncludeList = new String[0];
 
     private String[] m_removedFromExcludeList = new String[0];
+
+    private boolean m_handleBothIncludedAndExcludedNamesCorrectly = true;
 
     private EnforceOption m_enforceOption = EnforceOption.EnforceExclusion;
 
@@ -297,6 +314,7 @@ public class NameFilterConfiguration implements Cloneable {
             }
             // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
         }
+        m_handleBothIncludedAndExcludedNamesCorrectly = subSettings.containsKey(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY);
         loadConfigurationInModelChild(subSettings);
     }
 
@@ -333,6 +351,8 @@ public class NameFilterConfiguration implements Cloneable {
         subSettings.addString(KEY_ENFORCE_OPTION, m_enforceOption.name());
         NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfiguration.TYPE);
         m_patternConfig.saveConfiguration(configSettings);
+        // Since 5.5 to fix UIEXT-2375
+        subSettings.addBoolean(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY, true);
         saveConfigurationChild(subSettings);
     }
 
@@ -576,7 +596,9 @@ public class NameFilterConfiguration implements Cloneable {
                 if (inclsHash.remove(name)) { // also remove from hash so that it contains only orphan items
                     if (exclsHash.remove(name)) {
                         LOGGER.debug("Item \"" + name + "\" appears in both the include and exclude list");
-                        if (enforceOption == EnforceOption.EnforceInclusion) {
+                        if (!m_handleBothIncludedAndExcludedNamesCorrectly) {
+                            incls.add(name);
+                        } else if (enforceOption == EnforceOption.EnforceInclusion) {
                             incls.add(name);
                         } else {
                             excls.add(name);
