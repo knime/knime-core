@@ -156,7 +156,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         }
         var ws = new WorkflowSegment(wfm, wsInputs, wsOutputs, Set.of());
         m_name = wfm.getName();
-        m_description = wfm.getMetadata().getDescription().orElse("");
+        m_description = wfm.getMetadata().getDescription().orElse(null);
         m_parameterSchema = extractParameterSchemaFromConfigNodes(wfm);
         m_inputs = toolInputs.toArray(new ToolPort[0]);
         m_outputs = toolOutputs.toArray(new ToolPort[0]);
@@ -176,7 +176,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm) {
         var configNodes = wfm.getConfigurationNodes(false);
         if (configNodes.isEmpty()) {
-            return "";
+            return null;
         }
         var paramSchema = JsonUtil.getProvider().createObjectBuilder();
         for (var configNodeEntry : configNodes.entrySet()) {
@@ -262,7 +262,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
                     var outPort = nnc.getOutPort(1);
                     wsInputs.add(new Input(outPort.getPortType(), null, ports));
                     toolInputs.add(new ToolPort(outPort.getPortType().getName(), inputData.getID(),
-                        inputData.getDescription().orElse(""), specToString(outPort.getPortObjectSpec())));
+                        inputData.getDescription().orElse(null), specToString(outPort.getPortObjectSpec())));
                 }
                 return true;
             }
@@ -300,7 +300,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             );
             return JsonUtil.getProvider().createObjectBuilder(map).build().toString();
         } else {
-            return "";
+            return null;
         }
     }
 

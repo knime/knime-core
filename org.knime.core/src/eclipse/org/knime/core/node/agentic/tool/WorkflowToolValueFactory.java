@@ -70,7 +70,7 @@ import org.knime.core.table.schema.StructDataSpec;
 import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
- * De-/serialization of {@link WorkflowToolValue}s.
+ * De-/serialization of WorkflowToolValues.
  *
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.5
@@ -136,8 +136,11 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         @Override
         public WorkflowToolCell getDataCell() {
-            return new WorkflowToolCell(m_name.getStringValue(), m_description.getStringValue(),
-                m_parameterSchema.getStringValue(), readToolPorts(m_inputPorts), readToolPorts(m_outputPorts),
+            var parameterSchema = m_parameterSchema.isMissing() ? null : m_parameterSchema.getStringValue();
+            var description = m_description.isMissing() ? null : m_description.getStringValue();
+
+            return new WorkflowToolCell(m_name.getStringValue(), description,
+                parameterSchema, readToolPorts(m_inputPorts), readToolPorts(m_outputPorts),
                 m_binaryRepresentation.getByteArray());
         }
 
@@ -170,7 +173,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private static ToolPort readToolPort(final StructReadAccess access) {
             final String name = access.<StringReadAccess> getAccess(0).getStringValue();
-            final String description = access.<StringReadAccess> getAccess(1).getStringValue();
+            var descriptionAccess = access.<StringReadAccess> getAccess(1);
+            final String description = descriptionAccess.isMissing() ? null : descriptionAccess.getStringValue();
             final String type = access.<StringReadAccess> getAccess(2).getStringValue();
             var specAccess = access.<StringReadAccess> getAccess(3);
             final String spec = specAccess.isMissing() ? null : specAccess.getStringValue();
@@ -232,8 +236,18 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private void setFromValue(final WorkflowToolValue value) {
             m_name.setStringValue(value.getName());
-            m_description.setStringValue(value.getDescription());
-            m_parameterSchema.setStringValue(value.getParameterSchema());
+            var description = value.getDescription();
+            if (description == null) {
+                m_description.setMissing();
+            } else {
+                m_description.setStringValue(description);
+            }
+            var parameterSchema = value.getParameterSchema();
+            if (parameterSchema == null) {
+                m_parameterSchema.setMissing();
+            } else {
+                m_parameterSchema.setStringValue(parameterSchema);
+            }
             m_binaryRepresentation.setByteArray(value.getWorkflow());
             writeToolPorts(m_inputPorts, value.getInputs());
             writeToolPorts(m_outputPorts, value.getOutputs());
@@ -260,7 +274,12 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private static void writeToolPort(final StructWriteAccess access, final ToolPort port) {
             access.<StringWriteAccess> getWriteAccess(0).setStringValue(port.name());
-            access.<StringWriteAccess> getWriteAccess(1).setStringValue(port.description());
+            var descriptionAccess = access.<StringWriteAccess> getWriteAccess(1);
+            if (port.description() == null) {
+                descriptionAccess.setMissing();
+            } else {
+                descriptionAccess.setStringValue(port.description());
+            }
             access.<StringWriteAccess> getWriteAccess(2).setStringValue(port.type());
             var specAccess = access.<StringWriteAccess> getWriteAccess(3);
             if (port.spec() == null) {
