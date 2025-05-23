@@ -124,7 +124,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      * Input/Output' nodes and the 'Tool Message Output' node, if present.
      *
      * @param wfm the workflow manager to create the cell from and to modify
-     * @param metadata tool-specific workflow metadata
+     * @param metadata tool-specific workflow metadata, can be {@code null} if there is no extra metadata
      * @return a new cell instance
      * @throws ToolIncompatibleWorkflowException if the passed workflow manager doesn't comply with the tool conventions
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
@@ -132,7 +132,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
         final ToolWorkflowMetadata metadata) throws ToolIncompatibleWorkflowException {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
-        return new WorkflowToolCell(wfm, metadata.toolMessageOutputNodeID());
+        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID());
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
@@ -198,6 +198,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             return "";
         }
         var paramSchema = JsonUtil.getProvider().createObjectBuilder();
+        // TODO exclude quick forms?
         for (var configNodeEntry : configNodes.entrySet()) {
             var paramName = configNodeEntry.getKey();
             var dialogNode = configNodeEntry.getValue();

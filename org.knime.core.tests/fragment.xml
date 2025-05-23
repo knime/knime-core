@@ -45,4 +45,27 @@
    <extension point="org.knime.workbench.repository.nodesets">
       <nodeset deprecated="false" factory-class="org.knime.core.node.NodeFactoryIdTestNodeSetFactory" />
    </extension>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+      <node
+            deprecated="false"
+            factory-class="org.knim.core.agentic.tool.WorkflowInputTestNodeFactory"
+            hidden="true">
+      </node>
+      <node
+            deprecated="false"
+            factory-class="org.knim.core.agentic.tool.WorkflowOutputTestNodeFactory"
+            hidden="true">
+      </node>
+      <node
+            deprecated="false"
+            factory-class="org.knim.core.agentic.tool.TestNodeFactory"
+            hidden="true">
+      </node>
+      <node
+            deprecated="false"
+            factory-class="org.knim.core.agentic.tool.ConfigurationTestNodeFactory"
+            hidden="true">
+      </node>
+   </extension>
 </fragment>
