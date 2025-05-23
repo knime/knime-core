@@ -59,6 +59,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.extension.NodeFactoryProvider;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -183,6 +184,22 @@ public final class WorkflowManagerUtil {
         }
         final var nodeId = wfm.createAndAddNode(factory);
         return (NativeNodeContainer)wfm.getNodeContainer(nodeId);
+    }
+
+    /**
+     * Creates a new node using the the given {@link NodeFactory}-instance and adds it to the provided workflow.
+     *
+     * @param wfm the workflow to add the node to
+     * @param factory a factory instance
+     * @param x node position
+     * @param y node position
+     * @return the new {@link NativeNodeContainer} instance
+     */
+    public static NativeNodeContainer createAndAddNode(final WorkflowManager wfm,
+        final NodeFactory<? extends NodeModel> factory, final int x, final int y) {
+        var nnc = createAndAddNode(wfm, factory);
+        nnc.setUIInformation(NodeUIInformation.builder().setNodeLocation(x, y, 10, 10).build());
+        return nnc;
     }
 
     private WorkflowManagerUtil() {
