@@ -4094,7 +4094,7 @@ public final class WorkflowManager extends NodeContainer
                         subwfm.getNodeContainer(copiedNodes.getVirtualInputID(), NativeNodeContainer.class, true);
                     var virtualScopeCtx =
                         virtualInNode.getOutgoingFlowObjectStack().peek(FlowVirtualScopeContext.class);
-                    virtualScopeCtx.registerHostNodeForPortObjectPersistence(startNC, exec);
+                    virtualScopeCtx.registerHostNode(startNC, exec);
                 }
                 copiedNodes.executeChunk();
                 pccm.addParallelChunk(i, copiedNodes);
