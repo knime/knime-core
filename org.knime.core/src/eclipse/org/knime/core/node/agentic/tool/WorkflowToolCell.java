@@ -124,14 +124,15 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      * Input/Output' nodes and the 'Tool Message Output' node, if present.
      *
      * @param wfm the workflow manager to create the cell from and to modify
+     * @param metadata tool-specific workflow metadata
      * @return a new cell instance
      * @throws ToolIncompatibleWorkflowException if the passed workflow manager doesn't comply with the tool conventions
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      */
-    public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm)
-        throws ToolIncompatibleWorkflowException {
+    public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
+        final ToolWorkflowMetadata metadata) throws ToolIncompatibleWorkflowException {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
-        return new WorkflowToolCell(wfm);
+        return new WorkflowToolCell(wfm, metadata.toolMessageOutputNodeID());
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
@@ -161,14 +162,15 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private final byte[] m_workflow;
 
-    private WorkflowToolCell(final WorkflowManager wfm) throws ToolIncompatibleWorkflowException {
+    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID)
+        throws ToolIncompatibleWorkflowException {
         var wsInputs = new ArrayList<WorkflowSegment.Input>();
         var wsOutputs = new ArrayList<WorkflowSegment.Output>();
         var toolInputs = new ArrayList<ToolPort>();
         var toolOutputs = new ArrayList<ToolPort>();
         try (var unused = wfm.lock()) {
-            m_messageOutputPortIndex =
-                removeAndCollectInputsAndOutputs(wfm, wsInputs, wsOutputs, toolInputs, toolOutputs);
+            m_messageOutputPortIndex = removeAndCollectInputsAndOutputs(wfm, wsInputs, wsOutputs, toolInputs,
+                toolOutputs, toolMessageOutputNodeID);
         }
         var ws = new WorkflowSegment(wfm, wsInputs, wsOutputs, Set.of());
         m_name = wfm.getName();
@@ -230,12 +232,14 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private static int removeAndCollectInputsAndOutputs(final WorkflowManager wfm,
         final List<WorkflowSegment.Input> wsInputs, final List<WorkflowSegment.Output> wsOutputs,
-        final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs) throws ToolIncompatibleWorkflowException {
+        final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs, final NodeID toolMessageOutputNodeID)
+        throws ToolIncompatibleWorkflowException {
         List<NodeID> nodesToRemove = new ArrayList<>();
         var messageOutputPortIndex = new AtomicInteger(-1);
         for (NodeContainer nc : wfm.getNodeContainers()) {
-            if (nc instanceof NativeNodeContainer nnc && (collectInputs(wfm, wsInputs, toolInputs, nnc)
-                || collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc))) {
+            if (nc instanceof NativeNodeContainer nnc
+                && (collectInputs(wfm, wsInputs, toolInputs, nnc) || collectOutputs(wfm, wsOutputs,
+                    messageOutputPortIndex, toolOutputs, nnc, toolMessageOutputNodeID))) {
                 nodesToRemove.add(nnc.getID());
             }
         }
@@ -244,8 +248,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
     }
 
     private static boolean collectOutputs(final WorkflowManager wfm, final List<WorkflowSegment.Output> wsOutputs,
-        final AtomicInteger messageOutputPortIndex, final List<ToolPort> toolOutputs, final NativeNodeContainer nnc)
-        throws ToolIncompatibleWorkflowException {
+        final AtomicInteger messageOutputPortIndex, final List<ToolPort> toolOutputs, final NativeNodeContainer nnc,
+        final NodeID toolMessageOutputNodeID) throws ToolIncompatibleWorkflowException {
         if (nnc.getNodeModel() instanceof OutputNode outputNode) {
             var cc = wfm.getConnection(new ConnectionID(nnc.getID(), 1));
             if (cc == null) {
@@ -254,10 +258,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             var outPort = wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort());
             var wsOutput = new Output(outPort.getPortType(), null,
                 new PortID(NodeIDSuffix.create(wfm.getID(), cc.getSource()), cc.getSourcePort()));
-            if (isToolMessageOutput(outputNode)) {
-                if (messageOutputPortIndex.get() != -1) {
-                    throw new ToolIncompatibleWorkflowException("Multiple tool message outputs defined");
-                }
+            var isToolMessageOutput = nnc.getID().equals(toolMessageOutputNodeID);
+            if (isToolMessageOutput) {
                 messageOutputPortIndex.set(wsOutputs.size());
                 wsOutputs.add(wsOutput);
                 return true;
@@ -303,10 +305,6 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         // only Workflow Output nodes with a table port are supported for now
         return hasContentType(outputNode.getExternalOutput(),
             ContentType.CONTENT_TYPE_DEF_PREFIX + BufferedDataTable.class.getName());
-    }
-
-    private static boolean isToolMessageOutput(final OutputNode outputNode) {
-        return hasContentType(outputNode.getExternalOutput(), ContentType.TOOL_MESSAGE_CONTENT_TYPE_PREFIX);
     }
 
     private static boolean hasContentType(final ExternalNodeData externalNodeData, final String contentType) {
