@@ -51,7 +51,9 @@ package org.knim.core.agentic.tool;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.zip.ZipInputStream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -66,6 +68,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
+import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.testing.core.ExecutionContextExtension;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -193,6 +196,38 @@ class WorkflowToolCellTest {
             .startsWith("Tool execution failed with: Workflow contains one node with execution failure:\n"
                 + "TestNodeFactory #2: Purposely fail on execute");
         assertThat(res.outputs()).isNull();
+    }
+
+    /**
+     * Tests that nodes connected upstream/downstream to workflow input/output nodes are removed when the cell is
+     * created and the workflow modified.
+     *
+     * @throws ToolIncompatibleWorkflowException
+     * @throws IOException
+     */
+    @Test
+    void testRemoveNodesConnectedToWorkflowIONodes() throws ToolIncompatibleWorkflowException, IOException {
+        var upstreamOfInput1 = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(), 1, 0);
+        var upstreamOfInput0 = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(), 1, 0);
+        var input = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 1, 0);
+        var node = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(), 35, 23);
+        var output = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 1, 1);
+        var downstreamOfOutput0 = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(), 0, 0);
+        var downstreamOfOutput1 = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(), 0, 0);
+        m_toolWfm.addConnection(input.getID(), 1, node.getID(), 1);
+        m_toolWfm.addConnection(node.getID(), 1, output.getID(), 1);
+        m_toolWfm.addConnection(upstreamOfInput0.getID(), 0, input.getID(), 0);
+        m_toolWfm.addConnection(upstreamOfInput1.getID(), 0, upstreamOfInput0.getID(), 0);
+        m_toolWfm.addConnection(output.getID(), 0, downstreamOfOutput0.getID(), 0);
+        m_toolWfm.addConnection(downstreamOfOutput0.getID(), 0, downstreamOfOutput1.getID(), 0);
+
+        var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
+        var ws = WorkflowSegment.load(new ZipInputStream(new ByteArrayInputStream(cell.getWorkflow())));
+        var wfm  = ws.loadWorkflow();
+        assertThat(wfm.getNodeContainers().size()).isOne();
+        assertThat(wfm.getNodeContainers().iterator().next().getUIInformation().getBounds())
+            .isEqualTo(new int[]{35, 23, 10, 10});
+        ws.disposeWorkflow();
     }
 
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {

@@ -236,13 +236,39 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         List<NodeID> nodesToRemove = new ArrayList<>();
         var messageOutputPortIndex = new AtomicInteger(-1);
         for (NodeContainer nc : wfm.getNodeContainers()) {
-            if (nc instanceof NativeNodeContainer nnc && (collectInputs(wfm, wsInputs, toolInputs, nnc)
-                || collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc, toolMessageOutputNodeID))) {
-                nodesToRemove.add(nnc.getID());
+            if (nc instanceof NativeNodeContainer nnc) {
+                if (collectInputs(wfm, wsInputs, toolInputs, nnc)) {
+                    nodesToRemove.add(nnc.getID());
+                    collectNodesUpstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
+                } else if (collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc,
+                    toolMessageOutputNodeID)) {
+                    nodesToRemove.add(nnc.getID());
+                    collectNodesDownstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
+                }
             }
         }
         nodesToRemove.forEach(wfm::removeNode);
         return messageOutputPortIndex.get();
+    }
+
+    private static void collectNodesUpstreamOf(final List<NodeID> ids, final WorkflowManager wfm,
+        final List<NodeID> result) {
+        var upstreamNodes =
+            ids.stream().flatMap(id -> wfm.getIncomingConnectionsFor(id).stream().map(cc -> cc.getSource())).toList();
+        result.addAll(upstreamNodes);
+        if (!upstreamNodes.isEmpty()) {
+            collectNodesUpstreamOf(upstreamNodes, wfm, result);
+        }
+    }
+
+    private static void collectNodesDownstreamOf(final List<NodeID> ids, final WorkflowManager wfm,
+        final List<NodeID> result) {
+        var downstreamNodes =
+            ids.stream().flatMap(id -> wfm.getOutgoingConnectionsFor(id).stream().map(cc -> cc.getDest())).toList();
+        result.addAll(downstreamNodes);
+        if (!downstreamNodes.isEmpty()) {
+            collectNodesDownstreamOf(downstreamNodes, wfm, result);
+        }
     }
 
     private static boolean collectOutputs(final WorkflowManager wfm, final List<WorkflowSegment.Output> wsOutputs,
