@@ -198,7 +198,6 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             return "";
         }
         var paramSchema = JsonUtil.getProvider().createObjectBuilder();
-        // TODO exclude quick forms?
         for (var configNodeEntry : configNodes.entrySet()) {
             var paramName = configNodeEntry.getKey();
             var dialogNode = configNodeEntry.getValue();
@@ -233,14 +232,12 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private static int removeAndCollectInputsAndOutputs(final WorkflowManager wfm,
         final List<WorkflowSegment.Input> wsInputs, final List<WorkflowSegment.Output> wsOutputs,
-        final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs, final NodeID toolMessageOutputNodeID)
-        throws ToolIncompatibleWorkflowException {
+        final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs, final NodeID toolMessageOutputNodeID) {
         List<NodeID> nodesToRemove = new ArrayList<>();
         var messageOutputPortIndex = new AtomicInteger(-1);
         for (NodeContainer nc : wfm.getNodeContainers()) {
-            if (nc instanceof NativeNodeContainer nnc
-                && (collectInputs(wfm, wsInputs, toolInputs, nnc) || collectOutputs(wfm, wsOutputs,
-                    messageOutputPortIndex, toolOutputs, nnc, toolMessageOutputNodeID))) {
+            if (nc instanceof NativeNodeContainer nnc && (collectInputs(wfm, wsInputs, toolInputs, nnc)
+                || collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc, toolMessageOutputNodeID))) {
                 nodesToRemove.add(nnc.getID());
             }
         }
@@ -250,7 +247,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private static boolean collectOutputs(final WorkflowManager wfm, final List<WorkflowSegment.Output> wsOutputs,
         final AtomicInteger messageOutputPortIndex, final List<ToolPort> toolOutputs, final NativeNodeContainer nnc,
-        final NodeID toolMessageOutputNodeID) throws ToolIncompatibleWorkflowException {
+        final NodeID toolMessageOutputNodeID) {
         if (nnc.getNodeModel() instanceof OutputNode outputNode) {
             var cc = wfm.getConnection(new ConnectionID(nnc.getID(), 1));
             if (cc == null) {

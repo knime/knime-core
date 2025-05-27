@@ -227,8 +227,9 @@ public final class WorkflowSegmentExecutor {
      * top level (cp. {@link WorkflowManager#setConfigurationNodes(Map)}).
      *
      * @param parameters a map of parameter names to the new to be set configuration value as json
-     * @throws JsonException
-     * @throws InvalidSettingsException
+     * @throws InvalidSettingsException if there is no node for a given parameter name or the validation of the new
+     *             configuration value failed
+     * @throws JsonException if configuration couldn't be parsed from the json object
      */
     public void configureWorkflow(final Map<String, JsonValue> parameters)
         throws JsonException, InvalidSettingsException {
