@@ -113,13 +113,12 @@ final class MountPointPreferencesTest {
         String mountID = "new-mountpoint";
         String defaultMountID = "test-mountpoint";
         String factoryID = TestMountPointState.TYPE.getTypeIdentifier();
-        int mountPointNumber = 0;
         boolean active = true;
 
         WorkbenchMountPointStateSettings settings = new WorkbenchMountPointStateSettings(
             Map.of("user", "oole", "address", "https://testing.knime.org/tomee/ejb"));
         WorkbenchMountPointSettings newMountSettings =
-            new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, settings, active, mountPointNumber);
+            new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, settings, active);
 
         initialSettings.add(newMountSettings);
 
@@ -158,14 +157,16 @@ final class MountPointPreferencesTest {
         String mountID = "test-mountpoint1";
         String defaultMountID = "test-mountpoint";
 
+        assertThat(oldMountSettings.mountID(), Matchers.equalTo(mountID));
+        assertThat(oldMountSettings.mountPointStateSettings().props().get("user"), Matchers.equalTo("knuser1"));
+
         String factoryID = TestMountPointState.TYPE.getTypeIdentifier();
-        int mountPointNumber = 0;
         boolean active = true;
 
         WorkbenchMountPointStateSettings settings = new WorkbenchMountPointStateSettings(
             Map.of("user", "oole", "address", "https://testing.knime.org/tomee/ejb"));
         WorkbenchMountPointSettings newMountSettings =
-            new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, settings, active, mountPointNumber);
+            new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, settings, active);
 
         initialSettings.add(newMountSettings);
 

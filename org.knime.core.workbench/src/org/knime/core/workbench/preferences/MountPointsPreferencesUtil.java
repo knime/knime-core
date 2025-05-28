@@ -48,6 +48,7 @@ import static org.knime.core.workbench.WorkbenchConstants.WORKBENCH_PREFERENCES_
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -55,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -189,10 +191,11 @@ public final class MountPointsPreferencesUtil {
         // AP-8989 Switching to IEclipsePreferences
         final List<WorkbenchMountPointSettings> mountSettings = new ArrayList<>();
         try {
-            final List<WorkbenchMountPointSettings> defaultMountSettingsList = loadSortedMountSettingsFromDefaultPreferenceNode();
+            final List<WorkbenchMountPointSettings> defaultMountSettingsList =
+                loadSortedMountSettingsFromDefaultPreferenceNode();
             final List<WorkbenchMountPointSettings> instanceMountSettingsList = new ArrayList<>();
 
-            final List<WorkbenchMountPointSettings> loadedSettingsList =
+            final Collection<WorkbenchMountPointSettings> loadedSettingsList =
                 getSortedMountSettingsFromNode(getInstanceMountPointParentNode());
 
             instanceMountSettingsList.addAll(loadedSettingsList);
@@ -221,22 +224,20 @@ public final class MountPointsPreferencesUtil {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private static List<WorkbenchMountPointSettings> getSortedMountSettingsFromNode(final IEclipsePreferences preferenceNode)
+    private static Collection<WorkbenchMountPointSettings> getSortedMountSettingsFromNode(
+        final IEclipsePreferences preferenceNode)
         throws BackingStoreException {
-        final List<WorkbenchMountPointSettings> mountSettings = new ArrayList<>();
+        final TreeSet<WorkbenchMountPointSettingsAndNumber> mountSettings = new TreeSet<>();
         final String[] instanceChildNodes = preferenceNode.childrenNames();
         for (final String mountPointNodeName : instanceChildNodes) {
             final Preferences childMountPointNode = preferenceNode.node(mountPointNodeName);
-            final WorkbenchMountPointSettings ms = loadMountSettingsFromNode(childMountPointNode);
+            final WorkbenchMountPointSettingsAndNumber ms = loadMountSettingsFromNode(childMountPointNode);
             if (ms != null) {
                 mountSettings.add(ms);
             }
         }
 
-        // Sort ascending by mountPointNumber
-        mountSettings.sort((o1, o2) -> o1.mountPointNumber() - o2.mountPointNumber());
-
-        return mountSettings;
+        return mountSettings.stream().map(WorkbenchMountPointSettingsAndNumber::settings).toList();
     }
 
     /**
@@ -362,7 +363,18 @@ public final class MountPointsPreferencesUtil {
         settings.mountPointStateSettings().props().forEach(node::put);
     }
 
-    private static WorkbenchMountPointSettings loadMountSettingsFromNode(final Preferences node) throws BackingStoreException {
+    /** record to hold the settings and the mount point number, sortable by that number. */
+    private record WorkbenchMountPointSettingsAndNumber(WorkbenchMountPointSettings settings, int mountPointNumber)
+        implements Comparable<WorkbenchMountPointSettingsAndNumber> {
+
+        @Override
+        public int compareTo(final WorkbenchMountPointSettingsAndNumber o) {
+            return Integer.compare(this.mountPointNumber, o.mountPointNumber);
+        }
+    }
+
+    private static WorkbenchMountPointSettingsAndNumber loadMountSettingsFromNode(final Preferences node)
+        throws BackingStoreException {
         // Preference nodes must contain the factoryID and the mountID, otherwise they cannot be loaded.
         List<String> nodeKeys = Arrays.asList(node.keys());
         if (nodeKeys.containsAll(m_necessaryKeys)) {
@@ -380,8 +392,10 @@ public final class MountPointsPreferencesUtil {
                 String defaultMountID = node.get(DEFAULT_MOUNT_ID, "");
                 boolean active = node.getBoolean(ACTIVE, true);
                 int mountPointNumber = node.getInt(MOUNTPOINT_NUMBER, 0);
-                return new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID,
-                    new WorkbenchMountPointStateSettings(map), active, mountPointNumber);
+                return new WorkbenchMountPointSettingsAndNumber(//
+                    new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID,
+                        new WorkbenchMountPointStateSettings(map), active),
+                    mountPointNumber);
             } catch (Exception ex) {
                 LoggerFactory.getLogger(WorkbenchMountPointSettings.class).atError().setCause(ex).log(
                     "Could not load mount point settings from node {}: {}", node.absolutePath(), ex.getMessage());

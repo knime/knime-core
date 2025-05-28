@@ -64,7 +64,7 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.Workbenc
 @SuppressWarnings("javadoc")
 public record WorkbenchMountPointSettings(String mountID,
     String defaultMountID, String factoryID, WorkbenchMountPointStateSettings mountPointStateSettings,
-    boolean isActive, int mountPointNumber) {
+    boolean isActive) {
 
     public WorkbenchMountPointSettings {
         CheckUtils.checkArgumentNotNull(mountID, "mount id must not be null");
@@ -86,7 +86,7 @@ public record WorkbenchMountPointSettings(String mountID,
      * @return A clone
      */
     public WorkbenchMountPointSettings withActive(final boolean newIsActive) {
-        return new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, mountPointStateSettings, newIsActive,
-            mountPointNumber);
+        return new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, mountPointStateSettings,
+            newIsActive);
     }
 }

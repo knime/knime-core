@@ -68,8 +68,6 @@ public final class WorkbenchMountPoint {
 
     private boolean m_active;
 
-    private int m_mountPointNumber;
-
     private final WorkbenchMountPointType m_type;
 
     private final WorkbenchMountPointState m_state;
@@ -81,7 +79,6 @@ public final class WorkbenchMountPoint {
         m_mountID = builder.m_mountID;
         m_defaultMountID = builder.m_defaultMountID;
         m_active = builder.m_active;
-        m_mountPointNumber = builder.m_mountPointNumber;
         m_state = builder.m_state;
         m_contentProviders = Collections.synchronizedMap(new LinkedHashMap<>());
     }
@@ -115,7 +112,7 @@ public final class WorkbenchMountPoint {
      */
     WorkbenchMountPointSettings toWorkbenchMountPointSettings() {
         return new WorkbenchMountPointSettings(m_mountID, m_defaultMountID, getType().getTypeIdentifier(),
-            m_state.getCurrentSettings(), m_active, m_mountPointNumber);
+            m_state.getCurrentSettings(), m_active);
     }
 
     /**
@@ -174,12 +171,7 @@ public final class WorkbenchMountPoint {
 
     @SuppressWarnings("javadoc")
     sealed interface WithActive {
-        WithMountPointNumber withIsActive(boolean active);
-    }
-
-    @SuppressWarnings("javadoc")
-    sealed interface WithMountPointNumber {
-        WithState withMountPointNumber(int mountPointNumber);
+        WithState withIsActive(boolean active);
     }
 
     @SuppressWarnings("javadoc")
@@ -193,7 +185,7 @@ public final class WorkbenchMountPoint {
     }
 
     private static final class Builder
-        implements WithType, WithMountID, WithDefaultMountID, WithActive, WithMountPointNumber, WithState, FinalStep {
+        implements WithType, WithMountID, WithDefaultMountID, WithActive, WithState, FinalStep {
 
         private WorkbenchMountPointType m_type;
 
@@ -202,8 +194,6 @@ public final class WorkbenchMountPoint {
         private String m_defaultMountID;
 
         private boolean m_active;
-
-        private int m_mountPointNumber;
 
         private WorkbenchMountPointState m_state;
 
@@ -226,14 +216,8 @@ public final class WorkbenchMountPoint {
         }
 
         @Override
-        public WithMountPointNumber withIsActive(final boolean active) {
+        public WithState withIsActive(final boolean active) {
             m_active = active;
-            return this;
-        }
-
-        @Override
-        public WithState withMountPointNumber(final int mountPointNumber) {
-            m_mountPointNumber = mountPointNumber;
             return this;
         }
 

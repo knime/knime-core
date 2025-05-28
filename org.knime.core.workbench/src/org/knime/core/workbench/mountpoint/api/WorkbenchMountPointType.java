@@ -166,7 +166,7 @@ public final class WorkbenchMountPointType {
             .map(stateSettings -> new WorkbenchMountPointSettings(
                 CheckUtils.checkNotNull(m_defaultMountID,
                     "default mount ID must not be null for mount point of type %s", getTypeIdentifier()),
-                m_defaultMountID, m_typeIdentifier, stateSettings, true, 0));
+                m_defaultMountID, m_typeIdentifier, stateSettings, true));
     }
 
     /**
@@ -194,7 +194,6 @@ public final class WorkbenchMountPointType {
                 .withMountID(settings.mountID()) //
                 .withDefaultMountID(m_defaultMountID) //
                 .withIsActive(settings.isActive()) //
-                .withMountPointNumber(settings.mountPointNumber()) //
                 .withState(mountPointState) //
                 .build();
     }
