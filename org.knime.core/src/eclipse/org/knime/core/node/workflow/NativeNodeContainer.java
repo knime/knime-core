@@ -901,9 +901,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * Gets the flow scope context of the given class, also crossing 'subnode-boundaries' if this node is part of a
      * subnode/component.
      *
+     * @param contextClass the class of the {@link FlowScopeContext} to get
+     * @param flowObjectStack the stack to get the flow-scope-context from
+     * @param <C>
+     *
      * @return the context or <code>null</node> if there is none of the given class
      */
-    private static <C extends FlowScopeContext> C getFlowScopeContextFromHierarchy(final Class<C> contextClass,
+    static <C extends FlowScopeContext> C getFlowScopeContextFromHierarchy(final Class<C> contextClass,
         final FlowObjectStack flowObjectStack) {
         C context = flowObjectStack.peek(contextClass);
         if (context == null) {

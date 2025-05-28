@@ -52,6 +52,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -125,7 +127,12 @@ public final class WorkflowSegment {
     //cached workflow manager
     private WorkflowManager m_wfm;
 
+    // TODO rename: m_wfmBlob
     private byte[] m_wfmStream;
+
+    private byte[] m_dataAreaBlob;
+
+    private Path m_dataAreaPath;
 
     private final String m_name;
 
@@ -146,12 +153,31 @@ public final class WorkflowSegment {
      */
     public WorkflowSegment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
+        this(wfm, inputs, outputs, portObjectReferenceReaderNodes, null);
+    }
+
+    /**
+     * Creates a new instance from a workflow manager. The workflow manager must not be (partially) executed or
+     * executing.
+     *
+     * @param wfm the workflow manager representing the workflow segment
+     * @param inputs workflow segment's inputs
+     * @param outputs workflow segment's outputs
+     * @param portObjectReferenceReaderNodes relative node ids of nodes that reference port objects in another workflow
+     * @param dataAreaPath absolute path to the workflow's data area or {@code null} if none; the data path must exist
+     *            and must not deleted before {@link #serializeAndDisposeWorkflow()} is called
+     * @since 5.5
+     */
+    public WorkflowSegment(final WorkflowManager wfm, final List<Input> inputs, final List<Output> outputs,
+        final Set<NodeIDSuffix> portObjectReferenceReaderNodes, final Path dataAreaPath) {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
+        assert wfm.isProject() && wfm.getParent() == WorkflowManager.EXTRACTED_WORKFLOW_ROOT;
         m_wfm = wfm;
         m_name = wfm.getName();
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
         m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
+        m_dataAreaPath = dataAreaPath;
     }
 
     /**
@@ -169,6 +195,7 @@ public final class WorkflowSegment {
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
         m_outputs = CheckUtils.checkArgumentNotNull(outputs);
         m_portObjectReferenceReaderNodes = CheckUtils.checkArgumentNotNull(portObjectReferenceReaderNodes);
+        m_dataAreaBlob = null;
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm) {
@@ -259,9 +286,33 @@ public final class WorkflowSegment {
      * @throws IOException Failing to creating the folder
      */
     // added as part of AP-21997
-    static File newTempDirWithName(final String name) throws IOException {
+    private static File newTempDirWithName(final String name) throws IOException {
         final String sanitizedName = FileUtil.ILLEGAL_FILENAME_CHARS_PATTERN.matcher(name).replaceAll("_");
         return new File(FileUtil.createTempDir("workflow_segment"), sanitizedName);
+    }
+
+    /**
+     * Writes the data area to a temporary directory and returns the path. The temporary directory will be removed on
+     * shutdown of the JVM. If it can be deleted earlier, the caller needs to take care of it.
+     *
+     * @return the path to the temporary directory of the data area or an empty optional if there is no data area stored
+     *         with the workflow segment
+     * @throws IOException
+     * @since 5.5
+     */
+    public Optional<Path> writeDataAreaToTempDir() throws IOException {
+        if (m_dataAreaBlob != null) {
+            var dataAreaPath = FileUtil.createTempDir("workflow_segment_data_area").toPath();
+            try (var in = new ZipInputStream(new ByteArrayInputStream(m_dataAreaBlob))) {
+                FileUtil.unzip(in, dataAreaPath.toFile(), 1);
+                return Optional.of(dataAreaPath);
+            } catch (IOException ex) {
+                // should never happen
+                throw new IllegalStateException("Failed to extract data area from workflow segment", ex);
+            }
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -279,7 +330,8 @@ public final class WorkflowSegment {
      * Disposes the workflow manager cached by this segment (either loaded via {@link #loadWorkflow()} or passed to the
      * constructor). Removes it from the workflow hierarchy and the local reference.
      *
-     * If not already done, also serializes the workflow to the internally kept byte stream for later retrieval.
+     * If not already done, also serializes the workflow (and optionally the data area) to the internally kept byte
+     * stream for later retrieval.
      *
      * This method only needs to be called if the {@link WorkflowSegment} has been initialized with a new
      * {@link WorkflowManager}. In all other cases {@link #disposeWorkflow()} is sufficient.
@@ -289,6 +341,14 @@ public final class WorkflowSegment {
     public void serializeAndDisposeWorkflow() throws IOException {
         if (m_wfm != null && m_wfmStream == null) {
             m_wfmStream = wfmToStream(m_wfm);
+        }
+        if (m_dataAreaPath != null && m_dataAreaBlob == null) {
+            if (Files.exists(m_dataAreaPath)) {
+                m_dataAreaBlob = pathToBlob(m_dataAreaPath);
+                m_dataAreaPath = null;
+            } else {
+                LOGGER.warn("Data area path does not exist: " + m_dataAreaPath);
+            }
         }
         disposeWorkflow();
     }
@@ -344,6 +404,17 @@ public final class WorkflowSegment {
         }
     }
 
+    private static byte[] pathToBlob(final Path path) {
+        try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
+            FileUtil.zipDir(out, Files.list(path).map(Path::toFile).toList(), FileUtil.ZIP_INCLUDEALL_FILTER, null);
+            bos.flush();
+            return bos.toByteArray();
+        } catch (IOException | CanceledExecutionException ex) {
+            LOGGER.error("Failed to serialize data area from " + path + " with workflow segment.", ex);
+            return null;
+        }
+    }
+
     static byte[] wfmToStream(final WorkflowManager wfm, final File tmpDir) throws IOException {
         try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
             var saveHelper = new WorkflowSaveHelper(false, false);
@@ -367,6 +438,14 @@ public final class WorkflowSegment {
             throw new IOException("Expected workflow.bin file in stream, got " + entry.getName());
         }
         m_wfmStream = IOUtils.toByteArray(in);
+
+        entry = in.getNextEntry();
+        if (entry != null) {
+            if (!entry.getName().equals("data-area.bin")) {
+                throw new IOException("Expected data-area.bin file in stream, got " + entry.getName());
+            }
+            m_dataAreaBlob = IOUtils.toByteArray(in);
+        }
     }
 
     /**
@@ -385,6 +464,16 @@ public final class WorkflowSegment {
         out.putNextEntry(new ZipEntry("workflow.bin"));
         out.write(m_wfmStream);
         out.closeEntry();
+
+
+        if (m_dataAreaPath != null && m_dataAreaBlob == null) {
+            m_dataAreaBlob = pathToBlob(m_dataAreaPath);
+        }
+        if (m_dataAreaBlob != null) {
+            out.putNextEntry(new ZipEntry("data-area.bin"));
+            out.write(m_dataAreaBlob);
+            out.closeEntry();
+        }
     }
 
     /**
@@ -668,14 +757,14 @@ public final class WorkflowSegment {
     }
 
     /** Registers a listener that cleans the temp file after the workflow is discarded. */
-    static void createAndRegisterCleanupListener(final WorkflowManager wfm, final File tempDirectory) {
+    private static void createAndRegisterCleanupListener(final WorkflowManager wfm, final File tempDirectory) {
         final WorkflowManager parentWFM = wfm.getParent();
         parentWFM.addListener(new DeleteTempFolderOnRemoveWorkflowListener(parentWFM, wfm.getID(), tempDirectory));
     }
 
     /** A listener added to the workflow's parent (WorkflowManager#EXTRACTED_WORKFLOW_ROOT) that deletes
      * the workflow's temporary directory after the workflow is removed from the parent. */
-    static final class DeleteTempFolderOnRemoveWorkflowListener implements WorkflowListener {
+    private static final class DeleteTempFolderOnRemoveWorkflowListener implements WorkflowListener {
 
         private final WorkflowManager m_parentWFM;
         private final NodeID m_childWFMID;

@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.capture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,9 +62,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -96,6 +99,7 @@ import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeFactor
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeFactory;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeModel;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.util.Pair;
@@ -127,6 +131,8 @@ public final class WorkflowSegmentExecutor {
 
     private final boolean m_executeAllNodes;
 
+    private Path m_dataAreaPath;
+
     /**
      * @see #WorkflowSegmentExecutor(WorkflowSegment, String, NodeContainer, boolean, boolean, Consumer)
      */
@@ -144,8 +150,8 @@ public final class WorkflowSegmentExecutor {
      *            and receives the output data, supplies the file store, etc.)
      * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
      *            debugging purposes), if <code>false</code> it's hidden
-     * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior),
-     *            previously and if <code>false</code> only the output nodes would be executed
+     * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior), previously
+     *            and if <code>false</code> only the output nodes would be executed
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
      * @throws KNIMEException If the workflow can't be instantiated from the segment.
      * @since 5.5
@@ -155,7 +161,8 @@ public final class WorkflowSegmentExecutor {
         m_hostNode = (NativeNodeContainer)hostNode;
         m_wfm = hostNode.getParent().createAndAddSubWorkflow(new PortType[0], new PortType[0],
             (debug ? "Debug: " : "") + workflowName);
-        m_flowVirtualScopeContext = new FlowVirtualScopeContext(hostNode.getID());
+        m_flowVirtualScopeContext = new FlowVirtualScopeContext(hostNode.getID(), createDataAreaSupplier(ws),
+            Restriction.RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
         m_wfm.setInitialScopeContext(m_flowVirtualScopeContext);
         if (!debug) {
             m_wfm.hideInUI();
@@ -177,6 +184,21 @@ public final class WorkflowSegmentExecutor {
         ws.disposeWorkflow();
 
         addVirtualIONodes(ws);
+    }
+
+    private Supplier<Path> createDataAreaSupplier(final WorkflowSegment ws) {
+        return () -> {
+            if (m_dataAreaPath == null) {
+                try {
+                    m_dataAreaPath = ws.writeDataAreaToTempDir().orElse(null);
+                } catch (IOException ex) {
+                    NodeLogger.getLogger(WorkflowSegmentExecutor.class)
+                        .error("Failed to extract data area from workflow segment", ex);
+                    return null;
+                }
+            }
+            return m_dataAreaPath;
+        };
     }
 
     private void addVirtualIONodes(final WorkflowSegment wf) {
@@ -506,6 +528,9 @@ public final class WorkflowSegmentExecutor {
         cancel();
         m_wfm.getParent().removeNode(m_wfm.getID());
         m_wfm = null;
+        if (m_dataAreaPath != null) {
+            FileUtils.deleteQuietly(m_dataAreaPath.toFile());
+        }
     }
 
     /**

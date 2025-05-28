@@ -58,6 +58,8 @@ import java.util.stream.Collectors;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 
 /**
  * A {@link NodeContext} holds information about the context in which an operation on a node is executed. This is used
@@ -412,6 +414,11 @@ public final class NodeContext {
                     return Optional.of((C)srcObj);
                 } else if (WorkflowContextV2.class.isAssignableFrom(contextObjClass)) {
                     return Optional.ofNullable((C)NodeContainerParent.getProjectWFM(nc).getContextV2());
+                } else if (VirtualNodeContext.class.isAssignableFrom(contextObjClass)
+                    && nc instanceof NativeNodeContainer nnc) {
+                    var virtualScope =
+                        NativeNodeContainer.getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, nnc.getFlowObjectStack());
+                    return Optional.ofNullable((C)virtualScope);
                 } else {
                     return Optional.empty();
                 }

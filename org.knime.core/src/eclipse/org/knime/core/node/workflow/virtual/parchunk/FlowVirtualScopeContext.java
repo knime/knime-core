@@ -49,8 +49,11 @@
 package org.knime.core.node.workflow.virtual.parchunk;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -61,6 +64,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCaptureOperation;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext;
 
 /**
  * Marks a virtual scope, i.e. a scope (a set of nodes) that is not permanently present and deleted after the execution
@@ -99,16 +103,36 @@ import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeMode
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class FlowVirtualScopeContext extends FlowScopeContext {
+public final class FlowVirtualScopeContext extends FlowScopeContext implements VirtualNodeContext {
 
     private NativeNodeContainer m_nc;
+
     private ExecutionContext m_exec;
 
+    private final Supplier<Path> m_dataAreaPathSupplier;
+
+    private final Set<Restriction>  m_restrictions;
+
+    /**
+     * New instance without imposing any {@link Restriction}s on the nodes being executed in the scope.
+     */
     public FlowVirtualScopeContext() {
+        m_restrictions = Set.of();
+        m_dataAreaPathSupplier = null;
     }
 
-    public FlowVirtualScopeContext(final NodeID owner) {
+    /**
+     * New instance with custom restrictions and a data area path supplier.
+     *
+     * @param owner see {@link #setOwner(NodeID)}
+     * @param dataAreaPathSupplier supplies a virtual data area path - can be {@code null} or return {@code null}
+     * @param restrictions set of restrictions that should apply for the scope
+     */
+    public FlowVirtualScopeContext(final NodeID owner, final Supplier<Path> dataAreaPathSupplier,
+        final Restriction... restrictions) {
         setOwner(owner);
+        m_dataAreaPathSupplier = dataAreaPathSupplier;
+        m_restrictions = Set.of(restrictions);
     }
 
     /**
@@ -175,6 +199,25 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public Optional<NativeNodeContainer> getHostNode() {
         return Optional.ofNullable(m_nc);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasRestriction(final Restriction restriction) {
+        return m_restrictions.contains(restriction);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<Path> getVirtualDataAreaPath() {
+        if (m_dataAreaPathSupplier == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(m_dataAreaPathSupplier.get());
     }
 
 }
