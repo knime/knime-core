@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.capture;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,6 +62,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -127,6 +129,8 @@ public final class WorkflowSegmentExecutor {
 
     private final boolean m_executeAllNodes;
 
+    private Supplier<Path> m_createDataArea;
+
     /**
      * @see #WorkflowSegmentExecutor(WorkflowSegment, String, NodeContainer, boolean, boolean, Consumer)
      */
@@ -177,6 +181,15 @@ public final class WorkflowSegmentExecutor {
         ws.disposeWorkflow();
 
         addVirtualIONodes(ws);
+
+        m_createDataArea = () -> {
+            try {
+                return ws.writeDataAreaToTempDir().orElse(null);
+            } catch (IOException ex) {
+                // TODO
+                return null;
+            }
+        };
     }
 
     private void addVirtualIONodes(final WorkflowSegment wf) {
@@ -253,6 +266,10 @@ public final class WorkflowSegmentExecutor {
         DefaultVirtualPortObjectInNodeModel inNM = (DefaultVirtualPortObjectInNodeModel)virtualInNode.getNodeModel();
 
         m_flowVirtualScopeContext.registerHostNode(m_hostNode, exec);
+        var dataAreaPath = m_createDataArea.get();
+        if (dataAreaPath != null) {
+            m_flowVirtualScopeContext.setDataAreaPath(dataAreaPath);
+        }
 
         inNM.setVirtualNodeInput(
             new VirtualNodeInput(inputData, collectOutputFlowVariablesFromUpstreamNodes(m_hostNode)));
@@ -506,6 +523,7 @@ public final class WorkflowSegmentExecutor {
         cancel();
         m_wfm.getParent().removeNode(m_wfm.getID());
         m_wfm = null;
+        // TODO remove data area
     }
 
     /**

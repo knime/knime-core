@@ -49,6 +49,7 @@
 package org.knime.core.node.workflow.virtual.parchunk;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,6 +62,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCaptureOperation;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
+import org.knime.core.node.workflow.virtual.DataAreaProvider;
 
 /**
  * Marks a virtual scope, i.e. a scope (a set of nodes) that is not permanently present and deleted after the execution
@@ -99,10 +101,13 @@ import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeMode
  * @noreference This class is not intended to be referenced by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class FlowVirtualScopeContext extends FlowScopeContext {
+public final class FlowVirtualScopeContext extends FlowScopeContext implements DataAreaProvider {
 
     private NativeNodeContainer m_nc;
+
     private ExecutionContext m_exec;
+
+    private Path m_dataAreaPath;
 
     public FlowVirtualScopeContext() {
     }
@@ -175,6 +180,26 @@ public final class FlowVirtualScopeContext extends FlowScopeContext {
      */
     public Optional<NativeNodeContainer> getHostNode() {
         return Optional.ofNullable(m_nc);
+    }
+
+    /**
+     * TODO
+     *
+     * @param dataAreaPath
+     */
+    public void setDataAreaPath(final Path dataAreaPath) {
+        m_dataAreaPath = dataAreaPath;
+
+    }
+
+    /**
+     * TODO
+     *
+     * @return
+     */
+    @Override
+    public Optional<Path> getDataAreaPath() {
+        return Optional.ofNullable(m_dataAreaPath);
     }
 
 }

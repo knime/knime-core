@@ -54,6 +54,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -125,14 +126,15 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      *
      * @param wfm the workflow manager to create the cell from and to modify
      * @param metadata tool-specific workflow metadata, can be {@code null} if there is no extra metadata
+     * @param dataAreaPath TODO
      * @return a new cell instance
      * @throws ToolIncompatibleWorkflowException if the passed workflow manager doesn't comply with the tool conventions
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      */
     public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
-        final ToolWorkflowMetadata metadata) throws ToolIncompatibleWorkflowException {
+        final ToolWorkflowMetadata metadata, final Path dataAreaPath) throws ToolIncompatibleWorkflowException {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
-        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID());
+        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath);
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
@@ -162,7 +164,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private final byte[] m_workflow;
 
-    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID)
+    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath)
         throws ToolIncompatibleWorkflowException {
         var wsInputs = new ArrayList<WorkflowSegment.Input>();
         var wsOutputs = new ArrayList<WorkflowSegment.Output>();
@@ -172,7 +174,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             m_messageOutputPortIndex = removeAndCollectInputsAndOutputs(wfm, wsInputs, wsOutputs, toolInputs,
                 toolOutputs, toolMessageOutputNodeID);
         }
-        var ws = new WorkflowSegment(wfm, wsInputs, wsOutputs, Set.of());
+        var ws = new WorkflowSegment(wfm, wsInputs, wsOutputs, Set.of(), dataAreaPath);
         m_name = wfm.getName();
         m_description = wfm.getMetadata().getDescription().orElse("");
         m_parameterSchema = extractParameterSchemaFromConfigNodes(wfm);

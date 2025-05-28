@@ -98,7 +98,7 @@ class WorkflowToolCellTest {
 
     @Test
     void testCellCreatedFromEmptyWorkflow() throws IOException, ToolIncompatibleWorkflowException {
-        var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
+        var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null, null);
         assertThat(cell.getName()).isEqualTo("workflow");
         assertThat(cell.getDescription()).isBlank();
         assertThat(cell.getParameterSchema()).isEmpty();
