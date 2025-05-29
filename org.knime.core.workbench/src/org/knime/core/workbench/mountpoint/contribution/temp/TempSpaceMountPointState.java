@@ -2,8 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by
- * KNIME AG, Zurich, Switzerland
+ * Copyright by KNIME AG, Zurich, Switzerland
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -14,12 +13,12 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.com
  * email: contact@knime.com
- * ---------------------------------------------------------------------
  */
 package org.knime.core.workbench.mountpoint.contribution.temp;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.User;
@@ -47,6 +46,11 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
         @Override
         public TempSpaceMountPointState newInstance(final WorkbenchMountPointSettings settings) {
             return new TempSpaceMountPointState();
+        }
+
+        @Override
+        public Optional<WorkbenchMountPointStateSettings> getDefaultStateSettings() {
+            return Optional.of(WorkbenchMountPointState.EMPTY_SETTINGS);
         }
 
         @Override
