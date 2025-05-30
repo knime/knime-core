@@ -62,7 +62,9 @@ import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -118,12 +120,23 @@ public final class MountPointsPreferencesUtil {
     private MountPointsPreferencesUtil() {
     }
 
-    static List<WorkbenchMountPointSettings> loadDefaultMountPoints() {
-        // sort the default mount points according to type's priority and default ID
-        return getIncludedDefaultMountPoints().stream() //
+    /**
+     * Loads the default mount points, i.e. those from the default preference (customization profiles), if any, and
+     * installation defaults (e.g. LOCAL).
+     *
+     * @return the list of mount point settings, never <code>null</code>.
+     */
+    public static List<WorkbenchMountPointSettings> loadDefaultMountPoints() {
+        Set<String> uniqueMountPointNameSet = new HashSet<>();
+        return Stream
+                // default preferences take precedence over the installation defaults
+            .concat(loadSortedMountSettingsFromDefaultPreferenceNode().stream(),
+                loadDefaultMountPointsFromInstallation().stream())
+            .filter(e -> uniqueMountPointNameSet.add(e.mountID())) //
             .map(mp -> new Pair<>(mp.getWorkbenchMountPointTypeOrFail().getSortPriority(), mp)) //
+            // sort the default mount points according to type's priority and default ID
             .sorted(Comparator //
-                .comparing((Pair<Integer, WorkbenchMountPointSettings> p) -> -p.getFirst()) // NOSONAR type inference
+                .comparing((final Pair<Integer, WorkbenchMountPointSettings> p) -> -p.getFirst()) // NOSONAR type inference
                 .thenComparing(e -> e.getSecond().mountID())) //
             .map(Pair::getSecond) //
             .toList();
@@ -167,27 +180,38 @@ public final class MountPointsPreferencesUtil {
             isADefaultMountPointPredicate = defaultMountPoints::contains;
         }
 
-        return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
-                .filter(type -> !type.isTemporaryMountPoint()) //
-                .map(type -> {
-                    try {
-                        return type.getDefaultSettings();
-                    } catch (WorkbenchMountException e) {
-                        LOGGER.atError().setCause(e).log(
-                            "Failed to create mount point for default mount point with id '{}'",
-                            type.getDefaultMountID().orElse("<unknown>"));
-                        return Optional.<WorkbenchMountPointSettings> empty();
-                    }
-                }) //
-                .flatMap(Optional::stream) //
+        return loadDefaultMountPointsFromInstallation().stream() //
                 .filter(e -> isADefaultMountPointPredicate.test(e.defaultMountID())) //
                 .toList();
     }
 
     /**
+     * Retrieves the installation default mount point settings for all non-temporary mount point types (currently
+     * "My-KNIME-Hub", "EXAMPLES", and "LOCAL".
+     *
+     * @return A stream of installation default mount point settings.
+     */
+    private static List<WorkbenchMountPointSettings> loadDefaultMountPointsFromInstallation() {
+        return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
+            .filter(type -> !type.isTemporaryMountPoint()) //
+            .map(type -> {
+                try {
+                    return type.getDefaultSettings();
+                } catch (WorkbenchMountException e) {
+                    LOGGER.atError().setCause(e).log(
+                        "Failed to create mount point for default mount point with id '{}'",
+                        type.getDefaultMountID().orElse("<unknown>"));
+                    return Optional.<WorkbenchMountPointSettings> empty();
+                }
+            }) //
+            .flatMap(Optional::stream) //
+            .toList();
+    }
+
+    /**
      * @return a list with all default mount point IDs that shall be excluded.
      */
-    static List<String> getExcludedDefaultMountIDs() {
+    private static List<String> getExcludedDefaultMountIDs() {
         if (DefaultScope.INSTANCE.getNode(MOUNTPOINT_PREFERENCE_LOCATION).getBoolean(ENFORCE_EXCLUSION, false)) {
             final List<String> includedMountPoints = getIncludedDefaultMountPoints().stream() //
                     .map(WorkbenchMountPointSettings::defaultMountID) //
@@ -207,7 +231,6 @@ public final class MountPointsPreferencesUtil {
      * Loads the MountSettings from the {@link WorkbenchConstants#WORKBENCH_PREFERENCES_PLUGIN_ID} preference node.
      *
      * @return The MountSettings, never <code>null</code>. List is writable.
-     * @since 8.2
      */
     public static List<WorkbenchMountPointSettings> loadSortedMountSettingsFromPreferenceNode() {
         // AP-8989 Switching to IEclipsePreferences
@@ -296,7 +319,7 @@ public final class MountPointsPreferencesUtil {
         } catch (BackingStoreException ex) {
             LOGGER.atError().setCause(ex).log("Unable to read mount point preferences: {}", ex.getMessage());
         }
-        if ((childNodes == null || childNodes.length == 0) && loadDefaultsIfEmpty) {
+        if (ArrayUtils.isEmpty(childNodes) && loadDefaultsIfEmpty) {
             return MountPointsPreferencesUtil.loadDefaultMountPoints();
         }
         return loadSortedMountSettingsFromPreferenceNode();
@@ -401,7 +424,7 @@ public final class MountPointsPreferencesUtil {
         MOUNT_SETTINGS_SAVED_LISTENERS.add(listener);
     }
 
-    /** record to hold the settings and the mount point number, sortable by that number. */
+    /** record to hold the settings and the mount point number, sortable by that number, then mount id. */
     private record WorkbenchMountPointSettingsAndNumber(WorkbenchMountPointSettings settings, int mountPointNumber)
         implements Comparable<WorkbenchMountPointSettingsAndNumber> {
 

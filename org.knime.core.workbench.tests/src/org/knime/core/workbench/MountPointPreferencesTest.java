@@ -168,6 +168,8 @@ final class MountPointPreferencesTest {
         WorkbenchMountPointSettings newMountSettings =
             new WorkbenchMountPointSettings(mountID, defaultMountID, factoryID, settings, active);
 
+        // replace the old mount settings with the new one
+        initialSettings.removeIf(ms -> ms.mountID().equals(mountID));
         initialSettings.add(newMountSettings);
 
         MountPointsPreferencesUtil.saveMountSettings(initialSettings);

@@ -58,6 +58,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -382,15 +383,17 @@ public final class WorkbenchMountTable {
      * are used (e.g. the REST address for server mount points) which should be persisted. (e.g. user name)
      */
     public static void updateProviderSettings() {
-        final List<WorkbenchMountPointSettings> mountSettingsToSave;
+        final LinkedHashMap<String, WorkbenchMountPointSettings> mountPointMap =
+            MountPointsPreferencesUtil.loadSortedMountSettingsFromPreferences(false).stream() //
+                .collect(Collectors.toMap(s -> s.mountID(), Function.identity(), (a, b) -> {
+                    throw new IllegalStateException("Duplicate key detected: " + a.mountID());
+                }, LinkedHashMap::new));
         synchronized (MOUNTED) {
-            mountSettingsToSave = MountPointsPreferencesUtil.loadSortedMountSettingsFromPreferences(false).stream() //
-                .map(WorkbenchMountPointSettings::mountID) //
-                .map(MOUNTED::get) //
-                .filter(Objects::nonNull) //
-                .map(WorkbenchMountPoint::toWorkbenchMountPointSettings) //
-                .collect(Collectors.toCollection(ArrayList::new));
+            // settings in the current mount list overwrite the definitions in the preferences
+            MOUNTED.values().stream() //
+                .filter(mp -> !mp.getType().isTemporaryMountPoint()) // skip temporary mount points
+                .forEach(mp -> mountPointMap.put(mp.getMountID(), mp.toWorkbenchMountPointSettings()));
         }
-        MountPointsPreferencesUtil.saveMountSettings(mountSettingsToSave);
+        MountPointsPreferencesUtil.saveMountSettings(new ArrayList<>(mountPointMap.values()));
     }
 }
