@@ -269,4 +269,35 @@ public final class ColorModelNominal implements ColorModel {
         }
         return new ColorModelNominal(map, m_paletteColors);
     }
+
+    /**
+     * Applies data cell re-mappings to the data cells in the models data cell to color map.
+     *
+     * If none of the given re-mappings can be applied or the re-mappings are empty or null,
+     * it will return the original nominal color model.
+     *
+     * @param remappings A map of data cell re-mappings
+     * @return A new model with the data cell re-mappings applied
+     *
+     * @since 5.5
+     */
+    public ColorModelNominal applyDataCellRemapping(final Map<DataCell, DataCell> remappings) {
+        if (remappings == null || remappings.isEmpty()) {
+            return this;
+        }
+
+        final var existingKeys = m_map.keySet();
+        Map<DataCell, ColorAttr> updatedMap = new LinkedHashMap<>();
+        for (var entry : remappings.entrySet()) {
+            if (existingKeys.contains(entry.getKey())) {
+                updatedMap.put(entry.getValue(), m_map.get(entry.getKey()));
+            }
+        }
+
+        if (updatedMap.isEmpty()) {
+            return this;
+        }
+
+        return new ColorModelNominal(updatedMap, m_paletteColors);
+    }
 }
