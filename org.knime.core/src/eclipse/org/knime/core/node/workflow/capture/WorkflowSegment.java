@@ -127,8 +127,7 @@ public final class WorkflowSegment {
     //cached workflow manager
     private WorkflowManager m_wfm;
 
-    // TODO rename: m_wfmBlob
-    private byte[] m_wfmStream;
+    private byte[] m_wfmBlob;
 
     private byte[] m_dataAreaBlob;
 
@@ -181,16 +180,16 @@ public final class WorkflowSegment {
     }
 
     /**
-     * @param wfmStream
+     * @param wfmBlob
      * @param workflowName
      * @param inputs
      * @param outputs
      * @param portObjectReferenceReaderNodes
      * @since 4.6
      */
-    WorkflowSegment(final byte[] wfmStream, final String workflowName, final List<Input> inputs, final List<Output> outputs,
+    WorkflowSegment(final byte[] wfmBlob, final String workflowName, final List<Input> inputs, final List<Output> outputs,
         final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
-        m_wfmStream = wfmStream;
+        m_wfmBlob = wfmBlob;
         m_name = workflowName;
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
         m_outputs = CheckUtils.checkArgumentNotNull(outputs);
@@ -262,7 +261,7 @@ public final class WorkflowSegment {
     }
 
     WorkflowManager loadWorkflowInternal(final Consumer<WorkflowLoadResult> loadResultCallback) {
-        try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmStream))) {
+        try (var in = new ZipInputStream(new ByteArrayInputStream(m_wfmBlob))) {
             final var tmpDir = newTempDirWithName(getName());
             FileUtil.unzip(in, tmpDir, 1);
             var loadHelper = createWorkflowLoadHelper(tmpDir, LOGGER::warn);
@@ -306,9 +305,6 @@ public final class WorkflowSegment {
             try (var in = new ZipInputStream(new ByteArrayInputStream(m_dataAreaBlob))) {
                 FileUtil.unzip(in, dataAreaPath.toFile(), 1);
                 return Optional.of(dataAreaPath);
-            } catch (IOException ex) {
-                // should never happen
-                throw new IllegalStateException("Failed to extract data area from workflow segment", ex);
             }
         } else {
             return Optional.empty();
@@ -339,8 +335,8 @@ public final class WorkflowSegment {
      * @throws IOException thrown if persisting the workflow to the internal in-memory byte stream failed
      */
     public void serializeAndDisposeWorkflow() throws IOException {
-        if (m_wfm != null && m_wfmStream == null) {
-            m_wfmStream = wfmToStream(m_wfm);
+        if (m_wfm != null && m_wfmBlob == null) {
+            m_wfmBlob = wfmToBlob(m_wfm);
         }
         if (m_dataAreaPath != null && m_dataAreaBlob == null) {
             if (Files.exists(m_dataAreaPath)) {
@@ -395,7 +391,7 @@ public final class WorkflowSegment {
         }
     }
 
-    private static byte[] wfmToStream(final WorkflowManager wfm) throws IOException {
+    private static byte[] wfmToBlob(final WorkflowManager wfm) throws IOException {
         var tmpDir = newTempDirWithName(wfm.getName());
         try {
             return wfmToStream(wfm, tmpDir);
@@ -437,7 +433,7 @@ public final class WorkflowSegment {
         if (!entry.getName().equals("workflow.bin")) {
             throw new IOException("Expected workflow.bin file in stream, got " + entry.getName());
         }
-        m_wfmStream = IOUtils.toByteArray(in);
+        m_wfmBlob = IOUtils.toByteArray(in);
 
         entry = in.getNextEntry();
         if (entry != null) {
@@ -453,16 +449,16 @@ public final class WorkflowSegment {
      *
      */
     void saveWorkflowData(final ZipOutputStream out) throws IOException {
-        if (m_wfmStream == null) {
+        if (m_wfmBlob == null) {
             if (m_wfm == null) {
                 //only happens if WorkflowFragment is instantiated with a WorkflowManager
                 //and #disposeWorkflow() is called before #save(...)
                 throw new IllegalStateException("Can't save workflow segment. Workflow has been disposed already.");
             }
-            m_wfmStream = wfmToStream(m_wfm);
+            m_wfmBlob = wfmToBlob(m_wfm);
         }
         out.putNextEntry(new ZipEntry("workflow.bin"));
-        out.write(m_wfmStream);
+        out.write(m_wfmBlob);
         out.closeEntry();
 
 

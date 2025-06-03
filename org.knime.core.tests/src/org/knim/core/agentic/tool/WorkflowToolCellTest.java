@@ -50,6 +50,7 @@ package org.knim.core.agentic.tool;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -57,6 +58,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +71,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
@@ -107,9 +110,12 @@ class WorkflowToolCellTest {
 
     private WorkflowManager m_toolWfm;
 
+    @TempDir
+    Path m_tempDir;
+
     @BeforeEach
     void createEmptyWorkflow() throws IOException {
-        var dir = FileUtil.createTempDir("workflow");
+        var dir = FileUtil.createTempDir("workflow", m_tempDir.toFile());
         var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
         if (workflowFile.createNewFile()) {
             m_toolWfm =
@@ -271,7 +277,7 @@ class WorkflowToolCellTest {
      * @throws IOException
      */
     @Test
-    void testExecuteToolWorkflowWithDataArea() throws ToolIncompatibleWorkflowException, IOException {
+    void testExecuteToolWorkflowWithDataArea(@TempDir final Path tempDataAreaPath) throws ToolIncompatibleWorkflowException, IOException {
         var virtualDataAreaPath = new AtomicReference<Path>();
         Runnable onExecute = () -> {
             var vContext = VirtualNodeContext.getContext().orElse(null);
@@ -287,9 +293,14 @@ class WorkflowToolCellTest {
                 throw new AssertionError(e);
             }
             virtualDataAreaPath.set(dataAreaPath);
+
+            var message = assertThrows(IOException.class, () -> new URL("knime://knime.workflow/test.txt").openStream())
+                .getMessage();
+            assertThat(message).isEqualTo(
+                "Node is not allowed to access resources relative to 'knime.workflow' because it's executed within in a restricted (virtual) scope.");
         };
         addAndConnectNodes(m_toolWfm, onExecute, false);
-        var dataAreaPath = FileUtil.createTempDir("testDataArea").toPath();
+        var dataAreaPath = Files.createDirectory(tempDataAreaPath.resolve("testDataArea"));
         FileUtils.writeStringToFile(dataAreaPath.resolve("file").toFile(), "file content", StandardCharsets.UTF_8);
         final var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null, dataAreaPath);
 
@@ -310,8 +321,6 @@ class WorkflowToolCellTest {
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         assertThat(res.outputs()[0]).isNotNull();
         assertThat(Files.notExists(virtualDataAreaPath.get())).as("virtual data area not deleted").isTrue();
-
-        FileUtil.deleteRecursively(dataAreaPath.toFile());
     }
 
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {

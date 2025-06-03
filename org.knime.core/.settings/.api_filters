@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="new interface hierarchy in FlowVirtualScopeContext, AP-24414" id="923795461">
+            <message_arguments>
+                <message_argument value="5.5.0"/>
+                <message_argument value="5.4.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver">
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
