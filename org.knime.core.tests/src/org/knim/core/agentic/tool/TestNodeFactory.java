@@ -66,19 +66,19 @@ import org.xml.sax.SAXException;
  */
 public class TestNodeFactory extends NodeFactory<TestNodeModel> {
 
-    private final boolean m_failOnExecute;
+    private final String m_nodeKey;
 
     public TestNodeFactory() {
-        this(false);
+        this(null);
     }
 
-    TestNodeFactory(final boolean failOnExecute) {
-        m_failOnExecute = failOnExecute;
+    TestNodeFactory(final String nodeKey) {
+        m_nodeKey = nodeKey;
     }
 
     @Override
     public TestNodeModel createNodeModel() {
-        return new TestNodeModel(m_failOnExecute);
+        return new TestNodeModel(m_nodeKey);
     }
 
     @Override

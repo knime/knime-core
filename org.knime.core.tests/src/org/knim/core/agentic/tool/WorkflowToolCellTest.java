@@ -52,23 +52,44 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.container.LongUTFDataInputStream;
+import org.knime.core.data.container.LongUTFDataOutputStream;
 import org.knime.core.node.agentic.tool.ToolWorkflowMetadata;
 import org.knime.core.node.agentic.tool.WorkflowToolCell;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.ToolIncompatibleWorkflowException;
+import org.knime.core.node.agentic.tool.WorkflowToolCell.WorkflowToolCellSerializer;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
+import org.knime.core.util.FileUtil;
 import org.knime.testing.core.ExecutionContextExtension;
 import org.knime.testing.util.WorkflowManagerUtil;
 
@@ -88,12 +109,23 @@ class WorkflowToolCellTest {
 
     @BeforeEach
     void createEmptyWorkflow() throws IOException {
-        m_toolWfm = WorkflowManagerUtil.createEmptyWorkflow();
+        var dir = FileUtil.createTempDir("workflow");
+        var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
+        if (workflowFile.createNewFile()) {
+            m_toolWfm =
+                WorkflowManager.EXTRACTED_WORKFLOW_ROOT.createAndAddProject("workflow", new WorkflowCreationHelper(
+                    WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null)));
+        } else {
+            throw new IllegalStateException("Creating empty workflow failed");
+        }
     }
 
     @AfterEach
     void disposeWorkflow() {
-        WorkflowManagerUtil.disposeWorkflow(m_toolWfm);
+        var id = m_toolWfm.getID();
+        if (WorkflowManager.EXTRACTED_WORKFLOW_ROOT.containsNodeContainer(id)) {
+            WorkflowManager.EXTRACTED_WORKFLOW_ROOT.removeProject(id);
+        }
     }
 
     @Test
@@ -185,7 +217,9 @@ class WorkflowToolCellTest {
 
     @Test
     void testExecuteToolWorkflowWithFailure() throws ToolIncompatibleWorkflowException {
-        addAndConnectNodes(m_toolWfm, true, true);
+        addAndConnectNodes(m_toolWfm, () -> {
+            throw new RuntimeException("Purposely fail on execute");
+        }, true);
 
         var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
 
@@ -223,21 +257,76 @@ class WorkflowToolCellTest {
 
         var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
         var ws = WorkflowSegment.load(new ZipInputStream(new ByteArrayInputStream(cell.getWorkflow())));
-        var wfm  = ws.loadWorkflow();
+        var wfm = ws.loadWorkflow();
         assertThat(wfm.getNodeContainers().size()).isOne();
         assertThat(wfm.getNodeContainers().iterator().next().getUIInformation().getBounds())
             .isEqualTo(new int[]{35, 23, 10, 10});
         ws.disposeWorkflow();
     }
 
-    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {
-        return addAndConnectNodes(wfm, false, addMessageOutput);
+    /**
+     * Tests to execute a workflow tool with a data area.
+     *
+     * @throws ToolIncompatibleWorkflowException
+     * @throws IOException
+     */
+    @Test
+    void testExecuteToolWorkflowWithDataArea() throws ToolIncompatibleWorkflowException, IOException {
+        var virtualDataAreaPath = new AtomicReference<Path>();
+        Runnable onExecute = () -> {
+            var vContext = VirtualNodeContext.getContext().orElse(null);
+            assertThat(vContext).isNotNull();
+            assertThat(vContext.hasRestriction(Restriction.RELATIVE_RESOURCE_ACCESS)).isTrue();
+            assertThat(vContext.hasRestriction(Restriction.WORKFLOW_DATA_AREA_ACCESS)).isTrue();
+            var dataAreaPath = vContext.getVirtualDataAreaPath().orElse(null);
+            assertThat(dataAreaPath).isNotNull();
+            try {
+                var content = FileUtils.readFileToString(dataAreaPath.resolve("file").toFile(), StandardCharsets.UTF_8);
+                assertThat(content).isEqualTo("file content");
+            } catch (IOException e) {
+                throw new AssertionError(e);
+            }
+            virtualDataAreaPath.set(dataAreaPath);
+        };
+        addAndConnectNodes(m_toolWfm, onExecute, false);
+        var dataAreaPath = FileUtil.createTempDir("testDataArea").toPath();
+        FileUtils.writeStringToFile(dataAreaPath.resolve("file").toFile(), "file content", StandardCharsets.UTF_8);
+        final var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null, dataAreaPath);
+
+        // write and read again
+        byte[] serializedCell;
+        try (var bout = new ByteArrayOutputStream(); var out = new TestDataCellOutput(new DataOutputStream(bout))) {
+            new WorkflowToolCellSerializer().serialize(cell, out);
+            serializedCell = bout.toByteArray();
+        }
+
+        WorkflowToolCell readCell;
+        try (var in = new TestDataCellInput(new DataInputStream(new ByteArrayInputStream(serializedCell)))) {
+            readCell = new WorkflowToolCellSerializer().deserialize(in);
+        }
+
+        var exec = executionContextExtension.getExecutionContext();
+        var res = readCell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec);
+        assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
+        assertThat(res.outputs()[0]).isNotNull();
+        assertThat(Files.notExists(virtualDataAreaPath.get())).as("virtual data area not deleted").isTrue();
+
+        FileUtil.deleteRecursively(dataAreaPath.toFile());
     }
 
-    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addFailingNode,
+    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {
+        return addAndConnectNodes(wfm, null, addMessageOutput);
+    }
+
+    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final Runnable onExecute,
         final boolean addMessageOutput) {
         var input = WorkflowManagerUtil.createAndAddNode(wfm, new WorkflowInputTestNodeFactory(), 1, 0);
-        var node = WorkflowManagerUtil.createAndAddNode(wfm, new TestNodeFactory(addFailingNode), 0, 0);
+        String nodeKey = null;
+        if (onExecute != null) {
+            nodeKey = String.valueOf(System.identityHashCode(onExecute));
+            TestNodeModel.onExecuteMap.put(nodeKey, onExecute);
+        }
+        var node = WorkflowManagerUtil.createAndAddNode(wfm, new TestNodeFactory(nodeKey), 0, 0);
         var output = WorkflowManagerUtil.createAndAddNode(wfm, new WorkflowOutputTestNodeFactory(), 1, 1);
         wfm.addConnection(input.getID(), 1, node.getID(), 1);
         wfm.addConnection(node.getID(), 1, output.getID(), 1);
@@ -247,6 +336,37 @@ class WorkflowToolCellTest {
             return messageOutput;
         }
         return null;
+    }
+
+    @AfterEach
+    void clearOnExecuteMap() {
+        TestNodeModel.onExecuteMap.clear();
+    }
+
+    private class TestDataCellOutput extends LongUTFDataOutputStream implements DataCellDataOutput {
+
+        TestDataCellOutput(final DataOutputStream output) {
+            super(output);
+        }
+
+        @Override
+        public void writeDataCell(final DataCell cell) throws IOException {
+            throw new UnsupportedOperationException("Not implemented in test");
+        }
+
+    }
+
+    private class TestDataCellInput extends LongUTFDataInputStream implements DataCellDataInput {
+
+        TestDataCellInput(final DataInputStream input) {
+            super(input);
+        }
+
+        @Override
+        public DataCell readDataCell() throws IOException {
+            throw new UnsupportedOperationException("Not implemented in test");
+        }
+
     }
 
 }

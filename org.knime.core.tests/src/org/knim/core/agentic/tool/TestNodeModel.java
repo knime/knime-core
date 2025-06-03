@@ -50,6 +50,8 @@ package org.knim.core.agentic.tool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -71,7 +73,9 @@ import org.knime.core.node.port.PortType;
  */
 class TestNodeModel extends NodeModel {
 
-    private boolean m_failOnExecute;
+    static final Map<String, Runnable> onExecuteMap = new HashMap<>();
+
+    private String m_nodeKey = null;
 
     protected TestNodeModel(final boolean hasInput, final boolean hasOutput) {
         super(hasInput ? 1 : 0, hasOutput ? 1 : 0);
@@ -82,9 +86,9 @@ class TestNodeModel extends NodeModel {
             outPort == null ? new PortType[0] : new PortType[]{outPort});
     }
 
-    protected TestNodeModel(final boolean failOnExecute) {
+    protected TestNodeModel(final String nodeKey) {
         super(1, 1);
-        m_failOnExecute = failOnExecute;
+        m_nodeKey = nodeKey;
     }
 
     @Override
@@ -98,9 +102,11 @@ class TestNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
         throws Exception {
-        if (m_failOnExecute) {
-            throw new RuntimeException("Purposely fail on execute");
+        var onExecute = onExecuteMap.get(m_nodeKey);
+        if (onExecute != null) {
+            onExecute.run();
         }
+
         if (getNrOutPorts() == 1) {
             return new BufferedDataTable[]{createTable(exec)};
         }
@@ -142,7 +148,7 @@ class TestNodeModel extends NodeModel {
 
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addBoolean("failOnExecute", m_failOnExecute);
+        settings.addString("nodeKey", m_nodeKey);
     }
 
     @Override
@@ -152,7 +158,7 @@ class TestNodeModel extends NodeModel {
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_failOnExecute = settings.getBoolean("failOnExecute", false);
+        m_nodeKey = settings.getString("nodeKey");
     }
 
     @Override
