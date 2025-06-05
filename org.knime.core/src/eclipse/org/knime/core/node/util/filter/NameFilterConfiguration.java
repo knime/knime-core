@@ -314,7 +314,8 @@ public class NameFilterConfiguration implements Cloneable {
             }
             // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
         }
-        m_handleBothIncludedAndExcludedNamesCorrectly = subSettings.containsKey(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY);
+        m_handleBothIncludedAndExcludedNamesCorrectly =
+            subSettings.getBoolean(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY, false);
         loadConfigurationInModelChild(subSettings);
     }
 
@@ -352,7 +353,9 @@ public class NameFilterConfiguration implements Cloneable {
         NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfiguration.TYPE);
         m_patternConfig.saveConfiguration(configSettings);
         // Since 5.5 to fix UIEXT-2375
-        subSettings.addBoolean(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY, true);
+        if (m_handleBothIncludedAndExcludedNamesCorrectly) {
+            subSettings.addBoolean(KEY_HANDLE_BOTH_INCLUDED_AND_EXCLUDED_NAMES_CORRECTLY, true);
+        }
         saveConfigurationChild(subSettings);
     }
 
