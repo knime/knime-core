@@ -416,8 +416,8 @@ public final class NodeContext {
                     return Optional.ofNullable((C)NodeContainerParent.getProjectWFM(nc).getContextV2());
                 } else if (VirtualNodeContext.class.isAssignableFrom(contextObjClass)
                     && nc instanceof NativeNodeContainer nnc) {
-                    var virtualScope =
-                        NativeNodeContainer.getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, nnc.getFlowObjectStack());
+                    var virtualScope = NativeNodeContainer
+                        .getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, nnc.getFlowObjectStack());
                     return Optional.ofNullable((C)virtualScope);
                 } else {
                     return Optional.empty();

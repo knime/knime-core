@@ -187,8 +187,8 @@ public final class WorkflowSegment {
      * @param portObjectReferenceReaderNodes
      * @since 4.6
      */
-    WorkflowSegment(final byte[] wfmBlob, final String workflowName, final List<Input> inputs, final List<Output> outputs,
-        final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
+    WorkflowSegment(final byte[] wfmBlob, final String workflowName, final List<Input> inputs,
+        final List<Output> outputs, final Set<NodeIDSuffix> portObjectReferenceReaderNodes) {
         m_wfmBlob = wfmBlob;
         m_name = workflowName;
         m_inputs = CheckUtils.checkArgumentNotNull(inputs);
@@ -296,7 +296,7 @@ public final class WorkflowSegment {
      *
      * @return the path to the temporary directory of the data area or an empty optional if there is no data area stored
      *         with the workflow segment
-     * @throws IOException
+     * @throws IOException -
      * @since 5.5
      */
     public Optional<Path> writeDataAreaToTempDir() throws IOException {
@@ -401,8 +401,10 @@ public final class WorkflowSegment {
     }
 
     private static byte[] pathToBlob(final Path path) {
-        try (var bos = new ByteArrayOutputStream(); ZipOutputStream out = new ZipOutputStream(bos);) {
-            FileUtil.zipDir(out, Files.list(path).map(Path::toFile).toList(), FileUtil.ZIP_INCLUDEALL_FILTER, null);
+        try (var bos = new ByteArrayOutputStream();
+                ZipOutputStream out = new ZipOutputStream(bos);
+                var files = Files.list(path)) {
+            FileUtil.zipDir(out, files.map(Path::toFile).toList(), FileUtil.ZIP_INCLUDEALL_FILTER, null);
             bos.flush();
             return bos.toByteArray();
         } catch (IOException | CanceledExecutionException ex) {
