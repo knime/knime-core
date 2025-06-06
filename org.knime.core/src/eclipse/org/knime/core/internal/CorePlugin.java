@@ -63,7 +63,6 @@ import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.eclipseUtil.EclipseProxyServiceInitializer;
 import org.knime.core.monitor.ApplicationHealth;
-import org.knime.core.monitor.ProcessWatchdog;
 import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.pathresolve.ResolverUtil;
@@ -179,9 +178,6 @@ public class CorePlugin implements BundleActivator {
         EclipseProxyServiceInitializer.startListening(context);
 
         m_applicationHealth = new ApplicationHealth();
-
-        // Start the watchdog by accessing it once
-        ProcessWatchdog.getInstance();
     }
 
     private static void readMimeTypes() throws IOException {

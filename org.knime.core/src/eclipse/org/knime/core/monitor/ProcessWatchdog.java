@@ -281,6 +281,7 @@ public final class ProcessWatchdog {
         } else {
             m_watchdogRunning = false;
         }
+        LOGGER.debugWithFormat("KNIME Process Watchdog is %s.", m_watchdogRunning ? "enabled" : "disabled");
     }
 
     private static void startPeriodicMemoryTrimming() {
