@@ -158,11 +158,32 @@ public final class WorkflowSegmentExecutor {
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
         final boolean debug, final boolean executeAll, final Consumer<String> warningConsumer) throws KNIMEException {
+        this(ws, workflowName, hostNode, debug, executeAll, warningConsumer, new Restriction[0]);
+    }
+
+    /**
+     * @param ws the workflow segment to execute
+     * @param workflowName the name of the metanode to be created (which will only be visible if 'debug' is
+     *            <code>true</code>)
+     * @param hostNode the node which is responsible for the execution of the workflow segment (which provides the input
+     *            and receives the output data, supplies the file store, etc.)
+     * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
+     *            debugging purposes), if <code>false</code> it's hidden
+     * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior), previously
+     *            and if <code>false</code> only the output nodes would be executed
+     * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
+     * @param restrictions restrictions on the execution of the workflow segment
+     * @throws KNIMEException If the workflow can't be instantiated from the segment.
+     * @since 5.5
+     */
+    public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
+        final boolean debug, final boolean executeAll, final Consumer<String> warningConsumer,
+        final Restriction... restrictions) throws KNIMEException {
         m_hostNode = (NativeNodeContainer)hostNode;
         m_wfm = hostNode.getParent().createAndAddSubWorkflow(new PortType[0], new PortType[0],
             (debug ? "Debug: " : "") + workflowName);
-        m_flowVirtualScopeContext = new FlowVirtualScopeContext(hostNode.getID(), createDataAreaSupplier(ws),
-            Restriction.RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+        m_flowVirtualScopeContext =
+            new FlowVirtualScopeContext(hostNode.getID(), createDataAreaSupplier(ws), restrictions);
         m_wfm.setInitialScopeContext(m_flowVirtualScopeContext);
         if (!debug) {
             m_wfm.hideInUI();

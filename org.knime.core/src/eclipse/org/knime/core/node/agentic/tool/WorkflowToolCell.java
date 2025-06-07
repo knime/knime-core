@@ -99,6 +99,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentExecutionResult;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.JsonUtil;
 
 import jakarta.json.JsonObject;
@@ -410,8 +411,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         var isDebugMode = contains("debug", executionHints);
         boolean executionFailed = false;
         try {
-            wsExecutor = new WorkflowSegmentExecutor(ws, name, hostNode, isDebugMode, warning -> {
-            });
+            wsExecutor = new WorkflowSegmentExecutor(ws, name, hostNode, isDebugMode, true, warning -> {
+            }, Restriction.RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
             if (!StringUtils.isBlank(parameters)) {
                 wsExecutor.configureWorkflow(parseParameters(parameters));
             }
