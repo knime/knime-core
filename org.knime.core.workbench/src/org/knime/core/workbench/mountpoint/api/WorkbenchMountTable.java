@@ -58,6 +58,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -100,7 +101,15 @@ public final class WorkbenchMountTable {
      */
     private static final Map<String, WorkbenchMountPoint> MOUNTED = new LinkedHashMap<>();
 
+    /**
+     * Static filter for mount point hosts, specifically for {@link WorkbenchMountPointSettings}.
+     * This field is only set once, during {@link #init(WorkbenchMountPointHostFilter)}.
+     */
+    private static final AtomicReference<WorkbenchMountPointHostFilter> FILTER =
+        new AtomicReference<>(WorkbenchMountPointHostFilter.ALLOW_ALL);
+
     /*---------------------------------------------------------------*/
+
     /**
      * Adds a listener for mount point changes.
      *
@@ -198,6 +207,13 @@ public final class WorkbenchMountTable {
 
         WorkbenchMountPoint mp;
         synchronized (MOUNTED) {
+            // can't mount disallowed settings, e.g. filtered server addresses if remote
+            if (!isAllowed(settings)) {
+                throw new WorkbenchMountException(
+                    String.format("The mount point with the mountID \"%s\" cannot be mounted, "
+                        + "its server address is disallowed via customization", mountID));
+            }
+
             // can't mount different providers with the same ID
             WorkbenchMountPoint existingMountPoint = MOUNTED.get(mountID);
             if (existingMountPoint != null) {
@@ -212,6 +228,7 @@ public final class WorkbenchMountTable {
                     mountID, type.getTypeIdentifier(), existingMountPointType.getTypeIdentifier()));
             }
 
+            // can't mount "singleton type" multiple times
             if (!type.supportsMultipleInstances() && isMounted(type.getTypeIdentifier())) {
                 throw new WorkbenchMountException(
                     String.format("Cannot mount %s multiple times.", type.getTypeIdentifier()));
@@ -311,15 +328,31 @@ public final class WorkbenchMountTable {
     }
 
     /**
-     * Initializes the explorer mount table based on the preferences of the plugin's preference store.
+     * Uses the {@link WorkbenchMountPointHostFilter} instance currently-set in the mount table,
+     * to check whether individual {@link WorkbenchMountPointSettings} are allowed.
+     *
+     * @param settings the {@link WorkbenchMountPointSettings} instance
+     * @return {@code true} if settings are allowed, {@code false} otherwise
+     * @see WorkbenchMountPointHostFilter
      */
-    public static void init() {
+    public static boolean isAllowed(final WorkbenchMountPointSettings settings) {
+        return FILTER.get().areSettingsAllowed(settings);
+    }
+
+    /**
+     * Initializes the explorer mount table based on the preferences of the plugin's preference store.
+     *
+     * @param filter based on AP customization
+     */
+    public static void init(final WorkbenchMountPointHostFilter filter) {
         synchronized (MOUNTED) {
             // unmount all mount points
             List<String> ids = getAllMountedIDs();
             for (String id : ids) {
                 unmount(id);
             }
+            // initialize the static state
+            FILTER.set(filter);
             mountTempSpace();
             for (WorkbenchMountPointSettings settings : MountPointsPreferencesUtil.
                     loadSortedMountSettingsFromPreferences(true)) {

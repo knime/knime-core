@@ -75,6 +75,7 @@ import org.knime.core.workbench.WorkbenchConstants;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountException;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.WorkbenchMountPointStateSettings;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 import org.slf4j.Logger;
@@ -261,6 +262,7 @@ public final class MountPointsPreferencesUtil {
 
         return mountSettings.stream()
                 .filter(e -> !excludedDefaultMPs.contains(e.defaultMountID())) //
+                .filter(WorkbenchMountTable::isAllowed) //
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -366,12 +368,14 @@ public final class MountPointsPreferencesUtil {
                 continue;
             }
 
-            if (oldEntry != null) {
-                // remove always, re-add maybe
+            if (oldEntry != null && WorkbenchMountTable.isAllowed(oldEntry.settings())) {
+                // remove if not currently disallowed per filter, maybe re-add below
                 instanceParent.node(key).removeNode();
             }
 
             if (newEntry != null) {
+                // nodes that are newly written here are either completely new, or unaffected
+                // by the mount point filter and simply updated (i.e. re-added)
                 writeNode((IEclipsePreferences)instanceParent.node(key), newEntry.settings(),
                     newEntry.mountPointNumber());
             }

@@ -49,6 +49,7 @@
 package org.knime.core.internal;
 
 import org.knime.core.util.IEarlyStartup;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointHostFilter;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
 
 /**
@@ -61,6 +62,10 @@ public final class MountTableInitializerEarlyStartup implements IEarlyStartup {
 
     @Override
     public void run() {
-        WorkbenchMountTable.init();
+        // mount point filter from AP customization, default to allow all if absent
+        final var filter = CorePlugin.getInstance().getCustomizationService() //
+            .map(x -> (WorkbenchMountPointHostFilter)x.getCustomization().mountpoint()) //
+            .orElse(WorkbenchMountPointHostFilter.ALLOW_ALL);
+        WorkbenchMountTable.init(filter);
     }
 }
