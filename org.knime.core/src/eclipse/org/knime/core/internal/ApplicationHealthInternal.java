@@ -49,11 +49,15 @@
 package org.knime.core.internal;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.DoubleSupplier;
+import java.util.stream.Collectors;
 
 import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -139,5 +143,39 @@ public final class ApplicationHealthInternal {
     private ApplicationHealthInternal() {
         // no op
     }
+
+    public enum GCLoadAvgIntervals {
+            ONE_MIN, FIVE_MIN, FIFTEEN_MIN
+    }
+
+    private static final class GCTimeMetric implements DoubleSupplier {
+
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(GCTimeMetric.class);
+
+        private long m_lastGcTimeMs = 0;
+
+        @Override
+        public double getAsDouble() {
+            long currentTotalGcTimeMs = 0;
+            for (final var gc : java.lang.management.ManagementFactory.getGarbageCollectorMXBeans()) {
+                final var time = gc.getCollectionTime();
+                LOGGER.debug(() -> "%s: %d ms (%s)".formatted(gc.getName(), time,
+                    Arrays.stream(gc.getMemoryPoolNames()).collect(Collectors.joining(", "))));
+                currentTotalGcTimeMs += time;
+            }
+            final var diff = currentTotalGcTimeMs - m_lastGcTimeMs;
+            m_lastGcTimeMs = currentTotalGcTimeMs;
+            return diff;
+        }
+
+    }
+
+    public static final LoadTracker<GCLoadAvgIntervals> GC_LOAD_TRACKER =
+        LoadTracker.<GCLoadAvgIntervals> builder(Duration.ofSeconds(5), new GCTimeMetric()) //
+            .addInterval(GCLoadAvgIntervals.ONE_MIN, Duration.ofMinutes(1)) //
+            .addInterval(GCLoadAvgIntervals.FIVE_MIN, Duration.ofMinutes(5)) //
+            .addInterval(GCLoadAvgIntervals.FIFTEEN_MIN, Duration.ofMinutes(15)) //
+            .setIgnoreCloseInvocation(false) //
+            .start(0);
 
 }

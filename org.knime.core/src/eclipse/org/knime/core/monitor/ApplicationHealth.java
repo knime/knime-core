@@ -66,7 +66,11 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
 import org.knime.core.data.util.memory.InstanceCounter;
+import org.knime.core.data.util.memory.MemoryAlert;
+import org.knime.core.data.util.memory.MemoryAlertListener;
+import org.knime.core.data.util.memory.MemoryAlertSystem;
 import org.knime.core.internal.ApplicationHealthInternal;
+import org.knime.core.internal.ApplicationHealthInternal.GCLoadAvgIntervals;
 import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
 import org.knime.core.internal.ApplicationHealthInternal.QueueLengthAvgIntervals;
 import org.knime.core.monitor.beans.ApplicationHealthMetric;
@@ -78,6 +82,7 @@ import org.knime.core.monitor.beans.InstanceCountersMXBean;
 import org.knime.core.monitor.beans.NodeStates;
 import org.knime.core.monitor.beans.NodeStatesMXBean;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
@@ -93,10 +98,35 @@ public final class ApplicationHealth implements AutoCloseable {
 
     private final List<ObjectName> m_registeredBeans = new ArrayList<>();
 
+    private final MemoryAlertListener m_memoryAlertListener;
+
     /**
      * Constructs a new instance, setting up relevant metrics frameworks (e.g. MXBeans).
      */
     public ApplicationHealth() {
+
+        m_memoryAlertListener = new MemoryAlertListener() {
+
+            @Override
+            protected boolean memoryAlert(final MemoryAlert alert) {
+                final var usedMem = alert.getUsedMemory();
+                final var maxMem = alert.getMaxMemory();
+                // if only 100MB remaining
+                // if (usedMem > maxMem - 100 * 1024 * 1024) {
+                // if at least 64% (that's when we issue alerts)
+                if (usedMem >= maxMem * 0.64) {
+                    final var avg =
+                        ApplicationHealthInternal.GC_LOAD_TRACKER.getLoadAverage(GCLoadAvgIntervals.ONE_MIN);
+                    // 1s of GC time in the last 1 minutes (TODO play around with values)
+                    LOGGER.debug(() -> "1min GC load avg: %.2f".formatted(avg));
+                    if (avg > 1_000) {
+                        WorkflowManager.ROOT.shutdown(); // TODO separate thread?
+                    }
+                }
+                return false;
+            }
+        };
+        MemoryAlertSystem.getInstance().addListener(m_memoryAlertListener);
 
         final var metrics = new HashMap<>(Map.of( //
             "org.knime.core:type=Execution,name=GlobalPool", //
