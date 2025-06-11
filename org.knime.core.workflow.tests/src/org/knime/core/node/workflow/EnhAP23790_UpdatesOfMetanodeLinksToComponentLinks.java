@@ -84,7 +84,7 @@ public class EnhAP23790_UpdatesOfMetanodeLinksToComponentLinks extends WorkflowT
 	public void testUnchanged() throws Exception {
 		checkState(m_variableCreator_4, CONFIGURED);
 		executeAllAndWait();
-		checkState(m_metanodeDiffChecker_6, EXECUTED);       
+		checkState(m_metanodeDiffChecker_6, EXECUTED);
 		checkState(m_metanodeDiffChecker_10, EXECUTED);
 		checkState(m_componentDiffChecker_12, CONFIGURED); // failed
 		checkState(m_componentDiffChecker_15, CONFIGURED); // failed
