@@ -55,7 +55,6 @@ import static java.awt.Color.RED;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,64 +149,6 @@ class ColorModelNominalTest {
             .isEqualTo(ColorAttr.getInstance(PINK));
 
         assertThat(clrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
-        .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
-    }
-
-    /** Test updating of data cell to color palette map through re-mapping */
-    @SuppressWarnings("static-method")
-    @Test
-    final void testDataCellRemapping() throws InvalidSettingsException {
-        var clrMdl = newColorModel();
-
-        // Only re-map first value.
-        Map<DataCell, DataCell> remapping = Map.of(
-            new StringCell("value 1"),
-            new StringCell("re-mapped value 1"));
-
-        // Assert the re-mapping worked.
-        final var appliedClrMdl = clrMdl.withDataCellRemapping(remapping);
-        assertThat(appliedClrMdl.getColorAttr(new StringCell("re-mapped value 1"))).as("Color for re-mapped value 1")
-            .isEqualTo(ColorAttr.getInstance(GREEN));
-        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 2"))).as("Color for value 2")
-            .isEqualTo(ColorAttr.getInstance(RED));
-        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 3"))).as("Color for value 3")
-            .isEqualTo(ColorAttr.getInstance(GREEN));
-
-        // Assert the default for unknown columns.
-        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 1")).getColor()) //
-        .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
-        assertThat(appliedClrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
-        .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
-    }
-
-    /** Test updating of data cell to color palette map through empty re-mapping */
-    @SuppressWarnings("static-method")
-    @Test
-    final void testDataCellRemappingWithEmptMapping() throws InvalidSettingsException {
-        var clrMdl = newColorModel();
-
-        // Empty re-mapping.
-        Map<DataCell, DataCell> remapping = new HashMap<>();
-        assertInitialColorModelState(clrMdl.withDataCellRemapping(remapping), remapping);
-
-        // Null re-mapping.
-        remapping = null;
-        assertInitialColorModelState(clrMdl.withDataCellRemapping(remapping), remapping);
-    }
-
-    private static void assertInitialColorModelState(final ColorModelNominal updatedColorModel,
-        final Map<DataCell, DataCell> remapping) {
-        // Assert the re-mapping didn't change anything.
-        var actualColorModel = updatedColorModel.withDataCellRemapping(remapping);
-        assertThat(actualColorModel.getColorAttr(new StringCell("value 1"))).as("Color for value 1")
-            .isEqualTo(ColorAttr.getInstance(GREEN));
-        assertThat(actualColorModel.getColorAttr(new StringCell("value 2"))).as("Color for value 2")
-            .isEqualTo(ColorAttr.getInstance(RED));
-        assertThat(actualColorModel.getColorAttr(new StringCell("value 3"))).as("Color for value 3")
-            .isEqualTo(ColorAttr.getInstance(GREEN));
-
-        // Assert the default for unknown columns.
-        assertThat(actualColorModel.getColorAttr(new StringCell("unknown")).getColor()) //
         .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
     }
 
