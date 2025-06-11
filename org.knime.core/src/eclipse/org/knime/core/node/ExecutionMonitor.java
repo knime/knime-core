@@ -46,6 +46,7 @@ package org.knime.core.node;
 
 import java.util.function.Supplier;
 
+import org.knime.core.node.DefaultNodeProgressMonitor.NonCancelableNodeProgressMonitor;
 import org.knime.core.node.DefaultNodeProgressMonitor.SilentSubNodeProgressMonitor;
 import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
 
@@ -192,6 +193,18 @@ public class ExecutionMonitor {
         NodeProgressMonitor subProgress =
             createSilentSubProgressMonitor(maxProg);
         return new ExecutionMonitor(subProgress);
+    }
+
+    /**
+     * Create a monitor whose {@link #checkCanceled()} method never throws a {@link CanceledExecutionException}.
+     * Can be used as a work around to have short-living actions with side-effects to complete. Note that the running
+     * thread might still be interrupted.
+     *
+     * @return Such a new monitor.
+     * @since 5.5
+     */
+    public ExecutionMonitor createNonCancelableSubProgress() {
+        return new ExecutionMonitor(new NonCancelableNodeProgressMonitor(m_progress));
     }
 
     /**

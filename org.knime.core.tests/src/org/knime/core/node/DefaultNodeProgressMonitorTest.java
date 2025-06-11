@@ -48,20 +48,24 @@
  */
 package org.knime.core.node;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.mutable.MutableLong;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.DefaultNodeProgressMonitor.NonCancelableNodeProgressMonitor;
 import org.knime.core.node.DefaultNodeProgressMonitor.SubNodeProgressMonitor;
 import org.knime.core.node.workflow.NodeProgress;
 import org.knime.core.node.workflow.NodeProgressEvent;
@@ -74,20 +78,23 @@ import org.knime.core.util.Pointer;
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
  */
+@SuppressWarnings("javadoc")
 public class DefaultNodeProgressMonitorTest {
 
     /** math in subnodeprogressmonitor is "complex" -- allow a lot of margin here. */
     private static final double PROG_EPSILON = 1E-3;
 
     /** Just a lot of incremental numeric progress updates. */
-    @Test(timeout=2000L)
+    @Test
+    @Timeout(value = 2, unit = TimeUnit.SECONDS)
     public void testManySmallIncrementsDirect() throws Exception {
         DefaultNodeProgressMonitor m = new DefaultNodeProgressMonitor();
         internalTestManySmallIncrements(m, m);
     }
 
     /** Just a lot of incremental numeric progress updates on sub progress monitor. */
-    @Test(timeout=10000L)
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
     public void testManySmallIncrementsSubProgress() throws Exception {
         // this has a ridiculous large timeout because the math we do in the implementation
         // of SubnodeProgresMonitor is insane. Not going to change it as we spend days getting it "right" years ago
@@ -96,7 +103,7 @@ public class DefaultNodeProgressMonitorTest {
     }
 
     /** Just a lot of incremental numeric progress updates. */
-    private void internalTestManySmallIncrements(final NodeProgressMonitor toMonitor,
+    private static void internalTestManySmallIncrements(final NodeProgressMonitor toMonitor,
         final NodeProgressMonitor toControl) throws Exception {
         final Pointer<NodeProgress> progressPointer = new Pointer<>();
         final Function<NodeProgress, Boolean> isLastEventFunction = p -> p.getProgress() >= 1.0 - PROG_EPSILON;
@@ -117,22 +124,46 @@ public class DefaultNodeProgressMonitorTest {
     }
 
     /** Calls internal test message for {@link DefaultNodeProgressMonitor}. */
-    @Test(timeout=2000L)
+    @Test
+    @Timeout(value = 2, unit = TimeUnit.SECONDS)
     public void testManyMessageEventsDirect() throws Exception {
         final DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
         internalTestManyMessageEvents(progMon, progMon);
     }
 
     /** Calls internal test message for {@link SubNodeProgressMonitor}. */
-    @Test(timeout=2000L)
+    @Test
+    @Timeout(value = 2, unit = TimeUnit.SECONDS)
     public void testManyMessageEventsSubProgress() throws Exception {
         final DefaultNodeProgressMonitor progMon = new DefaultNodeProgressMonitor();
         internalTestManyMessageEvents(progMon, new SubNodeProgressMonitor(progMon, 1.0));
     }
 
+    /**
+     * Ensures that the delegating progress allows no modification (like progress listeners etc)
+     */
+    @Test
+    @SuppressWarnings("static-method")
+    public final void testDelegatingProgressDisallowsModification() {
+        DefaultNodeProgressMonitor parentMonitor = new DefaultNodeProgressMonitor();
+        NodeProgressMonitor nonCancelableMonitor = new NonCancelableNodeProgressMonitor(parentMonitor);
+
+        assertThrows(IllegalStateException.class, nonCancelableMonitor::setExecuteCanceled);
+        assertThrows(IllegalStateException.class, nonCancelableMonitor::reset);
+        assertThrows(IllegalStateException.class, nonCancelableMonitor::removeAllProgressListener);
+        assertThrows(IllegalStateException.class, () -> nonCancelableMonitor.addProgressListener(null));
+        assertThrows(IllegalStateException.class, () -> nonCancelableMonitor.removeProgressListener(null));
+        assertDoesNotThrow(() -> nonCancelableMonitor.setProgress(0.5));
+        assertDoesNotThrow(() -> nonCancelableMonitor.setProgress(0.5, "some message"));
+        assertThat(nonCancelableMonitor.getMessage(), is("some message"));
+        assertThat(nonCancelableMonitor.getProgress(), is(0.5));
+        assertDoesNotThrow(() -> nonCancelableMonitor.setMessage("some other message"));
+
+    }
+
     /** A lot of incremental numeric progress updates + many message events
      * Previously, this took significantly longer due to expensive string construction. */
-    private void internalTestManyMessageEvents(final NodeProgressMonitor toMonitor,
+    private static void internalTestManyMessageEvents(final NodeProgressMonitor toMonitor,
         final NodeProgressMonitor toControl) throws Exception {
         final int parts = 1000000;
         final MutableLong stringComposeCounter = new MutableLong();
@@ -160,7 +191,7 @@ public class DefaultNodeProgressMonitorTest {
             // the lazy string creation should only be called 4 times a second at most,
             // it must be at least two - one for the reference string creation and one during an event
             // 2020-01-08, BW: increment from max=5 to max=8 -- encountered a longer running test case on Win Server
-            Assert.assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThanOrEqualTo(8L))));
+            assertThat(stringComposeCounter.getValue(), is(allOf(greaterThanOrEqualTo(2L), lessThanOrEqualTo(8L))));
         } finally {
             toMonitor.removeProgressListener(l);
         }

@@ -412,13 +412,81 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         return messages.isEmpty() ? null : String.join(separator, messages);
     }
 
+    abstract static class DelegatingNodeProgressMonitor implements NodeProgressMonitor {
+
+        final NodeProgressMonitor m_delegate;
+
+        DelegatingNodeProgressMonitor(final NodeProgressMonitor delegate) {
+            m_delegate = CheckUtils.checkArgumentNotNull(delegate);
+        }
+
+        @Override
+        public void checkCanceled() throws CanceledExecutionException {
+            m_delegate.checkCanceled();
+        }
+
+        @Override
+        public void setProgress(final double progress) {
+            m_delegate.setProgress(progress);
+        }
+
+        @Override
+        public Double getProgress() {
+            return m_delegate.getProgress();
+        }
+
+        @Override
+        public void setProgress(final double progress, final String message) {
+            m_delegate.setProgress(progress, message);
+        }
+
+        @Override
+        public void setMessage(final String message) {
+            m_delegate.setMessage(message);
+        }
+
+        @Override
+        public void setProgress(final String message) {
+            m_delegate.setProgress(message);
+        }
+
+        @Override
+        public String getMessage() {
+            return m_delegate.getMessage();
+        }
+
+        @Override
+        public void setExecuteCanceled() {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        @Override
+        public void reset() {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        @Override
+        public void addProgressListener(final NodeProgressListener l) {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        @Override
+        public void removeProgressListener(final NodeProgressListener l) {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+        @Override
+        public void removeAllProgressListener() {
+            throw new IllegalStateException("This method must not be called.");
+        }
+
+    }
+
     /**
      * Progress monitor that is used by "sub-progresses", it doesn't have the range [0, 1] but only [0, b] where b is
      * user-defined.
      */
-    static class SubNodeProgressMonitor implements NodeProgressMonitor {
-
-        private final NodeProgressMonitor m_parent;
+    static class SubNodeProgressMonitor extends DelegatingNodeProgressMonitor {
 
         private final double m_maxProg;
 
@@ -435,26 +503,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * @param max The maximum progress (w.r.t parent) that this monitor should report.
          */
         SubNodeProgressMonitor(final NodeProgressMonitor parent, final double max) {
+            super(parent);
             m_maxProg = max;
-            m_parent = parent;
             m_innerMessageSupplier = NULL_SUPPLIER;
             m_innerMessageAppender = NOOP_APPENDER;
-        }
-
-        /** Must not be called. Throws IllegalStateException. {@inheritDoc} */
-        @Override
-        public void addProgressListener(final NodeProgressListener l) {
-            throw new IllegalStateException("This method must not be called.");
-        }
-
-        /**
-         * Delegates to parent.
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public void checkCanceled() throws CanceledExecutionException {
-            m_parent.checkCanceled();
         }
 
         @Override
@@ -477,41 +529,6 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         @Override
         public Double getProgress() {
             return m_lastProg;
-        }
-
-        @Override
-        public void reset() {
-            throw new IllegalStateException("This method must not be called.");
-        }
-
-        /**
-         * Must not be called. Throws IllegalStateException.
-         *
-         * @see NodeProgressMonitor#removeAllProgressListener()
-         */
-        @Override
-        public void removeAllProgressListener() {
-            throw new IllegalStateException("This method must not be called.");
-        }
-
-        /**
-         * Must not be called. Throws IllegalStateException.
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public void removeProgressListener(final NodeProgressListener l) {
-            throw new IllegalStateException("This method must not be called.");
-        }
-
-        /**
-         * Must not be called. Throws IllegalStateException.
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public void setExecuteCanceled() {
-            throw new IllegalStateException("This method must not be called.");
         }
 
         /**
@@ -542,7 +559,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         @Override
         public void setProgress(final double progress, final Supplier<String> messageSupplier) {
-            synchronized (m_parent) {
+            synchronized (m_delegate) {
                 this.setProgress(progress);
                 this.setMessage(messageSupplier);
             }
@@ -555,7 +572,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * @param append whether to append
          */
         void setProgress(final Supplier<String> messageSupplier, final boolean append) {
-            synchronized (m_parent) {
+            synchronized (m_delegate) {
                 m_innerMessageSupplier = CheckUtils.checkArgumentNotNull(messageSupplier);
                 if (append) {
                     // if the current level is being appended, all deeper levels have to be discarded
@@ -566,12 +583,12 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 final Consumer<List<String>> parentMessageAppender =
                         messages -> m_innerMessageAppender.accept(appendedIfNonEmpty(messages, m_innerMessageSupplier));
 
-                if (m_parent instanceof DefaultNodeProgressMonitor defaultNodeMon) {
+                if (m_delegate instanceof DefaultNodeProgressMonitor defaultNodeMon) {
                     defaultNodeMon.appendMessage(parentMessageAppender);
-                } else if (m_parent instanceof SubNodeProgressMonitor subNodeMon) {
+                } else if (m_delegate instanceof SubNodeProgressMonitor subNodeMon) {
                     subNodeMon.appendMessage(parentMessageAppender);
                 } else {
-                    m_parent.setMessage(
+                    m_delegate.setMessage(
                         () -> createAppendedMessage(m_innerMessageSupplier, m_innerMessageAppender, " - "));
                 }
             }
@@ -591,8 +608,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             // synchronization is imported here: multiple sub progresses may
             // report to the parent. "getOldProgress" and "setNewProgress" must
             // be an atomic operation
-            synchronized (m_parent) {
-                Double progressOfParent = m_parent.getProgress();
+            synchronized (m_delegate) {
+                Double progressOfParent = m_delegate.getProgress();
                 double boundedProgress = Math.max(0.0, Math.min(progress, 1.0));
                 // diff to the last progress update
                 double diff = Math.max(0.0, boundedProgress - m_lastProg);
@@ -617,8 +634,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 // parent's progress, this object's update was too little to get
                 // propagated, that means we stick with the previous propagated
                 // progress
-                m_parent.setProgress(subProgress);
-                Double newProgressOfParent = m_parent.getProgress();
+                m_delegate.setProgress(subProgress);
+                Double newProgressOfParent = m_delegate.getProgress();
                 if (newProgressOfParent != null) {
                     if (progressOfParent == null
                         || progressOfParent.doubleValue() != newProgressOfParent.doubleValue()) {
@@ -675,6 +692,21 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         void setProgress(final Supplier<String> messageSupplier, final boolean append) {
             // do nothing here
         }
+    }
+
+    /** Progress monitor that does not allow canceling, at least not via cancelation flag (thread interruption
+     * is not handled). */
+    static final class NonCancelableNodeProgressMonitor extends DelegatingNodeProgressMonitor {
+
+        NonCancelableNodeProgressMonitor(final NodeProgressMonitor parent) {
+            super(parent);
+        }
+
+        @Override
+        public void checkCanceled() {
+            // non-cancelable
+        }
+
     }
 
 }

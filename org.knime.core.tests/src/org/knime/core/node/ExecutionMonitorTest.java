@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  *  Copyright by KNIME AG, Zurich, Switzerland
  *  Website: http://www.knime.com; Email: contact@knime.com
@@ -41,22 +41,29 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 26, 2006 (wiswedel): created
  */
 package org.knime.core.node;
 
-import junit.framework.TestCase;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-/** Test class to the execution monitor that, so far, only tests the 
+import org.junit.jupiter.api.Test;
+
+/** Test class to the execution monitor that, so far, only tests the
  * functionality of sub progresses.
  */
-public class ExecutionMonitorTest extends TestCase {
+public class ExecutionMonitorTest {
 
     /**
      * Test method for 'ExecutionMonitor.createSubProgress(double)'.
      */
+    @SuppressWarnings("static-method")
+    @Test
     public final void testCreateSubProgress1() {
         DefaultNodeProgressMonitor dad = new DefaultNodeProgressMonitor();
         ExecutionMonitor dadEx = new ExecutionMonitor(dad);
@@ -75,12 +82,15 @@ public class ExecutionMonitorTest extends TestCase {
      * With different threads accessing the same progress.
      * Test method for 'ExecutionMonitor.createSubProgress(double)'.
      */
+    @SuppressWarnings("static-method")
+    @Test
     public final void testCreateSubProgress2() {
         DefaultNodeProgressMonitor dad = new DefaultNodeProgressMonitor();
         final ExecutionMonitor dadEx = new ExecutionMonitor(dad);
         Thread[] ts = new Thread[9];
         for (int i = 0; i < ts.length; i++) {
             ts[i] = new Thread(new Runnable() {
+                @Override
                 public void run() {
                     ExecutionMonitor sub = dadEx.createSubProgress(0.1);
                     double p = 0.0;
@@ -109,7 +119,25 @@ public class ExecutionMonitorTest extends TestCase {
         }
         // progress should be more or less 0.9
         double n = dad.getProgress();
-        assertTrue("progress=" + n, n < 0.91 && n > 0.89);
+        assertTrue(n < 0.91 && n > 0.89, "progress=" + n);
     }
-    
+
+    /**
+     * Ensures that createNonCancelableSubProgress returns a monitor that does not throw CanceledExecutionException on
+     * checkCanceled.
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    public final void testNonCancelableSubProgressDoesNotCancel() {
+        DefaultNodeProgressMonitor parentMonitor = new DefaultNodeProgressMonitor();
+        ExecutionMonitor monitor = new ExecutionMonitor(parentMonitor);
+        ExecutionMonitor nonCancelableMonitor = monitor.createNonCancelableSubProgress();
+
+        parentMonitor.setExecuteCanceled();
+
+        assertThrows(CanceledExecutionException.class, monitor::checkCanceled);
+        assertDoesNotThrow(nonCancelableMonitor::checkCanceled);
+
+    }
+
 }
