@@ -58,7 +58,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -105,8 +104,7 @@ public final class WorkbenchMountTable {
      * Static filter for mount point hosts, specifically for {@link WorkbenchMountPointSettings}.
      * This field is only set once, during {@link #init(WorkbenchMountPointHostFilter)}.
      */
-    private static final AtomicReference<WorkbenchMountPointHostFilter> FILTER =
-        new AtomicReference<>(WorkbenchMountPointHostFilter.ALLOW_ALL);
+    private static WorkbenchMountPointHostFilter hostFilter = WorkbenchMountPointHostFilter.ALLOW_ALL;
 
     /*---------------------------------------------------------------*/
 
@@ -188,7 +186,8 @@ public final class WorkbenchMountTable {
      * @return created mount point
      * @throws WorkbenchMountException if the mount point couldn't be created
      */
-    public static WorkbenchMountPoint mount(final WorkbenchMountPointSettings mountSettings) throws WorkbenchMountException {
+    public static WorkbenchMountPoint mount(final WorkbenchMountPointSettings mountSettings)
+        throws WorkbenchMountException {
         final String factoryID = mountSettings.factoryID();
         WorkbenchMountPointType type =
             WorkbenchActivator.getInstance().getMountPointType(factoryID)
@@ -336,7 +335,7 @@ public final class WorkbenchMountTable {
      * @see WorkbenchMountPointHostFilter
      */
     public static boolean isAllowed(final WorkbenchMountPointSettings settings) {
-        return FILTER.get().areSettingsAllowed(settings);
+        return hostFilter.areSettingsAllowed(settings);
     }
 
     /**
@@ -352,7 +351,7 @@ public final class WorkbenchMountTable {
                 unmount(id);
             }
             // initialize the static state
-            FILTER.set(filter);
+            hostFilter = filter;
             mountTempSpace();
             for (WorkbenchMountPointSettings settings : MountPointsPreferencesUtil.
                     loadSortedMountSettingsFromPreferences(true)) {
