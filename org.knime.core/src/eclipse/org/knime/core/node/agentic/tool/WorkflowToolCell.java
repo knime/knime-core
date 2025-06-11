@@ -412,7 +412,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         boolean executionFailed = false;
         try {
             wsExecutor = new WorkflowSegmentExecutor(ws, name, hostNode, isDebugMode, true, warning -> {
-            }, Restriction.RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+            }, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
             if (!StringUtils.isBlank(parameters)) {
                 wsExecutor.configureWorkflow(parseParameters(parameters));
             }

@@ -282,7 +282,7 @@ class WorkflowToolCellTest {
         Runnable onExecute = () -> {
             var vContext = VirtualNodeContext.getContext().orElse(null);
             assertThat(vContext).isNotNull();
-            assertThat(vContext.hasRestriction(Restriction.RELATIVE_RESOURCE_ACCESS)).isTrue();
+            assertThat(vContext.hasRestriction(Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS)).isTrue();
             assertThat(vContext.hasRestriction(Restriction.WORKFLOW_DATA_AREA_ACCESS)).isTrue();
             var dataAreaPath = vContext.getVirtualDataAreaPath().orElse(null);
             assertThat(dataAreaPath).isNotNull();
@@ -297,7 +297,7 @@ class WorkflowToolCellTest {
             var message = assertThrows(IOException.class, () -> new URL("knime://knime.workflow/test.txt").openStream())
                 .getMessage();
             assertThat(message).isEqualTo(
-                "Node is not allowed to access resources relative to 'knime.workflow' because it's executed within in a restricted (virtual) scope.");
+                "Node is not allowed to access workflow-relative resources because it's executed within in a restricted (virtual) scope.");
         };
         addAndConnectNodes(m_toolWfm, onExecute, false);
         var dataAreaPath = Files.createDirectory(tempDataAreaPath.resolve("testDataArea"));

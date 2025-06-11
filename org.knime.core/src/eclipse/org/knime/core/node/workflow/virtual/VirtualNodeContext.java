@@ -73,9 +73,9 @@ public interface VirtualNodeContext {
      */
     enum Restriction {
             /**
-             * Access to mountpoint-, space-, workflow-, node-relative resources are is not allowed.
+             * Access to workflow-relative resources are is not allowed.
              */
-            RELATIVE_RESOURCE_ACCESS,
+            WORKFLOW_RELATIVE_RESOURCE_ACCESS,
             /**
              * Access to workflow data area is not allowed. But a virtual data area maybe provided via
              * #getVirtualDataAreaPath().
