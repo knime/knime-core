@@ -63,6 +63,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
@@ -77,6 +78,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.container.LongUTFDataInputStream;
 import org.knime.core.data.container.LongUTFDataOutputStream;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.agentic.tool.ToolWorkflowMetadata;
 import org.knime.core.node.agentic.tool.WorkflowToolCell;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.ToolIncompatibleWorkflowException;
@@ -84,16 +86,19 @@ import org.knime.core.node.agentic.tool.WorkflowToolCell.WorkflowToolCellSeriali
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.core.ExecutionContextExtension;
+import org.knime.testing.data.filestore.LargeFileStoreValue;
 import org.knime.testing.util.WorkflowManagerUtil;
 
 import jakarta.json.JsonString;
@@ -156,7 +161,10 @@ class WorkflowToolCellTest {
         WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 0, 0); // un-connected input node
         WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 0, 0); // un-connected input node
         WorkflowManagerUtil.createAndAddNode(m_toolWfm, new ConfigurationTestNodeFactory(), 0, 0); // configuration node
-        var messageOutput = addAndConnectNodes(m_toolWfm, true);
+        var messageOutput = addAndConnectNodes(m_toolWfm, inData -> {
+            var projectWfm = NodeContext.getContext().getWorkflowManager();
+            assertThat(projectWfm.getName()).isEqualTo("JUnit-ExecutionContextExtension");
+        }, true);
         m_toolWfm.setContainerMetadata(WorkflowMetadata.fluentBuilder().withContentType(ContentType.PLAIN)
             .withLastModifiedNow().withDescription("tool description").build());
 
@@ -173,15 +181,17 @@ class WorkflowToolCellTest {
         assertThat(toolInput.name()).isEqualTo("test-input-parameter");
         assertThat(toolInput.description()).isEqualTo("workflow input description");
         assertThat(toolInput.type()).isEqualTo("Table");
-        assertThatJson(toolInput.spec()).isEqualTo("""
-                {"columns":[{"type":"String","name":"col1"},{"type":"String","name":"col2"}],"name":"default"}""");
+        assertThatJson(toolInput.spec()).isEqualTo(
+            """
+                    {"columns":[{"type":"String","name":"col1"},{"type":"String","name":"col2"},{"type":"LargeFileStoreCell","name":"large-file-store"}],"name":"default"}""");
         assertThat(cell.getOutputs()).hasSize(1);
         var toolOutput = cell.getOutputs()[0];
         assertThat(toolOutput.name()).isEqualTo("test-output-parameter");
         assertThat(toolOutput.description()).isEqualTo("workflow output description");
         assertThat(toolOutput.type()).isEqualTo("Table");
-        assertThatJson(toolOutput.spec()).isEqualTo("""
-                {"columns":[{"type":"String","name":"col1"},{"type":"String","name":"col2"}],"name":"default"}""");
+        assertThatJson(toolOutput.spec()).isEqualTo(
+            """
+                    {"columns":[{"type":"String","name":"col1"},{"type":"String","name":"col2"},{"type":"LargeFileStoreCell","name":"large-file-store"}],"name":"default"}""");
         assertThat(cell.getWorkflow()).isNotEmpty();
         assertThat(cell.getMessageOutputPortIndex()).isEqualTo(1);
 
@@ -223,7 +233,7 @@ class WorkflowToolCellTest {
 
     @Test
     void testExecuteToolWorkflowWithFailure() throws ToolIncompatibleWorkflowException {
-        addAndConnectNodes(m_toolWfm, () -> {
+        addAndConnectNodes(m_toolWfm, inData -> {
             throw new RuntimeException("Purposely fail on execute");
         }, true);
 
@@ -277,9 +287,10 @@ class WorkflowToolCellTest {
      * @throws IOException
      */
     @Test
-    void testExecuteToolWorkflowWithDataArea(@TempDir final Path tempDataAreaPath) throws ToolIncompatibleWorkflowException, IOException {
+    void testExecuteToolWorkflowWithDataArea(@TempDir final Path tempDataAreaPath)
+        throws ToolIncompatibleWorkflowException, IOException {
         var virtualDataAreaPath = new AtomicReference<Path>();
-        Runnable onExecute = () -> {
+        Consumer<BufferedDataTable[]> onExecute = inData -> {
             var vContext = VirtualNodeContext.getContext().orElse(null);
             assertThat(vContext).isNotNull();
             assertThat(vContext.hasRestriction(Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS)).isTrue();
@@ -327,12 +338,58 @@ class WorkflowToolCellTest {
         assertThat(Files.notExists(virtualDataAreaPath.get())).as("virtual data area not deleted").isTrue();
     }
 
+    /**
+     * Tests {@link WorkflowToolCell#execute(String, PortObject[], org.knime.core.node.ExecutionContext, String...)} in
+     * the {@link ExecutionMode#DETACHED}.
+     *
+     * @throws ToolIncompatibleWorkflowException
+     */
+    @Test
+    void testExecuteToolWorkflowWithDetachedMode() throws ToolIncompatibleWorkflowException {
+        var detachedWorkflowSegmentPath = new AtomicReference<Path>();
+        Consumer<BufferedDataTable[]> onExecute = inData -> {
+            var projectWfm = NodeContext.getContext().getWorkflowManager();
+            assertThat(projectWfm.getName()).startsWith("workflow_segment_executor");
+            testFileStores(inData[0]);
+            detachedWorkflowSegmentPath.set(projectWfm.getContextV2().getExecutorInfo().getLocalWorkflowPath());
+        };
+        addAndConnectNodes(m_toolWfm, onExecute, false);
+
+        final var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
+
+        var exec = executionContextExtension.getExecutionContext();
+        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec, "execution-mode:DETACHED");
+        assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
+        testFileStores((BufferedDataTable)res.outputs()[0]);
+        assertThat(Files.exists(detachedWorkflowSegmentPath.get())).isFalse();
+    }
+
+    private static void testFileStores(final BufferedDataTable inData) {
+        try (var rowCursor = inData.cursor()) {
+            var fileStoreColIndex = inData.getSpec().findColumnIndex("large-file-store");
+            while (rowCursor.canForward()) {
+                var row = rowCursor.forward();
+                LargeFileStoreValue v = row.getValue(fileStoreColIndex);
+                var lf = v.getLargeFile();
+                assertThat(lf).isNotNull();
+
+                long seed;
+                try {
+                    seed = lf.read();
+                } catch (IOException e) {
+                    throw new AssertionError("Failed to read from large file store", e);
+                }
+                assertThat(seed).isEqualTo(v.getSeed());
+            }
+        }
+    }
+
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {
         return addAndConnectNodes(wfm, null, addMessageOutput);
     }
 
-    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final Runnable onExecute,
-        final boolean addMessageOutput) {
+    private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm,
+        final Consumer<BufferedDataTable[]> onExecute, final boolean addMessageOutput) {
         var input = WorkflowManagerUtil.createAndAddNode(wfm, new WorkflowInputTestNodeFactory(), 1, 0);
         String nodeKey = null;
         if (onExecute != null) {

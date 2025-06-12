@@ -60,6 +60,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -98,6 +99,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentExecutionResult;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.JsonUtil;
@@ -408,10 +410,13 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         var name = ws.loadWorkflow().getName();
         var hostNode = NodeContext.getContext().getNodeContainer();
         WorkflowSegmentExecutor wsExecutor = null;
-        var isDebugMode = contains("debug", executionHints);
+        var execMode = ExecutionMode.valueOf(
+            getStringThatStartsWith("execution-mode", executionHints).map(s -> s.split(":")[1]).orElse("DEFAULT"));
+        var isDebugMode = execMode == ExecutionMode.DEBUG;
         boolean executionFailed = false;
         try {
-            wsExecutor = new WorkflowSegmentExecutor(ws, name, hostNode, isDebugMode, true, warning -> {
+            var metanodeName = (isDebugMode ? "Debug: " : "") + name;
+            wsExecutor = new WorkflowSegmentExecutor(ws, metanodeName, hostNode, execMode, true, warning -> {
             }, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
             if (!StringUtils.isBlank(parameters)) {
                 wsExecutor.configureWorkflow(parseParameters(parameters));
@@ -438,8 +443,8 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         }
     }
 
-    private static boolean contains(final String value, final String... strings) {
-        return Arrays.stream(strings).anyMatch(h -> h.equals(value));
+    private static Optional<String> getStringThatStartsWith(final String value, final String... strings) {
+        return Arrays.stream(strings).filter(h -> h.startsWith(value)).findFirst();
     }
 
     private PortObject[] removeMessageOutput(final PortObject[] outputs) {
