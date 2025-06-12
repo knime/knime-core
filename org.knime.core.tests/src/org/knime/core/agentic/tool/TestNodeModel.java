@@ -52,11 +52,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -67,13 +70,15 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.port.PortType;
+import org.knime.testing.data.filestore.LargeFile;
+import org.knime.testing.data.filestore.LargeFileStoreCell;
 
 /**
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
 class TestNodeModel extends NodeModel {
 
-    static final Map<String, Runnable> onExecuteMap = new HashMap<>();
+    static final Map<String, Consumer<BufferedDataTable[]>> onExecuteMap = new HashMap<>();
 
     private String m_nodeKey = null;
 
@@ -104,10 +109,10 @@ class TestNodeModel extends NodeModel {
         throws Exception {
         var onExecute = onExecuteMap.get(m_nodeKey);
         if (onExecute != null) {
-            onExecute.run();
+            onExecute.accept(inData);
         }
 
-        if (getNrOutPorts() == 1) {
+        if (getNrInPorts() != getNrOutPorts() || m_nodeKey != null) {
             return new BufferedDataTable[]{createTable(exec)};
         }
         return inData;
@@ -115,15 +120,30 @@ class TestNodeModel extends NodeModel {
 
     static BufferedDataTable createTable(final ExecutionContext exec) {
         var dc = exec.createDataContainer(createSpec());
-        dc.addRowToTable(new DefaultRow("1", "val1", "val2"));
-        dc.addRowToTable(new DefaultRow("2", "val3", "val4"));
+        dc.addRowToTable(new DefaultRow(new RowKey("1"), new StringCell("val1"), new StringCell("val2"),
+            createLargeFileStoreCell(exec, "1", 42)));
+        dc.addRowToTable(new DefaultRow(new RowKey("2"), new StringCell("val3"), new StringCell("val4"),
+            createLargeFileStoreCell(exec, "2", 24)));
         dc.close();
         return dc.getTable();
     }
 
+    private static LargeFileStoreCell createLargeFileStoreCell(final ExecutionContext exec, final String relativePath,
+        final long seed) {
+        LargeFile lf;
+        try {
+            final FileStore fs = exec.createFileStore(relativePath);
+            lf = LargeFile.create(fs, seed, false);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+        return new LargeFileStoreCell(lf, seed);
+    }
+
     private static DataTableSpec createSpec() {
         return new DataTableSpec(new DataColumnSpecCreator("col1", StringCell.TYPE).createSpec(),
-            new DataColumnSpecCreator("col2", StringCell.TYPE).createSpec());
+            new DataColumnSpecCreator("col2", StringCell.TYPE).createSpec(),
+            new DataColumnSpecCreator("large-file-store", LargeFileStoreCell.TYPE).createSpec());
     }
 
     public void validateInputData(final ExternalNodeData inputData) throws InvalidSettingsException {

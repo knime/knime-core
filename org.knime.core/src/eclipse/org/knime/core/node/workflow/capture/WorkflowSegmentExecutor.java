@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.capture;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -91,10 +93,14 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.VariableTypeRegistry;
 import org.knime.core.node.workflow.WorkflowCopyContent;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeFactory;
@@ -102,6 +108,7 @@ import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeModel
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 
@@ -119,7 +126,12 @@ import jakarta.json.JsonValue;
  */
 public final class WorkflowSegmentExecutor {
 
+
     private WorkflowManager m_wfm;
+
+    private WorkflowManager m_hostWfm;
+
+    private final boolean m_shallDisposeHostWfm;
 
     private final NativeNodeContainer m_hostNode;
 
@@ -134,12 +146,32 @@ public final class WorkflowSegmentExecutor {
     private Path m_dataAreaPath;
 
     /**
+     * Controls how the workflow segment is executed.
+     */
+    public enum ExecutionMode {
+            /**
+             * Executed as a visible metanode next to the host node. Usually used for debugging purposes.
+             */
+            DEBUG,
+            /**
+             * Executed as invisible metanode next to the host node.
+             */
+            DEFAULT,
+            /**
+             * Executed as a metanode in a separate, temporary, workflow project. This execution mode doesn't have any
+             * impact on the execution state of the parent workflow (e.g. component workflow) of the host node.
+             */
+            DETACHED;
+
+    }
+
+    /**
      * @see #WorkflowSegmentExecutor(WorkflowSegment, String, NodeContainer, boolean, boolean, Consumer)
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
         final boolean debug, final Consumer<String> warningConsumer) throws KNIMEException {
         // executeAll option was newly introduced, using old behavior here
-        this(ws, workflowName, hostNode, debug, false, warningConsumer);
+        this(ws, workflowName, hostNode, debug ? ExecutionMode.DEBUG : ExecutionMode.DEFAULT, false, warningConsumer);
     }
 
     /**
@@ -148,8 +180,7 @@ public final class WorkflowSegmentExecutor {
      *            <code>true</code>)
      * @param hostNode the node which is responsible for the execution of the workflow segment (which provides the input
      *            and receives the output data, supplies the file store, etc.)
-     * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
-     *            debugging purposes), if <code>false</code> it's hidden
+     * @param mode the workflow segment {@link ExecutionMode}
      * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior), previously
      *            and if <code>false</code> only the output nodes would be executed
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
@@ -157,8 +188,9 @@ public final class WorkflowSegmentExecutor {
      * @since 5.5
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
-        final boolean debug, final boolean executeAll, final Consumer<String> warningConsumer) throws KNIMEException {
-        this(ws, workflowName, hostNode, debug, executeAll, warningConsumer, new Restriction[0]);
+        final ExecutionMode mode, final boolean executeAll, final Consumer<String> warningConsumer)
+        throws KNIMEException {
+        this(ws, workflowName, hostNode, mode, executeAll, warningConsumer, new Restriction[0]);
     }
 
     /**
@@ -167,8 +199,7 @@ public final class WorkflowSegmentExecutor {
      *            <code>true</code>)
      * @param hostNode the node which is responsible for the execution of the workflow segment (which provides the input
      *            and receives the output data, supplies the file store, etc.)
-     * @param debug if <code>true</code> the metanode the workflow segment is executed in, will be visible (for
-     *            debugging purposes), if <code>false</code> it's hidden
+     * @param mode the workflow segment {@link ExecutionMode}
      * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior), previously
      *            and if <code>false</code> only the output nodes would be executed
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
@@ -177,15 +208,30 @@ public final class WorkflowSegmentExecutor {
      * @since 5.5
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
-        final boolean debug, final boolean executeAll, final Consumer<String> warningConsumer,
+        final ExecutionMode mode, final boolean executeAll, final Consumer<String> warningConsumer,
         final Restriction... restrictions) throws KNIMEException {
         m_hostNode = (NativeNodeContainer)hostNode;
-        m_wfm = hostNode.getParent().createAndAddSubWorkflow(new PortType[0], new PortType[0],
-            (debug ? "Debug: " : "") + workflowName);
+        if (mode == ExecutionMode.DETACHED) {
+            m_hostWfm = createTemporaryWorkflowProject(m_hostNode.getParent().getWorkflowDataRepository());
+            m_shallDisposeHostWfm = true;
+        } else {
+            m_hostWfm = hostNode.getParent();
+            m_shallDisposeHostWfm = false;
+        }
+
+        try (var unused = m_hostWfm.lock()) {
+            if (mode != ExecutionMode.DETACHED && !m_hostWfm.canModifyStructure()) {
+                throw new KNIMEException(
+                    "Cannot execute workflow segment in %s mode because it's part of an already executed component."
+                        .formatted(mode.name().toLowerCase(Locale.ENGLISH)));
+            }
+            m_wfm = m_hostWfm.createAndAddSubWorkflow(new PortType[0], new PortType[0], workflowName);
+        }
+
         m_flowVirtualScopeContext =
             new FlowVirtualScopeContext(hostNode.getID(), createDataAreaSupplier(ws), restrictions);
         m_wfm.setInitialScopeContext(m_flowVirtualScopeContext);
-        if (!debug) {
+        if (mode != ExecutionMode.DEBUG) {
             m_wfm.hideInUI();
         }
         m_executeAllNodes = executeAll;
@@ -203,8 +249,27 @@ public final class WorkflowSegmentExecutor {
         NodeID[] ids = segmentWorkflow.getNodeContainers().stream().map(NodeContainer::getID).toArray(NodeID[]::new);
         m_wfm.copyFromAndPasteHere(segmentWorkflow, WorkflowCopyContent.builder().setNodeIDs(ids).build());
         ws.disposeWorkflow();
-
         addVirtualIONodes(ws);
+    }
+
+
+    private static WorkflowManager createTemporaryWorkflowProject(final WorkflowDataRepository workflowDataRepository)
+        throws KNIMEException {
+        File dir;
+        try {
+            dir = FileUtil.createTempDir("workflow_segment_executor");
+            var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
+            if (workflowFile.createNewFile()) {
+                var creationHelper = new WorkflowCreationHelper(
+                    WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null));
+                creationHelper.setWorkflowDataRepository(workflowDataRepository);
+                return WorkflowManager.ROOT.createAndAddProject("workflow_segment_executor", creationHelper);
+            } else {
+                throw new KNIMEException("Creating empty workflow for workflow segment execution failed");
+            }
+        } catch (IOException ex) {
+            throw new KNIMEException("Creating empty workflow for workflow segment execution failed", ex);
+        }
     }
 
     private Supplier<Path> createDataAreaSupplier(final WorkflowSegment ws) {
@@ -549,6 +614,12 @@ public final class WorkflowSegmentExecutor {
         cancel();
         m_wfm.getParent().removeNode(m_wfm.getID());
         m_wfm = null;
+        if (m_shallDisposeHostWfm) {
+            var wfDir = m_hostWfm.getContextV2().getExecutorInfo().getLocalWorkflowPath().toFile();
+            WorkflowManager.ROOT.removeProject(m_hostWfm.getID());
+            FileUtils.deleteQuietly(wfDir);
+        }
+        m_hostWfm = null;
         if (m_dataAreaPath != null) {
             FileUtils.deleteQuietly(m_dataAreaPath.toFile());
         }
