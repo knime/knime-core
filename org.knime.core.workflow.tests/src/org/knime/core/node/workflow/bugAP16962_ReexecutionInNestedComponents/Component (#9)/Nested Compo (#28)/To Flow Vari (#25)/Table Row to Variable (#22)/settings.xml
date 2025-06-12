@@ -34,7 +34,7 @@
         </config>
         <config key="Variable_5">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="Table View (JavaScript)"/>
+            <entry key="name" type="xstring" value="Table View (JavaScript) (legacy)"/>
             <entry key="class" type="xstring" value="INTEGER"/>
             <entry key="value" type="xint" value="0"/>
         </config>
@@ -118,7 +118,7 @@
         </config>
         <config key="Variable_19">
             <entry key="type" type="xstring" value="variable"/>
-            <entry key="name" type="xstring" value="Table View (JavaScript)"/>
+            <entry key="name" type="xstring" value="Table View (JavaScript) (legacy)"/>
             <entry key="class" type="xstring" value="INTEGER"/>
             <entry key="value" type="xint" value="1"/>
         </config>

@@ -141,7 +141,7 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 
 		// widgets being re-executed
 		assertThat(flowVars.get("Refresh Button Widget").getIntValue(), greaterThan(1));
-		assertThat(flowVars.get("Table View (JavaScript)").getIntValue(), greaterThan(1));
+		assertThat(flowVars.get("Table View (JavaScript) (legacy)").getIntValue(), greaterThan(1));
 
 		WorkflowManager parent = page.getParent();
 		SubNodeContainer successorPage = (SubNodeContainer) parent.getNodeContainer(parent.getID().createChild(11));

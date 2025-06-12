@@ -149,7 +149,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 
 		// widgets being re-executed in the nested component
 		assertThat(flowVars.get("Refresh Button Widget").getIntValue(), greaterThan(1));
-		assertThat(flowVars.get("Table View (JavaScript)").getIntValue(), greaterThan(1));
+		assertThat(flowVars.get("Table View (JavaScript) (legacy)").getIntValue(), greaterThan(1));
 
 		// make sure the successor node of the (partially) re-executed component is reset
 		assertThat("successor node of partially re-executed component expected to be reset",
@@ -182,7 +182,7 @@ public class BugAP16962_ReexecutionInNestedComponents extends WorkflowTestCase {
 
 		// widgets being re-executed in the nested component
 		assertThat(flowVars.get("Refresh Button Widget").getIntValue(), greaterThan(1));
-		assertThat(flowVars.get("Table View (JavaScript)").getIntValue(), greaterThan(1));
+		assertThat(flowVars.get("Table View (JavaScript) (legacy)").getIntValue(), greaterThan(1));
 
 		// widgets being re-executed on page top-level
 		assertThat(flowVars.get("Double Widget").getIntValue(), greaterThan(1));

@@ -110,7 +110,7 @@
     <entry key="customDescription" type="xstring" isnull="true" value=""/>
     <entry key="state" type="xstring" value="IDLE"/>
     <entry key="factory" type="xstring" value="org.knime.js.base.node.viz.pagedTable.PagedTableViewNodeFactory"/>
-    <entry key="node-name" type="xstring" value="Table View"/>
+    <entry key="node-name" type="xstring" value="Table View (JavaScript) (legacy)"/>
     <entry key="node-bundle-name" type="xstring" value="KNIME JavaScript Base Views"/>
     <entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.js.views"/>
     <entry key="node-bundle-vendor" type="xstring" value="KNIME AG, Zurich, Switzerland"/>
@@ -120,7 +120,7 @@
     <entry key="node-feature-vendor" type="xstring" isnull="true" value=""/>
     <entry key="node-feature-version" type="xstring" value="0.0.0"/>
     <config key="factory_settings"/>
-    <entry key="name" type="xstring" value="Table View (JavaScript)"/>
+    <entry key="name" type="xstring" value="Table View (JavaScript) (legacy)"/>
     <entry key="hasContent" type="xboolean" value="false"/>
     <entry key="isInactive" type="xboolean" value="false"/>
     <config key="ports">
