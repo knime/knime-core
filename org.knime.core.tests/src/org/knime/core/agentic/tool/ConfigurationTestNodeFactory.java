@@ -46,16 +46,16 @@
  * History
  *   May 23, 2025 (hornm): created
  */
-package org.knim.core.agentic.tool;
+package org.knime.core.agentic.tool;
 
 /**
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WorkflowInputTestNodeFactory extends TestNodeFactory {
+public class ConfigurationTestNodeFactory extends TestNodeFactory {
 
     @Override
     public TestNodeModel createNodeModel() {
-        return new WorkflowInputTestNodeModel();
+        return new ConfigurationTestNodeModel();
     }
 
 }

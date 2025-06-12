@@ -46,7 +46,7 @@
  * History
  *   May 23, 2025 (hornm): created
  */
-package org.knim.core.agentic.tool;
+package org.knime.core.agentic.tool;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
