@@ -48,6 +48,7 @@
  */
 package org.knime.core.eclipseUtil;
 
+import java.lang.reflect.InaccessibleObjectException;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,11 +96,10 @@ public class URLConnectionCacheDisabler implements IEarlyStartup {
              * its internal cache (being a HashMap), and replaces it by our no-op HashMap.
              */
             hashMapField.set(cacheImplField.get(null), new NoOpHashMap<String, LinkedList<?>>()); // NOSONAR
-        } catch (ClassNotFoundException
-                | NoSuchFieldException
+        } catch (ReflectiveOperationException
                 | SecurityException
                 | IllegalArgumentException
-                | IllegalAccessException e) {
+                | InaccessibleObjectException e) {
             LOGGER.debug(String.format("Could not disable the authentication cache of the %s",
                 HttpURLConnection.class.getName()), e);
         }
