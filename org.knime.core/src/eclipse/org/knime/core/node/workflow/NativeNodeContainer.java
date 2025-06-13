@@ -66,6 +66,7 @@ import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopEndWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.LoopStartWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NestedLoopStartWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.data.util.memory.InstanceCounter;
@@ -930,6 +931,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
             getFlowScopeContextFromHierarchy(FlowVirtualScopeContext.class, getFlowObjectStack());
         NativeNodeContainer hostNode = virtualScope != null ? virtualScope.getHostNode().orElse(null) : null;
         if (hostNode != null) {
+            if (hostNode.getNodeContainerState().isExecuted()) {
+                // we don't want to permanently keep the file stores for an already executed node
+                // because those are guaranteed to be not needed anymore downstream
+                return NotInWorkflowWriteFileStoreHandler.create();
+            }
             IFileStoreHandler fsh = hostNode.getNode().getFileStoreHandler();
             if (fsh instanceof IWriteFileStoreHandler) {
                 return initWriteFileStoreHandlerReference((IWriteFileStoreHandler)fsh);
