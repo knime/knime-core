@@ -55,6 +55,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
@@ -142,6 +144,10 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
      *
      * This method needs to be called right before the nodes of this virtual scope are executed.
      *
+     * This node container does not need to be provided if the start node of this virtual scope is connected (upstream)
+     * to another loop start (as it is the case with the parallel chunk loop start node). In all other case it must be
+     * set.
+     *
      * @param hostNode the node the virtual scope is associated with; the node is, e.g., used for persistence of
      *            selected port objects and to provide a file store handler (its node model needs to be of type
      *            {@link AbstractPortObjectRepositoryNodeModel} in that case)
@@ -151,6 +157,42 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
     public void registerHostNode(final NativeNodeContainer hostNode, final ExecutionContext exec) {
         m_nc = hostNode;
         m_exec = exec;
+    }
+
+    /**
+     * @return whether a host node has been registered via
+     *         {@link #registerHostNode(NativeNodeContainer, ExecutionContext)} or not
+     *
+     * @since 5.5
+     */
+    public boolean hasHostNode() {
+        return m_nc != null;
+    }
+
+    /**
+     * @return the file store handler to be used within the virtual scope, or an empty optional if no host node has been
+     *         registered via {@link #registerHostNode(NativeNodeContainer, ExecutionContext)}
+     * @throws IllegalStateException if the host node is there but has been reset
+     *
+     * @since 5.5
+     */
+    public Optional<IFileStoreHandler> createFileStoreHandler() {
+        if (m_nc == null) {
+            return Optional.empty();
+        }
+        if (m_nc.getNodeContainerState().isExecuted()) {
+            // we don't want to permanently keep the file stores for an already executed node
+            // because those are guaranteed to be not needed anymore downstream
+            return Optional.of(NotInWorkflowWriteFileStoreHandler.create());
+        }
+
+        var fsh = m_nc.getNode().getFileStoreHandler();
+        if (fsh == null) {
+            // can happen if the node associated with the virtual scope is reset
+            throw new IllegalStateException(
+                "No file store handler given. Try to re-execute '" + m_nc.getNameWithID() + "'");
+        }
+        return Optional.of(fsh);
     }
 
     /**
@@ -182,23 +224,6 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
                 "Host node's node model is not a " + AbstractPortObjectRepositoryNodeModel.class.getSimpleName());
         }
 
-    }
-
-    /**
-     * Returns the node container that is (indirectly) responsible for the creation of this virtual scope. The file
-     * handlers of this node, e.g., will be used. Must be set before the scope can be executed.
-     *
-     * This node container does not need to be provided if the start node of this virtual scope is connected (upstream)
-     * to another loop start (as it is the case with the parallel chunk loop start node). In all other case it must be
-     * set.
-     *
-     * The node container is set via
-     * {@link #registerHostNode(NativeNodeContainer, ExecutionContext)}.
-     *
-     * @return the node associated with this virtual scope or an empty optional if there is no node associated.
-     */
-    public Optional<NativeNodeContainer> getHostNode() {
-        return Optional.ofNullable(m_nc);
     }
 
     /**
