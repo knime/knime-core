@@ -518,6 +518,12 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext"/>
+                <message_argument value="getHostNode()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext"/>
                 <message_argument value="registerHostNodeForPortObjectPersistence(NativeNodeContainer, ExecutionContext)"/>
             </message_arguments>
         </filter>

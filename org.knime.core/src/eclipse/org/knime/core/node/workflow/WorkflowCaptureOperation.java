@@ -381,7 +381,7 @@ public final class WorkflowCaptureOperation {
             // the 'static inputs' are part of a 'virtual scope', i.e. nodes will be deleted after execution
             // -> reference reader node can't reference a node port
             // -> port objects need to be put into the globally available port object repository
-            if (!virtualScopeContext.getHostNode().isPresent()) {
+            if (!virtualScopeContext.hasHostNode()) {
                 // fallback in case it's captured within the temporary metanode created by a node that is not
                 // properly registered with the virtual scope context
                 logDataNotAvailableOutsideOfWorkflowWarning(sourceNode, null);
