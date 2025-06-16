@@ -48,6 +48,7 @@
  */
 package org.knime.core.workbench.mountpoint.api;
 
+import java.net.URI;
 import java.util.Optional;
 
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.WorkbenchMountPointStateSettings;
@@ -98,8 +99,25 @@ public interface WorkbenchMountPointStateFactory<T extends WorkbenchMountPointSt
     String getDisplayName();
 
     /**
-     * @param workbenchMountPointState
-     * @return
+     * If {@link WorkbenchMountPointState#isRemote()} is {@code true}, the mount point must have a
+     * remote address (e.g. to a KNIME Server or KNIME Hub) associated with it. In this case,
+     * this method returns that address. Note that this can be a plain host name or an address
+     * in {@link URI} form. If the mount point is local, {@link Optional#empty()} is returned.
+     *
+     * @param settings state settings which may contain the remote address.
+     * @return remote address if not local, otherwise {@link Optional#empty()}
+     */
+    default Optional<String> getRemoteAddress(final WorkbenchMountPointStateSettings settings) {
+        return Optional.empty();
+    }
+
+    /**
+     * Extracts the settings from the parametrized {@link WorkbenchMountPointState}. Note that this
+     * may return {@link WorkbenchMountPointState#EMPTY_SETTINGS} if no useful or required settings
+     * exist within this {@link WorkbenchMountPointState}.
+     *
+     * @param workbenchMountPointState state
+     * @return settings, possibly empty
      */
     WorkbenchMountPointStateSettings getCurrentSettings(T workbenchMountPointState);
 

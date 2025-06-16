@@ -51,6 +51,7 @@ package org.knime.core.internal;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointHostFilter;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
+import org.knime.core.workbench.preferences.MountPointsPreferencesUtil;
 
 /**
  * Initializes the mountpoints after the profiles have been loaded.
@@ -62,6 +63,12 @@ public final class MountTableInitializerEarlyStartup implements IEarlyStartup {
 
     @Override
     public void run() {
+        // if the persisted preferences for mount points are empty, write defaults first
+        // this is necessary in order to have a set of defaults on which to filter on later
+        if (MountPointsPreferencesUtil.loadSortedMountSettingsFromPreferenceNode().isEmpty()) {
+            MountPointsPreferencesUtil.saveMountSettings(MountPointsPreferencesUtil.loadDefaultMountPoints());
+        }
+
         // mount point filter from AP customization, default to allow all if absent
         final var filter = CorePlugin.getInstance().getCustomizationService() //
             .map(x -> (WorkbenchMountPointHostFilter)x.getCustomization().mountpoint()) //
