@@ -254,6 +254,16 @@ public abstract class AbstractAdapterCellValueFactory
             m_dataRepository = dataRepository;
         }
 
+        /**
+         * Access to the primary value of the {@link AdapterCell}.
+         *
+         * @return primary value of the {@link AdapterCell}
+         * @since 5.5
+         */
+        protected ReadAccess getPrimaryAccess() {
+            return m_access.getAccess(0);
+        }
+
         @Override
         public final DataCell getDataCell() {
             var cell = getAdapterCell(m_access.getAccess(0));
