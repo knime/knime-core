@@ -47,6 +47,8 @@
  */
 package org.knime.core.workbench.mountpoint.api;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -59,6 +61,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -66,6 +69,7 @@ import org.apache.commons.lang3.function.FailableFunction;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.workbench.WorkbenchActivator;
 import org.knime.core.workbench.WorkbenchConstants;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.WorkbenchMountPointStateSettings;
 import org.knime.core.workbench.mountpoint.api.events.MountPointEvent;
 import org.knime.core.workbench.mountpoint.api.events.MountPointListener;
 import org.knime.core.workbench.preferences.MountPointsPreferencesUtil;
@@ -210,7 +214,7 @@ public final class WorkbenchMountTable {
             if (!isAllowed(settings)) {
                 throw new WorkbenchMountException(
                     String.format("The mount point with the mountID \"%s\" cannot be mounted, "
-                        + "its server address is disallowed via customization", mountID));
+                        + "its server address is disallowed via customization.", mountID));
             }
 
             // can't mount different providers with the same ID
@@ -232,8 +236,17 @@ public final class WorkbenchMountTable {
                 throw new WorkbenchMountException(
                     String.format("Cannot mount %s multiple times.", type.getTypeIdentifier()));
             }
+            if ((mp = type.createMountPoint(settings)) == null) {
+                return null;
+            }
 
-            mp = type.createMountPoint(settings);
+            // can't allow a remote mount point to not have a remote address
+            if (mp.getState().isRemote() && type.getRemoteAdress(settings.mountPointStateSettings()).isEmpty()) {
+                throw new WorkbenchMountException(
+                    String.format("The *remote* mount point with the mountID \"%s\" cannot be mounted "
+                        + "since its server address cannot be found.", mountID));
+            }
+
             MOUNTED.put(mountID, mp);
         }
         notifyMountPointAdded(new MountPointEvent(mp));
@@ -330,12 +343,52 @@ public final class WorkbenchMountTable {
      * Uses the {@link WorkbenchMountPointHostFilter} instance currently-set in the mount table,
      * to check whether individual {@link WorkbenchMountPointSettings} are allowed.
      *
-     * @param settings the {@link WorkbenchMountPointSettings} instance
+     * @param mountSettings the {@link WorkbenchMountPointSettings} instance
      * @return {@code true} if settings are allowed, {@code false} otherwise
      * @see WorkbenchMountPointHostFilter
      */
-    public static boolean isAllowed(final WorkbenchMountPointSettings settings) {
-        return hostFilter.areSettingsAllowed(settings);
+    public static boolean isAllowed(final WorkbenchMountPointSettings mountSettings) {
+        final WorkbenchMountPointType type = WorkbenchActivator.getInstance() //
+            .getMountPointType(mountSettings.factoryID()) //
+            .orElse(null);
+        try {
+            return isAllowed(type, mountSettings.mountPointStateSettings());
+        } catch (WorkbenchMountException e) {
+            LOGGER.atError().setCause(e).log(
+                "Unable to determine for mount type \"{}\" whether the server address of the "
+                    + "mount point \"{}\" is allowed, defaulting to false.",
+                mountSettings.factoryID(), mountSettings.mountID());
+            return false;
+        }
+    }
+
+    private static boolean isAllowed(final WorkbenchMountPointType type,
+        final WorkbenchMountPointStateSettings settings) throws WorkbenchMountException {
+        // do not allow MP types that cannot be found, we need the type to resolve
+        // to the individual remote address of the mount point
+        if (type == null) {
+            return false;
+        }
+
+        UnaryOperator<String> hostMapper = address -> {
+            try {
+                // Check if the address is in URI form...
+                final var uri = new URI(address.trim());
+                if (uri.getHost() != null) {
+                    return uri.getHost();
+                }
+            } catch (URISyntaxException ex) { // NOSONAR
+            }
+            // ...otherwise assume a pure host name here, and use as is.
+            return address;
+        };
+
+        // if settings contain a remote address, match against filter
+        return type.getRemoteAdress(settings) //
+            .filter(StringUtils::isNotBlank) //
+            .map(hostMapper::apply) //
+            .map(hostFilter::test) //
+            .orElse(true);
     }
 
     /**
@@ -351,7 +404,7 @@ public final class WorkbenchMountTable {
                 unmount(id);
             }
             // initialize the static state
-            hostFilter = filter;
+            hostFilter = Objects.requireNonNull(filter);
             mountTempSpace();
             for (WorkbenchMountPointSettings settings : MountPointsPreferencesUtil.
                     loadSortedMountSettingsFromPreferences(true)) {
