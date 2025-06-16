@@ -50,9 +50,6 @@ package org.knime.core.workbench.mountpoint.api;
 
 import java.util.function.Predicate;
 
-import org.apache.commons.lang3.StringUtils;
-import org.knime.core.workbench.preferences.MountPointsPrefsHostUtil;
-
 /**
  * A filter for {@link WorkbenchMountPointSettings}, currently based on the *host* string
  * of the server address of remote mount points. Implementations only have to provide
@@ -67,20 +64,5 @@ public interface WorkbenchMountPointHostFilter extends Predicate<String> {
      * Allows all mount point hosts.
      */
     WorkbenchMountPointHostFilter ALLOW_ALL = host -> true;
-
-    /**
-     * Determines if an instance of {@link WorkbenchMountPointSettings} are allowed to be
-     * mounted, based of the {@code serverAddress} property in its state settings.
-     *
-     * @param settings the {@link WorkbenchMountPointSettings} instance
-     * @return {@code true} if the mount point is allowed to be mounted
-     */
-    default boolean areSettingsAllowed(final WorkbenchMountPointSettings settings) {
-        final var host = MountPointsPrefsHostUtil.getHost(settings).orElse("");
-        if (StringUtils.isBlank(host)) {
-            return true;
-        }
-        return test(host);
-    }
 
 }

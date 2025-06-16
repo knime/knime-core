@@ -107,8 +107,10 @@ final class MountPointPreferencesTest {
         int numberOfSettings = initialSettings.size();
 
         List<String> initialMountIDs = initialSettings.stream().map(ms -> ms.mountID()).toList();
-
-        assertThat(initialMountIDs, Matchers.containsInAnyOrder("test-mountpoint1", "test-mountpoint2"));
+        // this matcher previously was `Matchers.containsInAnyOrder`, but we changed to actively
+        // initialize the preference node with defaults in AP-24496, thus the two test-mountpoints
+        // are now a subset of the initial mountIDs -- see `MountTableInitializerEarlyStartup`
+        assertThat(initialMountIDs, Matchers.hasItems("test-mountpoint1", "test-mountpoint2"));
 
         String mountID = "new-mountpoint";
         String defaultMountID = "test-mountpoint";
@@ -128,12 +130,11 @@ final class MountPointPreferencesTest {
         // required when running tests inside Eclipse with server space available
         modifiedSettings.removeIf(m -> CoreConstants.KNIME_HUB_MOUNT_ID.equals(m.mountID()));
 
-
         List<String> newMountIDs= modifiedSettings.stream().map(ms -> ms.mountID()).toList();
 
         assertThat(modifiedSettings.size(), Matchers.is(numberOfSettings + 1));
         assertThat(newMountIDs,
-            Matchers.containsInAnyOrder("test-mountpoint1", "test-mountpoint2", newMountSettings.mountID()));
+            Matchers.hasItems("test-mountpoint1", "test-mountpoint2", newMountSettings.mountID()));
     }
 
     /**
