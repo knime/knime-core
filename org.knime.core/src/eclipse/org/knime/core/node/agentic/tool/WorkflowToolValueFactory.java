@@ -49,11 +49,12 @@
 package org.knime.core.node.agentic.tool;
 
 import java.util.Map;
+import java.io.IOException;
 import java.util.stream.IntStream;
 
-import org.knime.core.data.v2.ReadValue;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.data.v2.WriteValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.v2.filestore.AbstractFileStoreValueFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.agentic.tool.ToolValue.ToolPort;
 import org.knime.core.node.port.PortObject;
@@ -65,14 +66,11 @@ import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
-import org.knime.core.table.access.VarBinaryAccess.VarBinaryReadAccess;
-import org.knime.core.table.access.VarBinaryAccess.VarBinaryWriteAccess;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
 import org.knime.core.table.schema.StringDataSpec;
 import org.knime.core.table.schema.StructDataSpec;
-import org.knime.core.table.schema.VarBinaryDataSpec;
 
 /**
  * De-/serialization of {@link WorkflowToolValue}s.
@@ -80,24 +78,26 @@ import org.knime.core.table.schema.VarBinaryDataSpec;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.5
  */
-public final class WorkflowToolValueFactory implements ValueFactory<StructReadAccess, StructWriteAccess> {
+public final class WorkflowToolValueFactory extends AbstractFileStoreValueFactory {
 
     @Override
-    public ReadValue createReadValue(final StructReadAccess access) {
-        return new DefaultWorkflowToolReadValue(access);
+    public WorkflowToolReadValue createReadValue(final StructReadAccess access) {
+        return new WorkflowToolReadValue(access);
     }
 
     @Override
-    public WriteValue<?> createWriteValue(final StructWriteAccess access) {
-        return new DefaultWorkflowToolWriteValue(access);
+    public WorkflowToolWriteValue createWriteValue(final StructWriteAccess access) {
+        return new WorkflowToolWriteValue(access);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public DataSpec getSpec() {
+    protected DataSpec getTableDataSpec() {
         return new StructDataSpec(StringDataSpec.INSTANCE, // name
             StringDataSpec.INSTANCE, // description
             StringDataSpec.INSTANCE, // parameter schema
-            VarBinaryDataSpec.INSTANCE, // binary representation
             new ListDataSpec(portDataSpec()), // input ports
             new ListDataSpec(portDataSpec()), // output ports
             IntDataSpec.INSTANCE // message output port index
@@ -113,11 +113,8 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         );
     }
 
-    interface WorkflowToolReadValue extends ReadValue, WorkflowToolValue {
-
-    }
-
-    private static final class DefaultWorkflowToolReadValue implements WorkflowToolReadValue {
+    private final class WorkflowToolReadValue extends FileStoreReadValue<StructReadAccess>
+        implements WorkflowToolValue {
 
         private final StringReadAccess m_name;
 
@@ -125,30 +122,37 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         private final StringReadAccess m_parameterSchema;
 
-        private final VarBinaryReadAccess m_binaryRepresentation;
-
         private final ListReadAccess m_inputPorts;
 
         private final ListReadAccess m_outputPorts;
 
         private final IntReadAccess m_messageOutputPortIndex;
 
-        private DefaultWorkflowToolReadValue(final StructReadAccess access) {
-            m_name = access.getAccess(0);
-            m_description = access.getAccess(1);
-            m_parameterSchema = access.getAccess(2);
-            m_binaryRepresentation = access.getAccess(3);
-            m_inputPorts = access.getAccess(4);
-            m_outputPorts = access.getAccess(5);
-            m_messageOutputPortIndex = access.getAccess(6);
-
+        private WorkflowToolReadValue(final StructReadAccess access) {
+            super(access);
+            var tableDataAccess = getTableDataAccess();
+            m_name = tableDataAccess.getAccess(0);
+            m_description = tableDataAccess.getAccess(1);
+            m_parameterSchema = tableDataAccess.getAccess(2);
+            m_inputPorts = tableDataAccess.getAccess(3);
+            m_outputPorts = tableDataAccess.getAccess(4);
+            m_messageOutputPortIndex = tableDataAccess.getAccess(5);
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        public WorkflowToolCell getDataCell() {
-            return new WorkflowToolCell(m_name.getStringValue(), m_description.getStringValue(),
-                m_parameterSchema.getStringValue(), readToolPorts(m_inputPorts), readToolPorts(m_outputPorts),
-                m_messageOutputPortIndex.getIntValue(), m_binaryRepresentation.getByteArray());
+        protected DataCell createCell(final StructReadAccess tableDataAccess) {
+            StringReadAccess name = tableDataAccess.getAccess(0);
+            StringReadAccess description = tableDataAccess.getAccess(1);
+            StringReadAccess parameterSchema = tableDataAccess.getAccess(2);
+            ListReadAccess inputPorts = tableDataAccess.getAccess(3);
+            ListReadAccess outputPorts = tableDataAccess.getAccess(4);
+            IntReadAccess messageOutputPortIndex = tableDataAccess.getAccess(5);
+            return new WorkflowToolCell(name.getStringValue(), description.getStringValue(),
+                parameterSchema.getStringValue(), readToolPorts(inputPorts), readToolPorts(outputPorts),
+                messageOutputPortIndex.getIntValue());
         }
 
         @Override
@@ -198,75 +202,17 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
         }
 
         @Override
-        public byte[] getWorkflow() {
-            return m_binaryRepresentation.getByteArray();
-        }
-
-        @Override
         public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
             final Map<String, String> executionHints) {
-            return getDataCell().execute(parameters, inputs, exec, executionHints);
+            return ((ToolValue)super.getDataCell()).execute(parameters, inputs, exec, executionHints);
         }
 
     }
 
-    interface WorkflowToolWriteValue extends WriteValue<WorkflowToolValue> {
+    private final class WorkflowToolWriteValue extends FileStoreWriteValue<WorkflowToolValue, StructWriteAccess> {
 
-    }
-
-    private static final class DefaultWorkflowToolWriteValue implements WorkflowToolWriteValue {
-
-        private final StringWriteAccess m_name;
-
-        private final StringWriteAccess m_description;
-
-        private final StringWriteAccess m_parameterSchema;
-
-        private final VarBinaryWriteAccess m_binaryRepresentation;
-
-        private final ListWriteAccess m_inputPorts;
-
-        private final ListWriteAccess m_outputPorts;
-
-        private final IntWriteAccess m_messageOutputPortIndex;
-
-        private DefaultWorkflowToolWriteValue(final StructWriteAccess access) {
-            m_name = access.getWriteAccess(0);
-            m_description = access.getWriteAccess(1);
-            m_parameterSchema = access.getWriteAccess(2);
-            m_binaryRepresentation = access.getWriteAccess(3);
-            m_inputPorts = access.getWriteAccess(4);
-            m_outputPorts = access.getWriteAccess(5);
-            m_messageOutputPortIndex = access.getWriteAccess(6);
-        }
-
-        @Override
-        public void setValue(final WorkflowToolValue value) {
-            if (value instanceof DefaultWorkflowToolReadValue readValue) {
-                setFromAccesses(readValue);
-            } else {
-                setFromValue(value);
-            }
-        }
-
-        private void setFromValue(final WorkflowToolValue value) {
-            m_name.setStringValue(value.getName());
-            m_description.setStringValue(value.getDescription());
-            m_parameterSchema.setStringValue(value.getParameterSchema());
-            m_binaryRepresentation.setByteArray(value.getWorkflow());
-            writeToolPorts(m_inputPorts, value.getInputs());
-            writeToolPorts(m_outputPorts, value.getOutputs());
-            m_messageOutputPortIndex.setIntValue(value.getMessageOutputPortIndex());
-        }
-
-        private void setFromAccesses(final DefaultWorkflowToolReadValue value) {
-            m_name.setFrom(value.m_name);
-            m_description.setFrom(value.m_description);
-            m_parameterSchema.setFrom(value.m_parameterSchema);
-            m_binaryRepresentation.setFrom(value.m_binaryRepresentation);
-            m_inputPorts.setFrom(value.m_inputPorts);
-            m_outputPorts.setFrom(value.m_outputPorts);
-            m_messageOutputPortIndex.setFrom(value.m_messageOutputPortIndex);
+        private WorkflowToolWriteValue(final StructWriteAccess access) {
+            super(access);
         }
 
         private static void writeToolPorts(final ListWriteAccess access, final ToolPort[] ports) {
@@ -289,6 +235,38 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
             } else {
                 specAccess.setStringValue(port.spec());
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected boolean isCorrespondingReadValue(final WorkflowToolValue value) {
+            return value instanceof WorkflowToolReadValue;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected FileStoreCell getFileStoreCell(final WorkflowToolValue value) throws IOException {
+            if (value instanceof WorkflowToolCell wtc) {
+                return wtc;
+            }
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void setTableData(final WorkflowToolValue value, final StructWriteAccess access) {
+            ((StringWriteAccess)access.getWriteAccess(0)).setStringValue(value.getName());
+            ((StringWriteAccess)access.getWriteAccess(1)).setStringValue(value.getDescription());
+            ((StringWriteAccess)access.getWriteAccess(2)).setStringValue(value.getParameterSchema());
+            writeToolPorts((ListWriteAccess)access.getWriteAccess(3), value.getInputs());
+            writeToolPorts((ListWriteAccess)access.getWriteAccess(4), value.getOutputs());
+            ((IntWriteAccess)access.getWriteAccess(5)).setIntValue(value.getMessageOutputPortIndex());
         }
 
     }

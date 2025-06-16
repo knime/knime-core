@@ -46,16 +46,27 @@
  * History
  *   May 23, 2025 (hornm): created
  */
-package org.knime.core.agentic.tool;
+package org.knime.core.node.agentic.tool;
+
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.dialog.ContentType;
+import org.knime.core.node.dialog.ExternalNodeData;
+import org.knime.core.node.dialog.InputNode;
 
 /**
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class WorkflowOutputTestNodeFactory extends TestNodeFactory {
+class WorkflowInputTestNodeModel extends TestNodeModel implements InputNode {
+
+    WorkflowInputTestNodeModel() {
+        super(false, true);
+    }
 
     @Override
-    public TestNodeModel createNodeModel() {
-        return new WorkflowOutputTestNodeModel();
+    public ExternalNodeData getInputData() {
+        var contentType = ContentType.CONTENT_TYPE_DEF_PREFIX + BufferedDataTable.class.getName();
+        return ExternalNodeData.builder("test-input-parameter").description("workflow input description")
+            .contentType(contentType).build();
     }
 
 }

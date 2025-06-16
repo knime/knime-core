@@ -53,7 +53,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
@@ -111,7 +110,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
 
     private ExecutionContext m_exec;
 
-    private final Supplier<Path> m_dataAreaPathSupplier;
+    private final Path m_dataAreaPath;
 
     private final Set<Restriction>  m_restrictions;
 
@@ -120,20 +119,19 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
      */
     public FlowVirtualScopeContext() {
         m_restrictions = Set.of();
-        m_dataAreaPathSupplier = null;
+        m_dataAreaPath = null;
     }
 
     /**
      * New instance with custom restrictions and a data area path supplier.
      *
      * @param owner see {@link #setOwner(NodeID)}
-     * @param dataAreaPathSupplier supplies a virtual data area path - can be {@code null} or return {@code null}
+     * @param dataAreaPath the virtual data area path - can be {@code null}
      * @param restrictions set of restrictions that should apply for the scope
      */
-    public FlowVirtualScopeContext(final NodeID owner, final Supplier<Path> dataAreaPathSupplier,
-        final Restriction... restrictions) {
+    public FlowVirtualScopeContext(final NodeID owner, final Path dataAreaPath, final Restriction... restrictions) {
         setOwner(owner);
-        m_dataAreaPathSupplier = dataAreaPathSupplier;
+        m_dataAreaPath = dataAreaPath;
         m_restrictions = Set.of(restrictions);
     }
 
@@ -239,10 +237,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
      */
     @Override
     public Optional<Path> getVirtualDataAreaPath() {
-        if (m_dataAreaPathSupplier == null) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(m_dataAreaPathSupplier.get());
+        return Optional.ofNullable(m_dataAreaPath);
     }
 
 }

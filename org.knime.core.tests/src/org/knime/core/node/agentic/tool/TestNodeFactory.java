@@ -46,16 +46,81 @@
  * History
  *   May 23, 2025 (hornm): created
  */
-package org.knime.core.agentic.tool;
+package org.knime.core.node.agentic.tool;
+
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDescription53Proxy;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public class ConfigurationTestNodeFactory extends TestNodeFactory {
+public class TestNodeFactory extends NodeFactory<TestNodeModel> {
+
+    private final String m_nodeKey;
+
+    public TestNodeFactory() {
+        this(null);
+    }
+
+    TestNodeFactory(final String nodeKey) {
+        m_nodeKey = nodeKey;
+    }
 
     @Override
     public TestNodeModel createNodeModel() {
-        return new ConfigurationTestNodeModel();
+        return new TestNodeModel(m_nodeKey);
+    }
+
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        Document doc;
+        try {
+            doc = NodeDescription.getDocumentBuilderFactory().newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            throw new RuntimeException("Failed to create XML document builder", e);
+        }
+        var node = doc.createElement("knimeNode");
+
+        node.setAttribute("type", NodeType.Unknown.toString());
+        var nodeName = doc.createElement("name");
+        nodeName.setTextContent(getClass().getSimpleName());
+        node.appendChild(nodeName);
+
+        var ports = doc.createElement("ports");
+        node.appendChild(ports);
+
+        doc.appendChild(node);
+        return new NodeDescription53Proxy(doc, null);
+    }
+
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    @Override
+    public NodeView<TestNodeModel> createNodeView(final int viewIndex, final TestNodeModel nodeModel) {
+        return null;
+    }
+
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
     }
 
 }
