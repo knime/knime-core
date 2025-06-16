@@ -286,18 +286,17 @@ public final class ProcessWatchdog {
 
     private static void startPeriodicMemoryTrimming() {
         if (MEMORY_TRIM_INTERVAL_MS > 0) {
-            var trimTimer = new Timer("KNIME Native Memory Trimmer", true);
-            trimTimer.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        MallocTrim.INSTANCE.malloc_trim(0);
-                        LOGGER.info("Trimming native memory.");
-                    } catch (Exception e) { // NOSONAR We want to catch-all here
-                        LOGGER.debug("Failed to trim native memory.", e);
+            // Note: getMallocTrimInstance() will log an error if the native malloc_trim function could not be loaded
+            getMallocTrimInstance().ifPresent(mallocTrim -> {
+                var trimTimer = new Timer("KNIME Native Memory Trimmer", true);
+                trimTimer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        LOGGER.debug("Trimming native memory.");
+                        mallocTrim.malloc_trim(0);
                     }
-                }
-            }, MEMORY_TRIM_INTERVAL_MS, MEMORY_TRIM_INTERVAL_MS);
+                }, MEMORY_TRIM_INTERVAL_MS, MEMORY_TRIM_INTERVAL_MS);
+            });
         }
     }
 
@@ -384,14 +383,12 @@ public final class ProcessWatchdog {
 
                 LOGGER.warn(warningMessage);
 
-                try {
+                getMallocTrimInstance().ifPresent(mallocTrim -> {
                     LOGGER.info( //
                         "Trimming native memory because the KNIME process uses more than 80% of the system RAM." //
                     );
-                    MallocTrim.INSTANCE.malloc_trim(0);
-                } catch (Exception e) { // NOSONAR we want to catch-all here
-                    LOGGER.debug("Failed to trim native memory.", e);
-                }
+                    mallocTrim.malloc_trim(0);
+                });
             }
         } else {
             m_shouldWarnAboutKnimeProcessMemory = true;
@@ -560,6 +557,30 @@ public final class ProcessWatchdog {
         }
     }
 
+    //#endregion
+
+    //#region MallocTrim
+
+    private static volatile boolean mallocTrimLoadFailed;
+
+    private static MallocTrim mallocTrimInstance;
+
+    /**
+     * Get the instance of the native {@code malloc_trim} function. If the function could not be loaded, an empty
+     * Optional is returned and the first time this happens, an error is logged.
+     */
+    private static synchronized Optional<MallocTrim> getMallocTrimInstance() {
+        if (mallocTrimInstance == null && !mallocTrimLoadFailed) {
+            try {
+                mallocTrimInstance = Native.load("c", MallocTrim.class);
+            } catch (UnsatisfiedLinkError e) {
+                LOGGER.error("Failed to load native malloc_trim function. Memory trimming will not be available.", e);
+                mallocTrimLoadFailed = true;
+            }
+        }
+        return Optional.ofNullable(mallocTrimInstance);
+    }
+
     /**
      * Interface to access the native {@code malloc_trim} function from the C standard library.
      * <p>
@@ -584,8 +605,6 @@ public final class ProcessWatchdog {
      * </p>
      */
     private interface MallocTrim extends Library {
-
-        MallocTrim INSTANCE = Native.load("c", MallocTrim.class);
 
         int malloc_trim(int pad); // NOSONAR: this is the C method signature we want to call from Java
     }
