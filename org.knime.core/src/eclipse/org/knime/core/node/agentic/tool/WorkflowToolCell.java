@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -76,6 +77,8 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
@@ -112,7 +115,7 @@ import jakarta.json.JsonValue;
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.5
  */
-public final class WorkflowToolCell extends DataCell implements WorkflowToolValue {
+public final class WorkflowToolCell extends FileStoreCell implements WorkflowToolValue {
 
     private static final long serialVersionUID = 1L;
 
@@ -127,13 +130,14 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      *
      * @param wfm the workflow manager to create the cell from and to modify
      * @param metadata tool-specific workflow metadata, can be {@code null} if there is no extra metadata
+     * @param fileStore the file-store to persist the workflow data
      * @return a new cell instance
      * @throws ToolIncompatibleWorkflowException if the passed workflow manager doesn't comply with the tool conventions
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      */
     public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
-        final ToolWorkflowMetadata metadata) throws ToolIncompatibleWorkflowException {
-        return createFromAndModifyWorkflow(wfm, metadata, null);
+        final ToolWorkflowMetadata metadata, final FileStore fileStore) throws ToolIncompatibleWorkflowException {
+        return createFromAndModifyWorkflow(wfm, metadata, null, fileStore);
     }
 
     /**
@@ -143,14 +147,17 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
      * @param wfm the workflow manager to create the cell from and to modify
      * @param metadata tool-specific workflow metadata, can be {@code null} if there is no extra metadata
      * @param dataAreaPath absolute path to the directory used as data area, can be {@code null}
+     * @param fileStore the file store to persist the workflow data
      * @return a new cell instance
      * @throws ToolIncompatibleWorkflowException if the passed workflow manager doesn't comply with the tool conventions
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      */
     public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
-        final ToolWorkflowMetadata metadata, final Path dataAreaPath) throws ToolIncompatibleWorkflowException {
+        final ToolWorkflowMetadata metadata, final Path dataAreaPath, final FileStore fileStore)
+        throws ToolIncompatibleWorkflowException {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
-        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath);
+        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
+            fileStore);
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
@@ -178,10 +185,11 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     private final int m_messageOutputPortIndex;
 
-    private final byte[] m_workflow;
+    private byte[] m_workflow;
 
-    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath)
-        throws ToolIncompatibleWorkflowException {
+    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath,
+        final FileStore fileStore) throws ToolIncompatibleWorkflowException {
+        super(fileStore);
         var wsInputs = new ArrayList<WorkflowSegment.Input>();
         var wsOutputs = new ArrayList<WorkflowSegment.Output>();
         var toolInputs = new ArrayList<ToolPort>();
@@ -199,15 +207,15 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         m_workflow = serializeAndDisposeWorkflowSegment(ws);
     }
 
+    // deserialization constructor
     WorkflowToolCell(final String name, final String description, final String parameterSchema, final ToolPort[] inputs,
-        final ToolPort[] outputs, final int messageOutputPortIndex, final byte[] workflow) {
+        final ToolPort[] outputs, final int messageOutputPortIndex) {
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
         m_inputs = inputs;
         m_outputs = outputs;
         m_messageOutputPortIndex = messageOutputPortIndex;
-        m_workflow = workflow;
     }
 
     private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm) {
@@ -236,6 +244,21 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
         } catch (IOException ex) {
             throw new IllegalStateException(
                 "Problem saving workflow '" + workflowSegment.loadWorkflow().getName() + "'", ex);
+        }
+    }
+
+    @Override
+    protected void postConstruct() throws IOException {
+        var fileStore = getFileStores()[0];
+        m_workflow = FileUtils.readFileToByteArray(fileStore.getFile());
+    }
+
+    @Override
+    protected void flushToFileStore() throws IOException {
+        if (m_workflow != null) {
+            var fileStore = getFileStores()[0];
+            FileUtils.writeByteArrayToFile(fileStore.getFile(), m_workflow);
+            m_workflow = null;
         }
     }
 
@@ -557,9 +580,6 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
                 writeToolPort(toolPort, output);
             }
             output.writeInt(cell.getMessageOutputPortIndex());
-            var wfBytes = cell.getWorkflow();
-            output.writeInt(wfBytes.length);
-            output.write(wfBytes);
         }
 
         private static void writeToolPort(final ToolPort toolPort, final DataCellDataOutput output) throws IOException {
@@ -583,10 +603,7 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
                 outputs[i] = readToolPort(input);
             }
             final int messageOutputPortIndex = input.readInt();
-            final byte[] workflow = new byte[input.readInt()];
-            input.readFully(workflow);
-            return new WorkflowToolCell(name, description, parameterSchema, inputs, outputs, messageOutputPortIndex,
-                workflow);
+            return new WorkflowToolCell(name, description, parameterSchema, inputs, outputs, messageOutputPortIndex);
         }
 
         private static ToolPort readToolPort(final DataCellDataInput input) throws IOException {
