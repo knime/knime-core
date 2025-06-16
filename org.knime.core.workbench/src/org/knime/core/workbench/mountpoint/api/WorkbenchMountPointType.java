@@ -48,6 +48,7 @@
  */
 package org.knime.core.workbench.mountpoint.api;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -65,6 +66,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.workbench.WorkbenchConstants;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.WorkbenchMountPointStateSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,6 +219,25 @@ public final class WorkbenchMountPointType {
     public String getContentDisplayString(final WorkbenchMountPointSettings mountSettings)
         throws WorkbenchMountException {
         return instantiateStateFactory().getContentDisplayString(mountSettings);
+    }
+
+    /**
+     * If {@link WorkbenchMountPointState#isRemote()} is {@code true}, the mount point must have a
+     * remote address (e.g. to a KNIME Server or KNIME Hub) associated with it. In this case,
+     * this method returns that address. Note that this can be a plain host name or an address
+     * in {@link URI} form. If the mount point is local, {@link Optional#empty()} is returned.
+     * <p>
+     * Since this method attempts to instantiate the state factory, getting the remote address
+     * may fail with a {@link WorkbenchMountException} if the factory cannot be created.
+     * </p>
+     *
+     * @param settings state settings which may contain the remote address.
+     * @return remote address if not local, otherwise {@link Optional#empty()}
+     * @throws WorkbenchMountException if the corresponding factory cannot be instantiated
+     */
+    public Optional<String> getRemoteAdress(final WorkbenchMountPointStateSettings settings)
+        throws WorkbenchMountException {
+        return instantiateStateFactory().getRemoteAddress(settings);
     }
 
     /**

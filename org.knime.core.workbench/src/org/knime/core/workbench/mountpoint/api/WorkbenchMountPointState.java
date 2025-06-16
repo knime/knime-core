@@ -50,8 +50,10 @@ package org.knime.core.workbench.mountpoint.api;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.workbench.preferences.MountPointsPreferencesUtil;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -63,9 +65,12 @@ import org.slf4j.LoggerFactory;
  */
 public interface WorkbenchMountPointState {
 
-    /** Static singleton - instance with no settings. */
-    public static final WorkbenchMountPointStateSettings EMPTY_SETTINGS =
-        new WorkbenchMountPointStateSettings(Map.of());
+    /**
+     * Static singleton - instance with no settings. Returning this field instead of {@link Optional#empty()}
+     * for {@link WorkbenchMountPointType#getDefaultSettings()} has the effect of loading it as default
+     * mount point in the initialization phase (loading from preferences using {@link MountPointsPreferencesUtil}).
+     */
+    WorkbenchMountPointStateSettings EMPTY_SETTINGS = new WorkbenchMountPointStateSettings(Map.of());
 
     /** @return The type the state is associated with. This is immutable and often hard-coded. */
     WorkbenchMountPointType getType();

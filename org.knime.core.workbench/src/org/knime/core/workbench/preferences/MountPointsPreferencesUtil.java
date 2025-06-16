@@ -128,6 +128,12 @@ public final class MountPointsPreferencesUtil {
      * @return the list of mount point settings, never <code>null</code>.
      */
     public static List<WorkbenchMountPointSettings> loadDefaultMountPoints() {
+        return loadDefaultRawSettings().stream() //
+            .filter(WorkbenchMountTable::isAllowed) //
+            .toList();
+    }
+
+    private static List<WorkbenchMountPointSettings> loadDefaultRawSettings() {
         Set<String> uniqueMountPointNameSet = new HashSet<>();
         return Stream
                 // default preferences take precedence over the installation defaults
@@ -151,6 +157,16 @@ public final class MountPointsPreferencesUtil {
             InstanceScope.INSTANCE.getNode(WorkbenchConstants.WORKBENCH_PREFERENCES_PLUGIN_ID);
         try {
             return mountPointNode.childrenNames().length > 0;
+        } catch (BackingStoreException e) { // NOSONAR
+            // No settings to be found.
+            return false;
+        }
+    }
+
+    private static boolean hasInitializedMountPointPreferenceNodes() {
+        IEclipsePreferences rootNode = InstanceScope.INSTANCE.getNode("");
+        try {
+            return rootNode.nodeExists(getMountpointPreferenceLocation());
         } catch (BackingStoreException e) { // NOSONAR
             // No settings to be found.
             return false;
@@ -213,7 +229,7 @@ public final class MountPointsPreferencesUtil {
      * @return a list with all default mount point IDs that shall be excluded.
      */
     private static List<String> getExcludedDefaultMountIDs() {
-        if (DefaultScope.INSTANCE.getNode(MOUNTPOINT_PREFERENCE_LOCATION).getBoolean(ENFORCE_EXCLUSION, false)) {
+        if (getInstanceMountPointParentNode().getBoolean(ENFORCE_EXCLUSION, false)) {
             final List<String> includedMountPoints = getIncludedDefaultMountPoints().stream() //
                     .map(WorkbenchMountPointSettings::defaultMountID) //
                     .toList();
@@ -269,6 +285,7 @@ public final class MountPointsPreferencesUtil {
     private static Collection<WorkbenchMountPointSettings> getSortedMountSettingsFromNode(
         final IEclipsePreferences preferenceNode)
         throws BackingStoreException {
+
         final TreeSet<WorkbenchMountPointSettingsAndNumber> mountSettings = new TreeSet<>();
         final String[] instanceChildNodes = preferenceNode.childrenNames();
         for (final String mountPointNodeName : instanceChildNodes) {
@@ -353,7 +370,7 @@ public final class MountPointsPreferencesUtil {
     private static void writeMountSettings(final Map<String, WorkbenchMountPointSettingsAndNumber> newSettings)
         throws BackingStoreException {
 
-        final IEclipsePreferences instanceParent = getInstanceMountPointParentNode();
+        final IEclipsePreferences instanceParent = getInstanceMountPointParentNode(false);
         final Map<String, WorkbenchMountPointSettingsAndNumber> oldSettings = loadRawSettings(instanceParent);
 
         // collect the union of all old and new keys, then insert/delete/update as needed
@@ -368,9 +385,14 @@ public final class MountPointsPreferencesUtil {
                 continue;
             }
 
-            if (oldEntry != null && WorkbenchMountTable.isAllowed(oldEntry.settings())) {
-                // remove if not currently disallowed per filter, maybe re-add below
-                instanceParent.node(key).removeNode();
+            if (oldEntry != null) {
+                // here, we can be in two cases: either (1) replace or (2) delete the entry
+                // (1) the `newEntry` cannot be null, and thus not being filtered
+                // (2) it is null, but either via user or filter, only for the former we want to remove
+                final var isDeletedByFilter = newEntry == null && !WorkbenchMountTable.isAllowed(oldEntry.settings());
+                if (!isDeletedByFilter) {
+                    instanceParent.node(key).removeNode();
+                }
             }
 
             if (newEntry != null) {
@@ -470,8 +492,17 @@ public final class MountPointsPreferencesUtil {
         return null;
     }
 
-    private static IEclipsePreferences getInstanceMountPointParentNode() {
+    private static IEclipsePreferences getInstanceMountPointParentNode(final boolean saveDefaultsIfUninitialized) {
+        if (saveDefaultsIfUninitialized && !hasInitializedMountPointPreferenceNodes()) {
+            // if the persisted preferences for mount points are empty, write defaults first
+            // this is necessary in order to have a set of defaults on which to filter on later
+            saveMountSettings(loadDefaultRawSettings());
+        }
         return InstanceScope.INSTANCE.getNode(getMountpointPreferenceLocation());
+    }
+
+    private static IEclipsePreferences getInstanceMountPointParentNode() {
+        return getInstanceMountPointParentNode(true);
     }
 
     private static IEclipsePreferences getDefaultMountPointParentNode() {
