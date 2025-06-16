@@ -64,7 +64,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -126,7 +125,6 @@ import jakarta.json.JsonValue;
  */
 public final class WorkflowSegmentExecutor {
 
-
     private WorkflowManager m_wfm;
 
     private WorkflowManager m_hostWfm;
@@ -142,8 +140,6 @@ public final class WorkflowSegmentExecutor {
     private NodeID m_virtualEndID;
 
     private final boolean m_executeAllNodes;
-
-    private Path m_dataAreaPath;
 
     /**
      * Controls how the workflow segment is executed.
@@ -190,7 +186,7 @@ public final class WorkflowSegmentExecutor {
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
         final ExecutionMode mode, final boolean executeAll, final Consumer<String> warningConsumer)
         throws KNIMEException {
-        this(ws, workflowName, hostNode, mode, executeAll, warningConsumer, new Restriction[0]);
+        this(ws, workflowName, hostNode, mode, executeAll, warningConsumer, null, new Restriction[0]);
     }
 
     /**
@@ -203,13 +199,14 @@ public final class WorkflowSegmentExecutor {
      * @param executeAll if <code>true</code> all nodes in the segment are executed (which is new behavior), previously
      *            and if <code>false</code> only the output nodes would be executed
      * @param warningConsumer callback for warning if there have while loading the workflow from the workflow segment
+     * @param dataAreaPath absolute path to the workflow's data area or {@code null} if none
      * @param restrictions restrictions on the execution of the workflow segment
      * @throws KNIMEException If the workflow can't be instantiated from the segment.
      * @since 5.5
      */
     public WorkflowSegmentExecutor(final WorkflowSegment ws, final String workflowName, final NodeContainer hostNode,
         final ExecutionMode mode, final boolean executeAll, final Consumer<String> warningConsumer,
-        final Restriction... restrictions) throws KNIMEException {
+        final Path dataAreaPath, final Restriction... restrictions) throws KNIMEException {
         m_hostNode = (NativeNodeContainer)hostNode;
         if (mode == ExecutionMode.DETACHED) {
             m_hostWfm = createTemporaryWorkflowProject(m_hostNode.getParent().getWorkflowDataRepository());
@@ -228,8 +225,7 @@ public final class WorkflowSegmentExecutor {
             m_wfm = m_hostWfm.createAndAddSubWorkflow(new PortType[0], new PortType[0], workflowName);
         }
 
-        m_flowVirtualScopeContext =
-            new FlowVirtualScopeContext(hostNode.getID(), createDataAreaSupplier(ws), restrictions);
+        m_flowVirtualScopeContext = new FlowVirtualScopeContext(hostNode.getID(), dataAreaPath, restrictions);
         m_wfm.setInitialScopeContext(m_flowVirtualScopeContext);
         if (mode != ExecutionMode.DEBUG) {
             m_wfm.hideInUI();
@@ -252,7 +248,6 @@ public final class WorkflowSegmentExecutor {
         addVirtualIONodes(ws);
     }
 
-
     private static WorkflowManager createTemporaryWorkflowProject(final WorkflowDataRepository workflowDataRepository)
         throws KNIMEException {
         File dir;
@@ -270,21 +265,6 @@ public final class WorkflowSegmentExecutor {
         } catch (IOException ex) {
             throw new KNIMEException("Creating empty workflow for workflow segment execution failed", ex);
         }
-    }
-
-    private Supplier<Path> createDataAreaSupplier(final WorkflowSegment ws) {
-        return () -> {
-            if (m_dataAreaPath == null) {
-                try {
-                    m_dataAreaPath = ws.writeDataAreaToTempDir().orElse(null);
-                } catch (IOException ex) {
-                    NodeLogger.getLogger(WorkflowSegmentExecutor.class)
-                        .error("Failed to extract data area from workflow segment", ex);
-                    return null;
-                }
-            }
-            return m_dataAreaPath;
-        };
     }
 
     private void addVirtualIONodes(final WorkflowSegment wf) {
@@ -620,9 +600,6 @@ public final class WorkflowSegmentExecutor {
             FileUtils.deleteQuietly(wfDir);
         }
         m_hostWfm = null;
-        if (m_dataAreaPath != null) {
-            FileUtils.deleteQuietly(m_dataAreaPath.toFile());
-        }
     }
 
     /**

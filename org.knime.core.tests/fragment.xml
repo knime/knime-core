@@ -49,22 +49,22 @@
          point="org.knime.workbench.repository.nodes">
       <node
             deprecated="false"
-            factory-class="org.knime.core.agentic.tool.WorkflowInputTestNodeFactory"
+            factory-class="org.knime.core.node.agentic.tool.WorkflowInputTestNodeFactory"
             hidden="true">
       </node>
       <node
             deprecated="false"
-            factory-class="org.knime.core.agentic.tool.WorkflowOutputTestNodeFactory"
+            factory-class="org.knime.core.node.agentic.tool.WorkflowOutputTestNodeFactory"
             hidden="true">
       </node>
       <node
             deprecated="false"
-            factory-class="org.knime.core.agentic.tool.TestNodeFactory"
+            factory-class="org.knime.core.node.agentic.tool.TestNodeFactory"
             hidden="true">
       </node>
       <node
             deprecated="false"
-            factory-class="org.knime.core.agentic.tool.ConfigurationTestNodeFactory"
+            factory-class="org.knime.core.node.agentic.tool.ConfigurationTestNodeFactory"
             hidden="true">
       </node>
    </extension>

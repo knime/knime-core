@@ -46,7 +46,7 @@
  * History
  *   May 23, 2025 (hornm): created
  */
-package org.knime.core.agentic.tool;
+package org.knime.core.node.agentic.tool;
 
 import java.io.File;
 import java.io.IOException;
