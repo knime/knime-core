@@ -384,6 +384,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/value/AbstractAdapterCellValueFactory.java" type="org.knime.core.data.v2.value.AbstractAdapterCellValueFactory$AbstractAdapterCellReadValue">
+        <filter comment="Added in bugfix release to support bugfix" id="1142947843">
+            <message_arguments>
+                <message_argument value="5.4.5"/>
+                <message_argument value="getPrimaryAccess()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/internal/CorePlugin.java" type="org.knime.core.internal.CorePlugin">
         <filter comment="new field, not sure why @since is not enough (binary incompatible?)" id="336658481">
             <message_arguments>
