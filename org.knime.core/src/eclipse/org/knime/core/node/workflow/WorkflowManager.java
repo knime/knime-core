@@ -9207,7 +9207,9 @@ public final class WorkflowManager extends NodeContainer
                 }
             }
 
-            if (!needsReset) {
+            if (!needsReset && !isComponentProject(cont)) {
+                // not applicable to component projects. Although these are SingleNodeContainers, they are direct
+                // children of the root workflow manager. Input data may be provided as example data.
                 boolean isFullyConnected = isFullyConnected(bfsID);
                 switch (contStateBeforeLoadContent) {
                     case IDLE:
@@ -9242,6 +9244,10 @@ public final class WorkflowManager extends NodeContainer
                 failedNodes.add(bfsID);
             }
             if (!isExecuted && cont instanceof SingleNodeContainer) {
+                // If `cont` is a SubNodeContainer corresponding to a component project, this call will not manage to configure
+                // it because it does not have all input ports connected (the contained nodes are, though).
+                // However, if the component project is saved with example input data, the corresponding SubNodeContainer
+                // _could_ be considered CONFIGURED and is indeed switched to that state when a contained node is executed.
                 configureSingleNodeContainer((SingleNodeContainer)cont, keepNodeMessage);
             }
             if (persistor.mustComplainIfStateDoesNotMatch() && !cont.getInternalState().equals(loadState)
@@ -9766,10 +9772,10 @@ public final class WorkflowManager extends NodeContainer
         try (WorkflowLock lock = lock()) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(nodes, true).keySet()) {
                 NodeContainer nc = getNodeContainer(id);
-                if (nc instanceof WorkflowManager) {
-                    WorkflowManager metaNode = (WorkflowManager)nc;
-                    Set<NodeID> metaContent = metaNode.m_workflow.getNodeIDs();
-                    if (!metaNode.sweep(metaContent)) {
+                if (isComponentProject(nc)) {
+                    continue;
+                } else if (nc instanceof WorkflowManager metanode) {
+                    if (!metanode.sweep(metanode.m_workflow.getNodeIDs())) {
                         wasClean = false;
                     }
                 } else {
@@ -11416,5 +11422,14 @@ public final class WorkflowManager extends NodeContainer
             throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName() + "`, found: `"
                 + updatedMetadata.getClass().getSimpleName() + "`");
         }
+    }
+
+    /**
+     * -
+     * @param nc -
+     * @return Whether the given {@code NodeContainer} represents a component project.
+     */
+    private static boolean isComponentProject(final NodeContainer nc) {
+        return nc instanceof SubNodeContainer snc && snc.isProject();
     }
 }

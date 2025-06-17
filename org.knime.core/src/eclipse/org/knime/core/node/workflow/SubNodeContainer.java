@@ -3135,13 +3135,10 @@ public final class SubNodeContainer extends SingleNodeContainer
                         }
                     }
                     if (isProject()) {
-                        //makes sure that all contained nodes are IDLE
-                        //templates/components are always saved in IDLE-state
-                        //(for non-project templates it's done during copy above)
+                        // makes sure that all contained nodes are reset (and configured, if possible)
                         copyOrThis.getWorkflowManager().resetAndConfigureAll();
-
-                        // hack only required for the classic UI
-                        unsetDirty();
+                        // (for non-project templates this is done during copy above)
+                        unsetDirty(); // hack only required for the classic UI
                     }
                     copyOrThis.setName(null);
 
