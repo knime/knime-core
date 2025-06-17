@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.agentic.tool;
 
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.v2.ReadValue;
@@ -203,7 +204,7 @@ public final class WorkflowToolValueFactory implements ValueFactory<StructReadAc
 
         @Override
         public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
-            final String... executionHints) {
+            final Map<String, String> executionHints) {
             return getDataCell().execute(parameters, inputs, exec, executionHints);
         }
 
