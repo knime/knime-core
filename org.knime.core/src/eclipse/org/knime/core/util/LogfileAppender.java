@@ -59,10 +59,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.RollingFileAppender;
 import org.apache.log4j.helpers.LogLog;
+import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
@@ -75,23 +77,29 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LogfileAppender extends RollingFileAppender {
-    private final File m_logFile;
+
     /** Maximum size of log file before it is split (in bytes). */
-    public static final long MAX_LOG_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB
+    public static final long MAX_LOG_SIZE_DEFAULT = 10 * FileUtils.ONE_MB;
+
+    private final File m_logFile;
+
+    private boolean m_isActivated;
 
     /** The executors that compress and rotate log files.
      * (see AP-15868 -- needs to be static due per "per-workflow" logging.)
      */
-    private static final ExecutorService LOG_COMPRESSOR_EXECUTOR_SERVICE = Executors.newCachedThreadPool(new ThreadFactory() {
+    private static final ExecutorService LOG_COMPRESSOR_EXECUTOR_SERVICE =
+        Executors.newCachedThreadPool(new ThreadFactory() {
 
-        private final AtomicInteger m_threadCounter = new AtomicInteger(0);
-        @Override
-        public Thread newThread(final Runnable r) {
-            Thread t = new Thread(r, "KNIME-Logfile-Compressor-" + m_threadCounter.getAndIncrement());
-            t.setPriority(Thread.MIN_PRIORITY);
-            return t;
-        }
-    });
+            private final AtomicInteger m_threadCounter = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(final Runnable r) {
+                final var t = new Thread(r, "KNIME-Logfile-Compressor-" + m_threadCounter.getAndIncrement());
+                t.setPriority(Thread.MIN_PRIORITY);
+                return t;
+            }
+        });
 
     /**
      * Creates a new LogfileAppender.
@@ -106,7 +114,6 @@ public class LogfileAppender extends RollingFileAppender {
      */
     public LogfileAppender(final File logFileDir) {
         initMaxLogFileSize();
-        ensureLogFileDirectoryExists(logFileDir);
         m_logFile = new File(logFileDir, NodeLogger.LOG_FILE);
         setFile(m_logFile.getAbsolutePath());
         setAppend(true);
@@ -144,15 +151,24 @@ public class LogfileAppender extends RollingFileAppender {
         setMaximumFileSize(maxLogSize < 0 ? Long.MAX_VALUE : maxLogSize);
     }
 
-    private void ensureLogFileDirectoryExists(final File logFileDir) {
-        if (!logFileDir.exists()) {
-            logFileDir.mkdirs();
+    @Override
+    public void append(final LoggingEvent event) {
+        if (!m_isActivated) {
+            // AP-24515: `FileAppender#activateOptions()` creates the log file (and enclosing directories if needed).
+            // We defer this call until the first message is logged in order to support live changing of the
+            // `logInWFDir` and to avoid file I/O for workflows that are created but never saved or run.
+            activateOptions();
         }
+        super.append(event);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public synchronized void activateOptions() {
+        super.activateOptions();
+        // set the flag here so we can't miss calls from outside this class
+        m_isActivated = true;
+    }
+
     @Override
     public void rollOver() {
         super.rollOver();
@@ -194,9 +210,6 @@ public class LogfileAppender extends RollingFileAppender {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         if (name != null) {
@@ -213,15 +226,12 @@ public class LogfileAppender extends RollingFileAppender {
     public boolean equals(final Object obj) {
         //We have to compare the name of the logger in the equals method to prevent duplicate log file registration
         //in the NodeLogger#addWorkflowDirAppender() method !!!
-        if (name != null && (obj instanceof FileAppender)) {
-            return name.equals(((FileAppender)obj).getName());
+        if (name != null && obj instanceof FileAppender appender) {
+            return name.equals(appender.getName());
         }
         return super.equals(obj);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return m_logFile.toString();
