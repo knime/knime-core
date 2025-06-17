@@ -233,8 +233,8 @@ class WorkflowToolCellTest {
         var exec = executionContextExtension.getExecutionContext();
         var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec);
         assertThat(res.message())
-            .startsWith("Tool execution failed with: Workflow contains one node with execution failure:\n"
-                + "TestNodeFactory #2: Purposely fail on execute");
+            .startsWith("Tool execution failed with: Workflow contains one node with execution failure:"
+                + System.lineSeparator() + "TestNodeFactory #2: Purposely fail on execute");
         assertThat(res.outputs()).isNull();
     }
 
