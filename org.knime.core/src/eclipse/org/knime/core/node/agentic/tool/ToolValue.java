@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.agentic.tool;
 
+import java.util.Map;
+
 import org.knime.core.data.DataValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.node.ExecutionContext;
@@ -132,5 +134,7 @@ public interface ToolValue extends DataValue {
      *            implementation
      * @return the tool result
      */
-    ToolResult execute(String parameters, PortObject[] inputs, ExecutionContext exec, String... executionHints);
+    ToolResult execute(String parameters, PortObject[] inputs, ExecutionContext exec,
+        Map<String, String> executionHints);
+
 }
