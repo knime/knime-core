@@ -648,7 +648,6 @@ public final class KNIMELogger {
             NodeLogger.getLogger(NodeLogger.class).debug(
                 "Registering workflow log appender for directory under name: \"%s\"".formatted(appenderName));
             final var fileAppender = DelegatingLogger.createWorkflowLogAppender(appenderName, workflowDir);
-            fileAppender.activateOptions(); // activate writer
             rootLogger.addAppender(fileAppender);
             return true;
         }
