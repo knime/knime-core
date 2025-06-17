@@ -56,7 +56,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -405,13 +404,13 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
 
     @Override
     public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
-        final String... executionHints) {
+        final Map<String, String> executionHints) {
         var ws = deserializeWorkflowSegment();
         var name = ws.loadWorkflow().getName();
         var hostNode = NodeContext.getContext().getNodeContainer();
         WorkflowSegmentExecutor wsExecutor = null;
-        var execMode = ExecutionMode.valueOf(
-            getStringThatStartsWith("execution-mode", executionHints).map(s -> s.split(":")[1]).orElse("DEFAULT"));
+        var execMode =
+            ExecutionMode.valueOf(Optional.ofNullable(executionHints.get("execution-mode")).orElse("DEFAULT"));
         var isDebugMode = execMode == ExecutionMode.DEBUG;
         boolean executionFailed = false;
         try {
@@ -441,10 +440,6 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             var jsonObject = reader.readObject();
             return jsonObject.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue));
         }
-    }
-
-    private static Optional<String> getStringThatStartsWith(final String value, final String... strings) {
-        return Arrays.stream(strings).filter(h -> h.startsWith(value)).findFirst();
     }
 
     private PortObject[] removeMessageOutput(final PortObject[] outputs) {

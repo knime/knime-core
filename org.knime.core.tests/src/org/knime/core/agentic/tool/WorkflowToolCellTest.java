@@ -62,6 +62,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.zip.ZipInputStream;
@@ -151,7 +152,7 @@ class WorkflowToolCellTest {
         assertThat(cell.getMessageOutputPortIndex()).isEqualTo(-1);
 
         var exec = executionContextExtension.getExecutionContext();
-        var res = cell.execute("", new PortObject[0], exec);
+        var res = cell.execute("", new PortObject[0], exec, Map.of());
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         assertThat(res.outputs()).isNotNull();
     }
@@ -200,7 +201,7 @@ class WorkflowToolCellTest {
         var exec = executionContextExtension.getExecutionContext();
         var res = cell.execute("""
                 {"configuration-parameter-name-3": "config value" }
-                 """, new PortObject[]{TestNodeModel.createTable(exec)}, exec);
+                 """, new PortObject[]{TestNodeModel.createTable(exec)}, exec, Map.of());
         assertThat(res.message()).isEqualTo("val1");
         assertThat(res.outputs()[0]).isNotNull();
         assertThat(((JsonString)ConfigurationTestNodeModel.jsonValue).getString()).isEqualTo("config value");
@@ -216,7 +217,7 @@ class WorkflowToolCellTest {
 
         // check execution
         var exec = executionContextExtension.getExecutionContext();
-        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec);
+        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec, Map.of());
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         assertThat(res.outputs()[0]).isNotNull();
     }
@@ -241,7 +242,7 @@ class WorkflowToolCellTest {
 
         // check execution
         var exec = executionContextExtension.getExecutionContext();
-        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec);
+        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec, Map.of());
         assertThat(res.message())
             .startsWith("Tool execution failed with: Workflow contains one node with execution failure:"
                 + System.lineSeparator() + "TestNodeFactory #2: Purposely fail on execute");
@@ -332,7 +333,7 @@ class WorkflowToolCellTest {
         }
 
         var exec = executionContextExtension.getExecutionContext();
-        var res = readCell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec);
+        var res = readCell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec, Map.of());
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         assertThat(res.outputs()[0]).isNotNull();
         assertThat(Files.notExists(virtualDataAreaPath.get())).as("virtual data area not deleted").isTrue();
@@ -358,7 +359,8 @@ class WorkflowToolCellTest {
         final var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null);
 
         var exec = executionContextExtension.getExecutionContext();
-        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec, "execution-mode:DETACHED");
+        var res = cell.execute("", new PortObject[]{TestNodeModel.createTable(exec)}, exec,
+            Map.of("execution-mode", "DETACHED"));
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         testFileStores((BufferedDataTable)res.outputs()[0]);
         assertThat(Files.exists(detachedWorkflowSegmentPath.get())).isFalse();
