@@ -298,6 +298,10 @@ class WorkflowToolCellTest {
                 .getMessage();
             assertThat(message).isEqualTo(
                 "Node is not allowed to access workflow-relative resources because it's executed within in a restricted (virtual) scope.");
+            message = assertThrows(IOException.class, () -> new URL("knime://knime.mountpoint/test.txt").openStream())
+                .getMessage();
+            assertThat(message).isEqualTo("Mountpoint or space relative URL needs a mountpoint.");
+
         };
         addAndConnectNodes(m_toolWfm, onExecute, false);
         var dataAreaPath = Files.createDirectory(tempDataAreaPath.resolve("testDataArea"));
