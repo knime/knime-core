@@ -102,7 +102,7 @@ public interface DoubleValue extends DataValue {
 
         @Override
         public String getName() {
-            return "Number (Floating Decimal)";
+            return "Number (Float)";
         }
 
         @Override
