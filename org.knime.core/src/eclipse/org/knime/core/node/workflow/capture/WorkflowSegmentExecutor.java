@@ -130,7 +130,6 @@ public final class WorkflowSegmentExecutor {
     private WorkflowManager m_hostWfm;
 
     private final boolean m_shallDisposeHostWfm;
-
     private final NativeNodeContainer m_hostNode;
 
     private FlowVirtualScopeContext m_flowVirtualScopeContext;
@@ -258,7 +257,8 @@ public final class WorkflowSegmentExecutor {
                 var creationHelper = new WorkflowCreationHelper(
                     WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null));
                 creationHelper.setWorkflowDataRepository(workflowDataRepository);
-                return WorkflowManager.ROOT.createAndAddProject("workflow_segment_executor", creationHelper);
+                return WorkflowManager.ROOT.createAndAddProject("workflow_segment_executor",
+                    creationHelper);
             } else {
                 throw new KNIMEException("Creating empty workflow for workflow segment execution failed");
             }
@@ -682,6 +682,15 @@ public final class WorkflowSegmentExecutor {
             }
         }
         return res;
+    }
+
+    /**
+     * @return the workflow manager of the (to be) executed workflow segment
+     * @throws IllegalStateException if the workflow segment executor has been disposed already
+     */
+    public WorkflowManager getWorkflowManager() {
+        checkWfmNonNull();
+        return m_wfm;
     }
 
 }

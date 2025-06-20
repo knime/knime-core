@@ -116,12 +116,22 @@ public interface ToolValue extends DataValue {
      * Represents the result of executing a tool. The result contains a message that is presented to the agent, as well
      * as output data that the agent can use to execute subsequent tools with.
      *
-     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
-     * @param message the message that is presented to the agent (e.g. success or error message)
-     * @param outputs the output data that the agent can use to execute subsequent tools with, {@code null} if the
-     *            execution failed
+     * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany execution failed
      */
-    record ToolResult(String message, PortObject[] outputs) {
+    interface ToolResult {
+
+        /**
+         *
+         * @return message the message that is presented to the agent (e.g. success or error message)
+         */
+        String message();
+
+        /**
+         * @return the output data that the agent can use to execute subsequent tools with, {@code null} if the
+         *         execution failed
+         */
+        PortObject[] outputs();
+
     }
 
     /**

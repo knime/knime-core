@@ -67,5 +67,10 @@
             factory-class="org.knime.core.node.agentic.tool.ConfigurationTestNodeFactory"
             hidden="true">
       </node>
+      <node
+            deprecated="false"
+            factory-class="org.knime.core.node.agentic.tool.WithViewTestNodeFactory"
+            hidden="true">
+      </node>
    </extension>
 </fragment>

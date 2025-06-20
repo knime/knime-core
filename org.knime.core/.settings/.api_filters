@@ -424,6 +424,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/agentic/tool/WorkflowToolValue.java" type="org.knime.core.node.agentic.tool.WorkflowToolValue">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.agentic.tool.WorkflowToolValue"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/extension/NodeFactoryExtensionManager.java" type="org.knime.core.node.extension.NodeFactoryExtensionManager">
         <filter comment="AP-23411 - removed hidden methods in deprecated classes, no matches in KNIME code (unlikely it's used by a 3rd party)" id="338792546">
             <message_arguments>

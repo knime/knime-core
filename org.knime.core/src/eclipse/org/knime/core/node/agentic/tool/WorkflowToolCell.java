@@ -91,6 +91,7 @@ import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -446,7 +447,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
     }
 
     @Override
-    public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
+    public WorkflowToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
         final Map<String, String> executionHints) {
         var ws = deserializeWorkflowSegment();
         var name = ws.loadWorkflow().getName();
@@ -455,8 +456,8 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         var execMode =
             ExecutionMode.valueOf(Optional.ofNullable(executionHints.get("execution-mode")).orElse("DEFAULT"));
         var isDebugMode = execMode == ExecutionMode.DEBUG;
-        boolean executionFailed = false;
         Path dataAreaPath = null;
+        boolean disposeWorkflowSegmentExecutor = false;
         try {
             var metanodeName = (isDebugMode ? "Debug: " : "") + name;
             dataAreaPath = copyDataAreaToTempDir().orElse(null);
@@ -466,15 +467,29 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
                 wsExecutor.configureWorkflow(parseParameters(parameters));
             }
             var result = wsExecutor.executeWorkflowAndCollectNodeMessages(inputs, exec);
-            executionFailed = result.portObjectCopies() == null;
-            return new ToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()));
+            disposeWorkflowSegmentExecutor = !isDebugMode || result.portObjectCopies() != null;
+            var wfm = wsExecutor.getWorkflowManager();
+            String[] viewNodeIds = null;
+            WorkflowManager virtualProject = null;
+            if (Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
+                viewNodeIds = wfm.getNodeContainers().stream()
+                    .filter(nc -> nc instanceof NativeNodeContainer nnc
+                        && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
+                    .map(nc -> nc.getID().toString()).toArray(String[]::new);
+                if (viewNodeIds.length > 0 && execMode == ExecutionMode.DETACHED) {
+                    virtualProject = wfm.getParent();
+                    disposeWorkflowSegmentExecutor = false;
+                }
+            }
+            return new WorkflowToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()),
+                virtualProject, viewNodeIds);
         } catch (Exception ex) {
             var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
             NodeLogger.getLogger(getClass()).error(message, ex);
-            executionFailed = true;
-            return new ToolResult(message, null);
+            disposeWorkflowSegmentExecutor = !isDebugMode;
+            return new WorkflowToolResult(message, null, null, null);
         } finally {
-            if (wsExecutor != null && !(isDebugMode && executionFailed)) {
+            if (wsExecutor != null && disposeWorkflowSegmentExecutor) {
                 wsExecutor.dispose();
             }
             if (dataAreaPath != null) {

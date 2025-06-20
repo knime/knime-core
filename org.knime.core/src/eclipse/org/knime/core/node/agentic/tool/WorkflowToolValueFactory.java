@@ -48,8 +48,8 @@
  */
 package org.knime.core.node.agentic.tool;
 
-import java.util.Map;
 import java.io.IOException;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.knime.core.data.DataCell;
@@ -202,9 +202,9 @@ public final class WorkflowToolValueFactory extends AbstractFileStoreValueFactor
         }
 
         @Override
-        public ToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
-            final Map<String, String> executionHints) {
-            return ((ToolValue)super.getDataCell()).execute(parameters, inputs, exec, executionHints);
+        public WorkflowToolResult execute(final String parameters, final PortObject[] inputs,
+            final ExecutionContext exec, final Map<String, String> executionHints) {
+            return ((WorkflowToolValue)super.getDataCell()).execute(parameters, inputs, exec, executionHints);
         }
 
     }

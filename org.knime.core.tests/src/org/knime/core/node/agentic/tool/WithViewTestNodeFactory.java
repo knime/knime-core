@@ -44,59 +44,43 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   May 7, 2025 (Adrian Nembach, KNIME GmbH, Konstanz, Germany): created
+ *   Jul 2, 2025 (hornm): created
  */
 package org.knime.core.node.agentic.tool;
 
-import java.util.Map;
+import java.io.IOException;
+import java.util.Optional;
 
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
+import org.knime.core.node.wizard.page.WizardPageContribution;
+import org.knime.core.node.workflow.NativeNodeContainer;
 
 /**
- * A {@link ToolValue} that is implemented by a workflow.
- *
- * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @noimplement This interface is not intended to be implemented by clients.
- * @noreference This interface is not intended to be referenced by clients.
+ * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  */
-public interface WorkflowToolValue extends ToolValue {
+public class WithViewTestNodeFactory extends TestNodeFactory implements WizardPageContribution {
 
-    /**
-     * @return -1 if the tool does not have a message output port
-     */
-    int getMessageOutputPortIndex();
+    public WithViewTestNodeFactory() {
+        super();
+    }
 
-    /**
-     * {@inheritDoc} <br>
-     * <br>
-     * Accepted execution-hints:
-     * <ul>
-     * <li>{@code execution-mode}: see {@link ExecutionMode} for possible values, defaults to
-     * {@link ExecutionMode#DEFAULT}</li>
-     * <li>{@code with-view-nodes}: if {@code true}, the tool execution will return the IDs of the view nodes</li>
-     * </ul>
-     */
     @Override
-    WorkflowToolResult execute(String parameters, PortObject[] inputs, ExecutionContext exec,
-        Map<String, String> executionHints);
+    public boolean hasNodeView() {
+        return true;
+    }
 
-    /**
-     * The tool execution result with additional information only relevant for workflow-tool-execution.
-     *
-     * @param message see {@link ToolValue.ToolResult#message()}
-     * @param outputs see {@link ToolValue.ToolResult#outputs()}
-     * @param virtualProject the virtual project containing the workflow that has been used for the tool the execution.
-     *            It's {@code null} if execution-mode is not 'detached' and view-node-ids are not to be included). NOTE:
-     *            This requires the caller to take care of disposing the 'virtual workflow'.
-     * @param viewNodeIds an array of node IDs of the view nodes in the workflow; {@code null} if view-nodes aren't to
-     *            be returned
-     * @noreference This record is not intended to be referenced by clients.
-     */
-    public record WorkflowToolResult(String message, PortObject[] outputs, WorkflowManager virtualProject,
-        String[] viewNodeIds) implements ToolResult {
+    @Override
+    public Optional<String> validateViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
+        return Optional.empty();
+    }
+
+    @Override
+    public void loadViewValue(final NativeNodeContainer nnc, final String value) throws IOException {
         //
     }
+
+    @Override
+    public Optional<String> getInitialViewValue(final NativeNodeContainer nnc) {
+        return Optional.empty();
+    }
+
 }

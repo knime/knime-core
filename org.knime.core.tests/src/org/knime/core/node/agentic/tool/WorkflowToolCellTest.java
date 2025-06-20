@@ -88,6 +88,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
@@ -206,6 +207,8 @@ class WorkflowToolCellTest {
         assertThat(res.message()).isEqualTo("val1");
         assertThat(res.outputs()[0]).isNotNull();
         assertThat(((JsonString)ConfigurationTestNodeModel.jsonValue).getString()).isEqualTo("config value");
+        assertThat(res.virtualProject()).isNull();
+        assertThat(res.viewNodeIds()).isNull();
     }
 
     @Test
@@ -402,6 +405,45 @@ class WorkflowToolCellTest {
                 assertThat(seed).isEqualTo(v.getSeed());
             }
         }
+    }
+
+    /**
+     * Tests {@link WorkflowToolCell#execute(String, PortObject[], org.knime.core.node.ExecutionContext, Map)} for tools
+     * with view nodes.
+     *
+     * @throws IOException
+     * @throws ToolIncompatibleWorkflowException
+     */
+    @Test
+    void testExecuteToolWorkflowWithViewNodes() throws ToolIncompatibleWorkflowException, IOException {
+        var input = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 1, 0);
+        var node = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(null), 0, 0);
+        var output = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 1, 1);
+        m_toolWfm.addConnection(input.getID(), 1, node.getID(), 1);
+        m_toolWfm.addConnection(node.getID(), 1, output.getID(), 1);
+        var nodeWithViewID =
+            WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WithViewTestNodeFactory(), 1, 1).getID();
+        m_toolWfm.addConnection(node.getID(), 1, nodeWithViewID, 1);
+
+        var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null,
+            FileStoreFactory.createNotInWorkflowFileStoreFactory());
+        var exec = executionContextExtension.getExecutionContext();
+        var inputs = new PortObject[]{TestNodeModel.createTable(exec)};
+        var res = cell.execute("", inputs, exec,
+            Map.of("with-views", "true"));
+        assertThat(res.viewNodeIds()).isNull();
+        assertThat(res.virtualProject()).isNull();
+
+        exec = executionContextExtension.getExecutionContext();
+        res = cell.execute("", inputs, exec, Map.of("with-view-nodes", "true", "execution-mode", "DETACHED"));
+        var virtualProject = res.virtualProject();
+        assertThat(virtualProject).isNotNull();
+        assertThat(res.viewNodeIds()).isEqualTo(new String[]{NodeIDSuffix
+            .create(m_toolWfm.getParent().getID(), nodeWithViewID).prependParent(virtualProject.getID()).toString()});
+
+        res = cell.execute("", inputs, exec, Map.of("with-view-nodes", "true", "execution-mode", "DEBUG"));
+        assertThat(res.virtualProject()).isNull();
+        assertThat(res.viewNodeIds()).hasSize(1);
     }
 
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {
