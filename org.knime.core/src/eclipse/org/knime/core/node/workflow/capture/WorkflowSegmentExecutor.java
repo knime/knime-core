@@ -636,4 +636,14 @@ public final class WorkflowSegmentExecutor {
         return res;
     }
 
+    /**
+     * TODO
+     *
+     * @return
+     */
+    public WorkflowManager getWorkflowManager() {
+        checkWfmNonNull();
+        return m_wfm;
+    }
+
 }

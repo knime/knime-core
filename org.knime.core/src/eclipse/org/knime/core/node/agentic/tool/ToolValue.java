@@ -118,8 +118,9 @@ public interface ToolValue extends DataValue {
      * @param message the message that is presented to the agent (e.g. success or error message)
      * @param outputs the output data that the agent can use to execute subsequent tools with, {@code null} if the
      *            execution failed
+     * @param viewNodeIds TODO
      */
-    record ToolResult(String message, PortObject[] outputs) {
+    record ToolResult(String message, PortObject[] outputs, String[] viewNodeIds /* TODO generalize */) {
     }
 
     /**

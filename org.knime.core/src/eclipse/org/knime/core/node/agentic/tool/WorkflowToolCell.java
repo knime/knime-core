@@ -86,6 +86,7 @@ import org.knime.core.node.dialog.OutputNode;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -418,12 +419,17 @@ public final class WorkflowToolCell extends DataCell implements WorkflowToolValu
             }
             var result = wsExecutor.executeWorkflowAndCollectNodeMessages(inputs, exec);
             executionFailed = result.portObjectCopies() == null;
-            return new ToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()));
+            var wfm = wsExecutor.getWorkflowManager();
+            var viewNodeIds = wfm.getNodeContainers().stream()
+                .filter(nc -> nc instanceof NativeNodeContainer nnc
+                    && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
+                .map(nc -> nc.getID().toString()).toArray(String[]::new);
+            return new ToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()), viewNodeIds);
         } catch (Exception ex) {
             var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
             NodeLogger.getLogger(getClass()).error(message, ex);
             executionFailed = true;
-            return new ToolResult(message, null);
+            return new ToolResult(message, null, null);
         } finally {
             if (wsExecutor != null && !(isDebugMode && executionFailed)) {
                 wsExecutor.dispose();
