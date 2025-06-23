@@ -324,7 +324,7 @@ public final class TemplateUpdateUtil {
     private static NodeContainerTemplate loadMetaNodeTemplateInternal(final URI sourceURI,
         final WorkflowLoadHelper loadHelper, final LoadResult loadResult, File localDir)
         throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
-        var tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
+        var templateRootWfm = WorkflowManager.lazyInitTemplateWorkflowRoot();
         MetaNodeLinkUpdateResult loadResultChild;
         try {
             if (localDir.isFile()) {
@@ -335,7 +335,11 @@ public final class TemplateUpdateUtil {
             }
             TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
             loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
-            tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
+            try {
+                templateRootWfm.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
+            } finally {
+                templateRootWfm.removeNode(loadResultChild.getLoadedInstance().getID());
+            }
         } catch (InvalidSettingsException e) {
             throw new IOException("Unable to read template: " + e.getMessage(), e);
         }
