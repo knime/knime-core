@@ -210,6 +210,8 @@ public class ParallelizedChunkContentMaster implements NodeStateChangeListener {
                     // the metanode was cleared but the StartNode did not
                     // get notified and calls this function again.)
                     parent.removeNode(m_manager.getID());
+                    // clear reference to allow WorkflowManager instance to be garbage-collected.
+                    m_manager = null;
                 }
             }
         }
