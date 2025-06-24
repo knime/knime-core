@@ -181,7 +181,9 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
         if (m_nc.getNodeContainerState().isExecuted()) {
             // we don't want to permanently keep the file stores for an already executed node
             // because those are guaranteed to be not needed anymore downstream
-            return Optional.of(NotInWorkflowWriteFileStoreHandler.create());
+            var fsh = NotInWorkflowWriteFileStoreHandler.create();
+            fsh.open();
+            return Optional.of(fsh);
         }
 
         var fsh = m_nc.getNode().getFileStoreHandler();
