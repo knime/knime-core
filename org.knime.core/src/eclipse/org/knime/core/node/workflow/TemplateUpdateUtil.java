@@ -357,12 +357,19 @@ public final class TemplateUpdateUtil {
      * by trying to load the template. Also uses a cache with the visitedTemplateMap from which already
      * visited templates' links are retrieved.
      *
+     * <b>Note on ownership:</b> the NodeContainerTemplates added to the map output parameter are owned by the caller
+     * and must be unregistered from their parent when the context of this call
+     * (e.g. a workflow project, an update check method, etc.) is closed in order to avoid leaking them.
+     * If you do not care about the map contents, use the version of this method without the output parameter.
+     *
      * @param nodesToCheck NodeContainerTemplates to check
      * @param loadHelper
      * @param loadResult
      * @param visitedTemplateMap cache of visited template nodes
      * @return map from NodeIDs to their corresponding UpdateStatus
      * @throws IOException if the execution was cancelled or the workflow could not be loaded
+     *
+     * @see #fillNodeUpdateStates(Collection, WorkflowLoadHelper, LoadResult)
      */
     public static Map<NodeID, UpdateStatus> fillNodeUpdateStates(
         final Collection<NodeContainerTemplate> nodesToCheck, final WorkflowLoadHelper loadHelper,
@@ -378,6 +385,7 @@ public final class TemplateUpdateUtil {
                 || visitedTemplateMap.get(uri).info().isNewerOrNotEqualThan(linkInfo)) {
                 try {
                     final var templateLoadResult = new LoadResult("Template to " + uri);
+                    // ownership: tempLink must be unregistered from its parent at some point
                     tempLink =
                         loadMetaNodeTemplateIfLocalOrOutdatedOrVersioned(linkedMeta, loadHelper, templateLoadResult);
                     loadResult.addChildError(templateLoadResult);
@@ -412,6 +420,35 @@ public final class TemplateUpdateUtil {
             nodeIdToUpdateStatus.put(linkedMeta.getID(), fillUpdateStatus(linkedMeta, tempLink));
         }
         return nodeIdToUpdateStatus;
+    }
+
+    /**
+     * Iterates through a collection of NodeContainerTemplates and retrieves their update status
+     * by trying to load the template. Also uses a cache with the visitedTemplateMap from which already
+     * visited templates' links are retrieved.
+     *
+     * @param nodesToCheck NodeContainerTemplates to check
+     * @param loadHelper helper to load the templates
+     * @param loadResult the load result to add child errors to
+     * @return map from NodeIDs to their corresponding UpdateStatus
+     * @throws IOException if the execution was cancelled or the workflow could not be loaded
+     *
+     * @since 5.6
+     */
+    public static Map<NodeID, UpdateStatus> fillNodeUpdateStates(
+        final Collection<NodeContainerTemplate> nodesToCheck, final WorkflowLoadHelper loadHelper,
+        final LoadResult loadResult) throws IOException {
+        final var visitedTemplateMap = new LinkedHashMap<URI, TemplateUpdateCheckResult>();
+        try {
+            return fillNodeUpdateStates(nodesToCheck, loadHelper, loadResult, visitedTemplateMap);
+        } finally {
+            // see WorkflowManager#updateMetaNodeLink and WorkflowManager#updateMetaNodeLinks (the finally blocks)
+            // on why we have to do this -> cleaning unused references (AP-24568)
+            visitedTemplateMap.values().stream() //
+                .map(TemplateUpdateCheckResult::template) //
+                .filter(Objects::nonNull) //
+                .forEach(t -> t.getParent().removeNode(t.getID()));
+        }
     }
 
     /**
