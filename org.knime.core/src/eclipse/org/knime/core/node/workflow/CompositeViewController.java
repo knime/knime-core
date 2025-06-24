@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -67,7 +69,7 @@ import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
  * component).
  *
  * This class is really only dedicated to 'isolated' single pages of components. Single page (re-)execution of page that
- * are part of a wizard is done via {@link WizardExecutionController#reexecuteSinglePage(NodeID, Map)}.
+ * are part of a wizard is done via {@link WizardExecutionController#reexecuteSinglePage(Collection<NodeID>, Map)}.
  *
  * <p>
  * Do not use, no public API.
@@ -143,6 +145,36 @@ public class CompositeViewController extends WebResourceController {
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
      *            settings), false otherwise (apply temporarily)
+     * @param nodeIDsToReset list of nodes in current page (i.e. component/composite view) to be reset (including all
+     *            their successors within the same page) before loading the values; if <code>null</code> all nodes
+     *            within the page are being reset
+     *
+     * @throws IllegalStateException if the page is executing or if the associated page is not the 'current' page
+     *             anymore (only if part of a workflow in wizard execution)
+     *
+     * @return an empty map if validation succeeds, map of errors otherwise
+     */
+    public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap,
+        final boolean validate, final boolean useAsDefault, final Collection<NodeID> nodeIDsToReset) {
+        WorkflowManager manager = m_manager;
+        try (WorkflowLock lock = manager.lock()) {
+            checkDiscard();
+            NodeContext.pushContext(manager);
+            try {
+                return loadValuesIntoPageInternal(viewContentMap, m_nodeID, validate, useAsDefault, nodeIDsToReset);
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+    }
+
+    /**
+     * Tries to load a map of view values to all appropriate views contained in the given subnode.
+     *
+     * @param viewContentMap the values to validate
+     * @param validate true, if validation is supposed to be done before applying the values, false otherwise
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
+     *            settings), false otherwise (apply temporarily)
      * @param nodeToReset a node in current page (i.e. component/composite view) to be reset (including all it's
      *            successors within the same page) before loading the values; if <code>null</code> all nodes within the
      *            page are being reset
@@ -154,23 +186,18 @@ public class CompositeViewController extends WebResourceController {
      */
     public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap,
         final boolean validate, final boolean useAsDefault, final NodeID nodeToReset) {
-        WorkflowManager manager = m_manager;
-        try (WorkflowLock lock = manager.lock()) {
-            checkDiscard();
-            NodeContext.pushContext(manager);
-            try {
-                return loadValuesIntoPageInternal(viewContentMap, m_nodeID, validate, useAsDefault, nodeToReset);
-            } finally {
-                NodeContext.removeLastContext();
-            }
-        }
+
+    	var nodeIDsToReset = nodeToReset == null ? null
+                : List.of(nodeToReset);
+
+        return loadValuesIntoPage(viewContentMap, validate, useAsDefault, nodeIDsToReset);
     }
 
     /**
-     * Processes a request issued by a view by calling the appropriate methods on the corresponding node
-     * model and returns the rendered response. This request handling is *only* for node-specific requests.
-     * For component-level requests (such as for re-execution), the {@link ViewableModel} impl. should handle
-     * the bulk of the logic regarding composition of the response.
+     * Processes a request issued by a view by calling the appropriate methods on the corresponding node model and
+     * returns the rendered response. This request handling is *only* for node-specific requests. For component-level
+     * requests (such as for re-execution), the {@link ViewableModel} impl. should handle the bulk of the logic
+     * regarding composition of the response.
      *
      * @param nodeID The node id of the node that the request belongs to.
      * @param viewRequest The JSON serialized view request
@@ -254,14 +281,14 @@ public class CompositeViewController extends WebResourceController {
      * {@inheritDoc}
      */
     @Override
-    public Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
+    public Map<String, ValidationError> reexecuteSinglePage(final Collection<NodeID> nodeIDsToReset,
         final Map<String, String> valueMap) {
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = m_nodeID;
             SubNodeContainer snc = (SubNodeContainer)m_manager.getNodeContainer(pageID);
             try (WorkflowLock sncLock = snc.lock()) {
                 Map<String, ValidationError> validationResult =
-                    loadValuesIntoPage(valueMap, true, false, nodeIDToReset);
+                    loadValuesIntoPage(valueMap, true, false, nodeIDsToReset);
                 if (validationResult == null || validationResult.isEmpty()) {
                     m_manager.executeUpToHere(pageID);
                 }

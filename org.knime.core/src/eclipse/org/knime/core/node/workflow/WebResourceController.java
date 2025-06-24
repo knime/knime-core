@@ -54,6 +54,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -167,13 +168,15 @@ public abstract class WebResourceController {
      * @param validate true, if validation is supposed to be done before applying the values, false otherwise
      * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
      *            settings), false otherwise (apply temporarily)
-     * @param nodeToReset a node in page (i.e., the subnode denoted by subnodeID) to be reset (including all it's
-     *            successors within the same page or nested subnode); if <code>null</code> all nodes within the subnode
-     *            (i.e. the entire page) are being reset
+     * @param nodeIDsToReset list of nodes in page (i.e., the subnode denoted by subnodeID) to be reset (including all
+     *            their successors within the same page or nested subnode); if <code>null</code> all nodes within the
+     *            subnode (i.e. the entire page) are being reset
      * @return empty map if validation succeeds, map of errors otherwise
+     * @since 5.5
      */
     protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap,
-        final NodeID subnodeID, final boolean validate, final boolean useAsDefault, final NodeID nodeToReset) {
+        final NodeID subnodeID, final boolean validate, final boolean useAsDefault,
+        final Collection<NodeID> nodeIDsToReset) {
         if (subnodeID == null) {
             LOGGER.error("No node ID supplied for loading values into wizard page");
             return Collections.emptyMap();
@@ -182,12 +185,13 @@ public abstract class WebResourceController {
         assert manager.isLockedByCurrentThread();
 
         Map<String, String> filteredViewContentMap;
-        if (nodeToReset == null) {
+
+        if (nodeIDsToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-            Set<String> nodesToReset =
-                WizardPageUtil.getSuccessorWizardPageNodesWithinComponent(manager, subnodeID, nodeToReset)
-                    .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
+			var nodesToReset = WizardPageUtil
+					.getSuccessorWizardPageNodesWithinComponent(manager, subnodeID, nodeIDsToReset)
+					.map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
@@ -210,16 +214,41 @@ public abstract class WebResourceController {
                 subNodeNC.getNameWithID());
         }
 
-        if (nodeToReset == null) {
+        if (nodeIDsToReset == null) {
             manager.resetSubnodeForViewUpdate(subnodeID, this);
         } else {
-            manager.resetSubnodeForViewUpdate(subnodeID, this, nodeToReset);
+            for (NodeID nodeID : nodeIDsToReset) {
+                manager.resetSubnodeForViewUpdate(subnodeID, this, nodeID);
+            }
         }
 
         loadViewValues(filteredViewContentMap, wizardNodeSet, manager, useAsDefault);
 
         manager.configureNodeAndSuccessors(subnodeID, true);
         return Collections.emptyMap();
+    }
+
+    /**
+     * Tries to load a map of view values to all appropriate views contained in a given subnode. This is a convenience
+     * method to call {@link #loadValuesIntoPageInternal(Map, NodeID, boolean, boolean, Collection)}
+     *
+     * @param viewContentMap the values to load
+     * @param subnodeID the id for the subnode (i.e. the page) containing the appropriate view nodes
+     * @param validate true, if validation is supposed to be done before applying the values, false otherwise
+     * @param useAsDefault true, if the given value map is supposed to be applied as new node defaults (overwrite node
+     *            settings), false otherwise (apply temporarily)
+     * @param nodeIDToReset a node in page (i.e., the subnode denoted by subnodeID) to be reset (including all its
+     *            successors within the same page or nested subnode); if <code>null</code> all nodes within the subnode
+     *            (i.e. the entire page) are being reset
+     * @return empty map if validation succeeds, map of errors otherwise
+     */
+    protected Map<String, ValidationError> loadValuesIntoPageInternal(final Map<String, String> viewContentMap,
+        final NodeID subnodeID, final boolean validate, final boolean useAsDefault, final NodeID nodeIDToReset) {
+
+        var nodeIDsToReset = nodeIDToReset == null ? null
+            : List.of(nodeIDToReset);
+
+        return loadValuesIntoPageInternal(viewContentMap, subnodeID, validate, useAsDefault, nodeIDsToReset);
     }
 
     @SuppressWarnings("rawtypes")
@@ -447,20 +476,38 @@ public abstract class WebResourceController {
     }
 
     /**
-     * Re-executes a subset of nodes of the current page. I.e. resets all nodes downstream of the given node (within the
-     * page), loads the provided values into the reset nodes and triggers workflow execution of the entire page. Notes:
-     * Provided values that refer to a node that hasn't been reset will be ignored. If the validation of the input
-     * values fails, the page won't be re-executed and remains reset.
+     * Re-executes a subset of nodes of the current page. I.e. resets all nodes downstream of the given list of nodes
+     * (within the page), loads the provided values into the reset nodes and triggers workflow execution of the entire
+     * page. Notes: Provided values that refer to a node that hasn't been reset will be ignored. If the validation of
+     * the input values fails, the page won't be re-executed and remains reset.
      *
-     * @param nodeIDToReset the absolute {@link NodeID} of the upstream-most node in the page that shall be reset.
+     * @param nodeIDsToReset list of absolute {@link NodeID}s of the upstream-most nodes in the page that shall be
+     *            reset.
      * @param valueMap the values to load before re-execution, a map from {@link NodeIDSuffix} strings to parsed view
      *            values.
      * @return empty map if validation succeeds, map of errors otherwise
      *
-     * @since 4.4
+     * @since 5.5
      */
-    public abstract Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
+    public abstract Map<String, ValidationError> reexecuteSinglePage(final Collection<NodeID> nodeIDsToReset,
         final Map<String, String> valueMap);
+
+    /**
+     * Re-executes a subset of nodes of the current page. I.e. resets all nodes downstream of the given node (within the
+     * page), Convenience method to call {@link #reexecuteSinglePage(Collection, Map)} with a single node.
+     *
+     * @param nodeIDToReset the absolute {@link NodeID} of the upstream-most node in the page that shall be reset.
+     * @param valueMap the values to load before re-execution, a map from {@link NodeIDSuffix} strings to parsed view
+     * @return empty map if validation succeeds, map of errors otherwise
+     */
+    public Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
+        final Map<String, String> valueMap) {
+
+        var nodeIDsToReset = nodeIDToReset == null ? null
+                : List.of(nodeIDToReset);
+
+        return reexecuteSinglePage(nodeIDsToReset, valueMap);
+    }
 
     /**
      * Composes the NodeID of a subnode.

@@ -83,7 +83,7 @@ public class EnhWEBP674_SinglePageExecution extends WorkflowTestCase {
 		WizardExecutionController wec = wfm.setAndGetWizardExecutionController();
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class,
-				() -> wec.reexecuteSinglePage(null, Collections.emptyMap()));
+				() -> wec.reexecuteSinglePage((NodeID)null, Collections.emptyMap()));
 		assertThat(exception.getMessage(), is("No current wizard page"));
 
 		// advance to first page
