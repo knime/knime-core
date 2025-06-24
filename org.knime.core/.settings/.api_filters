@@ -506,6 +506,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WebResourceController.java" type="org.knime.core.node.workflow.WebResourceController">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WebResourceController"/>
+                <message_argument value="reexecuteSinglePage(Collection&lt;NodeID&gt;, Map&lt;String,String&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
         <filter comment="removed &quot;OLD&quot; (unused) method" id="338792546">
             <message_arguments>

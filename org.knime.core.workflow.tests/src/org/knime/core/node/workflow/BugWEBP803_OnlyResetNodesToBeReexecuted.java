@@ -87,7 +87,7 @@ public class BugWEBP803_OnlyResetNodesToBeReexecuted extends WorkflowTestCase {
 		assertThrows(IllegalArgumentException.class, () -> WizardPageUtil
 				.getSuccessorWizardPageNodesWithinComponent(wfm, pageId, pageId.createChild(0).createChild(83483883)));
 		assertThrows(IllegalArgumentException.class, () -> WizardPageUtil
-				.getSuccessorWizardPageNodesWithinComponent(wfm, wfm.getID().createChild(34342), null));
+				.getSuccessorWizardPageNodesWithinComponent(wfm, wfm.getID().createChild(34342),(NodeID) null));
 	}
 
 	/**

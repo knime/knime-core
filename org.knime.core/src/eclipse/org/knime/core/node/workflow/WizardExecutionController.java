@@ -48,6 +48,7 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -515,8 +516,20 @@ public final class WizardExecutionController extends WebResourceController imple
      * {@inheritDoc}
      */
     @Override
+    public Map<String, ValidationError> reexecuteSinglePage(final Collection<NodeID> nodeIDsToReset,
+        final Map<String, String> valueMap) {
+
+        throw new UnsupportedOperationException(
+            "Single page re-execution with multiple nodes is not supported in the wizard execution controller.");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Map<String, ValidationError> reexecuteSinglePage(final NodeID nodeIDToReset,
         final Map<String, String> valueMap) {
+
         try (WorkflowLock lock = m_manager.lock()) {
             NodeID pageID = getCurrentWizardPageNodeID();
             doBeforePageChange(true);

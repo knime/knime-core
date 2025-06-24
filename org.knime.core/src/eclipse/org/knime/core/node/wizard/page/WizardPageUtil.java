@@ -50,7 +50,9 @@ package org.knime.core.node.wizard.page;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -307,15 +309,17 @@ public final class WizardPageUtil {
      */
     public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardPageNodesWithinComponent(
         final WorkflowManager wfm, final NodeID componentId, final NodeID startNodeId) {
+
         CheckUtils.checkArgument(wfm.getNodeContainer(componentId) instanceof SubNodeContainer,
             "Provided node id (%s) doesn't reference a component", componentId);
+
         try (WorkflowLock lock = wfm.lock()) {
             return getAllSuccessorNodesWithinComponent(componentId, wfm.findNodeContainer(startNodeId))//
                 .filter(WizardPageUtil::isWizardPageNodeOrComponentOrMetanode)//
                 .flatMap(nc -> {
                     if (nc instanceof NativeNodeContainer) {
                         return Stream.of(nc);
-                    } else if(nc instanceof SubNodeContainer snc){
+                    } else if (nc instanceof SubNodeContainer snc) {
                         return getWizardPageNodes(snc.getWorkflowManager(), true).stream();
                     } else {
                         return Stream.of();
@@ -324,8 +328,45 @@ public final class WizardPageUtil {
         }
     }
 
+    /**
+     * Utility method to get a special set of successor nodes of a list of nodes denoted by the provided
+     * {@link Collection< NodeID >}. Duplicates will be filtered out. This is a convenience method to get successor
+     * nodes for multiple start nodes at once and is calling
+     * {@link #getSuccessorWizardPageNodesWithinComponent(WorkflowManager, NodeID, NodeID)} under the hood. For details
+     * see the documentation of that method.
+     *
+     * @param wfm parent manager of the component denoted by componentId
+     * @param componentId must be a component which represents the wizard page
+     * @param startNodeIds the nodes to get the successor nodes for
+     * @return a stream of successor nodes represented by node id suffixes (relative to the project) and their node
+     * @since 5.5
+     */
+    public static Stream<Pair<NodeIDSuffix, NodeContainer>> getSuccessorWizardPageNodesWithinComponent(
+        final WorkflowManager wfm, final NodeID componentId, final Collection<NodeID> startNodeIds) {
+
+        CheckUtils.checkArgument(wfm.getNodeContainer(componentId) instanceof SubNodeContainer,
+            "Provided node id (%s) doesn't reference a component", componentId);
+
+        if( startNodeIds == null ) {
+            return Stream.empty();
+        }
+
+        try (WorkflowLock lock = wfm.lock()) {
+            Map<NodeID, Pair<NodeIDSuffix, NodeContainer>> distinctPairs = new HashMap<>();
+
+            for (NodeID startNodeId : startNodeIds) {
+                getSuccessorWizardPageNodesWithinComponent(wfm, componentId, startNodeId).forEach(pair -> {
+                    NodeID nodeId = pair.getSecond().getID();
+                    distinctPairs.putIfAbsent(nodeId, pair);
+                });
+            }
+            return distinctPairs.values().stream();
+        }
+    }
+
     private static boolean isWizardPageNodeOrComponentOrMetanode(final NodeContainer nc) {
-        return (nc instanceof NativeNodeContainer nnc && isWizardPageNode(nnc)) || nc instanceof WorkflowManager
+        return (nc instanceof NativeNodeContainer nnc && isWizardPageNode(nnc)) //
+            || nc instanceof WorkflowManager //
             || nc instanceof SubNodeContainer;
     }
 
