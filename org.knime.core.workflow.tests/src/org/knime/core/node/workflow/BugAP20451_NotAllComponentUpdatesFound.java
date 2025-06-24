@@ -46,11 +46,16 @@
 package org.knime.core.node.workflow;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -62,6 +67,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
+import org.knime.core.node.workflow.TemplateUpdateUtil.TemplateUpdateCheckResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.knime.testing.util.URIToFileResolveTestUtil;
@@ -148,13 +154,15 @@ public class BugAP20451_NotAllComponentUpdatesFound extends WorkflowTestCase {
      */
     private void checkForUpdateInOrder(final Map<NodeContainerTemplate, UpdateStatus> expectedUpdateStatuses)
             throws IOException {
+        // AP-24568: we don't want to take ownership of the loaded templates (and their references to parent WFMs)
+        // here, thus use new `TemplateUpdateUtil#fillNodeUpdateStates` from 5.5
         final var actualUpdateStatuses = TemplateUpdateUtil.fillNodeUpdateStates(expectedUpdateStatuses.keySet(),
-                new WorkflowLoadHelper(true, getManager().getContextV2()), new LoadResult("ignored"), new HashMap<>());
+                new WorkflowLoadHelper(true, getManager().getContextV2()), new LoadResult("ignored"));
 
         for (final var template : expectedUpdateStatuses.keySet()) {
             final var expected = expectedUpdateStatuses.get(template);
             final var actual = actualUpdateStatuses.get(template.getID());
-            assertThat(String.format("Component '%s' should be %s, but is actually %s", template.getNameWithID(),
+            assertThat(String.format("Template '%s' should be %s, but is actually %s", template.getNameWithID(),
                     expected, actual), actual == expected);
         }
     }
