@@ -59,6 +59,7 @@ import org.apache.log4j.helpers.PatternConverter;
 import org.apache.log4j.helpers.PatternParser;
 import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.NodeLogger.KNIMELogMessage;
+import org.knime.core.node.logging.NodeLoggerPatternConstants;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.util.CoreConstants;
 
@@ -70,18 +71,6 @@ import org.knime.core.util.CoreConstants;
  * @since 2.12
  */
 public class NodeLoggerPatternLayout extends PatternLayout {
-    /**Node id pattern.*/
-    static final char NODE_ID = 'I';
-    /**Node name pattern.*/
-    static final char NODE_NAME = 'N';
-    /**Qualifier pattern as a combination of node name and category.*/
-    static final char QUALIFIER = 'Q';
-    /**Workflow directory pattern.*/
-    static final char WORKFLOW_DIR = 'W';
-    /**Job id pattern.*/
-    static final char JOB_ID = 'J';
-    /** Correlation ID pattern. */
-    static final char CORRELATION_ID = 'C';
 
     static class LogPatternParser extends PatternParser {
         /**
@@ -94,27 +83,27 @@ public class NodeLoggerPatternLayout extends PatternLayout {
         @Override
         protected void finalizeConverter(final char c) {
             switch (c) {
-            case NODE_ID:
+            case NodeLoggerPatternConstants.NODE_ID:
                 currentLiteral.setLength(0);
                 addConverter(new NodeIDLogPatternConverter(formattingInfo, extractPrecisionOption()));
                 break;
-            case NODE_NAME:
+            case NodeLoggerPatternConstants.NODE_NAME:
                 currentLiteral.setLength(0);
                 addConverter(new NodeNameLogPatternConverter(formattingInfo));
                 break;
-            case WORKFLOW_DIR:
+            case NodeLoggerPatternConstants.WORKFLOW_DIR:
                 currentLiteral.setLength(0);
                 addConverter(new WorkflowDirLogPatternConverter(formattingInfo, extractPrecisionOption()));
                 break;
-            case QUALIFIER:
+            case NodeLoggerPatternConstants.QUALIFIER:
                 currentLiteral.setLength(0);
                 addConverter(new QualifierPatternConverter(formattingInfo, extractPrecisionOption()));
                 break;
-            case JOB_ID:
+            case NodeLoggerPatternConstants.JOB_ID:
                 currentLiteral.setLength(0);
                 addConverter(new JobIDLogPatternConverter(formattingInfo));
                 break;
-            case CORRELATION_ID:
+            case NodeLoggerPatternConstants.CORRELATION_ID:
                 currentLiteral.setLength(0);
                 addConverter(new CorrelationIDLogPatternConverter(formattingInfo));
                 break;

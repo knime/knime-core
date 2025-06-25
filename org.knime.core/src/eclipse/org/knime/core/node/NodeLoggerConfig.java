@@ -63,6 +63,7 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.logging.WorkflowLogCloseable;
 import org.knime.core.util.Pair;
 
 /**
@@ -91,9 +92,9 @@ public final class NodeLoggerConfig {
         final Layout layout;
         if (appender != null) {
             layout = appender.getLayout();
-            NodeLogger.checkLayoutFlags(layout);
+            WorkflowLogCloseable.checkLayoutFlags(layout);
         } else {
-            layout = NodeLogger.workflowDirLogfileLayout;
+            layout = WorkflowLogCloseable.workflowDirLogfileLayout;
         }
         // no stack traces in KNIME's console view:
         // a custom layout that pretends Throwable information is baked into the log message
@@ -146,7 +147,7 @@ public final class NodeLoggerConfig {
             WRITER.put(writer, appender);
         }
         Logger.getRootLogger().addAppender(appender);
-        NodeLogger.checkLayoutFlags(layout);
+        WorkflowLogCloseable.checkLayoutFlags(layout);
         NodeLogger.updateLog4JKNIMELoggerLevel();
     }
 
@@ -159,7 +160,7 @@ public final class NodeLoggerConfig {
         synchronized (WRITER) {
             final var appender = WRITER.get(writer);
             if (appender != null) {
-                if (appender != NodeLogger.LOG_FILE_APPENDER) {
+                if (appender != WorkflowLogCloseable.logFileAppender) {
                     Logger.getRootLogger().removeAppender(appender);
                     WRITER.remove(writer);
                 }
