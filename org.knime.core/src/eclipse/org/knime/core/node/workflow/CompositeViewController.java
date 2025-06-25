@@ -153,6 +153,7 @@ public class CompositeViewController extends WebResourceController {
      *             anymore (only if part of a workflow in wizard execution)
      *
      * @return an empty map if validation succeeds, map of errors otherwise
+     * @since 5.5
      */
     public Map<String, ValidationError> loadValuesIntoPage(final Map<String, String> viewContentMap,
         final boolean validate, final boolean useAsDefault, final Collection<NodeID> nodeIDsToReset) {
