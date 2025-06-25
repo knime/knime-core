@@ -68,6 +68,8 @@ public record WorkbenchMountPointSettings(String mountID,
 
     public WorkbenchMountPointSettings {
         CheckUtils.checkArgumentNotNull(mountID, "mount id must not be null");
+        CheckUtils.checkArgument(defaultMountID == null || !defaultMountID.isBlank(),
+                "Default Mount ID must be null or non-blank");
         CheckUtils.checkArgumentNotNull(factoryID, "factory id must not be null");
         CheckUtils.checkArgumentNotNull(mountPointStateSettings, "Settings must not be null");
     }

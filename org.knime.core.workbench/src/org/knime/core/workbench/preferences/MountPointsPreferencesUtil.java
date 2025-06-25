@@ -477,7 +477,7 @@ public final class MountPointsPreferencesUtil {
 
                 String mountID = node.get(MOUNT_ID, "");
                 String factoryID = node.get(FACTORY_ID, "");
-                String defaultMountID = node.get(DEFAULT_MOUNT_ID, "");
+                String defaultMountID = node.get(DEFAULT_MOUNT_ID, null);
                 boolean active = node.getBoolean(ACTIVE, true);
                 int mountPointNumber = node.getInt(MOUNTPOINT_NUMBER, 0);
                 return new WorkbenchMountPointSettingsAndNumber(//
