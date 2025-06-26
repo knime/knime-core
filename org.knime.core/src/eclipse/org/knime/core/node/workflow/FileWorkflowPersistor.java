@@ -1435,12 +1435,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         Path filePath = Paths.get(fileString);
 
         // robustness check in case the folder name has wrong casing (AP-23528): "File Reader(#1)" vs. "file reader(#1)"
+        NodeLogger logger = getLogger();
         if (filePath.getNameCount() >= 2) { // first level: folder name, second level (unchanged): xml file name
             final Path filePathParent = filePath.getName(0);
 
             // if "File Reader(#1)" does not exist, find directory ignoring case (e.g. "file reader(#1)"))
             if (!Files.exists(workflowDirAsPath.resolve(filePathParent))) {
-                getLogger().debugWithFormat("Parent directory of node settings file does not exist: \"%s\"",
+                logger.debugWithFormat("Parent directory of node settings file does not exist: \"%s\"",
                     filePathParent);
                 final Path childrenPath = filePath.subpath(1, filePath.getNameCount());
                 try (final Stream<Path> dirWalker = Files.walk(workflowDirAsPath, 1)) {
@@ -1451,7 +1452,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
                         .findFirst() //
                         .map(Path::getFileName) // makes it relative (only the directory name)
                         .map(path -> {
-                            getLogger().debugWithFormat("Found matching directory: \"%s\"", path);
+                            logger.debugWithFormat("Found matching directory: \"%s\"", path);
                             return path;
                         }) //
                         .map(matchingPath -> matchingPath.resolve(childrenPath)) //
@@ -1466,7 +1467,33 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         // why java.io.File (again)? Old code...
         File fullFile = workflowDirAsPath.resolve(filePath).toFile();
         if (!fullFile.isFile() || !fullFile.canRead()) {
-            throw new InvalidSettingsException("Unable to read settings file " + fullFile.getAbsolutePath());
+            logger.errorWithFormat("Change 4: Settings file \"%s\" does not exist (%b) or is not readable (%b)",
+                fullFile.getAbsolutePath(), fullFile.isFile(), fullFile.canRead());
+            // iterate the parent folder (until one is found), then print the list of files in that folder
+
+            File parentFileOfFileHandlingTestTemp = fullFile;
+            File parentFile = fullFile;
+            do {
+                parentFile = parentFile.getParentFile();
+                if (parentFile != null && parentFile.getName().contains("knime-filehandling")) {
+                    parentFileOfFileHandlingTestTemp = parentFile;
+                }
+            } while (parentFile != null);
+
+            // print the list of files in the parent folder, recursively, indent subfolders with two space chars
+            StringBuilder sb = new StringBuilder();
+            sb.append("Files in parent folder (recursively):\n");
+            final File parentFileOfFileHandlingTest = parentFileOfFileHandlingTestTemp;
+            try (Stream<Path> paths = Files.walk(parentFileOfFileHandlingTest.toPath())) {
+                paths.forEach(path -> {
+                    String indent =
+                        "  ".repeat(path.getNameCount() - parentFileOfFileHandlingTest.toPath().getNameCount());
+                    sb.append(indent).append(path.getFileName()).append("\n");
+                });
+            } catch (IOException e) {
+                sb.append("Error reading files: ").append(e.getMessage()).append("\n");
+            }
+            logger.errorWithFormat("%s", sb.toString());
         }
         Stack<String> children = new Stack<String>();
         File workflowDirAbsolute = workflowDir.getAbsoluteFile();
