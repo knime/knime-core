@@ -1466,7 +1466,23 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         // why java.io.File (again)? Old code...
         File fullFile = workflowDirAsPath.resolve(filePath).toFile();
         if (!fullFile.isFile() || !fullFile.canRead()) {
-            throw new InvalidSettingsException("Unable to read settings file " + fullFile.getAbsolutePath());
+            getLogger().errorWithFormat("Change 3: Settings file \"%s\" does not exist (%b) or is not readable (%b)",
+                fullFile.getAbsolutePath(), fullFile.isFile(), fullFile.canRead());
+            // iterate the parent folder (until one is found), then print the list of files in that folder
+            File parentFile = fullFile.getParentFile();
+            getLogger().debugWithFormat("Testing content of \"%s\"", Optional.ofNullable(parentFile).map(File::getAbsolutePath).orElse("null"));
+            while (parentFile != null && !parentFile.isDirectory()) {
+                getLogger().debugWithFormat("Testing content of \"%s\"", Optional.ofNullable(parentFile).map(File::getAbsolutePath).orElse("null"));
+                getLogger().errorWithFormat("Parent folder \"%s\" is not a directory", parentFile.getAbsolutePath());
+                parentFile = fullFile.getParentFile();
+            }
+            getLogger().debugWithFormat("Tested content of \"%s\"", Optional.ofNullable(parentFile).map(File::getAbsolutePath).orElse("null"));
+            if (parentFile != null && parentFile.isDirectory()) {
+                getLogger().errorWithFormat("Parent folder \"%s\" contains:", parentFile.getAbsolutePath());
+                for (File f : parentFile.listFiles()) {
+                    getLogger().errorWithFormat("- %s", f.getName());
+                }
+            }
         }
         Stack<String> children = new Stack<String>();
         File workflowDirAbsolute = workflowDir.getAbsoluteFile();
