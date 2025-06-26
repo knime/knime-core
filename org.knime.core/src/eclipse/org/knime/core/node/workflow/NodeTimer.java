@@ -61,6 +61,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -91,6 +92,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.JsonUtil;
 import org.knime.core.util.MutableInteger;
@@ -254,25 +256,40 @@ public final class NodeTimer {
             return !DISABLE_GLOBAL_TIMER;
         }
 
+        private Optional<NodeStats> getNodeContainerAsNodeStats(final NodeContainer nc) {
+            if (nc == null) {
+                return Optional.empty();
+            }
+            // check whether the node container is instance of a "plain missing node", in contrast
+            // to a normal "missing node placeholder", we have broken the link to the actual factory
+            if (nc instanceof NativeNodeContainer nnc) {
+                final var factoryId = nnc.getNode().getFactory().getFactoryId();
+                if (StringUtils.startsWith(factoryId, MissingNodeFactory.class.getName())) {
+                    LOGGER.codingWithFormat("Detected plain missing node \"%s\" (not a placeholder), "
+                        + "ignoring for global node usage statistics", nc.getNameWithID());
+                    return Optional.empty();
+                }
+            }
+            // otherwise, ensure that the corresponding `NodeStats` instance is recorded globally
+            final var key = NodeKey.get(nc);
+            return Optional.of(m_globalNodeStats.computeIfAbsent(key, k -> new NodeStats(nc.getName())));
+        }
+
         private void addExecutionTime(final NodeContainer nc, final boolean success, final long exectime) {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            var nodeKey = NodeKey.get(nc);
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(nodeKey);
-                if (ns == null) {
-                    ns = new NodeStats(nc.getName());
-                    m_globalNodeStats.put(nodeKey, ns);
-                }
-                ns.executionTime += exectime;
-                if (success) {
-                    ns.executionCount++;
-                } else {
-                    ns.failureCount++;
-                }
-                processStatChanges();
+                getNodeContainerAsNodeStats(nc).ifPresent(ns -> {
+                    ns.executionTime += exectime;
+                    if (success) {
+                        ns.executionCount++;
+                    } else {
+                        ns.failureCount++;
+                    }
+                    processStatChanges();
+                });
             }
         }
 
@@ -282,13 +299,10 @@ public final class NodeTimer {
             }
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(NodeKey.get(nc));
-                if (ns == null) {
-                    ns = new NodeStats(nc.getName());
-                    m_globalNodeStats.put(NodeKey.get(nc), ns);
-                }
-                ns.creationCount++;
-                processStatChanges();
+                getNodeContainerAsNodeStats(nc).ifPresent(ns -> {
+                    ns.creationCount++;
+                    processStatChanges();
+                });
             }
         }
 
@@ -301,14 +315,12 @@ public final class NodeTimer {
             if (DISABLE_GLOBAL_TIMER) {
                 return;
             }
-            synchronized(this) {
-                var ns = m_globalNodeStats.get(NodeKey.get(nc));
-                if (ns == null) {
-                    ns = new NodeStats(nc.getName());
-                    m_globalNodeStats.put(NodeKey.get(nc), ns);
-                }
-                ns.settingsChangedCount++;
-                processStatChanges();
+            // synchronized to avoid conflicts and parallel file writes
+            synchronized (this) {
+                getNodeContainerAsNodeStats(nc).ifPresent(ns -> {
+                    ns.settingsChangedCount++;
+                    processStatChanges();
+                });
             }
         }
 
@@ -318,18 +330,15 @@ public final class NodeTimer {
             }
             // synchronized to avoid conflicts and parallel file writes
             synchronized (this) {
-                NodeStats ns = m_globalNodeStats.get(NodeKey.get(source));
-                if (ns == null) {
-                    ns = new NodeStats(source.getName());
-                    m_globalNodeStats.put(NodeKey.get(source), ns);
-                }
-                // remember the newly connected successor with a 50:50 chance
-                // (statistics over many thousands of users will provide real info)
-                if ((ns.likelySuccessor.equals(N_A)) | (Math.random() >= .5)) {
-                    ns.likelySuccessor = NodeKey.get(dest).id();
-                    ns.successorNodeName = dest.getName();
-                }
-                processStatChanges();
+                getNodeContainerAsNodeStats(source).ifPresent(ns -> {
+                    // remember the newly connected successor with a 50:50 chance
+                    // (statistics over many thousands of users will provide real info)
+                    if ((ns.likelySuccessor.equals(N_A)) || (Math.random() >= .5)) {
+                        ns.likelySuccessor = NodeKey.get(dest).id();
+                        ns.successorNodeName = dest.getName();
+                    }
+                    processStatChanges();
+                });
             }
         }
 
