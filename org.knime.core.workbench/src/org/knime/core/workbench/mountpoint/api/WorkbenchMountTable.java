@@ -279,6 +279,7 @@ public final class WorkbenchMountTable {
         synchronized (MOUNTED) {
             return WorkbenchActivator.getInstance().getMountPointTypes().stream() //
                 .filter(mpDef -> mpDef.supportsMultipleInstances() || !(isMounted(mpDef.getTypeIdentifier()))) //
+                .filter(mpDef -> isAllowed(mpDef)) //
                 .sorted(DESC_PRIO) //
                 .toList();
         }
@@ -359,6 +360,19 @@ public final class WorkbenchMountTable {
                     + "mount point \"{}\" is allowed, defaulting to false.",
                 mountSettings.factoryID(), mountSettings.mountID());
             return false;
+        }
+    }
+
+    private static boolean isAllowed(final WorkbenchMountPointType type) {
+        try {
+            return isAllowed(type, WorkbenchMountPointState.EMPTY_SETTINGS);
+        } catch (WorkbenchMountException e) {
+            LOGGER.atError().setCause(e).log(
+                "Unable to determine whether the mount type \"{}\" is allowed, defaulting to true.",
+                type.getTypeIdentifier());
+            // defaulting to true since this check is *not* applied when checking to
+            // actually mount in `mountOrRestore`, but to find addable mount point types
+            return true;
         }
     }
 
