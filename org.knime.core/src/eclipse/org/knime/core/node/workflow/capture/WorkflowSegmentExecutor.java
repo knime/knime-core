@@ -129,8 +129,6 @@ public final class WorkflowSegmentExecutor {
 
     private WorkflowManager m_hostWfm;
 
-    private final boolean m_shallDisposeHostWfm;
-
     private final NativeNodeContainer m_hostNode;
 
     private FlowVirtualScopeContext m_flowVirtualScopeContext;
@@ -210,10 +208,8 @@ public final class WorkflowSegmentExecutor {
         m_hostNode = (NativeNodeContainer)hostNode;
         if (mode == ExecutionMode.DETACHED) {
             m_hostWfm = createTemporaryWorkflowProject(m_hostNode.getParent().getWorkflowDataRepository());
-            m_shallDisposeHostWfm = true;
         } else {
             m_hostWfm = hostNode.getParent();
-            m_shallDisposeHostWfm = false;
         }
 
         try (var unused = m_hostWfm.lock()) {
@@ -258,7 +254,8 @@ public final class WorkflowSegmentExecutor {
                 var creationHelper = new WorkflowCreationHelper(
                     WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null));
                 creationHelper.setWorkflowDataRepository(workflowDataRepository);
-                return WorkflowManager.ROOT.createAndAddProject("workflow_segment_executor", creationHelper);
+                return WorkflowManager.VIRTUAL_WORKFLOW_ROOT.createAndAddProject("workflow_segment_executor",
+                    creationHelper);
             } else {
                 throw new KNIMEException("Creating empty workflow for workflow segment execution failed");
             }
@@ -594,9 +591,9 @@ public final class WorkflowSegmentExecutor {
         cancel();
         m_wfm.getParent().removeNode(m_wfm.getID());
         m_wfm = null;
-        if (m_shallDisposeHostWfm) {
+        if (m_hostWfm.getParent() == WorkflowManager.VIRTUAL_WORKFLOW_ROOT) {
             var wfDir = m_hostWfm.getContextV2().getExecutorInfo().getLocalWorkflowPath().toFile();
-            WorkflowManager.ROOT.removeProject(m_hostWfm.getID());
+            WorkflowManager.VIRTUAL_WORKFLOW_ROOT.removeProject(m_hostWfm.getID());
             FileUtils.deleteQuietly(wfDir);
         }
         m_hostWfm = null;
