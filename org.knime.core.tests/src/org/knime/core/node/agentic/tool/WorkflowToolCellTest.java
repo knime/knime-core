@@ -77,10 +77,14 @@ import org.junit.jupiter.api.io.TempDir;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.LongUTFDataInputStream;
 import org.knime.core.data.container.LongUTFDataOutputStream;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.ToolIncompatibleWorkflowException;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.WorkflowToolCellSerializer;
@@ -429,8 +433,7 @@ class WorkflowToolCellTest {
             FileStoreFactory.createNotInWorkflowFileStoreFactory());
         var exec = executionContextExtension.getExecutionContext();
         var inputs = new PortObject[]{TestNodeModel.createTable(exec)};
-        var res = cell.execute("", inputs, exec,
-            Map.of("with-views", "true"));
+        var res = cell.execute("", inputs, exec, Map.of("with-views", "true"));
         assertThat(res.viewNodeIds()).isNull();
         assertThat(res.virtualProject()).isNull();
 
@@ -501,4 +504,47 @@ class WorkflowToolCellTest {
 
     }
 
+    public static class TestToolMessageCell extends DataCell implements ToolMessage {
+        private final String m_content;
+
+        public TestToolMessageCell(final String content) {
+            m_content = content;
+        }
+
+        @Override
+        public String getToolMessageText() {
+            return m_content;
+        }
+
+        @Override
+        protected boolean equalsDataCell(final DataCell dc) {
+            return dc instanceof TestToolMessageCell;
+        }
+
+        @Override
+        public int hashCode() {
+            return toString().hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return "ToolMessageCell";
+        }
+    }
+
+    @Test
+    void testExtractToolMessageText() {
+        DataCell messageCell = new TestToolMessageCell("TestMessage");
+
+        DataTableSpec spec = new DataTableSpec(new DataColumnSpecCreator("msg", messageCell.getType()).createSpec());
+        var exec = executionContextExtension.getExecutionContext();
+        BufferedDataContainer container = exec.createDataContainer(spec);
+        container.addRowToTable(new DefaultRow("row1", messageCell));
+        container.close();
+        BufferedDataTable messageTable = container.getTable();
+
+        String extracted = WorkflowToolCell.extractToolMessageContent(messageTable);
+
+        assertThat(extracted).isEqualTo("TestMessage");
+    }
 }
