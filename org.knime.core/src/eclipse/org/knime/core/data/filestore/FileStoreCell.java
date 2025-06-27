@@ -165,8 +165,8 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
 
     void callFlushIfNeeded() throws IOException {
         if (!m_isFlushedToFileStore) {
-            m_isFlushedToFileStore = true;
             flushToFileStore();
+            m_isFlushedToFileStore = true;
         }
     }
 
