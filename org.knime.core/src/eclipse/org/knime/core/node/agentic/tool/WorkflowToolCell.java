@@ -167,8 +167,12 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         var workflowFileStore = fileStoreFactory.createFileStore("workflow_" + UUID.randomUUID().toString());
         var fileStores = dataAreaPath == null ? new FileStore[]{workflowFileStore} : new FileStore[]{workflowFileStore,
             fileStoreFactory.createFileStore("data_area_" + UUID.randomUUID().toString())};
-        return new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
+        var cell = new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
             fileStores);
+        // AP-24500: flushing is necessary to make sure that the data area cannot be deleted (or modified) after the cell
+        // is created but before flushToFileStore is called.
+        cell.flushToFileStore();
+        return cell;
     }
 
     private static void checkThatThereAreNoExecutingOrExecutedNodes(final WorkflowManager wfm)
