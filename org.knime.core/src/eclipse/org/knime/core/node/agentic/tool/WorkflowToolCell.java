@@ -510,6 +510,13 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         return ArrayUtils.remove(outputs, m_messageOutputPortIndex);
     }
 
+    /**
+     * Extracts the message from the workflow execution result.
+     * If the message output is a {@link ToolMessageOutput}, its text content parts are extracted.
+     * Otherwise, a default string representation of the output cell is used.
+     * @param result the workflow segment execution result.
+     * @return the extracted tool message as a single string.
+     */
     private String extractMessage(final WorkflowSegmentExecutionResult result) {
         var outputs = result.portObjectCopies();
         if (outputs == null) {
@@ -523,7 +530,12 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
             return "Tool executed successfully (empty custom tool message)";
         }
         try (var cursor = messageTable.cursor()) {
-            return cursor.forward().getAsDataCell(0).toString();
+            DataCell messageCell = cursor.forward().getAsDataCell(0);
+            if (messageCell instanceof ToolTextMessage toolOutputMessage) {
+                return toolOutputMessage.getTextContent();
+            } else {
+                return messageCell.toString();
+            }
         }
     }
 
