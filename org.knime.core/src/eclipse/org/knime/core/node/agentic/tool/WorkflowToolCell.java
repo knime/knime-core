@@ -279,11 +279,8 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
     @Override
     protected void flushToFileStore() throws IOException {
         var fileStores = getFileStores();
-        if (m_workflow != null) {
-            var fileStore = fileStores[0];
-            FileUtils.writeByteArrayToFile(fileStore.getFile(), m_workflow);
-            m_workflow = null;
-        }
+        var fileStore = fileStores[0];
+        FileUtils.writeByteArrayToFile(fileStore.getFile(), m_workflow);
         if (m_dataAreaPath != null && fileStores.length == 2
             && !m_dataAreaPath.equals(fileStores[1].getFile().toPath())) {
             // copy the data area to the file store
