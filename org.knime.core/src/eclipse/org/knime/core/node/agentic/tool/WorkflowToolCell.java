@@ -81,6 +81,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreFactory;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
@@ -169,9 +170,9 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
             fileStoreFactory.createFileStore("data_area_" + UUID.randomUUID().toString())};
         var cell = new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
             fileStores);
-        // AP-24500: flushing is necessary to make sure that the data area cannot be deleted (or modified) after the cell
+        // AP-24599: flushing is necessary to make sure that the data area cannot be deleted (or modified) after the cell
         // is created but before flushToFileStore is called.
-        cell.flushToFileStore();
+        FileStoreUtil.invokeFlush(cell);
         return cell;
     }
 
