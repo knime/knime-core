@@ -63,6 +63,7 @@ import org.knime.core.customization.APCustomizationProviderService;
 import org.knime.core.customization.APCustomizationProviderServiceImpl;
 import org.knime.core.eclipseUtil.EclipseProxyServiceInitializer;
 import org.knime.core.monitor.ApplicationHealth;
+import org.knime.core.node.logging.ILogAdapter;
 import org.knime.core.node.port.report.IReportService;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.util.pathresolve.ResolverUtil;
@@ -163,6 +164,8 @@ public class CorePlugin implements BundleActivator {
         } catch (ClassNotFoundException e) {
             // this may happen in a non-Eclipse OSGi environment
         }
+
+        Platform.addLogListener(new ILogAdapter());
 
         m_customizationServiceRegistration = context.registerService(APCustomizationProviderService.class,
             new APCustomizationProviderServiceImpl(), null);
