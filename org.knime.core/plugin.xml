@@ -804,6 +804,10 @@
             class="org.knime.core.node.logging.JavaUtilLoggingAdapter">
       </provider>
       <provider
+            startupStage="EARLIEST"
+            class="org.knime.core.node.logging.ILogAdapter">
+      </provider>
+      <provider
             startupStage="AFTER_PROFILES_SET"
             class="org.knime.core.node.logging.KNIMELogger$EarlyStartupInitializer">
       </provider>
