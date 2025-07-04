@@ -165,7 +165,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
      * which the port groups are added defines the node's port order.
      *
      * <p>
-     * Three different port group types are available.
+     * Five different port group types are available.
      * <ol>
      * <li>Fixed port group, i.e., port groups that cannot be modified by the user
      * <li>Optional port group, i.e., a port group with [0,1] ports. Initially the optional port is not set
@@ -939,6 +939,19 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         }
 
         /**
+         * Adds an exchangeable input port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 5.5
+         */
+        public void addExchangeableInputPortGroup(final String pGrpId, final PortType defaultType,
+            final Predicate<PortType> supportedTypesPredicate) {
+            addExchangeableInputPortGroup(pGrpId, defaultType, getSupportedTypes(supportedTypesPredicate));
+        }
+
+        /**
          * Adds an exchangeable output port group configuration.
          *
          * @param pGrpId the port group identifier
@@ -952,6 +965,19 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         }
 
         /**
+         * Adds an exchangeable output port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 5.5
+         */
+        public void addExchangeableOutputPortGroup(final String pGrpId, final PortType defaultType,
+            final Predicate<PortType> supportedTypesPredicate) {
+            addExchangeableOutputPortGroup(pGrpId, defaultType, getSupportedTypes(supportedTypesPredicate));
+        }
+
+        /**
          * Adds an exchangeable port group configuration.
          *
          * @param pGrpId the port group identifier
@@ -962,6 +988,19 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
         public void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
             final PortType... supportedTypes) {
             addExchangeablePortGroup(pGrpId, defaultType, supportedTypes, true, true);
+        }
+
+        /**
+         * Adds an exchangeable port group configuration.
+         *
+         * @param pGrpId the port group identifier
+         * @param defaultType the default port type
+         * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
+         * @since 5.5
+         */
+        public void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
+            final Predicate<PortType> supportedTypesPredicate) {
+            addExchangeablePortGroup(pGrpId, defaultType, getSupportedTypes(supportedTypesPredicate));
         }
 
         private void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,

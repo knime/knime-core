@@ -522,7 +522,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @deprecated use {@link #callCreateNodeModel(NodeCreationConfiguration)} instead
      */
     @SuppressWarnings("javadoc")
-    @Deprecated
+    @Deprecated(since = "4.1", forRemoval = true)
     protected T createNodeModel(final NodeCreationContext context) {
         // normally correct implementations overwrite this
         m_logger.coding("If you register a node to be created in a certain"
@@ -588,7 +588,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param index the view index, starting at 0
      * @return the view's name
+     * @deprecated Swing based views are no longer used within KNIME. Use capabilities to create web views instead.
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     protected final String getNodeViewName(final int index) {
         String name = m_nodeDescription.getViewName(index);
         return (name == null) ? "NoName" : name;
@@ -604,7 +606,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         smaller 0 or greater or equal to the values returned by
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
+     * @deprecated Swing based views are no longer used within KNIME. Use capabilities to create web views instead.
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     public abstract NodeView<T> createNodeView(final int viewIndex, final T nodeModel);
 
     /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
@@ -637,7 +641,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return <code>true</code> if a <code>NodeDialogPane</code> is
      *         available
      * @see #createNodeDialogPane()
+     * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     protected abstract boolean hasDialog();
 
     /**
@@ -646,7 +652,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return node dialog pane
      * @see #hasDialog()
+     * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     protected abstract NodeDialogPane createNodeDialogPane();
 
 
@@ -656,7 +664,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param creationConfig the node creation configuration
      * @return a new {@link NodeModel}
      * @since 4.1
+     * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
+    @Deprecated(since = "5.5", forRemoval = true)
     protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
         // normally correct implementations overwrite this
         m_logger.coding("If you register a node to be created in a certain"
@@ -734,7 +744,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @deprecated Removed in 4.2 without replacement. Nodes are now collected in the framework only and not known
      * to any 3rd party extension.
      */
-    @Deprecated
+    @Deprecated(since = "4.2", forRemoval = true)
     public static List<String> getLoadedNodeFactories() {
         return Collections.emptyList();
     }
