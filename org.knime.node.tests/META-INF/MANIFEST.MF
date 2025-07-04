@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME Node Tests
+Bundle-SymbolicName: org.knime.node.tests;singleton:=true
+Bundle-Version: 5.5.0.qualifier
+Bundle-Vendor: KNIME AG
+Fragment-Host: org.knime.node;bundle-version="5.5.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: junit-jupiter-api;bundle-version="[5.9.2, 6.0.0)",
+ assertj-core;bundle-version="[3.19.0, 4.0.0)",
+ junit-jupiter-params;bundle-version="5.9.2",
+ org.knime.testing;bundle-version="[5.5.0, 6.0.0)"
+Automatic-Module-Name: org.knime.node.tests
+Import-Package: org.knime.node
