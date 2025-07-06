@@ -60,6 +60,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.ICredentials;
 
 
 /**
@@ -70,6 +71,12 @@ import org.knime.core.node.workflow.FlowVariable;
  * @since 2.11
  */
 public abstract class TestrunJanitor {
+
+    /** Name reference to filter available flow variable credentials */
+    public static final String JANITOR_CREDENTIALS_NAME = "janitor-credentials";
+
+    private ICredentials m_janitorCredentials;
+
     /**
      * Returns a list of workflow variables that should be injected into the workflow. The number and values may be
      * changed by {@link #before()} and {@link #after()}.
@@ -115,6 +122,24 @@ public abstract class TestrunJanitor {
      * @return a description, never null
      */
     public abstract String getDescription();
+
+    /**
+     * Sets the required credential for this janitor.
+     *
+     * @param credentials
+     */
+    public void setJanitorCredentials(final ICredentials credentials) {
+        m_janitorCredentials = credentials;
+    }
+
+    /**
+     * Retrieves the assigned janitor credentials.
+     *
+     * @return credentials
+     */
+    public ICredentials getJanitorCredentials() {
+        return m_janitorCredentials;
+    }
 
     /**
      * Returns a list with all registered testrun janitors. Each call will create new instances.
