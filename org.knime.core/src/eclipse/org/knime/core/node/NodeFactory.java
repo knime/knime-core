@@ -590,7 +590,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return the view's name
      * @deprecated Swing based views are no longer used within KNIME. Use capabilities to create web views instead.
      */
-    @Deprecated(since = "5.5", forRemoval = true)
+    @Deprecated(since = "5.6", forRemoval = true)
     protected final String getNodeViewName(final int index) {
         String name = m_nodeDescription.getViewName(index);
         return (name == null) ? "NoName" : name;
@@ -608,7 +608,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @see #getNrNodeViews()
      * @deprecated Swing based views are no longer used within KNIME. Use capabilities to create web views instead.
      */
-    @Deprecated(since = "5.5", forRemoval = true)
+    @Deprecated(since = "5.6", forRemoval = true)
     public abstract NodeView<T> createNodeView(final int viewIndex, final T nodeModel);
 
     /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
@@ -643,7 +643,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @see #createNodeDialogPane()
      * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
-    @Deprecated(since = "5.5", forRemoval = true)
+    @Deprecated(since = "5.6", forRemoval = true)
     protected abstract boolean hasDialog();
 
     /**
@@ -654,7 +654,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @see #hasDialog()
      * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
-    @Deprecated(since = "5.5", forRemoval = true)
+    @Deprecated(since = "5.6", forRemoval = true)
     protected abstract NodeDialogPane createNodeDialogPane();
 
 
@@ -666,7 +666,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @since 4.1
      * @deprecated Swing based dialogs are no longer used within KNIME. See class description for details.
      */
-    @Deprecated(since = "5.5", forRemoval = true)
+    @Deprecated(since = "5.6", forRemoval = true)
     protected NodeDialogPane createNodeDialogPane(final NodeCreationConfiguration creationConfig) {
         // normally correct implementations overwrite this
         m_logger.coding("If you register a node to be created in a certain"

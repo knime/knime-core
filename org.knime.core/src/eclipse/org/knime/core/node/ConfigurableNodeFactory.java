@@ -944,7 +944,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param defaultType the default port type
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
-         * @since 5.5
+         * @since 5.6
          */
         public void addExchangeableInputPortGroup(final String pGrpId, final PortType defaultType,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -970,7 +970,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param defaultType the default port type
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
-         * @since 5.5
+         * @since 5.6
          */
         public void addExchangeableOutputPortGroup(final String pGrpId, final PortType defaultType,
             final Predicate<PortType> supportedTypesPredicate) {
@@ -996,7 +996,7 @@ public abstract class ConfigurableNodeFactory<T extends NodeModel> extends NodeF
          * @param pGrpId the port group identifier
          * @param defaultType the default port type
          * @param supportedTypesPredicate the predicate that identifies supported {@link PortType PortTypes}
-         * @since 5.5
+         * @since 5.6
          */
         public void addExchangeablePortGroup(final String pGrpId, final PortType defaultType,
             final Predicate<PortType> supportedTypesPredicate) {

@@ -74,7 +74,7 @@ package org.knime.core.node;
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.6
  */
 public interface FluentNodeAPI {
 }
