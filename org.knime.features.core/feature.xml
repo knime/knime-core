@@ -736,10 +736,6 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"/>
 
    <plugin
-         id="org.knime.node"
-         version="0.0.0"/>
-
-   <plugin
          id="org.knime.core.pmml"
          version="0.0.0"/>
 

@@ -68,13 +68,13 @@ package org.knime.core.node;
  * and must not be designed in a way to enable inheritance, too
  * <li>implementing classes have only private constructors</li>
  * <li>classes/interfaces representing mandatory properties (i.e. stages) in the fluent API are prefixed with
- * 'Required'</li>
+ * 'Require'</li>
  * </ul>
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  * @author Marc Bux, KNIME GmbH, Berlin, Germany
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.6
  */
 public interface FluentNodeAPI {
 }
