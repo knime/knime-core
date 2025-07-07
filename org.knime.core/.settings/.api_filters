@@ -3,8 +3,8 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter comment="new interface hierarchy in FlowVirtualScopeContext, AP-24414" id="923795461">
             <message_arguments>
+                <message_argument value="5.6.0"/>
                 <message_argument value="5.5.0"/>
-                <message_argument value="5.4.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -12,7 +12,7 @@
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.4.0"/>
+                <message_argument value="org.knime.core_5.5.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -20,7 +20,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.knime.core.util.ui.converter.JsonFormsDialogBuilder"/>
-                <message_argument value="org.knime.core_5.4.0"/>
+                <message_argument value="org.knime.core_5.5.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -28,7 +28,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.knime.core.util.ui.converter.UiComponentConverter"/>
-                <message_argument value="org.knime.core_5.4.0"/>
+                <message_argument value="org.knime.core_5.5.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -36,7 +36,7 @@
         <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.knime.core.util.ui.converter.UiComponentConverterRegistry"/>
-                <message_argument value="org.knime.core_5.4.0"/>
+                <message_argument value="org.knime.core_5.5.0"/>
             </message_arguments>
         </filter>
     </resource>
