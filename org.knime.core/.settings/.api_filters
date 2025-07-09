@@ -424,6 +424,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/agentic/tool/ToolValue.java" type="org.knime.core.node.agentic.tool.ToolValue$ToolResult">
+        <filter comment="ToolResult not considered API, yet" id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.agentic.tool.ToolValue.ToolResult"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/agentic/tool/WorkflowToolValue.java" type="org.knime.core.node.agentic.tool.WorkflowToolValue">
         <filter id="1110441988">
             <message_arguments>
