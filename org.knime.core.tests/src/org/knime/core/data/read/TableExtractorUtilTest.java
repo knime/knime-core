@@ -50,6 +50,7 @@ package org.knime.core.data.read;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.knime.core.data.v2.TableExtractorUtil.extractData;
+import static org.knime.core.data.v2.TableExtractorUtil.extractDataUncancelled;
 import static org.knime.core.data.v2.TableExtractorUtil.restrictToIndex;
 
 import java.util.function.BiFunction;
@@ -79,7 +80,7 @@ class TableExtractorUtilTest {
     @Test
     void testExtractDataAllRows() {
         final var extractors = new IdleExtractor[]{new IdleExtractor(0), new IdleExtractor(1)};
-        extractData(createTestTable(), extractors);
+        extractDataUncancelled(createTestTable(), extractors);
         assertThat(extractors[0].m_size).isEqualTo(3);
         assertThat(extractors[0].m_counter).isEqualTo(3);
         assertThat(extractors[1].m_size).isEqualTo(3);

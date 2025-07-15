@@ -357,6 +357,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/v2/TableExtractorUtil.java" type="org.knime.core.data.v2.TableExtractorUtil">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.TableExtractorUtil"/>
+                <message_argument value="extractData(BufferedDataTable, TableExtractorUtil.Extractor[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
         <filter comment="AP-22308 - internal table API changes (no public API)" id="403984517">
             <message_arguments>
