@@ -128,8 +128,9 @@ public final class TableExtractorUtil {
      * @param extractors
      *
      * @see TableExtractorUtil#extractData(BufferedDataTable, ExecutionContext, Extractor...)
+     * @since 5.6
      */
-    public static void extractData(final BufferedDataTable table, final Extractor... extractors) {
+    public static void extractDataUncancelled(final BufferedDataTable table, final Extractor... extractors) {
         try {
             extractData(table, null, extractors);
         } catch (CanceledExecutionException e) { // NOSONAR
@@ -143,6 +144,9 @@ public final class TableExtractorUtil {
      * the process.
      *
      * @param table a {@link BufferedDataTable} with at least {@code numRows}.
+     * @param executionContext the {@link ExecutionContext} to check for cancellation. Use
+     *            {@link #extractDataUncancelled(BufferedDataTable, Extractor...)} if no execution context is available.
+     *
      * @param extractors an array of {@link Extractor} constructed in a way that corresponding colum indices are present
      *            in the table and their {@code readValue} methods are applicable to a row of the {@code table}
      *            materialised with the union columns.
