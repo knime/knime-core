@@ -4,12 +4,12 @@ Bundle-Name: KNIME Core Workflow tests
 Bundle-SymbolicName: org.knime.core.workflow.tests;singleton:=true
 Bundle-Version: 5.6.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
-Fragment-Host: org.knime.core;bundle-version="[5.5.0,6.0.0)"
+Fragment-Host: org.knime.core;bundle-version="[5.6.0,6.0.0)"
 Automatic-Module-Name: org.knime.core.workflow.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
- org.knime.testing;bundle-version="[5.5.0,6.0.0)",
- org.knime.filehandling.core;bundle-version="[5.5.0,6.0.0)",
+ org.knime.testing;bundle-version="[5.6.0,6.0.0)",
+ org.knime.filehandling.core;bundle-version="[5.6.0,6.0.0)",
  org.awaitility;bundle-version="[3.0.0,4.0.0)",
  org.mockito.mockito-core;bundle-version="[2.18.3,3.0.0)",
  junit-jupiter-api;bundle-version="[5.10.2,6.0.0)",

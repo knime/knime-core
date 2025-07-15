@@ -6,7 +6,7 @@ Bundle-Version: 5.6.0.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: slf4j.api;bundle-version="[2,3)"
-Require-Bundle: org.knime.core;bundle-version="[5.5.0,6.0.0)",
+Require-Bundle: org.knime.core;bundle-version="[5.6.0,6.0.0)",
  org.apache.log4j;bundle-version="[1.2.25,2.0.0)",
  org.apache.commons.lang3;bundle-version="[3.14.0,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
