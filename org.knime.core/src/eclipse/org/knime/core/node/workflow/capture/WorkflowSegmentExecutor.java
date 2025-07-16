@@ -79,6 +79,7 @@ import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
+import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -99,6 +100,9 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
+import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
+import org.knime.core.node.workflow.contextv2.LocationInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeFactory;
 import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectInNodeModel;
@@ -209,7 +213,8 @@ public final class WorkflowSegmentExecutor {
         final Path dataAreaPath, final Restriction... restrictions) throws KNIMEException {
         m_hostNode = (NativeNodeContainer)hostNode;
         if (mode == ExecutionMode.DETACHED) {
-            m_hostWfm = createTemporaryWorkflowProject(m_hostNode.getParent().getWorkflowDataRepository());
+            var projWfm = m_hostNode.getParent().getProjectWFM();
+            m_hostWfm = createTemporaryWorkflowProject(projWfm.getWorkflowDataRepository(), projWfm.getContextV2());
             m_shallDisposeHostWfm = true;
         } else {
             m_hostWfm = hostNode.getParent();
@@ -248,15 +253,20 @@ public final class WorkflowSegmentExecutor {
         addVirtualIONodes(ws);
     }
 
-    private static WorkflowManager createTemporaryWorkflowProject(final WorkflowDataRepository workflowDataRepository)
-        throws KNIMEException {
+    private static WorkflowManager createTemporaryWorkflowProject(final WorkflowDataRepository workflowDataRepository,
+        final WorkflowContextV2 orgContext) throws KNIMEException {
         File dir;
         try {
             dir = FileUtil.createTempDir("workflow_segment_executor");
             var workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
             if (workflowFile.createNewFile()) {
-                var creationHelper = new WorkflowCreationHelper(
-                    WorkflowContextV2.forTemporaryWorkflow(workflowFile.getParentFile().toPath(), null));
+                var mountpoint =
+                    ClassUtils.castOptional(AnalyticsPlatformExecutorInfo.class, orgContext.getExecutorInfo())
+                        .flatMap(info -> info.getMountpoint())
+                        .map(mp -> Pair.create(mp.getFirst().getAuthority(), mp.getSecond()))
+                        .orElse(Pair.create(null, null));
+                var creationHelper = new WorkflowCreationHelper(createContext(workflowFile.getParentFile().toPath(),
+                    mountpoint.getFirst(), mountpoint.getSecond(), orgContext.getLocationInfo()));
                 creationHelper.setWorkflowDataRepository(workflowDataRepository);
                 return WorkflowManager.ROOT.createAndAddProject("workflow_segment_executor", creationHelper);
             } else {
@@ -265,6 +275,23 @@ public final class WorkflowSegmentExecutor {
         } catch (IOException ex) {
             throw new KNIMEException("Creating empty workflow for workflow segment execution failed", ex);
         }
+    }
+
+    private static WorkflowContextV2 createContext(final Path workflowFolderPath, final String mountId,
+        final Path mountpointRoot, final LocationInfo locationInfo) {
+        return WorkflowContextV2.builder() //
+            .withAnalyticsPlatformExecutor(exec -> {
+                var res = exec //
+                    .withCurrentUserAsUserId() //
+                    .withLocalWorkflowPath(workflowFolderPath);
+                if (mountId != null) {
+                    res.withMountpoint(mountId,
+                        locationInfo instanceof RestLocationInfo ? workflowFolderPath.getParent() : mountpointRoot);
+                }
+                return res;
+            }) //
+            .withLocation(locationInfo) //
+            .build();
     }
 
     private void addVirtualIONodes(final WorkflowSegment wf) {
