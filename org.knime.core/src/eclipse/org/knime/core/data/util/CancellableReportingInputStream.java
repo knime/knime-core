@@ -104,9 +104,8 @@ public class CancellableReportingInputStream extends CountingInputStream {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected synchronized void afterRead(final int n) {
+    protected synchronized void afterRead(final int n) throws IOException {
         super.afterRead(n);
         m_streamLengthIfKnown.ifPresent(l -> m_exec.setProgress(getByteCount() / (double) l));
     }
