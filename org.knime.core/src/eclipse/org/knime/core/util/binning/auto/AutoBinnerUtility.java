@@ -89,7 +89,11 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated Uses the outdated {@link PMMLPreprocDiscretize} class for binning, and the buggy {@link NumericBin}
+ *             class. Instead look at {@link AutoBinningPMMLCreator}.
  */
+@Deprecated
 public final class AutoBinnerUtility {
 
     /**

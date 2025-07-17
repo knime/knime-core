@@ -57,7 +57,10 @@ package org.knime.core.util.binning.auto;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated Not used by modern nodes, since it is missing other binning methods.
  */
+@Deprecated
 public enum BinningMethod {
         /**
          * Fixed number of bins.
