@@ -47,6 +47,8 @@
  */
 package org.knime.core.util.binning.numeric;
 
+import java.util.Objects;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -163,14 +165,17 @@ public class NumericBin implements Bin {
         if (cell.isMissing()) {
             return false;
         }
-        final double value = ((DoubleValue)cell).getDoubleValue();
+
+        return covers(((DoubleValue)cell).getDoubleValue());
+    }
+
+    private boolean covers(final double value) {
         final double left = getLeftValue();
         final double right = getRightValue();
         assert (left <= right);
 
         return (left < value && value < right) || (left == value && !isLeftOpen())
             || (right == value && !isRightOpen());
-
     }
 
     @Override
@@ -182,4 +187,43 @@ public class NumericBin implements Bin {
         bin.addDouble(CFG_RIGHT_VALUE, getRightValue());
     }
 
+    private static char openChar(final boolean open) {
+        return open ? '(' : '[';
+    }
+
+    private static char closeChar(final boolean open) {
+        return open ? ')' : ']';
+    }
+
+    @Override
+    public String toString() {
+        return "{NumericBin:%s}-%s%s%.2f, %.2f%s".formatted( //
+            getBinName(), //
+            openChar(isLeftOpen()), //
+            getLeftValue(), //
+            getRightValue(), //
+            closeChar(isRightOpen()) //
+        );
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof NumericBin)) {
+            return false;
+        }
+        NumericBin other = (NumericBin)obj;
+        return m_binName.equals(other.m_binName) //
+            && m_leftOpen == other.m_leftOpen //
+            && m_leftValue == other.m_leftValue // NOSONAR
+            && m_rightOpen == other.m_rightOpen //
+            && m_rightValue == other.m_rightValue; // NOSONAR
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_binName, m_leftOpen, m_leftValue, m_rightOpen, m_rightValue);
+    }
 }
