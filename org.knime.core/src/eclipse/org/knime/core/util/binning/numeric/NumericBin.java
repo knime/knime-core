@@ -60,7 +60,13 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated The {{@link #covers(DataCell)} method of this class has a bug, namely that a half-open zero-width bin
+ *             covers one value, whereas it should contain zero values. For example, [1, 1) covers 1, whereas [1, 1)
+ *             should cover literally nothing. Since this class is used in legacy nodes, we can't fix this bug without
+ *             risking regressions, so we deprecate this class instead.
  */
+@Deprecated
 public class NumericBin implements Bin {
 
     private static final String CFG_LEFT_VALUE = "left_value";
@@ -197,8 +203,7 @@ public class NumericBin implements Bin {
 
     @Override
     public String toString() {
-        return "{NumericBin:%s}-%s%s%.2f, %.2f%s".formatted( //
-            getBinName(), //
+        return "%s%s,%s%s".formatted( //
             openChar(isLeftOpen()), //
             getLeftValue(), //
             getRightValue(), //
