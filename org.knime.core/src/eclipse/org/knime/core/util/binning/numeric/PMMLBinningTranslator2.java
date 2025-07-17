@@ -64,16 +64,12 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
 /**
  * Implementation of {@link PMMLPreprocTranslator} for binning.
  *
- * @author Mor Kalla
- * @since 3.6
- *
- * @deprecated Relies on the deprecated {@link NumericBin} class, which contains a bug that we can't fix for fear of
- *             introducing regressions.
+ * @author David Hickey, TNG Technology Consulting GmbH
+ * @since 5.6
  */
-@Deprecated
-public class PMMLBinningTranslator implements PMMLPreprocTranslator {
+public class PMMLBinningTranslator2 implements PMMLPreprocTranslator {
 
-    private final Map<String, Bin[]> m_columnToBins;
+    private final Map<String, NumericBin2[]> m_columnToBins;
 
     private final Map<String, String> m_columnToAppend;
 
@@ -82,7 +78,7 @@ public class PMMLBinningTranslator implements PMMLPreprocTranslator {
     /**
      * Constructs a new empty translator to be initialized by one of the initializeFrom methods.
      */
-    public PMMLBinningTranslator() {
+    public PMMLBinningTranslator2() {
         super();
         m_columnToBins = new TreeMap<>();
         m_columnToAppend = new TreeMap<>();
@@ -95,8 +91,8 @@ public class PMMLBinningTranslator implements PMMLPreprocTranslator {
      * @param columnToAppended mapping of existing column names to binned column names that are appended
      * @param mapper mapping data column names to PMML derived field names and vice versa
      */
-    public PMMLBinningTranslator(final Map<String, Bin[]> columnToBins, final Map<String, String> columnToAppended,
-        final DerivedFieldMapper mapper) {
+    public PMMLBinningTranslator2(final Map<String, NumericBin2[]> columnToBins,
+        final Map<String, String> columnToAppended, final DerivedFieldMapper mapper) {
         super();
         m_columnToBins = columnToBins;
         m_columnToAppend = columnToAppended;
@@ -111,59 +107,62 @@ public class PMMLBinningTranslator implements PMMLPreprocTranslator {
     }
 
     private DerivedField[] createDerivedFields() {
-        final int num = m_columnToBins.size();
-        final DerivedField[] derivedFields = new DerivedField[num];
+        var num = m_columnToBins.size();
+        var derivedFields = new ArrayList<DerivedField>(num);
 
-        int i = 0;
-        for (Map.Entry<String, Bin[]> entry : m_columnToBins.entrySet()) {
-            final Bin[] bins = entry.getValue();
-            final DerivedField df = DerivedField.Factory.newInstance();
-            final String name = entry.getKey();
-
-            /* The field name must be retrieved before creating a new derived
-             * name for this derived field as the map only contains the
-             * current mapping. */
-            final String fieldName = m_mapper.getDerivedFieldName(name);
-            final Discretize dis = df.addNewDiscretize();
-            dis.setField(fieldName);
-
-            final String derivedName = m_columnToAppend.get(name);
-            if (derivedName != null) {
-                df.setName(derivedName);
-            } else {
-                df.setName(m_mapper.createDerivedFieldName(name));
-                df.setDisplayName(name);
-            }
-            df.setOptype(OPTYPE.CATEGORICAL);
-            df.setDataType(DATATYPE.STRING);
-            for (Bin bin : bins) {
-                final NumericBin knimeBin = (NumericBin)bin;
-                final boolean leftOpen = knimeBin.isLeftOpen();
-                final boolean rightOpen = knimeBin.isRightOpen();
-                final double leftValue = knimeBin.getLeftValue();
-                final double rightValue = knimeBin.getRightValue();
-                final DiscretizeBin pmmlBin = dis.addNewDiscretizeBin();
-                pmmlBin.setBinValue(knimeBin.getBinName());
-                final Interval interval = pmmlBin.addNewInterval();
-                if (!Double.isInfinite(leftValue)) {
-                    interval.setLeftMargin(leftValue);
-                }
-                if (!Double.isInfinite(rightValue)) {
-                    interval.setRightMargin(rightValue);
-                }
-                if (leftOpen && rightOpen) {
-                    interval.setClosure(Closure.OPEN_OPEN);
-                } else if (leftOpen && !rightOpen) {
-                    interval.setClosure(Closure.OPEN_CLOSED);
-                } else if (!leftOpen && rightOpen) {
-                    interval.setClosure(Closure.CLOSED_OPEN);
-                } else if (!leftOpen && !rightOpen) {
-                    interval.setClosure(Closure.CLOSED_CLOSED);
-                }
-            }
-            derivedFields[i++] = df;
+        for (var entry : m_columnToBins.entrySet()) {
+            final var bins = entry.getValue();
+            final DerivedField df = createDerivedField(entry.getKey(), bins);
+            derivedFields.add(df);
         }
-        return derivedFields;
+
+        return derivedFields.toArray(DerivedField[]::new);
+    }
+
+    private DerivedField createDerivedField(final String name, final NumericBin2[] bins) {
+        final DerivedField df = DerivedField.Factory.newInstance();
+        final String fieldName = m_mapper.getDerivedFieldName(name);
+        final Discretize dis = df.addNewDiscretize();
+        dis.setField(fieldName);
+
+        final String derivedName = m_columnToAppend.get(name);
+        if (derivedName != null) {
+            df.setName(derivedName);
+        } else {
+            df.setName(m_mapper.createDerivedFieldName(name));
+            df.setDisplayName(name);
+        }
+        df.setOptype(OPTYPE.CATEGORICAL);
+        df.setDataType(DATATYPE.STRING);
+        addBinsToDiscretize(dis, bins);
+        return df;
+    }
+
+    private static void addBinsToDiscretize(final Discretize dis, final NumericBin2[] bins) {
+        for (var knimeBin : bins) {
+            final boolean leftOpen = knimeBin.isLeftOpen();
+            final boolean rightOpen = knimeBin.isRightOpen();
+            final double leftValue = knimeBin.getLeftValue();
+            final double rightValue = knimeBin.getRightValue();
+            final DiscretizeBin pmmlBin = dis.addNewDiscretizeBin();
+            pmmlBin.setBinValue(knimeBin.getBinName());
+            final Interval interval = pmmlBin.addNewInterval();
+            if (!Double.isInfinite(leftValue)) {
+                interval.setLeftMargin(leftValue);
+            }
+            if (!Double.isInfinite(rightValue)) {
+                interval.setRightMargin(rightValue);
+            }
+            if (leftOpen && rightOpen) {
+                interval.setClosure(Closure.OPEN_OPEN);
+            } else if (leftOpen) {
+                interval.setClosure(Closure.OPEN_CLOSED);
+            } else if (rightOpen) {
+                interval.setClosure(Closure.CLOSED_OPEN);
+            } else {
+                interval.setClosure(Closure.CLOSED_CLOSED);
+            }
+        }
     }
 
     @Override
@@ -186,9 +185,8 @@ public class PMMLBinningTranslator implements PMMLPreprocTranslator {
             }
             consumed.add(i);
             final Discretize discretize = df.getDiscretize();
-            @SuppressWarnings("deprecation")
             final DiscretizeBin[] pmmlBins = discretize.getDiscretizeBinArray();
-            final NumericBin[] knimeBins = new NumericBin[pmmlBins.length];
+            var knimeBins = new NumericBin2[pmmlBins.length];
 
             for (int j = 0; j < pmmlBins.length; j++) {
                 final DiscretizeBin bin = pmmlBins[j];
@@ -209,7 +207,7 @@ public class PMMLBinningTranslator implements PMMLPreprocTranslator {
                     leftOpen = false;
                     rightOpen = false;
                 }
-                knimeBins[j] = new NumericBin(binName, leftOpen, leftValue, rightOpen, rightValue);
+                knimeBins[j] = new NumericBin2(binName, leftOpen, leftValue, rightOpen, rightValue);
             }
 
             /**

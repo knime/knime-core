@@ -47,6 +47,8 @@
  */
 package org.knime.core.util.binning.numeric;
 
+import java.util.Objects;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -54,16 +56,12 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Delegates bin access function to local structure.
+ * Bin implementation containing a single contiguous interval.
  *
- * @author Mor Kalla
- * @since 3.6
- *
- * @deprecated The {{@link #covers(DataCell)} method has a bug where a half-open zero-width interval [x, x) contains the
- *             value x (which it should not). Hence deprecating this class. See {@link NumericBin2} for an alternative.
+ * @author David Hickey, TNG Technology Consulting GmbH
+ * @since 5.6
  */
-@Deprecated
-public class NumericBin implements Bin {
+public final class NumericBin2 implements Bin {
 
     private static final String CFG_LEFT_VALUE = "left_value";
 
@@ -86,7 +84,7 @@ public class NumericBin implements Bin {
     private final double m_rightValue;
 
     /**
-     * Constructs a new {@link NumericBin} object.
+     * Constructs a new {@link NumericBin2} object.
      *
      * @param binName the bin's name
      * @param leftOpen <code>true</code> if left interval is open
@@ -94,7 +92,7 @@ public class NumericBin implements Bin {
      * @param rightOpen <code>true</code> if the right interval is open
      * @param rightValue the right interval value
      */
-    public NumericBin(final String binName, final boolean leftOpen, final double leftValue, final boolean rightOpen,
+    public NumericBin2(final String binName, final boolean leftOpen, final double leftValue, final boolean rightOpen,
         final double rightValue) {
         m_binName = binName;
         m_leftOpen = leftOpen;
@@ -104,12 +102,12 @@ public class NumericBin implements Bin {
     }
 
     /**
-     * Constructs a new {@link NumericBin} from {@link NodeSettingsRO} object.
+     * Constructs a new {@link NumericBin2} from {@link NodeSettingsRO} object.
      *
      * @param bin read settings from
      * @throws InvalidSettingsException if slots could not be read
      */
-    public NumericBin(final NodeSettingsRO bin) throws InvalidSettingsException {
+    public NumericBin2(final NodeSettingsRO bin) throws InvalidSettingsException {
         this(bin.getString(CFG_BIN_NAME), bin.getBoolean(CFG_LEFT_OPEN), bin.getDouble(CFG_LEFT_VALUE),
             bin.getBoolean(CFG_RIGHT_OPEN), bin.getDouble(CFG_RIGHT_VALUE));
     }
@@ -167,14 +165,24 @@ public class NumericBin implements Bin {
         if (cell.isMissing()) {
             return false;
         }
-        final double value = ((DoubleValue)cell).getDoubleValue();
+
+        return covers(((DoubleValue)cell).getDoubleValue());
+    }
+
+    private boolean covers(final double value) {
         final double left = getLeftValue();
         final double right = getRightValue();
         assert (left <= right);
 
-        return (left < value && value < right) || (left == value && !isLeftOpen())
-            || (right == value && !isRightOpen());
-
+        if (isLeftOpen() && isRightOpen()) {
+            return (left < value && value < right);
+        } else if (isLeftOpen()) {
+            return (left < value && value <= right);
+        } else if (isRightOpen()) {
+            return (left <= value && value < right);
+        } else {
+            return (left <= value && value <= right);
+        }
     }
 
     @Override
@@ -186,4 +194,42 @@ public class NumericBin implements Bin {
         bin.addDouble(CFG_RIGHT_VALUE, getRightValue());
     }
 
+    private static char openChar(final boolean open) {
+        return open ? '(' : '[';
+    }
+
+    private static char closeChar(final boolean open) {
+        return open ? ')' : ']';
+    }
+
+    @Override
+    public String toString() {
+        return "%s%s,%s%s".formatted( //
+            openChar(isLeftOpen()), //
+            getLeftValue(), //
+            getRightValue(), //
+            closeChar(isRightOpen()) //
+        );
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof NumericBin2)) {
+            return false;
+        }
+        NumericBin2 other = (NumericBin2)obj;
+        return m_binName.equals(other.m_binName) //
+            && m_leftOpen == other.m_leftOpen //
+            && m_leftValue == other.m_leftValue // NOSONAR
+            && m_rightOpen == other.m_rightOpen //
+            && m_rightValue == other.m_rightValue; // NOSONAR
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(m_binName, m_leftOpen, m_leftValue, m_rightOpen, m_rightValue);
+    }
 }
