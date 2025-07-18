@@ -140,6 +140,7 @@ public final class MountPointsPreferencesUtil {
             .concat(loadSortedMountSettingsFromDefaultPreferenceNode().stream(),
                 loadDefaultMountPointsFromInstallation().stream())
             .filter(e -> uniqueMountPointNameSet.add(e.mountID())) //
+            .filter(e -> WorkbenchActivator.getInstance().getMountPointType(e.factoryID()).isPresent()) // not installed
             .map(mp -> new Pair<>(mp.getWorkbenchMountPointTypeOrFail().getSortPriority(), mp)) //
             // sort the default mount points according to type's priority and default ID
             .sorted(Comparator //
