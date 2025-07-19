@@ -49,8 +49,8 @@
 package org.knime.slf4j.binding;
 
 import org.apache.log4j.LogManager;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,12 +63,12 @@ import org.slf4j.LoggerFactory;
 public final class NotKNIMEPackageLoggingTest {
 
     /** A rule checking if message are received and correct. */
-    @Rule
-    public ExpectedLogMessage m_expectedLogMessage = ExpectedLogMessage.newInstance();
+    @RegisterExtension
+    ExpectedLogMessage m_expectedLogMessage = ExpectedLogMessage.newInstance();
 
     /** Test if errors from 3rd party packages are swallowed. */
     @Test
-    public void testMessageNotReceived() {
+    void testMessageNotReceived() {
         String message = "Some simple message on ERROR that is not expected on log output";
         m_expectedLogMessage.expectNone();
         Logger logger = LoggerFactory.getLogger("some.third.party.package.Object");
@@ -78,7 +78,7 @@ public final class NotKNIMEPackageLoggingTest {
     /** Test if errors from 3rd party packages are logged IF their logger was previously added
      * (usually through log4j.xml). */
     @Test
-    public void testMessageReceived() {
+    void testMessageReceived() {
         String message = "Some simple message on ERROR that is expected on log output";
         m_expectedLogMessage.expect(LEVEL.ERROR, message);
         LogManager.getLogger("some.fourth"); // this is done by the user by a line in log4j.xml

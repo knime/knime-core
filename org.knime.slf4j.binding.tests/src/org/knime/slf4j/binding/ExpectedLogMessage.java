@@ -59,10 +59,11 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.LoggingEvent;
-import org.junit.Assert;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 
@@ -71,7 +72,7 @@ import org.knime.core.node.NodeLogger.LEVEL;
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-final class ExpectedLogMessage implements TestRule {
+final class ExpectedLogMessage implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     private final Writer m_writer;
 
@@ -106,8 +107,34 @@ final class ExpectedLogMessage implements TestRule {
     }
 
     @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new ExpectedLogMessagesStatement(base);
+    public void beforeEach(final ExtensionContext context) throws Exception {
+        // setup log capture
+        NodeLogger.addWriter(m_writer, new LayoutExtension(), LEVEL.DEBUG, LEVEL.FATAL);
+    }
+
+    @Override
+    public void afterEach(final ExtensionContext context) throws Exception {
+        try {
+            // verify expectations
+            if (m_expectedMessage == null && m_firstSeenLogMessage != null) {
+                throw new AssertionError("Expected no log, but saw: " + m_firstSeenLogMessage);
+            }
+            assertThat("Type of message", m_firstSeenLogMessageType, is(m_expectedLevel));
+            assertThat("Message", m_firstSeenLogMessage, is(m_expectedMessage));
+            assertThat("Message Throwable", m_firstSeenLoggedThrowable, is(m_expectedThrowable));
+        } finally {
+            NodeLogger.removeWriter(m_writer);
+        }
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext pc, ExtensionContext ec) {
+        return pc.getParameter().getType() == ExpectedLogMessage.class;
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext pc, ExtensionContext ec) {
+        return this;
     }
 
     private final class LayoutExtension extends Layout {
@@ -158,30 +185,4 @@ final class ExpectedLogMessage implements TestRule {
             return nodeLoggerLevel;
         }
     }
-
-    private class ExpectedLogMessagesStatement extends Statement {
-        private final Statement m_next;
-
-        public ExpectedLogMessagesStatement(final Statement base) {
-            m_next = base;
-        }
-
-        @Override
-        public void evaluate() throws Throwable {
-            try {
-                m_next.evaluate();
-                if (m_expectedMessage == null && m_firstSeenLogMessage != null) {
-                    Assert.fail("Expected to not see a logged message, got: " + m_firstSeenLogMessage);
-                }
-                assertThat("Type of message", m_firstSeenLogMessageType, is(m_expectedLevel));
-                assertThat("Message", m_firstSeenLogMessage, is(m_expectedMessage));
-                assertThat("Message Throwable", m_firstSeenLoggedThrowable, is(m_expectedThrowable));
-            } finally {
-                NodeLogger.removeWriter(m_writer);
-            }
-
-        }
-    }
-
-
 }

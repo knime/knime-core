@@ -49,14 +49,12 @@
 package org.knime.slf4j.binding;
 
 import org.apache.log4j.LogManager;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,87 +64,81 @@ import org.slf4j.LoggerFactory;
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
-@RunWith(Parameterized.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public final class KNIMEPackageLoggingTest {
 
     /**
      * Expect "org.knime.foo.Bar" loggers to log. Expect "some.other.Blah" not to log -- in KNIME AP
      * this is controlled via log4j.xml. See also <code>org.slf4j.impl.NodeLoggerLoggerFactory#getLogger(String)</code>.
      */
-    @BeforeClass
-    public static void addOrgKnimeToLog4JManager() {
+    @BeforeAll
+    static void addOrgKnimeToLog4JManager() {
         LogManager.getLogger("org.knime");
     }
 
-    /** DEBUG, INFO, etc. JUnit will take one at a time.
-     * @return all possible levels. */
-    @Parameters(name="{0}")
-    public static TestLevel[] createLevels() {
-        return TestLevel.values();
-    }
-
-    /** Current instance. */
-    @Parameter
-    public TestLevel m_testLevel;
-
     /** A rule checking if message are received and correct. */
-    @Rule
-    public ExpectedLogMessage m_expectedLogMessage = ExpectedLogMessage.newInstance();
+    @RegisterExtension
+    ExpectedLogMessage m_expectedLogMessage = ExpectedLogMessage.newInstance();
 
     /** The logger to use. Can't be static since {@link #addOrgKnimeToLog4JManager()} must run first. */
     private Logger m_slf4jLogger;
 
     /** Inits the logger (package "org.knime.*"). */
-    @Before
-    public void initLogger() {
+    @BeforeEach
+    void initLogger() {
         m_slf4jLogger = LoggerFactory.getLogger(KNIMEPackageLoggingTest.class);
     }
 
     /** Test, e.g. {@link Logger#debug(String)}. */
-    @Test
-    public void testMessageOnly() {
-        String message = "Some simple message on " + m_testLevel.getNodeLoggerLevel().toString();
-        m_expectedLogMessage.expect(m_testLevel.getNodeLoggerLevel(), message);
-        m_testLevel.messageOnly().logMessage(m_slf4jLogger, message);
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(TestLevel.class)
+    void testMessageOnly(TestLevel testLevel) {
+        String message = "Some simple message on " + testLevel.getNodeLoggerLevel().toString();
+        m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message);
+        testLevel.messageOnly().logMessage(m_slf4jLogger, message);
     }
 
     /** Test, e.g. {@link Logger#debug(String, Object)}. */
-    @Test
-    public void testMessageOneArg() {
-        String level = m_testLevel.getNodeLoggerLevel().toString();
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(TestLevel.class)
+    void testMessageOneArg(TestLevel testLevel) {
+        String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with One Argument (Foo) on " + level;
         String messageRaw = "Message with One Argument ({}) on " + level;
-        m_expectedLogMessage.expect(m_testLevel.getNodeLoggerLevel(), message);
-        m_testLevel.messageOneArg().logMessage(m_slf4jLogger, messageRaw, "Foo");
+        m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message);
+        testLevel.messageOneArg().logMessage(m_slf4jLogger, messageRaw, "Foo");
     }
 
     /** Test, e.g. {@link Logger#debug(String, Object, Object)}. */
-    @Test
-    public void testMessageTwoArgs() {
-        String level = m_testLevel.getNodeLoggerLevel().toString();
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(TestLevel.class)
+    void testMessageTwoArgs(TestLevel testLevel) {
+        String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with Two Arguments (Foo and Bar) on " + level;
         String messageRaw = "Message with Two Arguments ({} and {}) on " + level;
-        m_expectedLogMessage.expect(m_testLevel.getNodeLoggerLevel(), message);
-        m_testLevel.messageTwoArgs().logMessage(m_slf4jLogger, messageRaw, "Foo", "Bar");
+        m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message);
+        testLevel.messageTwoArgs().logMessage(m_slf4jLogger, messageRaw, "Foo", "Bar");
     }
 
     /** Test, e.g. {@link Logger#debug(String, Object[])}. */
-    @Test
-    public void testMessageArrayArg() {
-        String level = m_testLevel.getNodeLoggerLevel().toString();
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(TestLevel.class)
+    void testMessageArrayArg(TestLevel testLevel) {
+        String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with Array Argument (Foo and Bar and FooBar) on " + level;
         String messageRaw = "Message with Array Argument ({} and {} and {}) on " + level;
-        m_expectedLogMessage.expect(m_testLevel.getNodeLoggerLevel(), message);
-        m_testLevel.messageArrayArg().logMessage(m_slf4jLogger, messageRaw, new String[] {"Foo", "Bar", "FooBar"});
+        m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message);
+        testLevel.messageArrayArg().logMessage(m_slf4jLogger, messageRaw, new String[] {"Foo", "Bar", "FooBar"});
     }
 
     /** Test, e.g. {@link Logger#debug(String, Throwable)}. */
-    @Test
-    public void testMessageAndException() {
-        String message = "Message with Exception on " + m_testLevel.getNodeLoggerLevel().toString();
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(TestLevel.class)
+    void testMessageAndException(TestLevel testLevel) {
+        String message = "Message with Exception on " + testLevel.getNodeLoggerLevel().toString();
         Exception e = new RuntimeException("Throwable message: " + message);
-        m_expectedLogMessage.expect(m_testLevel.getNodeLoggerLevel(), message, e);
-        m_testLevel.messageAndException().logMessage(m_slf4jLogger, message, e);
+        m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message, e);
+        testLevel.messageAndException().logMessage(m_slf4jLogger, message, e);
     }
 
 }
