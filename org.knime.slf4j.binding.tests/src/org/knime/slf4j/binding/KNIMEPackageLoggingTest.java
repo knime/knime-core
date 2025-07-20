@@ -57,6 +57,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.jupiter.api.Test;
+import org.knime.core.node.NodeLogger.LEVEL;
 
 /**
  * Tests logging for a "org.knime" based logger on all different log levels and all sorts of test methods
@@ -139,6 +141,17 @@ public final class KNIMEPackageLoggingTest {
         Exception e = new RuntimeException("Throwable message: " + message);
         m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message, e);
         testLevel.messageAndException().logMessage(m_slf4jLogger, message, e);
+    }
+
+    /**
+     * Tests the SLF4J 2.0 fluent API (Logger.atXxx().log) through our binding.
+     */
+    @Test
+    void testSLF4JFluentAPI() {
+        String template = "Fluent API message {} at {}";
+        String expected = "Fluent API message foo at bar";
+        m_expectedLogMessage.expect(LEVEL.INFO, expected);
+        m_slf4jLogger.atInfo().log(template, "foo", "bar");
     }
 
 }
