@@ -48,17 +48,19 @@
  */
 package org.knime.slf4j.binding;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import org.apache.log4j.LogManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.knime.core.node.NodeLogger.LEVEL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.jupiter.api.Test;
-import org.knime.core.node.NodeLogger.LEVEL;
 
 /**
  * Tests logging for a "org.knime" based logger on all different log levels and all sorts of test methods
@@ -94,7 +96,7 @@ public final class KNIMEPackageLoggingTest {
     /** Test, e.g. {@link Logger#debug(String)}. */
     @ParameterizedTest(name = "{0}")
     @EnumSource(TestLevel.class)
-    void testMessageOnly(TestLevel testLevel) {
+    void testMessageOnly(final TestLevel testLevel) {
         String message = "Some simple message on " + testLevel.getNodeLoggerLevel().toString();
         m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message);
         testLevel.messageOnly().logMessage(m_slf4jLogger, message);
@@ -103,7 +105,7 @@ public final class KNIMEPackageLoggingTest {
     /** Test, e.g. {@link Logger#debug(String, Object)}. */
     @ParameterizedTest(name = "{0}")
     @EnumSource(TestLevel.class)
-    void testMessageOneArg(TestLevel testLevel) {
+    void testMessageOneArg(final TestLevel testLevel) {
         String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with One Argument (Foo) on " + level;
         String messageRaw = "Message with One Argument ({}) on " + level;
@@ -114,7 +116,7 @@ public final class KNIMEPackageLoggingTest {
     /** Test, e.g. {@link Logger#debug(String, Object, Object)}. */
     @ParameterizedTest(name = "{0}")
     @EnumSource(TestLevel.class)
-    void testMessageTwoArgs(TestLevel testLevel) {
+    void testMessageTwoArgs(final TestLevel testLevel) {
         String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with Two Arguments (Foo and Bar) on " + level;
         String messageRaw = "Message with Two Arguments ({} and {}) on " + level;
@@ -125,7 +127,7 @@ public final class KNIMEPackageLoggingTest {
     /** Test, e.g. {@link Logger#debug(String, Object[])}. */
     @ParameterizedTest(name = "{0}")
     @EnumSource(TestLevel.class)
-    void testMessageArrayArg(TestLevel testLevel) {
+    void testMessageArrayArg(final TestLevel testLevel) {
         String level = testLevel.getNodeLoggerLevel().toString();
         String message = "Message with Array Argument (Foo and Bar and FooBar) on " + level;
         String messageRaw = "Message with Array Argument ({} and {} and {}) on " + level;
@@ -136,7 +138,7 @@ public final class KNIMEPackageLoggingTest {
     /** Test, e.g. {@link Logger#debug(String, Throwable)}. */
     @ParameterizedTest(name = "{0}")
     @EnumSource(TestLevel.class)
-    void testMessageAndException(TestLevel testLevel) {
+    void testMessageAndException(final TestLevel testLevel) {
         String message = "Message with Exception on " + testLevel.getNodeLoggerLevel().toString();
         Exception e = new RuntimeException("Throwable message: " + message);
         m_expectedLogMessage.expect(testLevel.getNodeLoggerLevel(), message, e);
@@ -154,4 +156,13 @@ public final class KNIMEPackageLoggingTest {
         m_slf4jLogger.atInfo().log(template, "foo", "bar");
     }
 
+    /**
+     * Tests that null messages do not throw exceptions.
+     */
+    @Test
+    void testNullMessage() {
+        m_expectedLogMessage.expect(LEVEL.INFO, "");
+        assertDoesNotThrow(() -> m_slf4jLogger.atInfo().log((String)null));
+        assertDoesNotThrow(() -> m_slf4jLogger.atInfo().log(() -> null));
+    }
 }
