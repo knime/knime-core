@@ -55,7 +55,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.exec.dataexchange.PortObjectRepository;
@@ -178,15 +177,6 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
         if (m_nc == null) {
             return Optional.empty();
         }
-        if (m_nc.getNodeContainerState().isExecuted()) {
-            // we don't want to permanently keep the file stores for an already executed node
-            // because those are guaranteed to be not needed anymore downstream
-            // TODO AP-24555: let the host node explicitly define what file store handler to use?
-            var fsh = NotInWorkflowWriteFileStoreHandler.create();
-            fsh.open();
-            return Optional.of(fsh);
-        }
-
         var fsh = m_nc.getNode().getFileStoreHandler();
         if (fsh == null) {
             // can happen if the node associated with the virtual scope is reset
