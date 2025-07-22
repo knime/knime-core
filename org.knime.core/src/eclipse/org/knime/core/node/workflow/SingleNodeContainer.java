@@ -894,6 +894,13 @@ public abstract class SingleNodeContainer extends NodeContainer {
         setDirty();
     }
 
+    public void setFeatureFlag(final String key, final boolean value) {
+        if (m_settings.m_modelSettings.containsKey(key)) {
+            return;
+        }
+        ((NodeSettings)m_settings.m_modelSettings).addBoolean(key, value);
+    }
+
     /**
      * Replaces the node's view settings with the provided ones.
      *
