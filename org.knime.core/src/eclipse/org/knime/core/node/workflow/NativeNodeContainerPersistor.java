@@ -46,8 +46,11 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Optional;
+
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformationPersistor;
+import org.knime.core.util.Version;
 
 /**
  *
@@ -70,5 +73,7 @@ interface NativeNodeContainerPersistor extends SingleNodeContainerPersistor {
      * @since 2.10
      */
     NodeAndBundleInformationPersistor getNodeAndBundleInformation();
+
+    Optional<Version> getNodeSettingsBundleVersion();
 
 }

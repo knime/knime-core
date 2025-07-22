@@ -111,13 +111,13 @@ import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInOut;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
+import org.knime.core.util.Version;
 import org.knime.shared.workflow.def.BaseNodeDef;
 import org.knime.shared.workflow.def.NativeNodeDef;
 import org.w3c.dom.Element;
 
 /**
- * Implementation of {@link SingleNodeContainer} for a natively implemented KNIME Node relying
- * on a {@link NodeModel}.
+ * Implementation of {@link SingleNodeContainer} for a natively implemented KNIME Node relying on a {@link NodeModel}.
  *
  * @author B. Wiswedel &amp; M.Berthold
  * @since 2.9
@@ -129,6 +129,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /**
      * Instance counter used by the application health checkers etc. Not public API.
+     *
      * @noreference This field is not intended to be referenced by clients.set
      * @since 5.5
      */
@@ -140,13 +141,21 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     private NodeContainerOutPort[] m_outputPorts = null;
 
-
     private NodeInPort[] m_inputPorts = null;
 
-    /** The bundle info with which the node was last executed with. Usually it's the latest installed
-     * version but when a flow was executed, saved and loaded it's possibly "older". Used to address
-     * bug 5207. This field is set when status changes to EXECUTED and set to null when reset. */
+    /**
+     * The bundle info with which the node was last executed with. Usually it's the latest installed version but when a
+     * flow was executed, saved and loaded it's possibly "older". Used to address bug 5207. This field is set when
+     * status changes to EXECUTED and set to null when reset.
+     */
     private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
+
+    /**
+     * The bundle info with which the node was last executed with when the workflow was loaded. I.e. it is the same as
+     * m_nodeAndBundleInformation on load but it is not set to null when reset. Used to address regression UIEXT-2862.
+     * TODO
+     */
+    private Version m_nodeSettingsBundleVersion;
 
     private LoopStatusChangeHandler m_loopStatusChangeHandler;
 
@@ -155,7 +164,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         if (nc instanceof NativeNodeContainer) {
             var nnc = (NativeNodeContainer)nc;
             return nnc.isModelCompatibleTo(VirtualSubNodeInputNodeModel.class)
-                    || nnc.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
+                || nnc.isModelCompatibleTo(VirtualSubNodeOutputNodeModel.class);
         }
         return false;
     };
@@ -185,10 +194,17 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node = persistor.getNode();
         if (getInternalState().isExecuted()) {
             m_nodeAndBundleInformation = persistor.getNodeAndBundleInformation();
+            m_nodeSettingsBundleVersion = persistor.getNodeSettingsBundleVersion()//
+                /**
+                 * The node settings bundle version was introduced with 5.6 (and 5.5.1). If the version is not set, we
+                 * take the best guess which is the last version in which the node was executed or reset.
+                 */
+                .or(() -> Optional.ofNullable(m_nodeAndBundleInformation)
+                    .flatMap(NodeAndBundleInformationPersistor::getBundleVersion))//
+                .orElse(Version.EMPTY_VERSION);
         }
-        assert m_node != null : persistor.getClass().getSimpleName()
-                + " did not provide Node instance for "
-                + getClass().getSimpleName() + " with id \"" + id + "\"";
+        assert m_node != null : persistor.getClass().getSimpleName() + " did not provide Node instance for "
+            + getClass().getSimpleName() + " with id \"" + id + "\"";
         postConstruct();
     }
 
@@ -203,8 +219,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeDef def, final Node node) {
         super(parent, id, def);
         m_node = node;
-        CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"",
-            def.getNodeName(), getClass().getSimpleName(), id);
+        CheckUtils.checkNotNull(m_node, "%s did not provide Node instance for %s with id \"%s\"", def.getNodeName(),
+            getClass().getSimpleName(), id);
         postConstruct();
     }
 
@@ -215,12 +231,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node.addMessageListener(new UnderlyingNodeMessageListener());
     }
 
-    /** The message listener that is added the Node and listens for messages
-     * that are set by failing execute methods are by the user
-     * (setWarningMessage()).
+    /**
+     * The message listener that is added the Node and listens for messages that are set by failing execute methods are
+     * by the user (setWarningMessage()).
      */
-    private final class UnderlyingNodeMessageListener
-        implements NodeMessageListener {
+    private final class UnderlyingNodeMessageListener implements NodeMessageListener {
         /** {@inheritDoc} */
         @Override
         public void messageChanged(final NodeMessageEvent messageEvent) {
@@ -235,7 +250,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return super.setInternalState(state, setDirty);
     }
 
-    /** Get the underlying node.
+    /**
+     * Get the underlying node.
+     *
      * @return the underlying Node
      */
     public Node getNode() {
@@ -272,9 +289,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
-     * Returns the output port for the given <code>portID</code>. This port
-     * is essentially a container for the underlying Node and the index and will
-     * retrieve all interesting data from the Node.
+     * Returns the output port for the given <code>portID</code>. This port is essentially a container for the
+     * underlying Node and the index and will retrieve all interesting data from the Node.
      *
      * @param index The output port's ID.
      * @return Output port with the specified ID.
@@ -292,8 +308,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
-     * Return a port, which for the inputs really only holds the type and some
-     * other static information.
+     * Return a port, which for the inputs really only holds the type and some other static information.
      *
      * @param index the index of the input port
      * @return port
@@ -370,7 +385,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V
+        getInteractiveView() {
         NodeContext.pushContext(this);
         try {
             V ainv = m_node.getNodeModel().getInteractiveNodeView();
@@ -392,7 +408,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
             NodeContext.removeLastContext();
         }
     }
-
 
     /* ------------------ Job Handling ---------------- */
 
@@ -417,14 +432,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case CONFIGURED_QUEUED:
-            case EXECUTED_QUEUED:
-            case PREEXECUTE:
-            case EXECUTING:
-            case EXECUTINGREMOTELY:
-            case POSTEXECUTE:
-                throwIllegalStateException();
-            default:
+                case CONFIGURED_QUEUED:
+                case EXECUTED_QUEUED:
+                case PREEXECUTE:
+                case EXECUTING:
+                case EXECUTINGREMOTELY:
+                case POSTEXECUTE:
+                    throwIllegalStateException();
+                default:
             }
             super.setJobManager(je);
         }
@@ -446,22 +461,20 @@ public class NativeNodeContainer extends SingleNodeContainer {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
             switch (getInternalState()) {
-            case EXECUTED_QUEUED:
-            case CONFIGURED_QUEUED:
-                setInternalState(InternalNodeContainerState.PREEXECUTE);
-                return true;
-            default:
-                // ignore any other state: other states indicate that the node
-                // was canceled before it is actually run
-                // (this method is called from a worker thread, whereas cancel
-                // typically from the UI thread)
-                if (!Thread.currentThread().isInterrupted()) {
-                    LOGGER.debug("Execution of node " + getNameWithID()
-                            + " was probably canceled (node is " + getInternalState()
-                            + " during 'preexecute') but calling thread is not"
-                            + " interrupted");
-                }
-                return false;
+                case EXECUTED_QUEUED:
+                case CONFIGURED_QUEUED:
+                    setInternalState(InternalNodeContainerState.PREEXECUTE);
+                    return true;
+                default:
+                    // ignore any other state: other states indicate that the node
+                    // was canceled before it is actually run
+                    // (this method is called from a worker thread, whereas cancel
+                    // typically from the UI thread)
+                    if (!Thread.currentThread().isInterrupted()) {
+                        LOGGER.debug("Execution of node " + getNameWithID() + " was probably canceled (node is "
+                            + getInternalState() + " during 'preexecute') but calling thread is not" + " interrupted");
+                    }
+                    return false;
             }
         }
     }
@@ -471,16 +484,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
     void performStateTransitionEXECUTING() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case PREEXECUTE:
-                this.getNode().clearLoopContext();
-                if (NodeExecutionJobManagerPool.isThreaded(findJobManager())) {
-                    setInternalState(InternalNodeContainerState.EXECUTING);
-                } else {
-                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
-                }
-                break;
-            default:
-                throwIllegalStateException();
+                case PREEXECUTE:
+                    this.getNode().clearLoopContext();
+                    if (NodeExecutionJobManagerPool.isThreaded(findJobManager())) {
+                        setInternalState(InternalNodeContainerState.EXECUTING);
+                    } else {
+                        setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
+                    }
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -490,14 +503,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     void performStateTransitionPOSTEXECUTE() {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case PREEXECUTE: // in case of errors, e.g. flow stack problems
-                             // encountered during doBeforeExecution
-            case EXECUTING:
-            case EXECUTINGREMOTELY:
-                setInternalState(InternalNodeContainerState.POSTEXECUTE);
-                break;
-            default:
-                throwIllegalStateException();
+                case PREEXECUTE: // in case of errors, e.g. flow stack problems
+                                 // encountered during doBeforeExecution
+                case EXECUTING:
+                case EXECUTINGREMOTELY:
+                    setInternalState(InternalNodeContainerState.POSTEXECUTE);
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -508,20 +521,20 @@ public class NativeNodeContainer extends SingleNodeContainer {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
             switch (getInternalState()) {
-            case EXECUTED_MARKEDFOREXEC:
-            case CONFIGURED_MARKEDFOREXEC:
-            case UNCONFIGURED_MARKEDFOREXEC:
-                // ideally opening the file store handler would be done in "mimicRemoteExecuting" (consistently to
-                // performStateTransitionEXECUTING) but remote execution isn't split up that nicely - there is only
-                // pre-execute and executed
-                initLocalFileStoreHandler();
-                setInternalState(InternalNodeContainerState.PREEXECUTE);
-                break;
-            case EXECUTED:
-                // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
+                case EXECUTED_MARKEDFOREXEC:
+                case CONFIGURED_MARKEDFOREXEC:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    // ideally opening the file store handler would be done in "mimicRemoteExecuting" (consistently to
+                    // performStateTransitionEXECUTING) but remote execution isn't split up that nicely - there is only
+                    // pre-execute and executed
+                    initLocalFileStoreHandler();
+                    setInternalState(InternalNodeContainerState.PREEXECUTE);
+                    break;
+                case EXECUTED:
+                    // ignore executed nodes
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -541,42 +554,41 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    void performStateTransitionEXECUTED(
-            final NodeContainerExecutionStatus status) {
+    void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status) {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
-            case POSTEXECUTE:
-                closeFileStoreHandlerAfterExecute(status.isSuccess());
-                if (status.isSuccess()) {
-                    if (this.getNode().getLoopContext() != null) {
-                        // loop not yet done - "stay" configured until done.
-                        assert this.getLoopStatus().equals(LoopStatus.RUNNING);
-                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                case POSTEXECUTE:
+                    closeFileStoreHandlerAfterExecute(status.isSuccess());
+                    if (status.isSuccess()) {
+                        if (this.getNode().getLoopContext() != null) {
+                            // loop not yet done - "stay" configured until done.
+                            assert this.getLoopStatus().equals(LoopStatus.RUNNING);
+                            setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                        } else {
+                            setInternalState(InternalNodeContainerState.EXECUTED);
+                            m_nodeAndBundleInformation = NodeAndBundleInformationPersistor.create(m_node);
+                            setExecutionEnvironment(null);
+                        }
                     } else {
-                        setInternalState(InternalNodeContainerState.EXECUTED);
-                        m_nodeAndBundleInformation = NodeAndBundleInformationPersistor.create(m_node);
+                        // node will be configured in doAfterExecute.
+                        // for now we assume complete failure and clean up (reset)
+                        // We do keep the message, though.
+                        NodeMessage oldMessage = getNodeMessage();
+                        NodeContext.pushContext(this);
+                        try {
+                            performReset();
+                        } finally {
+                            NodeContext.removeLastContext();
+                        }
+                        this.clearFileStoreHandler();
+                        setNodeMessage(oldMessage);
+                        setInternalState(InternalNodeContainerState.IDLE);
                         setExecutionEnvironment(null);
                     }
-                } else {
-                    // node will be configured in doAfterExecute.
-                    // for now we assume complete failure and clean up (reset)
-                    // We do keep the message, though.
-                    NodeMessage oldMessage = getNodeMessage();
-                    NodeContext.pushContext(this);
-                    try {
-                        performReset();
-                    } finally {
-                        NodeContext.removeLastContext();
-                    }
-                    this.clearFileStoreHandler();
-                    setNodeMessage(oldMessage);
-                    setInternalState(InternalNodeContainerState.IDLE);
-                    setExecutionEnvironment(null);
-                }
-                setExecutionJob(null);
-                break;
-            default:
-                throwIllegalStateException();
+                    setExecutionJob(null);
+                    break;
+                default:
+                    throwIllegalStateException();
             }
         }
     }
@@ -629,7 +641,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return success ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
     }
 
-
     /* ----------- Reset and Port handling ------------- */
 
     /** {@inheritDoc} */
@@ -638,6 +649,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node.reset();
         m_nodeAndBundleInformation = null;
         cleanOutPorts(false);
+    }
+
+    @Override
+    void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadSettings(settings);
+        m_nodeSettingsBundleVersion = getNewNodeAndBundleInformation().getBundleVersion().orElse(Version.EMPTY_VERSION);
     }
 
     /** {@inheritDoc} */
@@ -666,8 +683,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     public final void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         m_node.putOutputTablesIntoGlobalRepository(dataRepository);
-        Map<Integer, ContainerTable> localRep =
-                Node.getLocalTableRepositoryFromContext(c);
+        Map<Integer, ContainerTable> localRep = Node.getLocalTableRepositoryFromContext(c);
         Set<ContainerTable> localTables = new LinkedHashSet<>();
         for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
             Optional<ContainerTable> fromGlob = dataRepository.getTable(t.getKey());
@@ -681,8 +697,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node.addToTemporaryTables(localTables);
     }
 
-    /** Removes all tables that were created by this node from the global
-     * table repository. */
+    /**
+     * Removes all tables that were created by this node from the global table repository.
+     */
     private int removeOutputTablesFromGlobalRepository() {
         WorkflowDataRepository dataRepository = getParent().getWorkflowDataRepository();
         return m_node.removeOutputTablesFromGlobalRepository(dataRepository);
@@ -690,7 +707,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /* --------------- File Store Handling ------------- */
 
-    /** ...
+    /**
+     * ...
      *
      * @param success ...
      */
@@ -768,7 +786,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
             }
             if (currentFSHandler == null && virtualScopeFSHandler != null) {
                 currentFSHandler = virtualScopeFSHandler;
-           }
+            }
         }
 
         if (currentFSHandler != null) {
@@ -942,8 +960,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
-     * @noreference This method is not intended to be referenced by clients. */
+    /**
+     * Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
+     *
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public void clearFileStoreHandler() {
         IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
         if (fileStoreHandler != null) {
@@ -955,16 +976,18 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /* --------------- Loop Stuff ----------------- */
 
     /** Possible loop states. */
-    public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED }
+    public static enum LoopStatus {
+            NONE, RUNNING, PAUSED, FINISHED
+    }
+
     /**
      * @return status of loop (determined from NodeState and LoopContext)
      */
     public LoopStatus getLoopStatus() {
         if (this.isModelCompatibleTo(LoopEndNode.class)) {
-            if ((getNode().getLoopContext() != null)
-                    || (getInternalState().isExecutionInProgress())) {
+            if ((getNode().getLoopContext() != null) || (getInternalState().isExecutionInProgress())) {
                 if ((getNode().getPauseLoopExecution())
-                        && (getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC))) {
+                    && (getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC))) {
                     return LoopStatus.PAUSED;
                 } else {
                     return LoopStatus.RUNNING;
@@ -1003,9 +1026,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    /** enable (or disable) that after the next execution of this loop end node
-     * the execution will be halted. This can also be called on a paused node
-     * to trigger a "single step" execution.
+    /**
+     * enable (or disable) that after the next execution of this loop end node the execution will be halted. This can
+     * also be called on a paused node to trigger a "single step" execution.
      *
      * @param enablePausing if true, pause is enabled. Otherwise disabled.
      */
@@ -1119,8 +1142,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
             if (m_node.isModelCompatibleTo(CredentialsNode.class)) {
                 CredentialsNode credNode = (CredentialsNode)m_node.getNodeModel();
-                credNode.doAfterLoadFromDisc(fileNativeNCPersistor.getLoadHelper(),
-                    getCredentialsProvider(), isExecuted, isInactive());
+                credNode.doAfterLoadFromDisc(fileNativeNCPersistor.getLoadHelper(), getCredentialsProvider(),
+                    isExecuted, isInactive());
                 saveModelSettingsToDefault();
             }
         }
@@ -1133,20 +1156,17 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public void loadExecutionResult(
-            final NodeContainerExecutionResult execResult,
-            final ExecutionMonitor exec, final LoadResult loadResult) {
+    public void loadExecutionResult(final NodeContainerExecutionResult execResult, final ExecutionMonitor exec,
+        final LoadResult loadResult) {
         synchronized (m_nodeMutex) {
             if (InternalNodeContainerState.EXECUTED.equals(getInternalState())) {
-                LOGGER.debug(getNameWithID()
-                        + " is already executed; won't load execution result");
+                LOGGER.debug(getNameWithID() + " is already executed; won't load execution result");
                 return;
             }
             if (!(execResult instanceof NativeNodeContainerExecutionResult)) {
-                throw new IllegalArgumentException("Argument must be instance "
-                        + "of \"" + NativeNodeContainerExecutionResult.
-                        class.getSimpleName() + "\": "
-                        + execResult.getClass().getSimpleName());
+                throw new IllegalArgumentException(
+                    "Argument must be instance " + "of \"" + NativeNodeContainerExecutionResult.class.getSimpleName()
+                        + "\": " + execResult.getClass().getSimpleName());
             }
             super.loadExecutionResult(execResult, exec, loadResult);
             NativeNodeContainerExecutionResult sncExecResult = (NativeNodeContainerExecutionResult)execResult;
@@ -1178,8 +1198,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public NativeNodeContainerExecutionResult createExecutionResult(
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    public NativeNodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
+        throws CanceledExecutionException {
         synchronized (m_nodeMutex) {
             NativeNodeContainerExecutionResult result = new NativeNodeContainerExecutionResult();
             super.saveExecutionResult(result);
@@ -1234,12 +1254,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    /** Support old-style drop dir mechanism - replaced since 2.8 with relative mountpoints,
-     * e.g. knime://knime.workflow */
+    /**
+     * Support old-style drop dir mechanism - replaced since 2.8 with relative mountpoints, e.g. knime://knime.workflow
+     */
     private void pushNodeDropDirURLsOntoStack(final FlowObjectStack st) {
         ReferencedFile refDir = getNodeContainerDirectory();
-        ReferencedFile dropFolder = refDir == null ? null
-                : new ReferencedFile(refDir, DROP_DIR_NAME);
+        ReferencedFile dropFolder = refDir == null ? null : new ReferencedFile(refDir, DROP_DIR_NAME);
         if (dropFolder == null) {
             return;
         }
@@ -1251,18 +1271,16 @@ public class NativeNodeContainer extends SingleNodeContainer {
             }
             String[] files = directory.list();
             if (files != null) {
-                StringBuilder debug = new StringBuilder(
-                        "Found " + files.length + " node local file(s) to "
-                        + getNameWithID() + ": ");
+                StringBuilder debug =
+                    new StringBuilder("Found " + files.length + " node local file(s) to " + getNameWithID() + ": ");
                 debug.append(Arrays.toString(Arrays.copyOf(files, Math.max(3, files.length))));
                 for (String f : files) {
                     File child = new File(directory, f);
                     try {
-                        st.push(new FlowVariable(
-                                Scope.Local.getPrefix() + "(drop) " + f,
-//                                child.getAbsolutePath(), Scope.Local));
-                                child.toURI().toURL().toString(), Scope.Local));
-//                    } catch (Exception mue) {
+                        st.push(new FlowVariable(Scope.Local.getPrefix() + "(drop) " + f,
+                            //                                child.getAbsolutePath(), Scope.Local));
+                            child.toURI().toURL().toString(), Scope.Local));
+                        //                    } catch (Exception mue) {
                     } catch (MalformedURLException mue) {
                         LOGGER.warn("Unable to process drop file", mue);
                     }
@@ -1297,10 +1315,11 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.getCredentialsProvider();
     }
 
-
-    /** Get the tables/portobjects kept by the underlying node. The return value is null if (a) the underlying node is
-     * not a {@link org.knime.core.node.BufferedDataTableHolder} or {@link org.knime.core.node.port.PortObjectHolder}
-     * or (b) the node is not executed.
+    /**
+     * Get the tables/portobjects kept by the underlying node. The return value is null if (a) the underlying node is
+     * not a {@link org.knime.core.node.BufferedDataTableHolder} or {@link org.knime.core.node.port.PortObjectHolder} or
+     * (b) the node is not executed.
+     *
      * @return The internally held tables.
      * @see Node#getInternalHeldPortObjects()
      */
@@ -1309,9 +1328,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /**
-     * Overridden to also ensure that outport tables are "open" (node directory
-     * is deleted upon save() - so the tables are better copied into temp).
-     * {@inheritDoc}
+     * Overridden to also ensure that outport tables are "open" (node directory is deleted upon save() - so the tables
+     * are better copied into temp). {@inheritDoc}
      */
     @Override
     public void setDirty() {
@@ -1379,19 +1397,40 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.getXMLDescription();
     }
 
-    /** @return non-null meta bundle and node information to this instance. For executed nodes this will
-     * return the information to the bundle as of time of execution (also for loaded workflows).
+    /**
+     * @return non-null meta bundle and node information to this instance. For executed nodes this will return the
+     *         information to the bundle as of time of execution (also for loaded workflows).
      * @since 2.10
-     * @noreference This method is not intended to be referenced by clients. */
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         if (m_nodeAndBundleInformation != null) {
             return m_nodeAndBundleInformation;
         }
+        return getNewNodeAndBundleInformation();
+    }
+
+    private NodeAndBundleInformationPersistor getNewNodeAndBundleInformation() {
         final NodeModel model = getNodeModel();
         if (model instanceof MissingNodeModel) {
             return ((MissingNodeModel)model).getNodeAndBundleInformation();
         }
         return NodeAndBundleInformationPersistor.create(getNode());
+    }
+
+    /**
+     * TODO Use this method in contrast to {@link #getNodeAndBundleInformation()} if you want to access the node and bundle
+     * information as it was right after the node has been loaded. This is useful for making nodes backwards compatible
+     * to an old behavior if no other indication (e.g. in the settings) has been added when the behavior was changed.
+     * I.e. this method is used to resolve accidental regressions.
+     *
+     * @return non-null meta bundle and node information to the instance of this node container right after it has been
+     *         loaded.
+     * @throws IllegalAccessError if this is a new node that has not been loaded
+     * @since 5.6
+     */
+    public Version getSettingsBundleVersion() {
+        return m_nodeSettingsBundleVersion;
     }
 
     /* ------------------ Dialog ------------- */
@@ -1415,8 +1454,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
-            final PortObject[] inData) throws NotConfigurableException {
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
+        throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings, true, true);
         NodeContext.pushContext(this);
@@ -1437,8 +1476,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
             NodeContext.removeLastContext();
         }
     }
-
-
 
     /* --------------- Output Port Information ---------------- */
 

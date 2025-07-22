@@ -92,6 +92,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
 import org.knime.core.util.LoadVersion;
+import org.knime.core.util.Version;
 
 /**
  *
@@ -112,6 +113,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
 
+    private Version m_nodeSettingsBundleVersion;
+
     /**
      * @param nodeSettingsFile
      * @param loadHelper
@@ -123,7 +126,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         super(nodeSettingsFile, loadHelper, version, workflowDataRepository, mustWarnOnDataLoadError);
     }
 
-    /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
+    /**
+     * Called by {@link Node} to update the message field in the {@link NodeModel} class.
+     *
      * @return the msg or null.
      */
     public Message getNodeMessage() {
@@ -167,11 +172,23 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         NodeSettingsRO settings = getNodeSettings();
         String error;
         NodeAndBundleInformationPersistor nodeInfo;
+        Version nodeSettingsBundleVersion;
         try {
             nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
         } catch (InvalidSettingsException e) {
             setDirtyAfterLoad();
             throw e;
+        }
+
+        String v = settings.getString("node-settings-bundle-version", "");
+        try {
+            if (!v.isEmpty()) {
+                nodeSettingsBundleVersion = new Version(v);
+            } else {
+                nodeSettingsBundleVersion = null;
+            }
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException("Invalid version \"" + v + "\"", iae);
         }
         NodeSettingsRO additionalFactorySettings;
         try {
@@ -205,6 +222,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 "Unable to instantiate creation config for", e);
         }
         m_nodeAndBundleInformation = nodeInfo;
+        m_nodeSettingsBundleVersion = nodeSettingsBundleVersion;
         Node origNode = new Node(nodeFactory, creationConfig);
         m_node = replaceNodeByMissingNodeIfUsageIsDisallowed(origNode, additionalFactorySettings);
     }
@@ -237,10 +255,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
     /** {@inheritDoc} */
     @Override
-    NodeSettingsRO loadNCAndModelSettings(final NodeSettingsRO settingsForNode,
-        final NodeSettingsRO modelSettings,
+    NodeSettingsRO loadNCAndModelSettings(final NodeSettingsRO settingsForNode, final NodeSettingsRO modelSettings,
         final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
-                throws InvalidSettingsException, CanceledExecutionException, IOException {
+        throws InvalidSettingsException, CanceledExecutionException, IOException {
         m_nodePersistor = createNodePersistor(settingsForNode);
         m_nodePersistor.preLoad(m_node, result);
         try {
@@ -254,10 +271,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 error = "Loading model settings failed: " + e.getMessage();
             } else {
                 error = "Caught \"" + e.getClass().getSimpleName() + "\", " + "Loading model settings failed: "
-                        + e.getMessage();
+                    + e.getMessage();
             }
-            final LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy(
-                getMetaPersistor().getState(), m_nodePersistor.isInactive());
+            final LoadNodeModelSettingsFailPolicy pol =
+                getModelSettingsFailPolicy(getMetaPersistor().getState(), m_nodePersistor.isInactive());
             switch (pol) {
                 case IGNORE:
                     if (!(e instanceof InvalidSettingsException)) {
@@ -278,8 +295,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
         try {
             WorkflowDataRepository dataRepository = getWorkflowDataRepository();
-            m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, dataRepository,
-                result);
+            m_nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, dataRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -303,8 +319,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * @return Factory information.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    NodeAndBundleInformationPersistor loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+    NodeAndBundleInformationPersistor loadNodeFactoryInfo(final NodeSettingsRO parentSettings,
+        final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             String factoryName = parentSettings.getString("factory");
             // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
@@ -319,8 +335,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     }
 
     /**
-     * Creates the node factory instance for the given fully-qualified factory class name.
-     * Otherwise a respective exception will be thrown.
+     * Creates the node factory instance for the given fully-qualified factory class name. Otherwise a respective
+     * exception will be thrown.
+     *
      * @param factoryClassName
      * @return
      * @throws InvalidSettingsException
@@ -332,10 +349,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      */
     @SuppressWarnings("unchecked")
     public static final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName)
-            throws InvalidSettingsException, InstantiationException, IllegalAccessException,
-            InvalidNodeFactoryExtensionException{
+        throws InvalidSettingsException, InstantiationException, IllegalAccessException,
+        InvalidNodeFactoryExtensionException {
         Optional<NodeFactory<NodeModel>> facOptional =
-                NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName);
+            NodeFactoryProvider.getInstance().getNodeFactory(factoryClassName);
         if (facOptional.isPresent()) {
             return facOptional.get();
         }
@@ -344,25 +361,26 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             @SuppressWarnings("rawtypes")
             NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
             if (factory != null) {
-                LOGGER.debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
-                    + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
-                    mapper.getClass().getName()));
+                LOGGER.debug(String.format(
+                    "Replacing stored factory class name \"%s\" by actual factory "
+                        + "class \"%s\" (defined by class mapper \"%s\")",
+                    factoryClassName, factory.getClass().getName(), mapper.getClass().getName()));
                 return factory;
             }
         }
 
-//        for (String s : NodeFactory.getLoadedNodeFactories()) {
-//            if (s.endsWith("." + simpleClassName)) {
-//                NodeFactory<NodeModel> f =
-//                    (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
-//                LOGGER.warn(
-//                    "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
-//                return f;
-//            }
-//        }
+        //        for (String s : NodeFactory.getLoadedNodeFactories()) {
+        //            if (s.endsWith("." + simpleClassName)) {
+        //                NodeFactory<NodeModel> f =
+        //                    (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
+        //                LOGGER.warn(
+        //                    "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
+        //                return f;
+        //            }
+        //        }
 
-        throw new InvalidSettingsException(String.format(
-            "Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
+        throw new InvalidSettingsException(
+            String.format("Unknown factory class \"%s\" -- not registered via extension point", factoryClassName));
     }
 
     /**
@@ -398,7 +416,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 nodeFile = loadNodeFile(nodeSettings);
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load node settings file for node with ID suffix "
-                        + metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
+                    + metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
                 loadResult.addError(error);
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
@@ -406,9 +424,9 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
             File configFile = nodeFile.getFile();
             if (configFile == null || !configFile.isFile() || !configFile.canRead()) {
-                String error = "Unable to read node settings file for node with ID suffix "
-                        + metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"), file \""
-                        + configFile + "\"";
+                String error =
+                    "Unable to read node settings file for node with ID suffix " + metaPersistor.getNodeIDSuffix()
+                        + " (node \"" + m_node.getName() + "\"), file \"" + configFile + "\"";
                 loadResult.addError(error);
                 setNeedsResetAfterLoad(); // also implies dirty
                 return new NodeSettings("empty");
@@ -421,8 +439,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                     try {
                         in.close();
                     } catch (IOException e) {
-                        getLogger().error("Failed to close input stream on \""
-                                + configFile.getAbsolutePath() + "\"", e);
+                        getLogger().error("Failed to close input stream on \"" + configFile.getAbsolutePath() + "\"",
+                            e);
                     }
                 }
             }
@@ -474,9 +492,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
                 outPortTypes = nodePersistor.guessOutputPortTypes(guessLoadResult, nodeName);
                 if (guessLoadResult.hasErrors()) {
-                    getLogger().debug(
-                        "Errors guessing port types for missing node \"" + nodeName + "\": "
-                            + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
+                    getLogger().debug("Errors guessing port types for missing node \"" + nodeName + "\": "
+                        + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
                 }
             } catch (Exception e) {
                 getLogger().debug("Unable to guess port types for missing node \"" + nodeName + "\"", e);
@@ -540,9 +557,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         return null;
     }
 
-    static void save(final NativeNodeContainer nnc, final NodeSettingsWO settings,
-        final ExecutionMonitor execMon, final ReferencedFile nodeDirRef,
-        final boolean isSaveData) throws IOException, CanceledExecutionException {
+    static void save(final NativeNodeContainer nnc, final NodeSettingsWO settings, final ExecutionMonitor execMon,
+        final ReferencedFile nodeDirRef, final boolean isSaveData) throws IOException, CanceledExecutionException {
         saveNodeFactory(settings, nnc);
         saveCreationConfig(settings, nnc.getNode());
         FileNodePersistor.save(nnc, settings, execMon, nodeDirRef,
@@ -554,6 +570,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         // node info to missing node is the info to the actual instance, not MissingNodeFactory
         NodeAndBundleInformationPersistor nodeInfo = nnc.getNodeAndBundleInformation();
         nodeInfo.save(settings);
+        settings.addString("node-settings-bundle-version", nnc.getSettingsBundleVersion().toString());
 
         // The factory-id-uniquifier is only saved but never loaded! It's restored by the
         // respective node-implementation based on the 'additional factory settings'.
@@ -584,10 +601,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         final NodeSettingsRO additionalFactorySettings) {
         final String factoryId = origNode.getFactory().getFactoryId();
         if (CorePlugin.getInstance().getCustomizationService() //
-                .map(APCustomizationProviderService::getCustomization) //
-                .map(APCustomization::nodes) //
-                .map(n -> n.isUsageAllowed(factoryId)) //
-                .orElse(Boolean.TRUE)) {
+            .map(APCustomizationProviderService::getCustomization) //
+            .map(APCustomization::nodes) //
+            .map(n -> n.isUsageAllowed(factoryId)) //
+            .orElse(Boolean.TRUE)) {
             return origNode;
         } else {
             LOGGER.debugWithFormat(
@@ -595,17 +612,22 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 origNode.getFactory().getNodeName(), factoryId);
             final NodeAndBundleInformationPersistor info = NodeAndBundleInformationPersistor.create(origNode);
             final PortType[] inputs = IntStream.range(1, origNode.getNrInPorts()) // skip flow var port
-                    .mapToObj(origNode::getInputType) //
-                    .toArray(PortType[]::new);
+                .mapToObj(origNode::getInputType) //
+                .toArray(PortType[]::new);
             final PortType[] outputs = IntStream.range(1, origNode.getNrOutPorts()) // skip flow var port
-                    .mapToObj(origNode::getOutputType) //
-                    .toArray(PortType[]::new);
+                .mapToObj(origNode::getOutputType) //
+                .toArray(PortType[]::new);
             MissingNodeFactory factory = new MissingNodeFactory(info, additionalFactorySettings, inputs, outputs,
-                    MissingNodeFactory.Reason.GOVERNANCE_FORBIDDEN);
+                MissingNodeFactory.Reason.GOVERNANCE_FORBIDDEN);
             factory.init();
             final ModifiableNodeCreationConfiguration creationConfig = origNode.getCopyOfCreationConfig().orElse(null);
             return new Node((NodeFactory)factory, creationConfig);
         }
+    }
+
+    @Override
+    public Optional<Version> getNodeSettingsBundleVersion() {
+        return Optional.ofNullable(m_nodeSettingsBundleVersion);
     }
 
 }

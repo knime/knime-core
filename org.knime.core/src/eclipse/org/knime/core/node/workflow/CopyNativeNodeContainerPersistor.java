@@ -47,6 +47,7 @@
 package org.knime.core.node.workflow;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CopyNodePersistor;
@@ -60,6 +61,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.context.ModifiableNodeCreationConfiguration;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.util.Version;
 
 /**
  *
@@ -92,6 +94,8 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
 
     private final ModifiableNodeCreationConfiguration m_creationConfig;
 
+    private Version m_nodeSettingsBundleVersion;
+
     /**
      * @param original
      * @param preserveDeletableFlag
@@ -104,6 +108,7 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
         m_nodeFactory = originalNode.getFactory();
         m_creationConfig = originalNode.getCopyOfCreationConfig().orElse(null);
         m_nodePersistor = originalNode.createCopyPersistor();
+        m_nodeSettingsBundleVersion = original.getSettingsBundleVersion();
     }
 
     /** {@inheritDoc} */
@@ -122,6 +127,14 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
     @Override
     public NodeAndBundleInformationPersistor getNodeAndBundleInformation() {
         return null; // copy & paste only for idle/configured nodes - no need to keep bundle version
+    }
+
+    /**
+     * @since 5.6
+     */
+    @Override
+    public Optional<Version> getNodeSettingsBundleVersion() {
+        return Optional.ofNullable(m_nodeSettingsBundleVersion);
     }
 
     /** {@inheritDoc} */
