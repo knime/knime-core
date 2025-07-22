@@ -148,6 +148,12 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * bug 5207. This field is set when status changes to EXECUTED and set to null when reset. */
     private NodeAndBundleInformationPersistor m_nodeAndBundleInformation;
 
+    /** The bundle info with which the node was last executed with when the workflow was loaded.
+     * I.e. it is the same as m_nodeAndBundleInformation on load but it is not set to null when reset.
+     * Used to address regression UIEXT-2862.
+     * */
+    private NodeAndBundleInformationPersistor m_nodeAndBundleInformationOnLoad;
+
     private LoopStatusChangeHandler m_loopStatusChangeHandler;
 
     /** Used to exclude virtual nodes from copy operations. */
@@ -185,6 +191,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         m_node = persistor.getNode();
         if (getInternalState().isExecuted()) {
             m_nodeAndBundleInformation = persistor.getNodeAndBundleInformation();
+            m_nodeAndBundleInformationOnLoad = m_nodeAndBundleInformation;
         }
         assert m_node != null : persistor.getClass().getSimpleName()
                 + " did not provide Node instance for "
@@ -1392,6 +1399,24 @@ public class NativeNodeContainer extends SingleNodeContainer {
             return ((MissingNodeModel)model).getNodeAndBundleInformation();
         }
         return NodeAndBundleInformationPersistor.create(getNode());
+    }
+
+    /**
+     * Use this method in contrast to {@link #getNodeAndBundleInformation()} if you want to access the node and bundle
+     * information as it was right after the node has been loaded. This is useful for making nodes backwards compatible
+     * to an old behavior if no other indication (e.g. in the settings) has been added when the behavior was changed.
+     * I.e. this method is used to resolve accidental regressions.
+     *
+     * @return non-null meta bundle and node information to the instance of this node container right after it has been
+     *         loaded.
+     * @throws IllegalAccessError if this is a new node that has not been loaded
+     * @since 5.6
+     */
+    public NodeAndBundleInformationPersistor getNodeAndBundleInformationOnLoad() {
+        if (m_nodeAndBundleInformationOnLoad != null) {
+            return m_nodeAndBundleInformationOnLoad;
+        }
+        throw new IllegalAccessError("The node and bundle information on load should only be accessed for loaded nodes.");
     }
 
     /* ------------------ Dialog ------------- */
