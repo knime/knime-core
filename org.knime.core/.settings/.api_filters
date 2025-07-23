@@ -431,6 +431,12 @@
                 <message_argument value="DISALLOW_WEAK_PASSWORDS_IN_NODE_CONFIGURATION"/>
             </message_arguments>
         </filter>
+        <filter comment="change method of internal api, see AP-24726" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="setScopeStartNode(Node)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/agentic/tool/ToolValue.java" type="org.knime.core.node.agentic.tool.ToolValue$ToolResult">
         <filter comment="ToolResult not considered API, yet" id="337809484">

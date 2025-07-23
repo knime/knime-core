@@ -6969,7 +6969,12 @@ public final class WorkflowManager extends NodeContainer
                             Class<? extends FlowScopeContext> flowScopeContextClass =
                                 ((ScopeEndNode<?>)sncNode.getNodeModel()).getFlowScopeContextClass();
                             if (flowScopeContextClass.isAssignableFrom(fsc.getClass())) {
-                                sncNode.setScopeStartNode(((NativeNodeContainer)headNode).getNode());
+                                // the node might still not be a proper start node (but missing), see AP-24726
+                                ScopeStartNode<?> startNode =
+                                    Optional.ofNullable(((NativeNodeContainer)headNode).getNode())
+                                        .map(Node::getNodeModel).filter(ScopeStartNode.class::isInstance)
+                                        .map(ScopeStartNode.class::cast).orElse(null);
+                                sncNode.setScopeStartNode(startNode);
                             }
                         }
                     }

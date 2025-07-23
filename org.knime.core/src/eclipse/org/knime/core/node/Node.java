@@ -2991,14 +2991,11 @@ public final class Node {
      * Make model aware of corresponding scope start node of given type.
      *
      * @param head the node, can be <code>null</code> to 'un-set' the start node
-     * @since 4.2
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 5.6
      */
-    public void setScopeStartNode(final Node head) {
-        if (head == null) {
-            m_model.setScopeStartNode(null);
-        } else {
-            m_model.setScopeStartNode((ScopeStartNode<?>)head.m_model);
-        }
+    public void setScopeStartNode(final ScopeStartNode<?> head) {
+        m_model.setScopeStartNode(head);
     }
 
     /**
