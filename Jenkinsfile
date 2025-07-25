@@ -1,7 +1,7 @@
 #!groovy
 def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2025-07'
 
-library "knime-pipeline@$BN"
+library "knime-pipeline@todo/DEVOPS-3284-knime-core-takes-too-long"
 
 properties([
     pipelineTriggers([upstream(
@@ -16,7 +16,7 @@ properties([
 try {
     parallel (
         'Tycho Build': {
-            knimetools.defaultTychoBuild('org.knime.update.core')
+            // knimetools.defaultTychoBuild('org.knime.update.core')
         },
         'Integrated Workflowtests': {
                 workflowTests.runIntegratedWorkflowTests(profile: 'test')
