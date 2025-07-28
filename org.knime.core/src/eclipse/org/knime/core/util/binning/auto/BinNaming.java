@@ -61,6 +61,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  * @author Mor Kalla
  * @since 3.6
  */
+@Deprecated
 public enum BinNaming implements ButtonGroupEnumInterface {
 
         /**

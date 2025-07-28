@@ -45,7 +45,7 @@
  * History
  *   09.07.2010 (hofer): created
  */
-package org.knime.core.util.binning.numeric;
+package org.knime.core.util.binning.auto;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -57,16 +57,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.OptionalDouble;
 
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings.EqualCount;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings.EqualWidth;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings.FixedBoundaries;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings.FixedQuantiles;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.ColumnOutputNamingSettings.AppendSuffix;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.ColumnOutputNamingSettings.ReplaceColumn;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.DataBoundsSettings.BoundSetting.FixedBound;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.DataBoundsSettings.BoundSetting.NoBound;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormattingSettings.ColumnFormat;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormattingSettings.CustomFormat;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings.EqualCount;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings.EqualWidth;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings.FixedBoundaries;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings.FixedQuantiles;
+import org.knime.core.util.binning.auto.AutoBinningSettings.ColumnOutputNamingSettings.AppendSuffix;
+import org.knime.core.util.binning.auto.AutoBinningSettings.ColumnOutputNamingSettings.ReplaceColumn;
+import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings.BoundSetting.FixedBound;
+import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings.BoundSetting.NoBound;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.ColumnFormat;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.CustomFormat;
 
 /**
  * This class hold the settings required to use {@link AutoBinningUtils}.

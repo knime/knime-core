@@ -64,6 +64,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @author Mor Kalla
  * @since 3.6
  */
+@Deprecated
 public final class AutoBinnerLearnSettings {
 
     private static final String CFG_METHOD = "method";

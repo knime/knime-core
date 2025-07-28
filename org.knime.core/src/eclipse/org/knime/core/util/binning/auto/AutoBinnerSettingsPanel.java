@@ -84,6 +84,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  * @author Mor Kalla
  * @since 3.6
  */
+@Deprecated
 public class AutoBinnerSettingsPanel extends JPanel {
 
     private static final long serialVersionUID = 6289032947872308466L;

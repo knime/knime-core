@@ -46,7 +46,7 @@
  * History
  *   Jun 20, 2025 (david): created
  */
-package org.knime.core.util.binning.numeric;
+package org.knime.core.util.binning.auto;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,20 +90,20 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinBoundary;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinBoundaryExactMatchBehaviour;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinNaming;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinNamingSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.ColumnOutputNamingSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.DataBoundsSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.DataBoundsSettings.BoundSetting;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormatSettingsGroup;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormatSettingsGroup.NumberFormat;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormatSettingsGroup.PrecisionMode;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormatSettingsGroup.RoundingDirection;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormattingSettings.ColumnFormat;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.NumberFormattingSettings.CustomFormat;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundary;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundaryExactMatchBehaviour;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinNaming;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinNamingSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.ColumnOutputNamingSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings.BoundSetting;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.NumberFormat;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.PrecisionMode;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.RoundingDirection;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.ColumnFormat;
+import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.CustomFormat;
 import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.ClosureStyle;
 import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.Interval;
 import org.knime.testing.util.InputTableNode;
@@ -353,9 +353,10 @@ final class AutoBinningUtilsTest {
                     new Column("col1", new double[]{1, 1, 1, 1}) //
                 );
 
+                var exec = createExecutionContext(data);
                 var edges = AutoBinningUtils.createEdgesForEqualCount( //
-                    data.get(), //
-                    createExecutionContext(data), //
+                    AutoBinningUtils.extractColumnValues(data.get(), 0, exec), //
+                    exec, //
                     2, // number of bins
                     OptionalDouble.empty(), // no lower bound
                     OptionalDouble.empty(), // no upper bound
@@ -380,9 +381,10 @@ final class AutoBinningUtilsTest {
                     new Column("col1", new double[]{1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4}) //
                 );
 
+                var exec = createExecutionContext(data);
                 var edges = AutoBinningUtils.createEdgesForEqualCount( //
-                    data.get(), //
-                    createExecutionContext(data), //
+                    AutoBinningUtils.extractColumnValues(data.get(), 0, exec), //
+                    exec, //
                     10, // number of bins
                     OptionalDouble.empty(), // no lower bound
                     OptionalDouble.empty(), // no upper bound
@@ -408,9 +410,10 @@ final class AutoBinningUtilsTest {
                     new Column("col1", new double[]{1, 2, 3, 4}) //
                 );
 
+                var exec = createExecutionContext(data);
                 var edges = AutoBinningUtils.createEdgesForEqualCount( //
-                    data.get(), //
-                    createExecutionContext(data), //
+                    AutoBinningUtils.extractColumnValues(data.get(), 0, exec), //
+                    exec, //
                     2, // number of bins
                     OptionalDouble.empty(), // no lower bound
                     OptionalDouble.empty(), // no upper bound
@@ -435,9 +438,10 @@ final class AutoBinningUtilsTest {
                     new Column("col1", new double[]{1, 2, 3, 4}) //
                 );
 
+                var exec = createExecutionContext(data);
                 var edges = AutoBinningUtils.createEdgesForEqualCount( //
-                    data.get(), //
-                    createExecutionContext(data), //
+                    AutoBinningUtils.extractColumnValues(data.get(), 0, exec), //
+                    exec, //
                     2, // number of bins
                     OptionalDouble.empty(), // no lower bound
                     OptionalDouble.empty(), // no upper bound
@@ -463,9 +467,10 @@ final class AutoBinningUtilsTest {
                     new Column("col1", new double[]{0, 1, 2, 3, 4, 5}) //
                 );
 
+                var exec = createExecutionContext(data);
                 var edges = AutoBinningUtils.createEdgesForEqualCount( //
-                    data.get(), //
-                    createExecutionContext(data), //
+                    AutoBinningUtils.extractColumnValues(data.get(), 0, exec), //
+                    exec, //
                     2, // number of bins
                     OptionalDouble.of(1.0), // lower bound
                     OptionalDouble.of(4.0), // upper bound
@@ -590,10 +595,15 @@ final class AutoBinningUtilsTest {
             oldSpec.getColumnSpec(2) // the column without a domain
         ).createSpec();
 
+        // now add the domains for the first two columns to the table spec
         var newTableWithDomain = exec.createSpecReplacerTable( //
             dataWithoutDomain.get(), //
             newSpec //
         );
+
+        /*
+         * End of the setup of the test data. Here begin the actual tests.
+         */
 
         var recalculatedDomains = AutoBinningUtils.calcDomainBoundsIfNeccessary( //
             newTableWithDomain, //

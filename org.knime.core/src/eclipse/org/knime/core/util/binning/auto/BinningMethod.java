@@ -58,6 +58,7 @@ package org.knime.core.util.binning.auto;
  * @author Mor Kalla
  * @since 3.6
  */
+@Deprecated
 public enum BinningMethod {
         /**
          * Fixed number of bins.

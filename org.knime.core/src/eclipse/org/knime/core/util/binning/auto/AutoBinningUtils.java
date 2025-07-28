@@ -45,11 +45,10 @@
  * History
  *   12.07.2010 (hofer): created
  */
-package org.knime.core.util.binning.numeric;
+package org.knime.core.util.binning.auto;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -75,13 +74,12 @@ import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
-import org.knime.core.data.sort.SortedTable;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -89,11 +87,13 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.util.UniqueNameGenerator;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinBoundary;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinBoundaryExactMatchBehaviour;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinNamingSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.BinningSettings;
-import org.knime.core.util.binning.numeric.AutoBinningSettings.ColumnOutputNamingSettings.AppendSuffix;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundary;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundaryExactMatchBehaviour;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinNamingSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings;
+import org.knime.core.util.binning.auto.AutoBinningSettings.ColumnOutputNamingSettings.AppendSuffix;
+import org.knime.core.util.binning.numeric.NumericBin2;
+import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration;
 import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.ClosureStyle;
 import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.Interval;
 
@@ -128,6 +128,8 @@ public class AutoBinningUtils {
          * Extracts a single column from the given data table, sorts it, and returns a new table with that single column
          * sorted in ascending order.
          *
+         * Package scoped for testing purposes.
+         *
          * @param data the data table to extract the column from
          * @param exec the execution context to report progress and handle cancellation
          * @param columnName the name of the column to extract and sort
@@ -142,12 +144,7 @@ public class AutoBinningUtils {
 
             var unsortedSingleColumnTable = exec.createColumnRearrangeTable(data, rearranger, exec);
 
-            return new SortedTable( //
-                unsortedSingleColumnTable, //
-                Collections.singletonList(columnName), //
-                new boolean[]{true}, //
-                exec //
-            ).getBufferedDataTable();
+            return BufferedDataTableSorter.sortTable(unsortedSingleColumnTable, 0, true, exec);
         }
 
         /**
@@ -190,9 +187,10 @@ public class AutoBinningUtils {
             } else if (m_settings.binning() instanceof BinningSettings.EqualCount ec) {
                 for (var target : m_settings.columnNames()) {
                     var sortedColumn = extractAndSortSingleColumn(inData, exec.createSubExecutionContext(0.9), target);
+                    var sortedValues = extractColumnValues(sortedColumn, 0, exec.createSubExecutionContext(0.05));
 
                     var edges = createEdgesForEqualCount( //
-                        sortedColumn, //
+                        sortedValues, //
                         exec, //
                         ec.numBins(), //
                         m_settings.boundsSettings().optLowerBound(), //
@@ -334,6 +332,8 @@ public class AutoBinningUtils {
      * Calculates the bounds for a fixed-width binning. If integer bounds are requested, the bounds will be rounded to
      * integer values (specifically, the first bin boundary will be floored, and all others will be ceiled).
      *
+     * Package scoped for testing purposes.
+     *
      * @param singleColumnSpec the column spec for which to calculate the bounds. It should have a domain with bounds.
      * @param lowerBound the lower bound to use for the first bin boundary; if not present, the minimum value from the
      *            column domain
@@ -380,7 +380,7 @@ public class AutoBinningUtils {
      * with (a,b)=(1,1). See <a
      * href="https://en.wikipedia.org/wiki/Quantile#Estimating_quantiles_from_a_sample"}>WP:Quantile</a>.
      *
-     * This method doesn't support integer boundaries. Should it?
+     * Package scoped for testing purposes.
      *
      * @param sortedColumn the sorted single-column data table to find the edges for, sorted ascending
      * @param exec the execution context to report progress and handle cancellation
@@ -446,11 +446,18 @@ public class AutoBinningUtils {
         }
     }
 
+    /**
+     * A simple record to hold a pair of integers, used for finding streak endpoints in the list of values.
+     *
+     * Package scoped for testing purposes.
+     */
     record IntPair(int first, int second) {
     }
 
     /**
      * Finds the endpoints of a streak of values in the list, starting at the specified index.
+     *
+     * Package scoped for testing purposes.
      *
      * @param values the list of values to search through
      * @param beginning the index to start searching from
@@ -479,11 +486,25 @@ public class AutoBinningUtils {
         return new IntPair(leftIndex, rightIndex);
     }
 
+    static List<Double> extractColumnValues(final BufferedDataTable table, final int colIndex,
+        final ExecutionMonitor exec) throws CanceledExecutionException {
+        List<Double> tableValues = new ArrayList<>();
+        try (var it = table.iterator()) {
+            while (it.hasNext()) {
+                tableValues.add(((DoubleValue)it.next().getCell(colIndex)).getDoubleValue());
+                exec.checkCanceled();
+            }
+        }
+        return tableValues;
+    }
+
     /**
      * Finds the bin boundaries for a given number of bins, where each bin contains approximately the same number of
      * values. Note that the amounts of values in the bins may differ slightly, depending on the data - for example, the
      * method tries to avoid splitting identical values across different bins, and if integer cutoffs are enforced, the
      * number of values in the bins may vary even more.
+     *
+     * Package scoped for testing purposes.
      *
      * @param sortedSingleColumn the single-column data table to find the edges for. Should be sorted ascending.
      * @param exec the execution context to report progress and handle cancellation
@@ -499,21 +520,13 @@ public class AutoBinningUtils {
      * @throws CanceledExecutionException if the execution is canceled during the calculation
      */
     static List<BinBoundary> createEdgesForEqualCount( //
-        final BufferedDataTable sortedSingleColumn, //
+        List<Double> tableValues, //
         final ExecutionContext exec, //
         final int binCount, //
         final OptionalDouble minValue, // NOSONAR optional is fine
         final OptionalDouble maxValue, // NOSONAR optional is fine
         final boolean integerBounds //
     ) throws CanceledExecutionException {
-
-        List<Double> tableValues = new ArrayList<>();
-        try (var it = sortedSingleColumn.iterator()) {
-            while (it.hasNext()) {
-                tableValues.add(((DoubleValue)it.next().getCell(0)).getDoubleValue());
-                exec.checkCanceled();
-            }
-        }
 
         // we need to filter the table values to remove anything outside the specified range
         tableValues = tableValues.stream() //
@@ -582,6 +595,12 @@ public class AutoBinningUtils {
         return addMatchBehaviourToEdges(Arrays.stream(edges).boxed().toList());
     }
 
+    /**
+     * A simple record to hold a pair of double values, used for finding the minimum and maximum values for each column
+     * in a data table.
+     *
+     * Package scoped for testing purposes.
+     */
     static record DoublePair(double first, double second) {
 
         DoublePair withFirst(final double newFfirst) {
@@ -649,12 +668,10 @@ public class AutoBinningUtils {
 
     /**
      * Calculates the domain bounds for the specified columns in the data table. It will try to extract them directly
-     * from the domain of the table if it has one, otherwise it will calculate the bounds by iterating through the rows
-     * of the table.
+     * from the domain of each column if it has one, otherwise it will calculate the bounds by iterating through the
+     * rows of the table.
      *
-     * I have lifted this method with very few changes from its original location in {@link AutoBinningUtils}, but I
-     * have fixed one bug: when given a data table with some columns that have a domain and some that do not, the ones
-     * with a domain will end up with a domain of [-infinity, +infinity], which is not correct.
+     * Package scoped for testing purposes.
      *
      * @param data the data table to calculate the bounds for
      * @param exec the execution context to report progress and handle cancellation
@@ -674,15 +691,17 @@ public class AutoBinningUtils {
             return data;
         }
 
+        var oldSpec = data.getDataTableSpec();
+
         var columnIndicesThatMustBeRecalculated = colNamesToRecalcValuesForIfNecessary.stream() //
-            .filter(cname -> !data.getDataTableSpec().getColumnSpec(cname).getDomain().hasBounds()) //
-            .mapToInt(data.getDataTableSpec()::findColumnIndex) // get the column indices of the remaining columns
+            .mapToInt(oldSpec::findColumnIndex) // get the column indices of the remaining columns
+            .filter(colIdx -> !oldSpec.getColumnSpec(colIdx).getDomain().hasBounds()) //
             .boxed() //
             .toList();
 
         // check they're all numeric
         var firstNonNumeric = columnIndicesThatMustBeRecalculated.stream() //
-            .map(data.getDataTableSpec()::getColumnSpec) //
+            .map(oldSpec::getColumnSpec) //
             .filter(cspec -> !columnCanBeBinned(cspec)) //
             .map(DataColumnSpec::getName) //
             .findFirst();
@@ -694,8 +713,8 @@ public class AutoBinningUtils {
 
         // Create the new spec, copying over any unchanged column specs
         var newColSpecList = new ArrayList<DataColumnSpec>();
-        for (int colIdx = 0; colIdx < data.getDataTableSpec().getNumColumns(); ++colIdx) {
-            var columnSpec = data.getDataTableSpec().getColumnSpec(colIdx);
+        for (int colIdx = 0; colIdx < oldSpec.getNumColumns(); ++colIdx) {
+            var columnSpec = oldSpec.getColumnSpec(colIdx);
 
             if (columnIndicesThatMustBeRecalculated.contains(colIdx)) {
                 // if we are here, this means that we have recalculated the min/max values for this column,
@@ -712,12 +731,14 @@ public class AutoBinningUtils {
                 newColSpecList.add(columnSpec);
             }
         }
-        var spec = new DataTableSpec(newColSpecList.toArray(new DataColumnSpec[0]));
-        return exec.createSpecReplacerTable(data, spec);
+        var newSpec = new DataTableSpec(newColSpecList.toArray(new DataColumnSpec[0]));
+        return exec.createSpecReplacerTable(data, newSpec);
     }
 
     /**
      * Creates bins based on the specified edges and bin naming settings.
+     *
+     * Package scoped for testing purposes.
      *
      * @param edgesMap a map where keys are column names and values are lists of bin boundaries
      * @param binNamingSettings the settings for naming the bins
@@ -803,11 +824,11 @@ public class AutoBinningUtils {
 
             var valueAsDouble = ((DoubleValue)value).getDoubleValue();
 
-            var matchingBins = m_bins.stream() //
+            var firstMatchingBin = m_bins.stream() //
                 .filter(bin -> bin.covers(value)) //
-                .toList();
+                .findFirst();
 
-            if (matchingBins.isEmpty()) {
+            if (firstMatchingBin.isEmpty()) {
                 // find min left boundary of all bins, and max right boundary of all bins. Value should be outside
                 // one or the other.
 
@@ -840,16 +861,8 @@ public class AutoBinningUtils {
                         + m_targetColumnIndex + ". " + "This is an implementation bug. Note: the outlier bins are "
                         + outlierRight + " and " + outlierLeft + ".");
                 }
-
-            } else if (matchingBins.size() > 1) {
-                NodeLogger.getLogger(AutoBinningUtils.class)
-                    .warn("Multiple bins found for value " + value + " in column " + m_targetColumnIndex
-                        + ". This is an implementation bug. The set of all bins is: \n\n" + m_bins + "\n\n"
-                        + "and the set of all matching bins is: \n\n" + matchingBins + "\n\n");
-                throw new IllegalStateException("Multiple bins found for value " + value + " in column "
-                    + m_targetColumnIndex + ". " + "This is an implementation bug.");
             } else {
-                var bin = matchingBins.get(0);
+                var bin = firstMatchingBin.get();
                 return StringCellFactory.create(bin.getBinName());
             }
         }

@@ -90,6 +90,7 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  * @author Mor Kalla
  * @since 3.6
  */
+@Deprecated
 public final class AutoBinnerUtility {
 
     /**
