@@ -70,6 +70,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
 import org.osgi.framework.Bundle;
@@ -482,6 +484,8 @@ public class BatchExecutorTestcase {
 	 * @throws Exception if an error occurs
 	 */
 	@Test
+	@DisabledOnOs(value = OS.MAC,
+	    disabledReason = "SQLite used in deprecated Database Writer does not support macos-aarch64")
 	public void testLoadCredentials() throws Exception {
 		File credentialsFlow = findInPlugin("/files/BatchExecutorTestflowCredentials.zip");
 
