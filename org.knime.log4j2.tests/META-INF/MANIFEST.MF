@@ -10,5 +10,5 @@ Require-Bundle: org.knime.core;bundle-version="[5.6.0,6.0.0)",
  org.apache.commons.commons-io;bundle-version="[2.15.1,3.0.0)",
  org.apache.log4j;bundle-version="[1.2.25,2.0.0)",
  org.knime.testing;bundle-version="[5.6.0,6.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: org.knime.log4j2.tests
