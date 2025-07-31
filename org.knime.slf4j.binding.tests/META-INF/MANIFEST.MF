@@ -12,5 +12,5 @@ Require-Bundle: org.knime.core;bundle-version="[5.6.0,6.0.0)",
  junit-jupiter-params;bundle-version="[5.10.2,6.0.0)",
  junit-jupiter-engine;bundle-version="[5.10.2,6.0.0)",
  org.hamcrest;bundle-version="[2.2.0,3.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: org.knime.slf4j.binding.tests
