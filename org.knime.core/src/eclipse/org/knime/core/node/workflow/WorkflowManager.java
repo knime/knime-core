@@ -9316,10 +9316,7 @@ public final class WorkflowManager extends NodeContainer
                     }
                 default:
                     NodeMessage oldMessage = cont.getNodeMessage();
-                    StringBuilder messageBuilder = new StringBuilder(oldMessage.getMessage());
-                    if (messageBuilder.length() != 0) {
-                        messageBuilder.append("\n");
-                    }
+                    final var messageBuilder = Message.builder().withSummary(oldMessage.getMessage());
                     NodeMessage.Type type;
                     switch (oldMessage.getMessageType()) {
                         case RESET:
@@ -9329,8 +9326,19 @@ public final class WorkflowManager extends NodeContainer
                         default:
                             type = NodeMessage.Type.ERROR;
                     }
-                    messageBuilder.append(subResult.getFilteredError("", LoadResultEntryType.Warning));
-                    cont.setNodeMessage(new NodeMessage(type, messageBuilder.toString()));
+
+                    if (oldMessage.getIssue().isEmpty()) {
+                        // retrieve the node error issue from the load state if it's not available in the old message.
+                        var filteredErrors = subResult.getFilteredErrors("", LoadResultEntryType.Warning);
+                        // remove the first error line (node container name), because it does not contain any errors.
+                        filteredErrors = filteredErrors.size() > 1 ?
+                            filteredErrors.subList(1, filteredErrors.size()) : filteredErrors;
+                        filteredErrors.stream().limit(3).forEach(messageBuilder::addTextIssue);
+                    } else {
+                        messageBuilder.addTextIssue(oldMessage.getIssue().get());
+                    }
+
+                    cont.setNodeMessage(messageBuilder.build().get().toNodeMessage(type));
             }
         }
         if (!sweep(nodeIDsInPersistorSet) && !isStateChangePredictable) {

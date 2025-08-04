@@ -578,6 +578,26 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return b.toString();
         }
 
+        /** Returns all error messages of this elements and all of its children.
+         *
+         * @param indent The indentation of the string (increased for children)
+         * @param filter A filter for the least severity level
+         * @return A list of all error messages (possibly empty but never null).
+         *
+         * @since 5.6
+         */
+        public List<String> getFilteredErrors(final String indent,
+                final LoadResultEntryType filter) {
+            final var filteredMessages = new ArrayList<String>();
+            filteredMessages.add(getMessage());
+            for (LoadResultEntry c : getChildren()) {
+                if (c.getType().ordinal() >= filter.ordinal()) {
+                    filteredMessages.addAll(c.getFilteredErrors(indent + "  ", filter));
+                }
+            }
+            return filteredMessages;
+        }
+
     }
 
     public static class LoadResult extends LoadResultEntry {
