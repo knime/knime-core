@@ -90,7 +90,7 @@ public class BugAP11261_CredentialsDefaultHook extends WorkflowTestCase {
             msgOfNode3.getMessageType(),
             is(NodeMessage.Type.WARNING));
         assertThat("Node message text of executed credentials validate node after load",
-            msgOfNode3.getMessage(), CoreMatchers.containsString("Wrong password"));
+            msgOfNode3.getIssue().orElseThrow(), CoreMatchers.containsString("Wrong password"));
         assertThat("Workflow Manager dirty state", getManager().isDirty(), is(true));
         executeAllAndWait();
 
