@@ -138,7 +138,7 @@ public final class OSGIHelper {
             for (IInstallableUnit unit : features) {
                 for (IArtifactKey afk : unit.getArtifacts()) {
                     if (afk.getId().equals(bundle.getSymbolicName())) {
-                        bundleToFeatureMap.put(bundle, unit);
+                        bundleToFeatureMap.putIfAbsent(bundle, unit);
                         return Optional.of(unit);
                     }
                 }
@@ -146,7 +146,7 @@ public final class OSGIHelper {
                 for (IRequirement r : unit.getRequirements()) {
                     if (r instanceof IRequiredCapability) {
                         if (((IRequiredCapability)r).getName().equals(bundle.getSymbolicName())) {
-                            bundleToFeatureMap.put(bundle, unit);
+                            bundleToFeatureMap.putIfAbsent(bundle, unit);
                             return Optional.of(unit);
                         }
                     }
