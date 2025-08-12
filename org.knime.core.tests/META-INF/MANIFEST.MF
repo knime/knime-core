@@ -19,10 +19,8 @@ Export-Package: org.knime.core,
  org.knime.core.util.tokenizer
 Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
  org.knime.testing;bundle-version="[5.6.0,6.0.0)",
- org.junit;bundle-version="[4.8.1,5.0.0)",
  org.eclipse.swt;bundle-version="[3.7.2,4.0.0)",
  com.fasterxml.jackson.core.jackson-databind;bundle-version="[2.13.2,3.0.0)",
- org.mockito.mockito-core;bundle-version="[2.18.3,3.0.0)",
  org.awaitility;bundle-version="[3.0.0,4.0.0)",
  junit-jupiter-api;bundle-version="[5.8.1,6.0.0)",
  junit-jupiter-params;bundle-version="[5.8.1,6.0.0)",
@@ -31,7 +29,9 @@ Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
  org.json;bundle-version="[20240303.0.0,20240304.0.0)",
  slf4j.api;bundle-version="[2.0.12,3.0.0)",
  org.knime.core.data.uritype;bundle-version="[5.6.0,6.0.0)",
- net.javacrumbs.json-unit.json-unit-assertj;bundle-version="[2.38.0,3.0.0)"
+ net.javacrumbs.json-unit.json-unit-assertj;bundle-version="[2.38.0,3.0.0)",
+ org.junit;bundle-version="[4.13.2,5.0.0)",
+ org.mockito.mockito-core;bundle-version="[2.28.2,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
@@ -40,7 +40,7 @@ Automatic-Module-Name: org.knime.core.tests
 Bundle-ClassPath: .,
  lib/byte-buddy-1.14.8.jar,
  lib/equalsverifier-3.15.2.jar,
- lib/objenesis-3.3.jar,
  lib/itu-1.7.0.jar,
  lib/json-schema-validator-1.0.87.jar,
- lib/jackson-dataformat-yaml-2.15.2.jar
+ lib/objenesis-3.3.jar,
+ lib/snakeyaml-2.0.jar

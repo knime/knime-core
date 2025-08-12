@@ -56,13 +56,13 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.OptionalDouble;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.util.binning.BinningSettings.BinBoundary.BinBoundaryExactMatchBehaviour;
-import org.knime.core.util.binning.BinningSettings.BinningMethod.EqualCount;
-import org.knime.core.util.binning.BinningSettings.BinningMethod.EqualWidth;
-import org.knime.core.util.binning.BinningSettings.BinningMethod.FixedBoundaries;
-import org.knime.core.util.binning.BinningSettings.BinningMethod.FixedQuantiles;
 
 /**
  * This class hold the settings required to use {@link BinningUtil}.
@@ -81,7 +81,7 @@ public final class BinningSettings {
      * This interface defines the settings for binning. It allows for different types of binning - see the subclasses
      * for more detail.
      */
-    public sealed interface BinningMethod permits EqualWidth, EqualCount, FixedQuantiles, FixedBoundaries {
+    public sealed interface BinningMethod {
 
         /**
          * Create bins with fixed width, i.e. each bin has the same width.
@@ -125,7 +125,7 @@ public final class BinningSettings {
          * @param integerBounds if true, the lower and upper bounds of the bins will be rounded to integers (after
          *            determining those with non-rounded values). This can affect the number of bins created.
          */
-        public static record FixedQuantiles(BinBoundary[] quantiles, boolean integerBounds) implements BinningMethod { // NOSONAR equals not important for this record
+        public static record FixedQuantiles(BinBoundary[] quantiles, boolean integerBounds) implements BinningMethod {
 
             public static final String NAME_CUSTOM_QUANTILES = "Custom quantiles";
 
@@ -143,6 +143,29 @@ public final class BinningSettings {
                     values within those bounds.
                     """;
 
+            @Override
+            public boolean equals(final Object other) {
+                return this == other || (other instanceof FixedQuantiles that && new EqualsBuilder() //
+                    .append(this.quantiles, that.quantiles) //
+                    .append(this.integerBounds, that.integerBounds) //
+                    .isEquals());
+            }
+
+            @Override
+            public int hashCode() {
+                return new HashCodeBuilder() //
+                    .append(quantiles) //
+                    .append(integerBounds) //
+                    .toHashCode();
+            }
+
+            @Override
+            public String toString() {
+                return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE) //
+                    .append("quantiles", quantiles) //
+                    .append("integerBounds", integerBounds) //
+                    .toString();
+            }
         }
 
         /**
@@ -151,7 +174,7 @@ public final class BinningSettings {
          *
          * @param boundaries the boundaries to use for binning. These are the cutoffs of the bins.
          */
-        public static record FixedBoundaries(BinBoundary[] boundaries) implements BinningMethod { // NOSONAR doesn't need .equals
+        public static record FixedBoundaries(BinBoundary[] boundaries) implements BinningMethod {
 
             public static final String NAME_CUSTOM_CUTOFFS = "Custom cutoffs";
 
@@ -159,6 +182,27 @@ public final class BinningSettings {
                     Manually define bin edges using a list of cutoff values. \
                     At least two cutoffs are required.
                     """;
+
+            @Override
+            public boolean equals(final Object other) {
+                return this == other || (other instanceof FixedBoundaries that && new EqualsBuilder() //
+                    .append(this.boundaries, that.boundaries) //
+                    .isEquals());
+            }
+
+            @Override
+            public int hashCode() {
+                return new HashCodeBuilder() //
+                    .append(boundaries) //
+                    .toHashCode();
+            }
+
+            @Override
+            public String toString() {
+                return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE) //
+                    .append("boundaries", boundaries) //
+                    .toString();
+            }
         }
     }
 

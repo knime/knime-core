@@ -4,12 +4,6 @@
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.6.0"/>
-            </message_arguments>
-        </filter>
-        <filter comment="Should not have been exported" id="305422471">
-            <message_arguments>
-                <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
                 <message_argument value="org.knime.core_5.7.0"/>
             </message_arguments>
         </filter>
@@ -36,19 +30,11 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/util/binning/BinningPMMLApplyUtil.java" type="org.knime.core.util.binning.BinningPMMLApplyUtil">
-        <filter id="305365105">
+    <resource path="src/eclipse/org/knime/core/internal/KNIMEPath.java" type="org.knime.core.internal.KNIMEPath">
+        <filter comment="moved functionality as part of AP-24828, this removed method is only used in tests." id="338792546">
             <message_arguments>
-                <message_argument value="org.knime.core.util.binning.BinningPMMLApplyUtil"/>
-                <message_argument value="org.knime.core_5.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings">
-        <filter id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.binning.BinningSettings"/>
-                <message_argument value="org.knime.core_5.8.0"/>
+                <message_argument value="org.knime.core.internal.KNIMEPath"/>
+                <message_argument value="setWorkspaceDirPath(File)"/>
             </message_arguments>
         </filter>
     </resource>

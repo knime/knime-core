@@ -57,6 +57,7 @@ import java.net.URI;
 import java.util.Optional;
 
 import org.apache.commons.lang3.Functions;
+import org.apache.commons.lang3.function.FailableRunnable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.ExecutionMonitor;
@@ -132,10 +133,10 @@ public class BugAP22321_ExecutorUpdatesNestedLinkedComponents extends WorkflowTe
     }
 
 
-    private void runWithResolver(URIToFileResolve mockedResolver,
-            final Functions.FailableRunnable<Exception> body) throws Exception {
+    private void runWithResolver(URIToFileResolve mockedResolver, final FailableRunnable<Exception> body)
+            throws Exception {
         // set up fields to inject mocked `URIToFileResolve` into `ResolverUtil`
-        final var resolverTrackerField = ResolverUtil.class.getDeclaredField("serviceTracker");
+        final var resolverTrackerField = ResolverUtil.class.getDeclaredField("SERVICE_TRACKER");
         resolverTrackerField.setAccessible(true);
         final var cachedResolverField = ServiceTracker.class.getDeclaredField("cachedService");
         cachedResolverField.setAccessible(true);

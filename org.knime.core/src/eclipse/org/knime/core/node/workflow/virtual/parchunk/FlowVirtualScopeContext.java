@@ -50,6 +50,7 @@ package org.knime.core.node.workflow.virtual.parchunk;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -131,7 +132,7 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
     public FlowVirtualScopeContext(final NodeID owner, final Path dataAreaPath, final Restriction... restrictions) {
         setOwner(owner);
         m_dataAreaPath = dataAreaPath;
-        m_restrictions = Set.of(restrictions);
+        m_restrictions = Set.copyOf(Arrays.asList(restrictions)); // `Set.of(...)` triggers an Eclipse 2024-03 NPE
     }
 
     /**

@@ -830,4 +830,11 @@
             startupStage="BEFORE_WFM_CLASS_LOADED">
       </provider>
    </extension>
+   <extension
+        point="org.eclipse.ecf.filetransfer.urlStreamHandlerService">
+     <urlStreamHandlerService
+           protocol="knime"
+           serviceClass="org.knime.core.internal.knimeurl.ExplorerURLStreamHandler">
+     </urlStreamHandlerService>
+  </extension>
 </plugin>

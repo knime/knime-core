@@ -44,79 +44,24 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 31, 2024 (wiswedel): created
+ *   Aug 12, 2025 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.contribution.local;
+package org.knime.core.workbench.mountpoint.api.knimeurl;
 
-import java.util.Optional;
-
-import org.knime.core.workbench.WorkbenchActivator;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
 
 /**
- * State for local workspace.
+ * Extension point factory for {@link MountPointURLService} instances.
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.8
  */
-public final class LocalWorkspaceMountPointState implements WorkbenchMountPointState {
-
-    private final String m_mountID;
-
-    /** The type of this mount point. */
-    public static final WorkbenchMountPointType TYPE =
-        WorkbenchActivator.getInstance().getMountPointTypeOrFail("org.knime.workbench.explorer.workspace");
-
-    /** Factory for the local workspace. */
-    public static final class Factory implements WorkbenchMountPointStateFactory<LocalWorkspaceMountPointState> {
-
-        @Override
-        public LocalWorkspaceMountPointState newInstance(final WorkbenchMountPointSettings settings) {
-            return new LocalWorkspaceMountPointState(settings.mountID());
-        }
-
-        @Override
-        public WorkbenchMountPointStateSettings getCurrentSettings(final LocalWorkspaceMountPointState state) {
-            return WorkbenchMountPointState.EMPTY_SETTINGS;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "Local Workspace";
-        }
-
-        @Override
-        public Optional<WorkbenchMountPointStateSettings> getDefaultStateSettings() {
-            return Optional.of(WorkbenchMountPointState.EMPTY_SETTINGS);
-        }
-
-        @Override
-        public String getContentDisplayString(final WorkbenchMountPointSettings mountSettings) {
-            // has always been redundant
-            return getDisplayName();
-        }
-    }
-
-    private LocalWorkspaceMountPointState(final String mountID) {
-        m_mountID = mountID;
-    }
-
-    @Override
-    public WorkbenchMountPointType getType() {
-        return TYPE;
-    }
+public interface MountPointURLServiceFactory {
 
     /**
-     * Retrieves the ID of the mount point.
-     *
-     * @return the mountID
-     * @since 5.8
+     * Creates a new {@link MountPointURLService} for the given state.
+     * @param state The non-null state for which the service is created.
+     * @return A new {@link MountPointURLService} instance.
      */
-    public String getMountID() {
-        return m_mountID;
-    }
-
+    MountPointURLService createMountPointURLService(WorkbenchMountPointState state);
 }

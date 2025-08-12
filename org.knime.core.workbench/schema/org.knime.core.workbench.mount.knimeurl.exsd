@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core.workbench" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="org.knime.core.workbench" id="org.knime.core.workbench.mount.knimeurl" name="URLMountPointService"/>
+      </appinfo>
+      <documentation>
+         Addendum to org.knime.core.workbench.mount.MountPoint that enables a mount point to be readable via &apos;knime://&apos; protocol.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element internal="true" />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <choice minOccurs="1" maxOccurs="unbounded">
+               <element ref="urlService"/>
+            </choice>
+         </sequence>
+      </complexType>
+   </element>
+
+   <element name="urlService">
+      <annotation>
+         <documentation>
+            A mount point type. It defines an identifier to which concrete mount providers can contribute to.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="typeIdentifier" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The identifier of the type of mount point, something unique.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="urlMountPointServiceClassFactory" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The fully qualified class defining the url mount point service factory.
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appinfo>
+         <meta.section type="since"/>
+      </appinfo>
+      <documentation>
+         v5.8
+      </documentation>
+   </annotation>
+
+
+   <annotation>
+      <appinfo>
+         <meta.section type="apiinfo"/>
+      </appinfo>
+      <documentation>
+         This extension point is used internally by the KNIME Framework. It&apos;s not meant as public API.
+      </documentation>
+   </annotation>
+
+
+
+</schema>

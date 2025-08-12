@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/itu-1.7.0.jar" sourcepath="lib/itu-1.7.0-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/json-schema-validator-1.0.87.jar" sourcepath="lib/json-schema-validator-1.0.87-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/byte-buddy-1.14.8.jar" sourcepath="lib/byte-buddy-1.14.8-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/equalsverifier-3.15.2.jar" sourcepath="lib/equalsverifier-3.15.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/itu-1.7.0.jar" sourcepath="lib/itu-1.7.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/json-schema-validator-1.0.87.jar" sourcepath="lib/json-schema-validator-1.0.87-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/objenesis-3.3.jar" sourcepath="lib/objenesis-3.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/snakeyaml-2.0.jar" sourcepath="lib/snakeyaml-2.0-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17">
 		<attributes>
 			<attribute name="module" value="true"/>

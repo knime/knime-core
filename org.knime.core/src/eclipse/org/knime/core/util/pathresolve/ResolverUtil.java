@@ -56,7 +56,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.NamedItemVersion;
@@ -75,9 +74,6 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public final class ResolverUtil {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ResolverUtil.class);
-
-
     /** A location within the workflow directory where some "KNIME native" nodes put temporary data. Currently used by
      * "Create Temp Directory" and "File Upload (Widget)" nodes to cache temporary data created or received from a
      * webportal application. The files will be deleted when the workflow is discarded (deleted by the nodes itself).
@@ -90,15 +86,15 @@ public final class ResolverUtil {
      */
     public static final String IN_WORKFLOW_TEMP_DIR = "tmp";
 
-    private static final ServiceTracker serviceTracker;
+    private static final ServiceTracker<URIToFileResolve, URIToFileResolve> SERVICE_TRACKER;
 
     static {
         Bundle coreBundle = FrameworkUtil.getBundle(ResolverUtil.class);
         if (coreBundle != null) {
-            serviceTracker = new ServiceTracker(coreBundle.getBundleContext(), URIToFileResolve.class.getName(), null);
-            serviceTracker.open();
+            SERVICE_TRACKER = new ServiceTracker<>(coreBundle.getBundleContext(), URIToFileResolve.class, null);
+            SERVICE_TRACKER.open();
         } else {
-            serviceTracker = null;
+            SERVICE_TRACKER = null;
         }
     }
 
@@ -142,10 +138,10 @@ public final class ResolverUtil {
                 throw new ResourceAccessException("Can't resolve file URI \"" + uri + "\" to file", e);
             }
         }
-        if (serviceTracker == null) {
+        if (SERVICE_TRACKER == null) {
             throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        URIToFileResolve res = SERVICE_TRACKER.getService();
         if (res == null) {
             throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
@@ -183,7 +179,7 @@ public final class ResolverUtil {
         if (localFile != null) {
             return localFile;
         }
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        URIToFileResolve res = SERVICE_TRACKER.getService();
         if (res == null) {
             throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
@@ -209,7 +205,7 @@ public final class ResolverUtil {
         if (localFile != null) {
             return Optional.of(localFile);
         }
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        URIToFileResolve res = SERVICE_TRACKER.getService();
         if (res == null) {
             throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
@@ -234,10 +230,10 @@ public final class ResolverUtil {
         if (scheme.equalsIgnoreCase("file")) {
             return false;
         }
-        if (serviceTracker == null) {
+        if (SERVICE_TRACKER == null) {
             throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        URIToFileResolve res = SERVICE_TRACKER.getService();
         if (res == null) {
             throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
@@ -262,10 +258,10 @@ public final class ResolverUtil {
         if (scheme.equalsIgnoreCase("file")) {
             return false;
         }
-        if (serviceTracker == null) {
+        if (SERVICE_TRACKER == null) {
             throw new ResourceAccessException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
         }
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        URIToFileResolve res = SERVICE_TRACKER.getService();
         if (res == null) {
             throw new ResourceAccessException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
         }
@@ -283,8 +279,8 @@ public final class ResolverUtil {
      * @since 4.7
      */
     public static Optional<KNIMEURIDescription> toDescription(final URI uri, final IProgressMonitor monitor) {
-        if (serviceTracker != null) {
-            var resolver = (URIToFileResolve)serviceTracker.getService();
+        if (SERVICE_TRACKER != null) {
+            var resolver = SERVICE_TRACKER.getService();
             if (resolver != null) {
                 return resolver.toDescription(uri, monitor);
             }
@@ -298,8 +294,8 @@ public final class ResolverUtil {
     @Deprecated(since = "5.1.0")
     public static Optional<List<SpaceVersion>> getSpaceVersions(final URI uri, final IProgressMonitor monitor)
         throws Exception {
-        if (serviceTracker != null) {
-            var resolver = (URIToFileResolve)serviceTracker.getService();
+        if (SERVICE_TRACKER != null) {
+            var resolver = SERVICE_TRACKER.getService();
             if (resolver != null) {
                 return resolver.getSpaceVersions(uri);
             }
@@ -329,8 +325,8 @@ public final class ResolverUtil {
      * @since 5.4
      */
     public static List<NamedItemVersion> getHubItemVersionList(final URI uri) throws ResourceAccessException {
-        CheckUtils.checkState(serviceTracker != null, "No service available to resolve uri: %s", uri);
-        var resolver = (URIToFileResolve)serviceTracker.getService();
+        CheckUtils.checkState(SERVICE_TRACKER != null, "No service available to resolve uri: %s", uri);
+        var resolver = SERVICE_TRACKER.getService();
         CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
         return resolver.getHubItemVersionList(uri);
     }

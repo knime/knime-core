@@ -48,11 +48,8 @@
 package org.knime.core.internal;
 
 import java.io.File;
-import java.net.URL;
-import java.util.Arrays;
 
-import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.util.CheckUtils;
+import org.knime.core.workbench.KNIMEWorkspacePath;
 
 /**
  * Container for a field, which holds the home directory of KNIME. This class
@@ -60,68 +57,17 @@ import org.knime.core.node.util.CheckUtils;
  * During startup of eclipse, the home directory is set in this class, which is
  * polled from the KNIMEConstants class to do the final initialization.
  *
+ * @deprecated Use {@link org.knime.core.workbench.KNIMEWorkspacePath} instead.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class KNIMEPath {
-    private static File knimeHomeDir;
-    private static File workspaceDir;
+@Deprecated(since = "5.8", forRemoval = true)
+public final class KNIMEPath { // NOSONAR - deprecation
 
     /**
      * Disallow instantiation.
      */
     private KNIMEPath() {
-    }
-
-
-    static {
-        try {
-            Class.forName("org.eclipse.core.runtime.Platform");
-            initializePaths();
-        } catch (ClassNotFoundException e) {
-            // this only happens in a non-Eclipse OSGi environment
-        }
-    }
-
-
-    private static void initializePaths() {
-        try {
-            URL workspaceURL = org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
-            if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
-                // we can create our home only in local workspaces
-                File wsDir = new File(workspaceURL.getPath());
-                if (!wsDir.exists() && !wsDir.mkdirs()) {
-                    throw new IllegalArgumentException("Unable to create workspace directory "
-                        + wsDir.getAbsolutePath());
-                }
-                if (!wsDir.isDirectory()) {
-                    throw new IllegalArgumentException("KNIME workspace " + wsDir.getAbsolutePath()
-                        + " is not a directory");
-                }
-                if (!wsDir.canWrite()) {
-                    throw new IllegalArgumentException("Unable to write to workspace directory at "
-                        + wsDir.getAbsolutePath());
-                }
-                workspaceDir = wsDir;
-
-                File homeDir = new File(wsDir, ".metadata" + File.separator + "knime");
-                if (!homeDir.exists() && !homeDir.mkdirs()) {
-                    throw new IllegalArgumentException("Unable to create KNIME home directory "
-                        + homeDir.getAbsolutePath());
-                }
-                if (!homeDir.isDirectory()) {
-                    throw new IllegalArgumentException("KNIME home path " + homeDir.getAbsolutePath()
-                        + " is not a directory");
-                }
-                if (!wsDir.canWrite()) {
-                    throw new IllegalArgumentException("Unable to write to KNIME home directory at "
-                        + homeDir.getAbsolutePath());
-                }
-                knimeHomeDir = homeDir;
-            }
-        } catch (Exception e) {
-            // the logger is not yet available here
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -130,31 +76,7 @@ public final class KNIMEPath {
      * @return The workspace directory.
      */
     public static File getWorkspaceDirPath() {
-        if (workspaceDir == null) {
-            initDefaultDir();
-        }
-        return workspaceDir;
-    }
-
-    /**
-     * Sets a custom workspace directory path. Only for testing purposes and will fail if not called from a
-     * workflow-test!
-     *
-     * @param wsDir the workspace directory or <code>null</code> if it should be reset to the default one
-     */
-    public static void setWorkspaceDirPath(final File wsDir) {
-        final String allowedTestClass = "org.knime.testing.core.ng.WorkflowTest";
-        // precaution to ensure that this is really only be called from a test case
-        CheckUtils.checkState(
-            Arrays.stream(Thread.currentThread().getStackTrace())
-                .anyMatch(e -> e.getClassName().equals(allowedTestClass)),
-            "A custom workspace directory is only allowed to be set by the %s", allowedTestClass);
-
-        if (wsDir == null) {
-            initializePaths();
-        } else {
-            workspaceDir = wsDir;
-        }
+        return KNIMEWorkspacePath.getWorkspaceDirPath();
     }
 
     /**
@@ -163,46 +85,7 @@ public final class KNIMEPath {
      * @return The directory to use.
      */
     public static File getKNIMEHomeDirPath() {
-        if (knimeHomeDir == null) {
-            initDefaultDir();
-        }
-        return knimeHomeDir;
+        return KNIMEWorkspacePath.getKNIMEHomeDirPath();
     }
 
-    private static void initDefaultDir() {
-        // see if the home dir got set through a command line argument
-        String knimePropertyHome =
-            System.getProperty(KNIMEConstants.PROPERTY_KNIME_HOME);
-        File tempHomeDir = null;
-        if (knimePropertyHome != null) {
-            tempHomeDir = createUniqueDir(new File(knimePropertyHome));
-        }
-        if (tempHomeDir == null) {
-            File userHome = new File(System.getProperty("user.home"));
-            tempHomeDir = createUniqueDir(new File(userHome, "knime"));
-            if (tempHomeDir == null) {
-                tempHomeDir = userHome;
-            }
-        }
-        knimeHomeDir = tempHomeDir;
-    }
-
-    private static File createUniqueDir(final File file) {
-        final String parent = file.getParentFile().getAbsolutePath();
-        String child = file.getName();
-        File temp = new File(parent, child);
-        if (temp.exists() && !temp.isDirectory()) {
-            // Do not use logger here as it is not yet available!
-            System.err.println("Unable to set KNIME home directory to \""
-                    + file.getAbsolutePath() + "\"");
-            while (temp.exists() && !temp.isDirectory()) {
-                child = child.concat("_");
-                temp = new File(parent, child);
-            }
-        }
-        if (!temp.exists() && !temp.mkdirs()) {
-            return null;
-        }
-        return temp;
-    }
 }

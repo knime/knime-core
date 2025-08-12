@@ -44,56 +44,44 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12 Jun 2023 (carlwitt): created
+ *   Aug 12, 2025 (wiswedel): created
  */
+package org.knime.core.workbench.mountpoint.contribution.local;
 
-package org.knime.core.util.hub;
-
-import java.util.Objects;
+import java.nio.file.Path;
 
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.workbench.KNIMEWorkspacePath;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory;
+import org.knime.core.workbench.mountpoint.contribution.LocalDirURLMountPointService;
 
 /**
- * Metadata of the version of a KNIME Hub repository item.
+ * URL service for the local workspace mount point.
  *
- * @param version a positive number
- * @param title never {@code null}
- * @param description optional
- * @param author optional
- * @param authorAccountId KNIME Hub author account identifier, never {@code null}.
- * @param createdOn never {@code null}.
- *
- * @since 5.1
- *
- * @see HubItemVersion
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ * @since 5.8
  */
-public record NamedItemVersion(int version, String title, String description, String author, String authorAccountId,
-    String createdOn) {
+public final class LocalWorkspaceURLMountPointService extends LocalDirURLMountPointService {
 
-    public static final String JSON_PROPERTY_VERSION = "version";
+    private LocalWorkspaceURLMountPointService(final LocalWorkspaceMountPointState state) {
+        super(state.getMountID());
+    }
 
-    public static final String JSON_PROPERTY_TITLE = "title";
+    @Override
+    protected Path getRootDirectory() {
+        return KNIMEWorkspacePath.getWorkspaceDirPath().getAbsoluteFile().toPath();
+    }
 
-    public static final String JSON_PROPERTY_DESCRIPTION = "description";
-
-    public static final String JSON_PROPERTY_AUTHOR = "author";
-
-    public static final String JSON_PROPERTY_AUTHOR_ACCOUNT_ID = "authorAccountId";
-
-    public static final String JSON_PROPERTY_CREATED_ON = "createdOn";
-
-    /**
-     * @param version a positive number
-     * @param title never {@code null}
-     * @param description optional
-     * @param author optional
-     * @param authorAccountId KNIME Hub author account identifier, never {@code null}.
-     * @param createdOn never {@code null}.
-     */
-    public NamedItemVersion {
-        CheckUtils.checkArgument(version > 0, "In NamedItemVersion 'version' must be positive");
-        Objects.requireNonNull(title, "In NamedItemVersion 'title' cannot be null");
-        Objects.requireNonNull(authorAccountId, "In NamedItemVersion 'authorAccountId' cannot be null");
-        Objects.requireNonNull(createdOn, "In NamedItemVersion 'createdOn' cannot be null");
+    /** {@link MountPointURLServiceFactory} implementation for the {@link LocalWorkspaceURLMountPointService}. */
+    public static final class Factory implements MountPointURLServiceFactory {
+        @Override
+        public MountPointURLService createMountPointURLService(final WorkbenchMountPointState state) {
+            final LocalWorkspaceMountPointState localState = CheckUtils.checkCast(state,
+                LocalWorkspaceMountPointState.class, IllegalArgumentException::new, "State is not of type %s but %s.",
+                LocalWorkspaceMountPointState.class.getName(), state.getClass().getName());
+            return new LocalWorkspaceURLMountPointService(localState);
+        }
     }
 }

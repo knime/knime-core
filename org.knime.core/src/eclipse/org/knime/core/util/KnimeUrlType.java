@@ -72,26 +72,26 @@ public enum KnimeUrlType {
      * A URL that identifies resources by their location relative to the current node, e.g.
      * {@code knime://knime.node/<???>}.
      */
-    NODE_RELATIVE("knime.node"),
+    NODE_RELATIVE(CoreConstants.NODE_RELATIVE),
 
     /**
      * A URL that locates resources by relative to the current workflow's root directory, e.g.
      * {@code knime://knime.workflow/data/subdir/measurements.csv} or
      * {@code knime://knime.workflow/../neighbor-workflow}.
      */
-    WORKFLOW_RELATIVE("knime.workflow"),
+    WORKFLOW_RELATIVE(CoreConstants.WORKFLOW_RELATIVE),
 
     /**
      * A URL that locates resources relative to the current Hub space, e.g.
      * {@code knime://knime.space/some_group/workflow17}.
      */
-    HUB_SPACE_RELATIVE("knime.space"),
+    HUB_SPACE_RELATIVE(CoreConstants.SPACE_RELATIVE),
 
     /**
      * A URL that locates resources relative to the current mountpoint, e.g.
      * {@code knime://knime.mountpoint/some_group/workflow17}.
      */
-    MOUNTPOINT_RELATIVE("knime.mountpoint"),
+    MOUNTPOINT_RELATIVE(CoreConstants.MOUNTPOINT_RELATIVE),
 
     /**
      * An absolute mountpoint URL with a mount ID as its {@link URL#getAuthority() authority}, e.g.

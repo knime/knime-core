@@ -2,6 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point id="MountPointType" name="KNIME Mount Point Type" schema="schema/org.knime.core.workbench.mount.exsd"/>
+   <extension-point id="MountPointURLService" name="Mount Point to KNIME URL Service" schema="schema/org.knime.core.workbench.mount.knimeurl.exsd"/>
    <extension
          point="org.knime.core.workbench.MountPointType">
       <MountPointType
@@ -17,5 +18,15 @@
             typeIdentifier="com.knime.explorer.tempspace">
       </MountPointType>
    </extension>
-
+   <extension
+         point="org.knime.core.workbench.MountPointURLService">
+      <urlService
+            typeIdentifier="org.knime.workbench.explorer.workspace"
+            urlMountPointServiceClassFactory="org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceURLMountPointService$Factory">
+      </urlService>
+      <urlService
+            typeIdentifier="com.knime.explorer.tempspace"
+            urlMountPointServiceClassFactory="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceURLMountPointService$Factory">
+      </urlService>
+   </extension>
 </plugin>

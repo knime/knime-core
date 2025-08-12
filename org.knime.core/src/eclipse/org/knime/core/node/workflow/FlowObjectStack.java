@@ -63,7 +63,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -72,6 +71,7 @@ import org.knime.core.node.workflow.VariableType.DoubleType;
 import org.knime.core.node.workflow.VariableType.IntType;
 import org.knime.core.node.workflow.VariableType.StringType;
 import org.knime.core.util.Pair;
+import org.knime.core.workbench.KNIMEWorkspacePath;
 
 
 /**
@@ -99,7 +99,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     private FlowObjectStack() {
         m_nodeID = WorkflowManager.ROOT.getID();
         m_stack = new Vector<FlowObject>();
-        File wsDirPath = KNIMEPath.getWorkspaceDirPath();
+        File wsDirPath = KNIMEWorkspacePath.getWorkspaceDirPath();
         if (wsDirPath != null) {
             push(new FlowVariable("knime.workspace",
                     wsDirPath.getAbsolutePath(), Scope.Global));
