@@ -56,6 +56,7 @@ import org.knime.core.workbench.mountpoint.api.MountPointProvider;
  * A {@link URLConnection} with provided mount point service for KNIME URLs.
  *
  * @author Magnus Gohm, KNIME AG, Konstanz, Germany
+ * @since 5.7
  */
 public interface URLMountPointService extends MountPointProvider {
 
