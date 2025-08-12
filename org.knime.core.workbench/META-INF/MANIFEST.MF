@@ -12,6 +12,7 @@ Eclipse-BundleShape: jar
 Export-Package: org.knime.core.workbench,
  org.knime.core.workbench.mountpoint.api,
  org.knime.core.workbench.mountpoint.api.events,
+ org.knime.core.workbench.mountpoint.api.knimeurl,
  org.knime.core.workbench.mountpoint.contribution.local,
  org.knime.core.workbench.mountpoint.contribution.temp,
  org.knime.core.workbench.preferences
