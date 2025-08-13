@@ -44,22 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Aug 12, 2025 (magnus): created
+ *   Aug 12, 2025 (wiswedel): created
  */
-package org.knime.core.workbench.mountpoint.api.knimeurl;
+package org.knime.core.internal.knimeurl.localworkspace;
 
+import java.io.IOException;
 import java.net.URLConnection;
 
-import org.knime.core.workbench.mountpoint.api.MountPointProvider;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.knime.core.internal.KNIMEPath;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.hub.ItemVersion;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory;
+import org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointState;
 
 /**
- * A {@link URLConnection} with provided mount point service for KNIME URLs.
  *
- * @author Magnus Gohm, KNIME AG, Konstanz, Germany
+ * @author wiswedel
  * @since 5.7
  */
-public interface URLMountPointService extends MountPointProvider {
+public final class LocalWorkspaceURLMountPointService implements MountPointURLService {
 
-    URLConnection newURLConnection();
+    private LocalWorkspaceMountPointState m_state;
+
+    private LocalWorkspaceURLMountPointService(final LocalWorkspaceMountPointState state) {
+        m_state = state;
+    }
+
+    @Override
+    public void dispose() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public URLConnection newURLConnection(final IPath path, final ItemVersion version) throws IOException {
+        IPath rootPath = Path.fromPortableString(KNIMEPath.getWorkspaceDirPath().getAbsolutePath());
+        // TODO review - is this sane? (see also org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore.LocalWorkspaceFileStore(String, String))
+        return rootPath.append(path).toFile().toURI().toURL().openConnection();
+    }
+
+    public static final class Factory implements MountPointURLServiceFactory {
+
+        @Override
+        public MountPointURLService createMountPointURLService(final WorkbenchMountPointState state) {
+            final LocalWorkspaceMountPointState localState = CheckUtils.checkCast(state,
+                LocalWorkspaceMountPointState.class, IllegalArgumentException::new, "State is not of type %s but %s. ",
+                LocalWorkspaceMountPointState.class.getName(), state.getClass().getName());
+            return new LocalWorkspaceURLMountPointService(localState);
+        }
+    }
 
 }
