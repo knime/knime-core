@@ -63,13 +63,12 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2.LocationType;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext;
-import org.knime.core.ui.node.workflow.RemoteWorkflowContext;
-import org.knime.core.ui.node.workflow.WorkflowContextUI;
-import org.knime.core.ui.node.workflow.WorkflowManagerUI;
-import org.knime.core.ui.wrapper.Wrapper;
+import org.knime.core.util.CoreConstants;
 import org.knime.core.util.KNIMEServerHostnameVerifier;
 import org.knime.core.util.KnimeUrlType;
+import org.knime.core.util.ServerRequestModifier;
 import org.knime.core.util.auth.Authenticator;
 import org.knime.core.util.auth.CouldNotAuthorizeException;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -90,42 +89,9 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
  *
  * @author ohl, University of Konstanz
  * @author Thorsten Meinl, KNIME AG, Zurich, Switzerland
+ * @since 5.7
  */
 public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
-
-    /**
-     * The magic hostname for workflow-relative URLs.
-     *
-     * @since 5.0
-     */
-    public static final String WORKFLOW_RELATIVE = "knime.workflow";
-
-    /**
-     * The magic hostname for mountpoint-relative URLs.
-     *
-     * @since 5.0
-     */
-    public static final String MOUNTPOINT_RELATIVE = "knime.mountpoint";
-
-    /**
-     * The magic hostname for node-relative URLs.
-     *
-     * @since 6.4
-     */
-    public static final String NODE_RELATIVE = "knime.node";
-
-    /**
-     * The magic hostname for space-relative URLs.
-     *
-     * @since 8.9
-     */
-    public static final String SPACE_RELATIVE = "knime.space";
-
-    /**
-     * The scheme this file system is registered with (see extension point
-     * "org.eclipse.core.filesystem.filesystems").
-     */
-    public static final String SCHEME = "knime";
 
     private final ServerRequestModifier m_requestModifier;
 
@@ -199,13 +165,13 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
      * @throws IOException
      */
     private URLConnection openConnectionForResolved(final URL resolvedUrl) throws IOException {
-        if (SCHEME.equals(resolvedUrl.getProtocol())) {
+        if (CoreConstants.SCHEME.equals(resolvedUrl.getProtocol())) {
             return openExternalMountConnection(resolvedUrl);
         } else if ("http".equals(resolvedUrl.getProtocol()) || "https".equals(resolvedUrl.getProtocol())) {
             // neither the node context nor the workflow context can be null here, otherwise resolveKNIMEURL would have
             // already failed
             final var workflowContext =
-                NodeContext.getContext().getContextObjectForClass(WorkflowManagerUI.class).orElseThrow().getContext();
+                NodeContext.getContext().getContextObjectForClass(WorkflowManager.class).orElseThrow().getContextV2();
             final var conn = URLConnectionFactory.getConnection(resolvedUrl);
             authorizeClient(workflowContext, conn);
 
@@ -240,55 +206,50 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
     }
 
     private static URL resolveKNIMEURL(final URL url, final KnimeUrlType urlType) throws ResourceAccessException {
-
         final var nodeContext = Optional.ofNullable(NodeContext.getContext());
-        final var wfmUI = nodeContext.flatMap(ctx -> ctx.getContextObjectForClass(WorkflowManagerUI.class));
-        final var workflowContextUI = wfmUI.map(WorkflowManagerUI::getContext).orElse(null);
+        final var wfm = nodeContext.flatMap(ctx -> ctx.getContextObjectForClass(WorkflowManager.class));
+        final var workflowContextV2 = wfm.map(WorkflowManager::getContextV2).orElse(null);
         if (urlType.isRelative()) {
             if (nodeContext.isEmpty()) {
                 throw new ResourceAccessException("No context for relative URL available");
-            } else if (workflowContextUI == null) {
-                throw new ResourceAccessException("Workflow " + wfmUI + " does not have a context");
+            } else if (workflowContextV2 == null) {
+                throw new ResourceAccessException("Workflow " + wfm + " does not have a context");
             }
         }
 
         final KnimeUrlResolver resolver;
-        if (workflowContextUI instanceof RemoteWorkflowContext remoteCtx) {
-            final var mountpointURI = remoteCtx.getMountpointURI();
-            final var contextV2 = remoteCtx.getWorkflowContextV2().orElse(null);
-            resolver = KnimeUrlResolver.getRemoteWorkflowResolver(mountpointURI, contextV2);
+        if (workflowContextV2.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContextV2.getLocationType() == LocationType.HUB_SPACE) {
+            resolver = KnimeUrlResolver.getRemoteWorkflowResolver(
+                workflowContextV2.getMountpointURI().orElseThrow(), workflowContextV2);
         } else {
-            final var contextV2 = workflowContextUI == null ? null
-                : Wrapper.unwrap(workflowContextUI, WorkflowContextV2.class);
-            resolver = KnimeUrlResolver.getResolver(contextV2);
+            resolver = KnimeUrlResolver.getResolver(workflowContextV2);
         }
 
         return resolver.resolve(url);
     }
 
-    private static Optional<URI> getRemoteRepositoryAddress(final WorkflowContextUI workflowContext) {
-        if (workflowContext instanceof RemoteWorkflowContext remoteCtx) {
-            return Optional.of(remoteCtx.getRepositoryAddress());
-        } else {
-            return Wrapper.unwrapOptional(workflowContext, WorkflowContextV2.class)
-                    .filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
-                    .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
-                    .map(RestLocationInfo::getRepositoryAddress);
+    private static Optional<URI> getRemoteRepositoryAddress(final WorkflowContextV2 workflowContext) {
+        if (workflowContext.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContext.getLocationType() == LocationType.HUB_SPACE) {
+            return Optional.ofNullable(workflowContext).filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
+                .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
+                .map(RestLocationInfo::getRepositoryAddress);
         }
+        return Optional.empty();
     }
 
-    private static Optional<Authenticator> getServerAuthenticator(final WorkflowContextUI workflowContext) {
-        if (workflowContext instanceof RemoteWorkflowContext remoteCtx) {
-            return Optional.of(remoteCtx.getServerAuthenticator());
-        } else {
-            return Wrapper.unwrapOptional(workflowContext, WorkflowContextV2.class)
-                    .filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
-                    .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
-                    .map(RestLocationInfo::getAuthenticator);
+    private static Optional<Authenticator> getServerAuthenticator(final WorkflowContextV2 workflowContext) {
+        if (workflowContext.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContext.getLocationType() == LocationType.HUB_SPACE) {
+            return Optional.ofNullable(workflowContext).filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
+                .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
+                .map(RestLocationInfo::getAuthenticator);
         }
+        return Optional.empty();
     }
 
-    private static void authorizeClient(final WorkflowContextUI workflowContext, final URLConnection conn)
+    private static void authorizeClient(final WorkflowContextV2 workflowContext, final URLConnection conn)
         throws IOException {
         final Optional<Authenticator> authenticator = getServerAuthenticator(workflowContext);
         if (authenticator.isPresent()) {
@@ -313,7 +274,7 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
     private static String getIDfromURI(final URL url) {
         final var urlType = KnimeUrlType.getType(url) //
                 .orElseThrow(() -> new IllegalArgumentException("Invalid scheme in URI ('" + url + "'). "
-                    + "Only '" + SCHEME + "' is allowed here."));
+                    + "Only '" + CoreConstants.SCHEME + "' is allowed here."));
         return urlType.isRelative() ? getMountpointIdFromContext().orElse(url.getHost()) : url.getHost();
     }
 
