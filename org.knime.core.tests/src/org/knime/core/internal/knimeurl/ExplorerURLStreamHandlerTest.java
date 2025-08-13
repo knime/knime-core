@@ -46,7 +46,7 @@
  * History
  *   13.09.2016 (thor): created
  */
-package org.knime.core.explorer;
+package org.knime.core.internal.knimeurl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
