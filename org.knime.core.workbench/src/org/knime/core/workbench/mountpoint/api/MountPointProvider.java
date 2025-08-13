@@ -51,7 +51,7 @@ package org.knime.core.workbench.mountpoint.api;
 /**
  * Concrete providers, e.g. old explorer mount points or "modern UI" space providers will implement this.
  *
- * @since 5.5
+ * @since 5.7
  */
 // TODO rename to MountPointAdapter
 public interface MountPointProvider {

@@ -56,7 +56,7 @@ import java.util.function.Predicate;
  * {@link #test(String)}, hence this is a also functional interface.
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.7
  */
 public interface WorkbenchMountPointHostFilter extends Predicate<String> {
 

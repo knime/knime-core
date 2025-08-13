@@ -58,7 +58,7 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.Workbenc
  * @param mountPointNumber The mountpoint number
  * @param mountPointStateSettings The settings required by the concrete implementation (e.g. incl server address etc)
  *
- * @since 5.5
+ * @since 5.7
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("javadoc")
