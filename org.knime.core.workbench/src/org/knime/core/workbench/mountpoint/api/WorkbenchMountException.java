@@ -53,7 +53,7 @@ package org.knime.core.workbench.mountpoint.api;
  * extensions) or actual issues when creating the mount point (e.g. a folder no longer exists).
  *
  * @author wiswedel
- * @since 5.5
+ * @since 5.7
  */
 @SuppressWarnings("serial")
 public final class WorkbenchMountException extends Exception {

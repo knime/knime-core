@@ -60,7 +60,7 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
  * State for local workspace.
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.7
  */
 public final class LocalWorkspaceMountPointState implements WorkbenchMountPointState {
 

@@ -52,10 +52,17 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.workflow.NodeContext;
@@ -69,12 +76,16 @@ import org.knime.core.util.CoreConstants;
 import org.knime.core.util.KNIMEServerHostnameVerifier;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.ServerRequestModifier;
+import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.auth.Authenticator;
 import org.knime.core.util.auth.CouldNotAuthorizeException;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.proxy.URLConnectionFactory;
 import org.knime.core.util.urlresolve.KnimeUrlResolver;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactoryCollector;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.url.AbstractURLStreamHandlerService;
@@ -94,6 +105,8 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
 public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
 
     private final ServerRequestModifier m_requestModifier;
+
+    private static final String VERSION_QUERY_PARAM = "version";
 
     /**
      * Creates a new URL stream handler.
@@ -218,8 +231,8 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
         }
 
         final KnimeUrlResolver resolver;
-        if (workflowContextV2.getLocationType() == LocationType.SERVER_REPOSITORY ||
-                workflowContextV2.getLocationType() == LocationType.HUB_SPACE) {
+        if (workflowContextV2 != null && (workflowContextV2.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContextV2.getLocationType() == LocationType.HUB_SPACE)) {
             resolver = KnimeUrlResolver.getRemoteWorkflowResolver(
                 workflowContextV2.getMountpointURI().orElseThrow(), workflowContextV2);
         } else {
@@ -265,10 +278,41 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
         final var mountPointId = getIDfromURI(url);
         final var mountPoint = WorkbenchMountTable.getMountPoint(mountPointId)
                 .orElseThrow(() -> new IOException("Mount point with ID '" + mountPointId + "' is not mounted."));
-        final var resolvedURL = resolveKNIMEURL(url);
-        return null;
-//        return mountPoint.getProvider(URLMountPointService.class,
-//            () -> new URLMountPointService(resolvedURL));
+
+        final var queryParams = getQueryParams(url);
+        ItemVersion itemVersion = null;
+        if (queryParams != null && queryParams.containsKey(VERSION_QUERY_PARAM)) {
+            itemVersion = queryParams.get(VERSION_QUERY_PARAM).size() > 0
+                ? ItemVersion.convertToItemVersion(queryParams.get(VERSION_QUERY_PARAM).get(0)) : null;
+        }
+
+        final var mountPointURLServiceFactory = MountPointURLServiceFactoryCollector.getInstance()
+            .getMountPointURLServiceFactory(mountPoint.getType().getTypeIdentifier())
+            .orElseThrow(() -> new ResourceAccessException("No mount point URL service factory found for type '"
+                + mountPoint.getType().getTypeIdentifier() + "'"));
+
+        return mountPoint.getProvider(MountPointURLService.class,
+            () -> mountPointURLServiceFactory.createMountPointURLService(mountPoint.getState())
+        ).newURLConnection(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion);
+    }
+
+    private static Map<String, List<String>> getQueryParams(final URL url) {
+        String query = url.getQuery();
+        if (query == null) {
+            return null;
+        }
+
+        Map<String, List<String>> queryPairs = new LinkedHashMap<>();
+        for (String pair : query.split("&")) {
+            int idx = pair.indexOf("=");
+            String key = idx > 0 ? URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8) : pair;
+            String value = idx > 0 && pair.length() > idx + 1
+                    ? URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8)
+                    : null;
+            queryPairs.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
+        }
+
+        return queryPairs;
     }
 
     private static String getIDfromURI(final URL url) {
