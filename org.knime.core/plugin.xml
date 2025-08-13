@@ -834,7 +834,7 @@
         point="org.eclipse.ecf.filetransfer.urlStreamHandlerService">
      <urlStreamHandlerService
            protocol="knime"
-           serviceClass="org.knime.workbench.explorer.ExplorerURLStreamHandler">
+           serviceClass="org.knime.core.internal.knimeurl.ExplorerURLStreamHandler">
      </urlStreamHandlerService>
   </extension>
 </plugin>
