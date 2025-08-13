@@ -32,7 +32,7 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
  * Settings for the temp space mount point, moved content out of old (explorer-based) TempSpaceContentProvider.
  *
  * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.7
  */
 public final class TempSpaceMountPointState implements WorkbenchMountPointState {
 
