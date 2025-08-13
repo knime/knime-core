@@ -7,7 +7,7 @@ Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.core.workbench;bundle-version="[5.8.0,6.0.0)"
 Require-Bundle: org.knime.core;bundle-version="[5.7.0,6.0.0)",
  org.knime.testing;bundle-version="[5.6.0,6.0.0)",
- org.mockito.mockito-core;bundle-version="[2.18.3,3.0.0)",
+ org.mockito.mockito-core;bundle-version="[5.18.0,6.0.0)",
  org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
  junit-jupiter-api;bundle-version="[5.9.2,6.0.0)",
  junit-platform-suite-api;bundle-version="[1.9.2,2.0.0)",
