@@ -388,7 +388,11 @@ class WorkflowToolCellTest {
             Map.of("execution-mode", "DETACHED"));
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         testFileStores((BufferedDataTable)res.outputs()[0]);
-        assertThat(Files.exists(detachedWorkflowSegmentPath.get())).isFalse();
+        // the executed workflow segment points to the 'spawning' workflow (e.g. the one containg a Agent-node)
+        // and must not be deleted
+        assertThat(Files.exists(detachedWorkflowSegmentPath.get())).isTrue();
+        assertThat(detachedWorkflowSegmentPath.get()).isEqualTo(NodeContext.getContext().getNodeContainer().getParent()
+            .getProjectWFM().getContextV2().getExecutorInfo().getLocalWorkflowPath());
     }
 
     private static void testFileStores(final BufferedDataTable inData) {
