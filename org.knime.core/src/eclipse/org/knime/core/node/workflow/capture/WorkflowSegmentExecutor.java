@@ -66,7 +66,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -604,9 +603,7 @@ public final class WorkflowSegmentExecutor {
         m_wfm.getParent().removeNode(m_wfm.getID());
         m_wfm = null;
         if (m_shallDisposeHostWfm) {
-            var wfDir = m_hostWfm.getContextV2().getExecutorInfo().getLocalWorkflowPath().toFile();
             WorkflowManager.ROOT.removeProject(m_hostWfm.getID());
-            FileUtils.deleteQuietly(wfDir);
         }
         m_hostWfm = null;
     }
