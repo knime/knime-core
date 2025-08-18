@@ -48,10 +48,12 @@
  */
 package org.knime.core.internal.knimeurl.localworkspace;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.util.CheckUtils;
@@ -96,6 +98,11 @@ public final class LocalWorkspaceURLMountPointService implements MountPointURLSe
                 LocalWorkspaceMountPointState.class.getName(), state.getClass().getName());
             return new LocalWorkspaceURLMountPointService(localState);
         }
+    }
+
+    @Override
+    public File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor) throws IOException {
+        return null;
     }
 
 }
