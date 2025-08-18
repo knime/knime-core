@@ -48,10 +48,13 @@
  */
 package org.knime.core.workbench.mountpoint.api.knimeurl;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.workbench.mountpoint.api.MountPointProvider;
 
@@ -74,4 +77,15 @@ public interface MountPointURLService extends MountPointProvider {
      */
     URLConnection newURLConnection(IPath path, ItemVersion version) throws IOException;
 
+    /**
+     * Resolves the given path and version into a local file. If the path does not represent a local file
+     * (e.g. on hub) it is downloaded first to a temporary directory and then the temporary copy is returned.
+     *
+     * @param path the path relative to the mount point root, not null
+     * @param version the version of the item, possibly null if "latest" or not applicable
+     * @param monitor a progress monitor to report progress, may be {@link NullProgressMonitor}
+     * @return a local or temporary file {@link File} represented by the given path and version
+     * @throws IOException if an I/O error occurs while resolving the file
+     */
+    File toLocalOrTempFile(IPath path, ItemVersion version, IProgressMonitor monitor) throws IOException;
 }
