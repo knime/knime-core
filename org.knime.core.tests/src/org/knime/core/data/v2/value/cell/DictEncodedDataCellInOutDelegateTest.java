@@ -65,7 +65,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.data.v2.ValueSchemaTest;
+import org.knime.core.data.v2.DataTableValueSchemaTest;
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
 import org.knime.core.table.io.ReadableDataInputStream;
@@ -137,7 +137,7 @@ public class DictEncodedDataCellInOutDelegateTest {
 
     private static void testWriteReadDataCell(final DataCell cell) throws IOException {
         final IDataRepository dataRepository = null;
-        final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
+        final IWriteFileStoreHandler fileStoreHandler = new DataTableValueSchemaTest.DummyWriteFileStoreHandler();
         final var baseBuffer = new ByteArrayOutputStream();
         final var outStream = new DataOutputStream(baseBuffer);
         try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
@@ -158,7 +158,7 @@ public class DictEncodedDataCellInOutDelegateTest {
         final var xmlString = "<dummyXML>Test</dummyXML>";
         final var cell = XMLCellFactory.create(xmlString);
         final IDataRepository dataRepository = null;
-        final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
+        final IWriteFileStoreHandler fileStoreHandler = new DataTableValueSchemaTest.DummyWriteFileStoreHandler();
         final var baseBuffer = new ByteArrayOutputStream();
         final var outStream = new DataOutputStream(baseBuffer);
         try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {
@@ -180,7 +180,7 @@ public class DictEncodedDataCellInOutDelegateTest {
         @SuppressWarnings("unchecked")
         final var cell = new MyAdapterCell(innerCell, XMLValue.class);
         final IDataRepository dataRepository = null;
-        final IWriteFileStoreHandler fileStoreHandler = new ValueSchemaTest.DummyWriteFileStoreHandler();
+        final IWriteFileStoreHandler fileStoreHandler = new DataTableValueSchemaTest.DummyWriteFileStoreHandler();
         final var baseBuffer = new ByteArrayOutputStream();
         final var outStream = new DataOutputStream(baseBuffer);
         try (final var out = new DictEncodedDataCellDataOutputDelegator(fileStoreHandler, outStream)) {

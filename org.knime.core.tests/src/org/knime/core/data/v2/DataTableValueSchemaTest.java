@@ -109,7 +109,7 @@ import org.knime.core.table.schema.DefaultColumnarSchema;
  * @author Benjamin Wilhelm, KNIME GmbH, Konstanz, Germany
  */
 @SuppressWarnings("javadoc")
-public class ValueSchemaTest {
+public class DataTableValueSchemaTest {
 
     /** Test saving and loading a schema with all registered DataTypes */
     @Test
@@ -266,7 +266,7 @@ public class ValueSchemaTest {
         when(loadContext.getSettings()).thenReturn(settings);
         // Load back and check
         final ValueSchema loadedSchema = DataTableValueSchemaUtils.load(columnarSchema, loadContext);
-        assertEquals(VoidRowKeyFactory.class, rowKeyFactory.getClass());
+        assertEquals(VoidRowKeyFactory.class, loadedSchema.getValueFactory(0).getClass());
         assertEquals(2, loadedSchema.numColumns());
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
     }
