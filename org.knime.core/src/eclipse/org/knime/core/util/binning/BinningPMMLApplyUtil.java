@@ -46,11 +46,13 @@
  * History
  *   Jul 29, 2025 (david): created
  */
-package org.knime.core.util.binning.auto;
+package org.knime.core.util.binning;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.dmg.pmml.DiscretizeBinDocument.DiscretizeBin;
+import org.dmg.pmml.IntervalDocument.Interval.Closure;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -59,29 +61,26 @@ import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
-import org.knime.core.util.binning.numeric.NumericBin2;
-import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.util.Pair;
+import org.knime.core.util.binning.numeric.NumericBin;
+import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
 
 /**
- * Converts a {@link PMMLPreprocDiscretizeTranslatorConfiguration} into a {@link ColumnRearranger} and/or the output
- * from a NodeModel's execute method.
+ * Converts a {@link PMMLPortObject} into a {@link ColumnRearranger}.
  *
  * @author David Hickey, TNG Technology Consulting GmbH
- * @since 5.6
+ * @since 5.7
  *
- * @see AutoBinningPMMLCreator
+ * @see BinningUtil
  */
-public final class AutoBinningPMMLApplier {
+public final class BinningPMMLApplyUtil {
 
-    private AutoBinningPMMLApplier() {
+    private BinningPMMLApplyUtil() {
         // Utility class, no instances allowed
     }
 
@@ -105,88 +104,87 @@ public final class AutoBinningPMMLApplier {
         }
 
         var pmmlSpecCreator = new PMMLPortObjectSpecCreator(outputTableSpec);
-        pmmlSpecCreator.setPreprocColNames(targetColumnNames);
+        pmmlSpecCreator.setTargetColsNames(targetColumnNames);
         return pmmlSpecCreator.createSpec();
     }
 
     /**
      * Creates a {@link ColumnRearranger} that rearranges the columns of the input table according to the
-     * {@link PMMLPreprocDiscretizeTranslatorConfiguration} given.
+     * {@link PMMLPortObject} given.
      *
-     * @param config the configuration that contains the target column names, output column names and discretizations
      * @param inSpec the input table spec that contains the columns to discretize
+     * @param outputPmml the {@link PMMLPortObject} that contains the discretization information
      * @return a {@link ColumnRearranger} that rearranges the columns of the input table
-     * @throws InvalidSettingsException if the input table spec does not contain all target columns
      */
-    public static ColumnRearranger createColumnRearranger( //
-        final PMMLPreprocDiscretizeTranslatorConfiguration config, //
-        final DataTableSpec inSpec //
-    ) throws InvalidSettingsException {
+    public static ColumnRearranger createColumnRearranger(final DataTableSpec inSpec, final PMMLPortObject outputPmml) {
+        final var rearranger = new ColumnRearranger(inSpec);
+        final var derivedFields = outputPmml.getDerivedFields();
+        final var derivedFieldMapper = new DerivedFieldMapper(derivedFields);
 
-        // Check if columns to discretize exist
-        for (String name : config.getTargetColumnNames()) {
-            if (!inSpec.containsName(name)) {
-                throw new InvalidSettingsException("Column " + "\"" + name + "\"" + "is missing in the input table.");
+        // Each derived field corresponds to the binning of one column
+        for (int i = 0; i < derivedFields.length; i++) {
+            final var derivedField = derivedFields[i];
+            final var targetColumnName = derivedField.getDiscretize().getField();
+            final var targetColumnIndex = inSpec.findColumnIndex(targetColumnName);
+            if (targetColumnIndex < 0) {
+                throw new IllegalStateException("Input column " + targetColumnName + " not found in input spec.");
             }
-        }
-
-        var rearranger = new ColumnRearranger(inSpec);
-
-        for (int i = 0; i < config.getDiscretizations().size(); ++i) {
-            var inputColumnName = config.getTargetColumnNames().get(i);
-            var outputColumnName = config.getOutputColumnNames().get(i);
-            var possibleBins = config.getDiscretizations().get(inputColumnName);
+            var possibleBins = derivedField.getDiscretize().getDiscretizeBinList().stream()
+                .map(BinningPMMLApplyUtil::discretizeBinToNumericBin).toList();
+            final var outputColumnName = derivedFieldMapper.getColumnName(derivedField.getName());
 
             var cellFactory = new BinningCellFactory( //
                 outputColumnName, //
-                inSpec.findColumnIndex(inputColumnName), //
+                targetColumnIndex, //
                 possibleBins //
             );
 
-            if (inputColumnName.equals(outputColumnName)) {
-                rearranger.replace(cellFactory, inputColumnName);
-            } else {
+            if (inSpec.findColumnIndex(outputColumnName) < 0) {
                 rearranger.append(cellFactory);
+            } else {
+                rearranger.replace(cellFactory, outputColumnName);
             }
         }
-
         return rearranger;
+
     }
 
     /**
-     * Creates the output for the execution of a NodeModel whose first output port is a {@link BufferedDataTable} and
-     * the second output port is a {@link PMMLPortObject} that contains the PMML specification of the discretizations.
+     * This method reverts the translation in {@link PMMLBinningTranslator}
      *
-     * @param inData the input data table that contains the columns to discretize
-     * @param translatorConfig the configuration that contains the target column names, output column names and
-     *            discretizations
-     * @param exec the execution context that is used to create the output table and monitor/cancel progress
-     * @return an array of {@link PortObject}s, the first element is a {@link BufferedDataTable} that contains the
-     *         discretized columns and the second element is a {@link PMMLPortObject} that contains the PMML.
-     * @throws CanceledExecutionException if the execution was canceled
-     * @throws InvalidSettingsException if the input table spec does not contain all target columns or if the
-     *             discretizations are not valid.
+     * @param bin the {@link DiscretizeBin} to convert
+     * @return a {@link NumericBin2} that represents the same bin
      */
-    public static PortObject[] createExecutionOutput( //
-        final BufferedDataTable inData, //
-        final PMMLPreprocDiscretizeTranslatorConfiguration translatorConfig, //
-        final ExecutionContext exec //
-    ) throws CanceledExecutionException, InvalidSettingsException {
-        var inSpec = inData.getDataTableSpec();
+    private static NumericBin discretizeBinToNumericBin(final DiscretizeBin bin) {
+        final var interval = bin.getInterval();
+        final var leftRightOpen = getBoundariesOpenValues(interval.getClosure());
+        final var leftValue = interval.isSetLeftMargin() ? interval.getLeftMargin() : Double.NEGATIVE_INFINITY;
+        final var rightValue = interval.isSetRightMargin() ?  interval.getRightMargin() : Double.POSITIVE_INFINITY;
 
-        var columnRearranger = createColumnRearranger(translatorConfig, inSpec);
-        var outSpec = columnRearranger.createSpec();
+        return new NumericBin( //
+            bin.getBinValue(), //
+            leftRightOpen.getFirst(), //
+            leftValue, //
+            leftRightOpen.getSecond(), //
+            rightValue //
+        );
+    }
 
-        var table = exec.createColumnRearrangeTable(inData, columnRearranger, exec);
-
-        var pmmlSpec = createPMMLOutSpec(outSpec, translatorConfig.getTargetColumnNames());
-        var outputPmml = new PMMLPortObject(pmmlSpec);
-        outputPmml.addGlobalTransformations(translatorConfig.toTranslator().exportToTransDict());
-
-        return new PortObject[]{ //
-            table, //
-            outputPmml, //
-        };
+    /**
+     * Duplicated from DefaultDBBinner
+     */
+    private static Pair<Boolean, Boolean> getBoundariesOpenValues(final Closure.Enum closure) {
+        if (closure == Closure.OPEN_CLOSED) {
+            return new Pair<>(true, false);
+        } else if (closure == Closure.OPEN_OPEN) {
+            return new Pair<>(true, true);
+        } else if (closure == Closure.CLOSED_OPEN) {
+            return new Pair<>(false, true);
+        } else if (closure == Closure.CLOSED_CLOSED) {
+            return new Pair<>(false, false);
+        } else {
+            return new Pair<>(true, false);
+        }
     }
 
     /**
@@ -197,12 +195,12 @@ public final class AutoBinningPMMLApplier {
 
         private final int m_targetColumnIndex;
 
-        private final List<NumericBin2> m_bins;
+        private final List<NumericBin> m_bins;
 
         BinningCellFactory( //
             final String newColName, //
             final int targetColumnIndex, //
-            final List<NumericBin2> binsIncludingOutliers //
+            final List<NumericBin> binsIncludingOutliers //
         ) {
             super(new DataColumnSpecCreator(newColName, StringCell.TYPE).createSpec());
             m_targetColumnIndex = targetColumnIndex;

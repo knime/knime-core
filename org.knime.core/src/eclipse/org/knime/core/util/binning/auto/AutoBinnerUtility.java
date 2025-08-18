@@ -74,6 +74,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.util.Pair;
+import org.knime.core.util.binning.BinningUtil;
 import org.knime.core.util.binning.auto.pmml.Closure;
 import org.knime.core.util.binning.auto.pmml.DisretizeConfiguration;
 import org.knime.core.util.binning.auto.pmml.PMMLDiscretize;
@@ -90,8 +91,8 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  * @author Mor Kalla
  * @since 3.6
  *
- * @deprecated Uses the outdated {@link PMMLPreprocDiscretize} class for binning, and the buggy {@link NumericBin}
- *             class. Instead look at {@link AutoBinningPMMLCreator}.
+ * @deprecated Uses the outdated {@link PMMLPreprocDiscretize} class for binning . Instead look at
+ *             {@link BinningUtil}.
  */
 @Deprecated
 public final class AutoBinnerUtility {

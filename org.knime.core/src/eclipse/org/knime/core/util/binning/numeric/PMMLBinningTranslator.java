@@ -67,10 +67,7 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
  * @author Mor Kalla
  * @since 3.6
  *
- * @deprecated Relies on the deprecated {@link NumericBin} class, which contains a bug that we can't fix for fear of
- *             introducing regressions.
  */
-@Deprecated
 public class PMMLBinningTranslator implements PMMLPreprocTranslator {
 
     private final Map<String, Bin[]> m_columnToBins;

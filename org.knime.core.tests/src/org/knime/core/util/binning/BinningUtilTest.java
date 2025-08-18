@@ -46,20 +46,19 @@
  * History
  *   Jun 20, 2025 (david): created
  */
-package org.knime.core.util.binning.auto;
+package org.knime.core.util.binning;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -68,10 +67,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.DoubleCell.DoubleCellFactory;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.filestore.internal.NotInWorkflowDataRepository;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -82,42 +79,32 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundary;
-import org.knime.core.util.binning.auto.AutoBinningSettings.BinBoundaryExactMatchBehaviour;
-import org.knime.core.util.binning.auto.AutoBinningSettings.BinNaming;
-import org.knime.core.util.binning.auto.AutoBinningSettings.BinNamingSettings;
-import org.knime.core.util.binning.auto.AutoBinningSettings.BinningSettings;
-import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings;
-import org.knime.core.util.binning.auto.AutoBinningSettings.DataBoundsSettings.BoundSetting;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.NumberFormat;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.PrecisionMode;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormatSettingsGroup.RoundingDirection;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.ColumnFormat;
-import org.knime.core.util.binning.auto.AutoBinningSettings.NumberFormattingSettings.CustomFormat;
-import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.ClosureStyle;
-import org.knime.core.util.binning.numeric.PMMLPreprocDiscretizeTranslatorConfiguration.Interval;
+import org.knime.core.util.binning.BinningSettings.BinBoundary;
+import org.knime.core.util.binning.BinningSettings.BinBoundary.BinBoundaryExactMatchBehaviour;
+import org.knime.core.util.binning.BinningSettings.BinNamingScheme;
+import org.knime.core.util.binning.BinningSettings.BinNamingUtils.BinNamingNumberFormatterUtils.CustomNumberFormat;
+import org.knime.core.util.binning.BinningSettings.BinNamingUtils.BinNamingNumberFormatterUtils.PrecisionMode;
+import org.knime.core.util.binning.BinningSettings.DataBounds;
 import org.knime.testing.util.InputTableNode;
 import org.knime.testing.util.TableTestUtil;
 
 /**
- * Tests for the {@link AutoBinningPMMLCreator} class.
+ * Tests for the {@link BinningUtil} class.
  *
  * @author David Hickey, TNG Technology Consulting GmbH
  */
 @SuppressWarnings("static-method")
-final class AutoBinningUtilsTest {
+final class BinningUtilTest {
 
     @Test
     void testFindStreakEndpoints() {
-        var endPoints =
-            AutoBinningPMMLCreator.findStreakEndpoints(List.of(0.0, 2.05, 2.1, 2.1, 2.1, 2.2, 4.0, 5.0), 3, false);
+        var endPoints = BinningUtil.findStreakEndpoints(List.of(0.0, 2.05, 2.1, 2.1, 2.1, 2.2, 4.0, 5.0), 3, false);
 
         assertEquals(2, endPoints.first(), "First endpoint should be at correct index");
         assertEquals(4, endPoints.second(), "Second endpoint should be at correct index");
 
         var endPointsWithIntegerCoercion =
-            AutoBinningPMMLCreator.findStreakEndpoints(List.of(0.0, 2.05, 2.1, 2.1, 2.1, 2.2, 4.0, 5.0), 3, true);
+            BinningUtil.findStreakEndpoints(List.of(0.0, 2.05, 2.1, 2.1, 2.1, 2.2, 4.0, 5.0), 3, true);
 
         assertEquals(1, endPointsWithIntegerCoercion.first(),
             "First endpoint with integer coercion should be at correct index");
@@ -128,25 +115,25 @@ final class AutoBinningUtilsTest {
     @Nested
     class BinNameNumberFormatTests {
 
-        record TestCase(NumberFormat fmt, int precision, RoundingDirection roundingMode, PrecisionMode precisionMode,
+        record TestCase(CustomNumberFormat fmt, int precision, RoundingMode roundingMode, PrecisionMode precisionMode,
             double firstBinBoundary, String expectedBinName) {
         }
 
         static Stream<Arguments> provideTestParameters() {
             return Stream.of( //
-                new TestCase(NumberFormat.ENGINEERING_STRING, 1, RoundingDirection.CEILING,
+                new TestCase(CustomNumberFormat.ENGINEERING_STRING, 1, RoundingMode.CEILING,
                     PrecisionMode.SIGNIFICANT_FIGURES, 12345, "20E+3"), //
-                new TestCase(NumberFormat.ENGINEERING_STRING, 2, RoundingDirection.FLOOR,
+                new TestCase(CustomNumberFormat.ENGINEERING_STRING, 2, RoundingMode.FLOOR,
                     PrecisionMode.SIGNIFICANT_FIGURES, 12345, "12E+3"), //
-                new TestCase(NumberFormat.ENGINEERING_STRING, 2, RoundingDirection.DOWN, PrecisionMode.DECIMAL_PLACES,
+                new TestCase(CustomNumberFormat.ENGINEERING_STRING, 2, RoundingMode.DOWN, PrecisionMode.DECIMAL_PLACES,
                     12345.6789, "12345.67"), //
-                new TestCase(NumberFormat.PLAIN_STRING, 2, RoundingDirection.UP, PrecisionMode.DECIMAL_PLACES,
+                new TestCase(CustomNumberFormat.PLAIN_STRING, 2, RoundingMode.UP, PrecisionMode.DECIMAL_PLACES,
                     12345.6789, "12345.68"), //
-                new TestCase(NumberFormat.PLAIN_STRING, 2, RoundingDirection.CEILING, PrecisionMode.SIGNIFICANT_FIGURES,
-                    12345.6789, "13000"), //
-                new TestCase(NumberFormat.STANDARD_STRING, 2, RoundingDirection.FLOOR,
+                new TestCase(CustomNumberFormat.PLAIN_STRING, 2, RoundingMode.CEILING,
+                    PrecisionMode.SIGNIFICANT_FIGURES, 12345.6789, "13000"), //
+                new TestCase(CustomNumberFormat.STANDARD_STRING, 2, RoundingMode.FLOOR,
                     PrecisionMode.SIGNIFICANT_FIGURES, 12345.6789, "1.2E+4"), //
-                new TestCase(NumberFormat.STANDARD_STRING, 3, RoundingDirection.DOWN, PrecisionMode.DECIMAL_PLACES,
+                new TestCase(CustomNumberFormat.STANDARD_STRING, 3, RoundingMode.DOWN, PrecisionMode.DECIMAL_PLACES,
                     12345.6789, "12345.678") //
             ).map(Arguments::of);
         }
@@ -154,94 +141,20 @@ final class AutoBinningUtilsTest {
         @ParameterizedTest
         @MethodSource("provideTestParameters")
         void testBinNameNumberFormatting(final TestCase tc) throws InvalidSettingsException {
-            var numberFormatSettingsGroup =
-                new NumberFormatSettingsGroup(tc.fmt, tc.precision, tc.precisionMode, tc.roundingMode);
+            final var numberFormatter = BinningSettings.BinNamingUtils.BinNamingNumberFormatterUtils
+                .createCustomNumberFormatter(tc.fmt, tc.precision, tc.precisionMode, tc.roundingMode);
 
-            var settings = new BinNamingSettings(BinNaming.MIDPOINTS, new CustomFormat(numberFormatSettingsGroup));
+            final var binNaming = BinningSettings.BinNamingUtils.getMidpointsBinNaming(numberFormatter);
+            final var binNamingScheme = new BinNamingScheme(binNaming, "lower", "upper");
 
-            var edges =
-                AutoBinningPMMLCreator.createEdgesForEqualWidth(tc.firstBinBoundary, tc.firstBinBoundary, false, 1);
-            var binName =
-                AutoBinningPMMLCreator.createBins(Map.of("col1", edges), settings).get("col1").get(0).getBinName();
+            final var edges = BinningUtil.createEdgesForEqualWidth(tc.firstBinBoundary, tc.firstBinBoundary, false, 1);
+            final var bins = BinningUtil.createBins(edges, binNamingScheme);
+
+            assertEquals(bins.size(), 3, "There should be a single bin and the lower and upper bin.");
+
+            var binName = bins.get(1).getBinName();
 
             assertEquals(tc.expectedBinName, binName, "Bin name should match expected name");
-        }
-    }
-
-    @Nested
-    class EdgesToBinsTests {
-
-        private Map<String, List<BinBoundary>> m_data;
-
-        @BeforeEach
-        void setupData() {
-            m_data = Map.of( //
-                "col1", List.of( //
-                    new BinBoundary(1.0, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), //
-                    new BinBoundary(2.5, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), //
-                    new BinBoundary(4.0, BinBoundaryExactMatchBehaviour.TO_LOWER_BIN) //
-                ), //
-                "col2", List.of( //
-                    new BinBoundary(10.0, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), //
-                    new BinBoundary(25.0, BinBoundaryExactMatchBehaviour.TO_LOWER_BIN), //
-                    new BinBoundary(26.0, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), //
-                    new BinBoundary(39.0, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN) //
-                ) //
-            );
-        }
-
-        record TestCase(BinNamingSettings naming, Map<String, String[]> expectedBinNames) {
-        }
-
-        static Stream<Arguments> provideTestParameters() {
-            return Stream.of( //
-                Arguments.of("numbered", new TestCase( //
-                    new BinNamingSettings(BinNaming.NUMBERED, new ColumnFormat()), //
-                    Map.of( //
-                        "col1", new String[]{"Bin 1", "Bin 2"}, //
-                        "col2", new String[]{"Bin 1", "Bin 2", "Bin 3"} //
-                    ) //
-                )), //
-                Arguments.of("midpoints", new TestCase( //
-                    new BinNamingSettings(BinNaming.MIDPOINTS, new ColumnFormat()), //
-                    Map.of( //
-                        "col1", new String[]{"1.75", "3.25"}, //
-                        "col2", new String[]{"17.5", "25.5", "32.5"} //
-                    ) //
-                )), //
-                Arguments.of("borders", new TestCase( //
-                    new BinNamingSettings(BinNaming.BORDERS, new ColumnFormat()), //
-                    Map.of( //
-                        "col1", new String[]{"[1, 2.5)", "[2.5, 4]"}, //
-                        "col2", new String[]{"[10, 25]", "(25, 26)", "[26, 39)"} //
-                    ) //
-                )) //
-            );
-        }
-
-        @ParameterizedTest(name = "{0}")
-        @MethodSource("provideTestParameters")
-        void testCreateBins(@SuppressWarnings("unused") final String name, final TestCase tc)
-            throws InvalidSettingsException {
-            var bins = AutoBinningPMMLCreator.createBins(m_data, tc.naming);
-
-            assertEquals(2, bins.size(), "Expected 2 outputs for 2 columns");
-            assertTrue(bins.containsKey("col1"), "Bins should contain col1");
-            assertTrue(bins.containsKey("col2"), "Bins should contain col2");
-
-            var outputCol1 = List.of( //
-                new Interval(1.0, 2.5, ClosureStyle.CLOSED_OPEN).toNumericBin(tc.expectedBinNames.get("col1")[0]), //
-                new Interval(2.5, 4.0, ClosureStyle.CLOSED_CLOSED).toNumericBin(tc.expectedBinNames.get("col1")[1]) //
-            );
-
-            var outputCol2 = List.of( //
-                new Interval(10.0, 25.0, ClosureStyle.CLOSED_CLOSED).toNumericBin(tc.expectedBinNames.get("col2")[0]), //
-                new Interval(25.0, 26.0, ClosureStyle.OPEN_OPEN).toNumericBin(tc.expectedBinNames.get("col2")[1]), //
-                new Interval(26.0, 39.0, ClosureStyle.CLOSED_OPEN).toNumericBin(tc.expectedBinNames.get("col2")[2]) //
-            );
-
-            assertEquals(outputCol1, bins.get("col1"), "Bins for col1 should match expected output");
-            assertEquals(outputCol2, bins.get("col2"), "Bins for col2 should match expected output");
         }
     }
 
@@ -253,7 +166,7 @@ final class AutoBinningUtilsTest {
 
             @Test
             void testNoIntegerForcing() {
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualWidth( //
+                var edges = BinningUtil.createEdgesForEqualWidth( //
                     1.0, // lower bound
                     4.0, // upper bound
                     false, // no integer forcing
@@ -261,8 +174,8 @@ final class AutoBinningUtilsTest {
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
-                assertEquals(List.of(1.0, 2.5, 4.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 2.5, 4.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -274,7 +187,7 @@ final class AutoBinningUtilsTest {
 
             @Test
             void testIntegerForcing() {
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualWidth( //
+                var edges = BinningUtil.createEdgesForEqualWidth( //
                     1, // no lower bound
                     4, // no upper bound
                     true, // integer forcing
@@ -282,8 +195,8 @@ final class AutoBinningUtilsTest {
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
-                assertEquals(List.of(1.0, 3.0, 4.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 3.0, 4.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -304,18 +217,19 @@ final class AutoBinningUtilsTest {
                 );
 
                 var exec = createExecutionContext(data);
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualCount( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
+                var edges = BinningUtil.createEdgesForEqualCount( //
+                    extractAndSortColumn(data, exec, "col1"), //
                     exec, //
                     2, // number of bins
-                    OptionalDouble.empty(), // no lower bound
-                    OptionalDouble.empty(), // no upper bound
-                    false // no integer forcing
+                    new DataBounds(//
+                        OptionalDouble.empty(), // no lower bound
+                        OptionalDouble.empty() // no upper bound
+                    ), false // no integer forcing
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
-                assertEquals(List.of(1.0, 1.0, 1.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 1.0, 1.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -332,18 +246,20 @@ final class AutoBinningUtilsTest {
                 );
 
                 var exec = createExecutionContext(data);
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualCount( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
+                var edges = BinningUtil.createEdgesForEqualCount( //
+                    extractAndSortColumn(data, exec, "col1"), //
                     exec, //
                     10, // number of bins
-                    OptionalDouble.empty(), // no lower bound
-                    OptionalDouble.empty(), // no upper bound
+                    new DataBounds(//
+                        OptionalDouble.empty(), // no lower bound
+                        OptionalDouble.empty() // no upper bound
+                    ), //
                     false // no integer forcing
                 );
 
                 assertEquals(11, edges.size(), "Expected 11 edges");
                 assertEquals(List.of(1, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4).stream().map(Double::valueOf).toList(),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                    edges.stream().map(BinningSettings.BinBoundary::value).toList(), "Edges should be correct");
 
                 assertTrue(edges.get(0).exactMatchBehaviour() == BinBoundaryExactMatchBehaviour.TO_UPPER_BIN,
                     "First boundary should match to upper bin");
@@ -361,18 +277,20 @@ final class AutoBinningUtilsTest {
                 );
 
                 var exec = createExecutionContext(data);
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualCount( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
+                var edges = BinningUtil.createEdgesForEqualCount( //
+                    extractAndSortColumn(data, exec, "col1"), //
                     exec, //
                     2, // number of bins
-                    OptionalDouble.empty(), // no lower bound
-                    OptionalDouble.empty(), // no upper bound
+                    new DataBounds(//
+                        OptionalDouble.empty(), // no lower bound
+                        OptionalDouble.empty() // no upper bound
+                    ), //
                     false // no integer forcing
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
-                assertEquals(List.of(1.0, 2.0, 4.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 2.0, 4.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -389,19 +307,21 @@ final class AutoBinningUtilsTest {
                 );
 
                 var exec = createExecutionContext(data);
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualCount( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
+                var edges = BinningUtil.createEdgesForEqualCount( //
+                    extractAndSortColumn(data, exec, "col1"), //                   exec, //
                     exec, //
                     2, // number of bins
-                    OptionalDouble.empty(), // no lower bound
-                    OptionalDouble.empty(), // no upper bound
+                    new DataBounds(//
+                        OptionalDouble.empty(), // no lower bound
+                        OptionalDouble.empty() // no upper bound
+                    ), //
                     false // no integer forcing
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
 
-                assertEquals(List.of(1.0, 2.0, 4.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 2.0, 4.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -418,18 +338,19 @@ final class AutoBinningUtilsTest {
                 );
 
                 var exec = createExecutionContext(data);
-                var edges = AutoBinningPMMLCreator.createEdgesForEqualCount( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
-                    exec, //
+                var edges = BinningUtil.createEdgesForEqualCount( //
+                    extractAndSortColumn(data, exec, "col1"), exec, //
                     2, // number of bins
-                    OptionalDouble.of(1.0), // lower bound
-                    OptionalDouble.of(4.0), // upper bound
+                    new DataBounds(//
+                        OptionalDouble.of(1.0), // lower bound
+                        OptionalDouble.of(4.0) // upper bound
+                    ), //
                     false // no integer forcing
                 );
 
                 assertEquals(3, edges.size(), "Expected 3 edges");
-                assertEquals(List.of(1.0, 2.0, 4.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                assertEquals(List.of(1.0, 2.0, 4.0), edges.stream().map(BinningSettings.BinBoundary::value).toList(),
+                    "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -451,21 +372,24 @@ final class AutoBinningUtilsTest {
 
                 var exec = createExecutionContext(data);
 
-                var edges = AutoBinningPMMLCreator.createEdgesFromQuantiles( //
-                    AutoBinningPMMLCreator.extractColumnValues(data.get(), 0, exec), //
-                    exec, //
+                var edges = BinningUtil.createEdgesFromQuantiles( //
+                    extractAndSortColumn(data, exec, "col1"), exec, //
                     List.of( //
                         new BinBoundary(0.0, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), // 0% quantile
                         new BinBoundary(0.25, BinBoundaryExactMatchBehaviour.TO_LOWER_BIN), // 25% quantile
                         new BinBoundary(0.5, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), // 50% quantile
                         new BinBoundary(0.75, BinBoundaryExactMatchBehaviour.TO_UPPER_BIN), // 75% quantile
                         new BinBoundary(1.0, BinBoundaryExactMatchBehaviour.TO_LOWER_BIN) // 100% quantile
-                    ) //
-                );
+                    ), //
+                    new DataBounds(//
+                        OptionalDouble.empty(), // no lower bound
+                        OptionalDouble.empty() // no upper bound
+                    ), //
+                    false);
 
                 assertEquals(5, edges.size(), "Expected 5 edges");
                 assertEquals(List.of(10.0, 20.0, 30.0, 40.0, 50.0),
-                    edges.stream().map(AutoBinningSettings.BinBoundary::value).toList(), "Edges should be correct");
+                    edges.stream().map(BinningSettings.BinBoundary::value).toList(), "Edges should be correct");
 
                 assertEquals(BinBoundaryExactMatchBehaviour.TO_UPPER_BIN, edges.get(0).exactMatchBehaviour(),
                     "First boundary should match to upper bin");
@@ -557,59 +481,8 @@ final class AutoBinningUtilsTest {
         return new ExecutionContext(monitor, node, memoryPolicy, thing);
     }
 
-    @Nested
-    class AutoBinnerTests {
-
-        AutoBinningSettings m_settings;
-
-        BufferedDataTable m_data;
-
-        @BeforeEach
-        void setup() {
-            m_settings = new AutoBinningSettings( //
-                new BinningSettings.EqualWidth(3), //
-                false, //
-                new BinNamingSettings(BinNaming.NUMBERED, new ColumnFormat()), //
-                new DataBoundsSettings(new BoundSetting.NoBound(""), new BoundSetting.NoBound("")) //
-            );
-
-            var spec = new TableTestUtil.SpecBuilder() //
-                .addColumn("col1", DoubleCell.TYPE) //
-                .addColumn("col2", DoubleCell.TYPE) //
-                .addColumn("colWithoutDomain", DoubleCell.TYPE) //
-                .addColumn("missingColumn", DoubleCell.TYPE) //
-                .addColumn("notDouble", StringCell.TYPE) //
-                .build();
-
-            m_data = new TableTestUtil.TableBuilder(spec) //
-                .addRow(new Object[]{new DoubleCell(1.0), new DoubleCell(10.0), new DoubleCell(5.0),
-                    new MissingCell(""), new StringCell("test")}) //
-                .addRow(new Object[]{new DoubleCell(2.0), new DoubleCell(20.0), new DoubleCell(6.0),
-                    new MissingCell(""), new StringCell("test")}) //
-                .addRow(new Object[]{new DoubleCell(3.0), new DoubleCell(30.0), new MissingCell(""),
-                    new MissingCell(""), new StringCell("test")}) //
-                .addRow(new Object[]{new DoubleCell(4.0), new DoubleCell(40.0), new DoubleCell(8.0),
-                    new MissingCell(""), new StringCell("test")}) //
-                .buildDataTable();
-        }
-
-        @Test
-        void testExtractAndSortSingleColumn() throws CanceledExecutionException {
-            var data = createDataTable( //
-                new Column("col1", new double[]{3.0, 2.0, 1.0, 4.0, 5.0}), //
-                new Column("col2", new double[]{10.0, 20.0, 30.0, 40.0, 50.0}) //
-            );
-            var exec = createExecutionContext(data);
-
-            var extractedData = AutoBinningPMMLCreator.extractColumnValues(data.get(), 1, exec);
-
-            // assert that the data is sorted and contains same values as col2
-            var expectedData = new double[]{10.0, 20.0, 30.0, 40.0, 50.0};
-
-            assertEquals(expectedData.length, extractedData.size(), "Data length mismatch");
-            for (int i = 0; i < expectedData.length; i++) {
-                assertEquals(expectedData[i], extractedData.get(i), "Data value mismatch at index " + i);
-            }
-        }
+    private static List<Double> extractAndSortColumn(final Supplier<BufferedDataTable> data,
+        final ExecutionContext exec, final String colName) throws CanceledExecutionException {
+        return BinningUtil.extractDataFromTableAndSort(data.get(), exec, colName).get(colName);
     }
 }
