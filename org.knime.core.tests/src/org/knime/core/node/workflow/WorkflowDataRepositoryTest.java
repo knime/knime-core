@@ -56,7 +56,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.container.DataContainerTest;
-import org.knime.core.data.v2.ValueSchemaTest;
+import org.knime.core.data.v2.DataTableValueSchemaTest;
 
 /**
  * Performs a smoke test of basic methods in the {@link WorkflowDataRepository}.
@@ -81,7 +81,7 @@ public class WorkflowDataRepositoryTest {
 
         // handling file store handlers
         final var uuid = UUID.randomUUID();
-        final var handler = new ValueSchemaTest.DummyWriteFileStoreHandler() {
+        final var handler = new DataTableValueSchemaTest.DummyWriteFileStoreHandler() {
             @Override
             public UUID getStoreUUID() {
                 return uuid;
