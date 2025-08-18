@@ -53,13 +53,8 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.v2.ValueFactory;
-import org.knime.core.table.access.ReadAccess;
-import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ColumnarSchema;
 import org.knime.core.table.schema.DataSpec;
-import org.knime.core.table.schema.traits.DataTraits;
 
 import com.google.common.collect.Iterators;
 
@@ -89,31 +84,11 @@ sealed class DefaultValueSchema implements ValueSchema permits DefaultDataTableV
         return m_columns[index];
     }
 
-    @Override
-    public DataColumnSpec getDataColumnSpec(final int index) {
-        return getColumn(index).dataColumnSpec();
-    }
-
-    @Override
-    public <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
-        return getColumn(index).castValueFactory();
-    }
-
     // -------- ColumnarSchema --------
 
     @Override
     public int numColumns() {
         return m_columns.length;
-    }
-
-    @Override
-    public DataSpec getSpec(final int index) {
-        return getColumn(index).dataSpec();
-    }
-
-    @Override
-    public DataTraits getTraits(final int index) {
-        return getColumn(index).dataTraits();
     }
 
     @Override

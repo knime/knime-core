@@ -92,7 +92,9 @@ public interface ValueSchema extends ColumnarSchema {
      * @return the DataColumnSpec of the column at the given index
      * @since 5.7
      */
-    DataColumnSpec getDataColumnSpec(int index);
+    default DataColumnSpec getDataColumnSpec(final int index) {
+        return getColumn(index).dataColumnSpec();
+    }
 
     /**
      * Find a column by name.
@@ -124,7 +126,20 @@ public interface ValueSchema extends ColumnarSchema {
      * @param index of the value factory to return
      * @return the {@link ValueFactory} at the provided index
      */
-    <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(int index);
+    default <R extends ReadAccess, W extends WriteAccess> ValueFactory<R, W> getValueFactory(final int index) {
+        return getColumn(index).castValueFactory();
+    }
+
+    @Override
+    default DataSpec getSpec(final int index) {
+        return getColumn(index).dataSpec();
+    }
+
+    @Override
+    default DataTraits getTraits(final int index) {
+        return getColumn(index).dataTraits();
+    }
+
 
     /**
      * Describes a single column in a {@link ValueSchema}.
