@@ -22,11 +22,13 @@
  */
 package org.knime.core.workbench.mountpoint.contribution.temp;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.file.Path;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
@@ -67,5 +69,10 @@ public final class TempSpaceURLMountPointService implements MountPointURLService
                 TempSpaceMountPointState.class.getName(), state.getClass().getName());
             return new TempSpaceURLMountPointService(tempState);
         }
+    }
+
+    @Override
+    public File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor) throws IOException {
+        return null;
     }
 }
