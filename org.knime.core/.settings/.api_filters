@@ -8,4 +8,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/internal/KNIMEPath.java" type="org.knime.core.internal.KNIMEPath">
+        <filter comment="moved functionality as part of AP-24828, this removed method is only used in tests." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.internal.KNIMEPath"/>
+                <message_argument value="setWorkspaceDirPath(File)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

@@ -78,11 +78,11 @@ import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.ConfigurationAreaChecker;
-import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.ThreadPool;
 import org.knime.core.util.auth.SuppressingAuthenticator;
 import org.knime.core.util.proxy.URLConnectionFactory;
+import org.knime.core.workbench.KNIMEWorkspacePath;
 import org.osgi.framework.Bundle;
 
 /**
@@ -315,7 +315,7 @@ public final class KNIMEConstants {
      * used instead. To set the knime home dir from the command line, use
      * -Dknime.home=&lt;absolutePathToNewHomeDir&gt;.
      */
-    public static final String PROPERTY_KNIME_HOME = "knime.home";
+    public static final String PROPERTY_KNIME_HOME = KNIMEWorkspacePath.PROPERTY_KNIME_HOME;
 
     /** @deprecated Use {@link #PROPERTY_KNIME_HOME} instead. */
     @Deprecated
@@ -586,7 +586,7 @@ public final class KNIMEConstants {
     public static ImageIcon KNIME16X16 = null;
 
     static {
-        File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
+        File knimeHome = KNIMEWorkspacePath.getKNIMEHomeDirPath();
         knimeHomeDir = knimeHome;
 
         int maxThreads =
