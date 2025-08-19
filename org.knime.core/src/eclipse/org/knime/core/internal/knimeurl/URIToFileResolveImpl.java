@@ -62,8 +62,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.NodeLogger;
@@ -71,7 +71,9 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.ThreadLocalHTTPAuthenticator;
+import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
+import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.util.pathresolve.SpaceVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve;
@@ -131,14 +133,10 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     private static File resolveStandardUri(final URI uri, final IProgressMonitor monitor)
         throws ResourceAccessException {
         try {
-            // TODO First check that we are on a local mount point then resolve to file else return null
-            AbstractExplorerFileStore s = ExplorerFileSystem.INSTANCE.getStore(uri);
-            if (s == null) {
-                throw new ResourceAccessException(
-                    "Can't resolve file to URI \"" + uri + "\"; the corresponding mount point is probably "
-                        + "not defined or the resource has been (re)moved");
+            if (MountPointURLUtil.getMountPointStateFromURI(uri).isRemote()) {
+                return null;
             }
-            return s.toLocalFile(EFS.NONE, monitor);
+            return toLocalOrTempFile(uri.toURL(), monitor);
         } catch (Exception e) {
             throw new ResourceAccessException("Can't resolve KNIME URL \"" + uri + "\" to local file or folder", e);
         }
@@ -179,14 +177,10 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         if ("file".equals(url.getProtocol())) {
             return FileUtil.getFileFromURL(url);
         } else if (CoreConstants.SCHEME.equals(url.getProtocol())) {
-            final AbstractExplorerFileStore fs = ExplorerFileSystem.INSTANCE.getStore(uri);
-
-            if (fs instanceof LocalExplorerFileStore) {
-                return resolveStandardUri(uri, monitor);
-            } else if (fs instanceof RemoteExplorerFileStore remoteStore) {
-                return fetchRemoteFileStore(remoteStore, monitor, ifModifiedSince);
-            } else {
-                throw new ResourceAccessException("Unsupported file store type: " + fs.getClass());
+            try {
+                return toLocalOrTempFile(url, monitor);
+            } catch (IOException ex) {
+                throw new ResourceAccessException("Can't resolve URI \"" + uri + "\" to local or temp file", ex);
             }
         } else {
             // use the original URL because otherwise the handler may not be invoked correctly
@@ -202,15 +196,6 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
         return Optional.ofNullable(resolveToLocalOrTempFileInternal(uri, monitor, ifModifiedSince));
     }
-
-//    private static File fetchRemoteFileStore(final RemoteExplorerFileStore source, final IProgressMonitor monitor,
-//        final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
-//        try {
-//            return source.resolveToLocalFileConditional(monitor, ifModifiedSince).orElse(null);
-//        } catch (CoreException e) {
-//            throw new ResourceAccessException(e);
-//        }
-//    }
 
     private static File fetchRemoteFile(final URL url, final ZonedDateTime ifModifiedSince)
         throws ResourceAccessException {
@@ -307,19 +292,10 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             }
         }
 
-        final var fileStore = ExplorerFileSystem.INSTANCE.getStore(uri);
-        if (fileStore == null) {
-            return Optional.empty();
-        }
-
-        final var info = fileStore.fetchInfo();
-        if (!info.exists()) {
-            return Optional.empty();
-        }
-
-        final var mountId = fileStore.getMountID();
-        var path = StringUtils.substringAfterLast(fileStore.getMountIDWithFullPath(), ":");
-        return Optional.of(new KNIMEURIDescription(mountId, path, info.getName()));
+        final var mountId = MountPointURLUtil.getMountIDFromURI(uri);
+        final var path = IPath.forPosix(uri.getPath());
+        final var name = path.lastSegment();
+        return Optional.of(new KNIMEURIDescription(mountId, path.toString(), name));
     }
 
     @Override
@@ -328,10 +304,12 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             return Optional.empty();
         }
 
-        var s = ExplorerFileSystem.INSTANCE.getStore(uri);
-        if (s instanceof RemoteExplorerFileStore remoteFileStore) {
-            return Optional.of(remoteFileStore.getSpaceVersions());
+        // The method to retrieve space versions is not implemented for server or hub
+        // The remote file store would only return an empty list.
+        if (MountPointURLUtil.getMountPointStateFromURI(uri).isRemote()) {
+            return Optional.of(List.of());
         }
+
         return Optional.empty();
     }
 
@@ -351,14 +329,24 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     @Override
     public List<NamedItemVersion> getHubItemVersionList(final URI uri) throws ResourceAccessException {
         CheckUtils.checkArgument(uri.getScheme().equals("knime"), "Expected a KNIME URI but got: %s", uri);
+        try {
+            return MountPointURLUtil.getMountPointURLServiceFromURI(uri).getVersions(IPath.forPosix(uri.getPath()));
+        } catch (UnsupportedOperationException ex) {
+            throw new ResourceAccessException("Can't retrieve item versions for URI \"" + uri + "\"", ex);
+        } catch (IOException ex) {
+            throw new ResourceAccessException("Unable to retrieve item versions for URI \"" + uri + "\"", ex);
+        }
+    }
 
-        var s = ExplorerFileSystem.INSTANCE.getStore(uri);
+    private static File toLocalOrTempFile(final URL url, final IProgressMonitor monitor) throws IOException {
+        final var queryParams = MountPointURLUtil.getQueryParams(url);
+        ItemVersion itemVersion = null;
+        if (queryParams != null && queryParams.containsKey(MountPointURLUtil.VERSION_QUERY_PARAM)) {
+            itemVersion = queryParams.get(MountPointURLUtil.VERSION_QUERY_PARAM).size() > 0 ?
+                ItemVersion.convertToItemVersion(queryParams.get(MountPointURLUtil.VERSION_QUERY_PARAM).get(0)) : null;
+        }
 
-        CheckUtils.checkState(s instanceof RemoteExplorerFileStore,
-            "Cannot retrieve Hub item versions for %s, the content is not available via a mount point.", uri);
-
-        var remoteFileStore = (RemoteExplorerFileStore)s;
-        return remoteFileStore.getVersions();
-
+        return MountPointURLUtil.getMountPointURLServiceFromURL(url)
+                .toLocalOrTempFile(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
     }
 }

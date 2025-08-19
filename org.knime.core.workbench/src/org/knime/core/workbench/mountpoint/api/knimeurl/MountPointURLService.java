@@ -51,11 +51,13 @@ package org.knime.core.workbench.mountpoint.api.knimeurl;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.util.hub.ItemVersion;
+import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.workbench.mountpoint.api.MountPointProvider;
 
 /**
@@ -88,4 +90,16 @@ public interface MountPointURLService extends MountPointProvider {
      * @throws IOException if an I/O error occurs while resolving the file
      */
     File toLocalOrTempFile(IPath path, ItemVersion version, IProgressMonitor monitor) throws IOException;
+
+    /**
+     * Retrieves all named item versions of the repository item at the given path. This method is
+     * only applicable on mount point URL service implementations for a KNIME Hub.
+     *
+     * @param path the path relative to the mount point root, not null
+     * @return a possibly empty list of {@link NamedItemVersion}
+     * @throws IOException if an I/O error occurs while retrieving the named item versions
+     * @throws UnsupportedOperationException if the URL service is not associated with a KNIME Hub
+     */
+    List<NamedItemVersion> getVersions(IPath path) throws UnsupportedOperationException, IOException;
+
 }
