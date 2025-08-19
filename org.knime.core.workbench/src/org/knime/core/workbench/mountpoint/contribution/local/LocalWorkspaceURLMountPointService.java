@@ -46,7 +46,7 @@
  * History
  *   Aug 12, 2025 (wiswedel): created
  */
-package org.knime.core.internal.knimeurl.localworkspace;
+package org.knime.core.workbench.mountpoint.contribution.local;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,14 +56,13 @@ import java.util.List;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.hub.NamedItemVersion;
+import org.knime.core.workbench.KNIMEWorkspacePath;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory;
-import org.knime.core.workbench.mountpoint.contribution.local.LocalWorkspaceMountPointState;
 
 /**
  *
@@ -86,7 +85,7 @@ public final class LocalWorkspaceURLMountPointService implements MountPointURLSe
 
     @Override
     public URLConnection newURLConnection(final IPath path, final ItemVersion version) throws IOException {
-        IPath rootPath = Path.fromPortableString(KNIMEPath.getWorkspaceDirPath().getAbsolutePath());
+        IPath rootPath = Path.fromPortableString(KNIMEWorkspacePath.getWorkspaceDirPath().getAbsolutePath());
         // TODO review - is this sane? (see also org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore.LocalWorkspaceFileStore(String, String))
         return rootPath.append(path).toFile().toURI().toURL().openConnection();
     }

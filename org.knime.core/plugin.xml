@@ -837,11 +837,4 @@
            serviceClass="org.knime.core.internal.knimeurl.ExplorerURLStreamHandler">
      </urlStreamHandlerService>
   </extension>
-   <extension
-         point="org.knime.core.workbench.MountPointURLService">
-      <urlService
-            typeIdentifier="org.knime.workbench.explorer.workspace"
-            urlMountPointServiceClassFactory="org.knime.core.internal.knimeurl.localworkspace.LocalWorkspaceURLMountPointService$Factory">
-      </urlService>
-   </extension>
 </plugin>
