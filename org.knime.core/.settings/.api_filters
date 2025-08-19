@@ -180,10 +180,22 @@
                 <message_argument value="load(ColumnarSchema, ValueSchemaLoadContext)"/>
             </message_arguments>
         </filter>
+        <filter comment="AP-23831: method was removed because it is no longer used" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="renameColumns(ValueSchema, int[], String[])"/>
+            </message_arguments>
+        </filter>
         <filter comment="AP-23831" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
                 <message_argument value="renameToRandomColumnNames(ValueSchema)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-23831: method was removed because it is no longer used" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.v2.schema.ValueSchemaUtils"/>
+                <message_argument value="renameToRandomColumnNames(ValueSchema, int[])"/>
             </message_arguments>
         </filter>
         <filter comment="AP-23831" id="338792546">
