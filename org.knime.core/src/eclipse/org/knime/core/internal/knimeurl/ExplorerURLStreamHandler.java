@@ -52,12 +52,6 @@ import java.net.Proxy;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -83,9 +77,6 @@ import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.proxy.URLConnectionFactory;
 import org.knime.core.util.urlresolve.KnimeUrlResolver;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
-import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
-import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactoryCollector;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.url.AbstractURLStreamHandlerService;
@@ -105,8 +96,6 @@ import org.osgi.service.url.AbstractURLStreamHandlerService;
 public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
 
     private final ServerRequestModifier m_requestModifier;
-
-    private static final String VERSION_QUERY_PARAM = "version";
 
     /**
      * Creates a new URL stream handler.
@@ -242,22 +231,24 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
         return resolver.resolve(url);
     }
 
-    private static Optional<URI> getRemoteRepositoryAddress(final WorkflowContextV2 workflowContext) {
-        if (workflowContext.getLocationType() == LocationType.SERVER_REPOSITORY ||
-                workflowContext.getLocationType() == LocationType.HUB_SPACE) {
-            return Optional.ofNullable(workflowContext).filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
-                .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
-                .map(RestLocationInfo::getRepositoryAddress);
+    private static Optional<URI> getRemoteRepositoryAddress(final WorkflowContextV2 workflowContextV2) {
+        if (workflowContextV2 != null && (workflowContextV2.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContextV2.getLocationType() == LocationType.HUB_SPACE)) {
+            return Optional.ofNullable(workflowContextV2)
+                    .filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
+                    .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
+                    .map(RestLocationInfo::getRepositoryAddress);
         }
         return Optional.empty();
     }
 
-    private static Optional<Authenticator> getServerAuthenticator(final WorkflowContextV2 workflowContext) {
-        if (workflowContext.getLocationType() == LocationType.SERVER_REPOSITORY ||
-                workflowContext.getLocationType() == LocationType.HUB_SPACE) {
-            return Optional.ofNullable(workflowContext).filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
-                .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
-                .map(RestLocationInfo::getAuthenticator);
+    private static Optional<Authenticator> getServerAuthenticator(final WorkflowContextV2 workflowContextV2) {
+        if (workflowContextV2 != null && (workflowContextV2.getLocationType() == LocationType.SERVER_REPOSITORY ||
+                workflowContextV2.getLocationType() == LocationType.HUB_SPACE)) {
+            return Optional.ofNullable(workflowContextV2)
+                    .filter(ctx -> ctx.getExecutorInfo() instanceof JobExecutorInfo)
+                    .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
+                    .map(RestLocationInfo::getAuthenticator);
         }
         return Optional.empty();
     }
@@ -275,67 +266,15 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
     }
 
     private static URLConnection openExternalMountConnection(final URL url) throws IOException {
-        final var mountPointId = getIDfromURI(url);
-        final var mountPoint = WorkbenchMountTable.getMountPoint(mountPointId)
-                .orElseThrow(() -> new IOException("Mount point with ID '" + mountPointId + "' is not mounted."));
-
-        final var queryParams = getQueryParams(url);
+        final var queryParams = MountPointURLUtil.getQueryParams(url);
         ItemVersion itemVersion = null;
-        if (queryParams != null && queryParams.containsKey(VERSION_QUERY_PARAM)) {
-            itemVersion = queryParams.get(VERSION_QUERY_PARAM).size() > 0
-                ? ItemVersion.convertToItemVersion(queryParams.get(VERSION_QUERY_PARAM).get(0)) : null;
+        if (queryParams != null && queryParams.containsKey(MountPointURLUtil.VERSION_QUERY_PARAM)) {
+            itemVersion = queryParams.get(MountPointURLUtil.VERSION_QUERY_PARAM).size() > 0 ?
+                ItemVersion.convertToItemVersion(queryParams.get(MountPointURLUtil.VERSION_QUERY_PARAM).get(0)) : null;
         }
 
-        final var mountPointURLServiceFactory = MountPointURLServiceFactoryCollector.getInstance()
-            .getMountPointURLServiceFactory(mountPoint.getType().getTypeIdentifier())
-            .orElseThrow(() -> new ResourceAccessException("No mount point URL service factory found for type '"
-                + mountPoint.getType().getTypeIdentifier() + "'"));
-
-        return mountPoint.getProvider(MountPointURLService.class,
-            () -> mountPointURLServiceFactory.createMountPointURLService(mountPoint.getState())
-        ).newURLConnection(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion);
-    }
-
-    private static Map<String, List<String>> getQueryParams(final URL url) {
-        String query = url.getQuery();
-        if (query == null) {
-            return null;
-        }
-
-        Map<String, List<String>> queryPairs = new LinkedHashMap<>();
-        for (String pair : query.split("&")) {
-            int idx = pair.indexOf("=");
-            String key = idx > 0 ? URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8) : pair;
-            String value = idx > 0 && pair.length() > idx + 1
-                    ? URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8)
-                    : null;
-            queryPairs.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
-        }
-
-        return queryPairs;
-    }
-
-    private static String getIDfromURI(final URL url) {
-        final var urlType = KnimeUrlType.getType(url) //
-                .orElseThrow(() -> new IllegalArgumentException("Invalid scheme in URI ('" + url + "'). "
-                    + "Only '" + CoreConstants.SCHEME + "' is allowed here."));
-        return urlType.isRelative() ? getMountpointIdFromContext().orElse(url.getHost()) : url.getHost();
-    }
-
-    private static Optional<String> getMountpointIdFromContext() {
-        NodeContext ctx = NodeContext.getContext();
-        if (ctx == null) {
-            return Optional.empty();
-        }
-        WorkflowManager wfm = ctx.getWorkflowManager();
-        if (wfm == null) {
-            return Optional.empty();
-        }
-        WorkflowContextV2 wfc = wfm.getContextV2();
-        if (wfc == null) {
-            return Optional.empty();
-        }
-        return wfc.getMountpointURI().map(u -> u.getHost());
+        return MountPointURLUtil.getMountPointURLServiceFromURL(url)
+                .newURLConnection(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion);
     }
 
 }

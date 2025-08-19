@@ -26,11 +26,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.hub.ItemVersion;
+import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory;
@@ -74,5 +76,10 @@ public final class TempSpaceURLMountPointService implements MountPointURLService
     @Override
     public File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor) throws IOException {
         return null;
+    }
+
+    @Override
+    public List<NamedItemVersion> getVersions(final IPath path) throws UnsupportedOperationException, IOException {
+        throw new UnsupportedOperationException("Item versions are not supported in the temp space");
     }
 }
