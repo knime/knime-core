@@ -83,6 +83,7 @@ import org.knime.core.util.urlresolve.URLResolverUtil;
 /**
  *
  * @author Bernd Wiswedel, KNIME AG, Zurich, Switzerland
+ * @since 5.7
  */
 public class URIToFileResolveImpl implements URIToFileResolve {
 
