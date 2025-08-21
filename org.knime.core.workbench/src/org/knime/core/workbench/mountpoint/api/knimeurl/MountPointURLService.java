@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -77,7 +78,7 @@ public interface MountPointURLService extends MountPointProvider {
      * @return a new {@link URLConnection} for the given path and version
      * @throws IOException if an I/O error occurs while creating the connection
      */
-    URLConnection newURLConnection(IPath path, ItemVersion version) throws IOException;
+    KnimeURLConnection newURLConnection(IPath path, ItemVersion version) throws IOException;
 
     /**
      * Resolves the given path and version into a local file. If the path does not represent a local file
@@ -88,8 +89,10 @@ public interface MountPointURLService extends MountPointProvider {
      * @param monitor a progress monitor to report progress, may be {@link NullProgressMonitor}
      * @return a local or temporary file {@link File} represented by the given path and version
      * @throws IOException if an I/O error occurs while resolving the file
+     * @throws CancellationException if the operation is cancelled
      */
-    File toLocalOrTempFile(IPath path, ItemVersion version, IProgressMonitor monitor) throws IOException;
+    File toLocalOrTempFile(IPath path, ItemVersion version, IProgressMonitor monitor)
+            throws IOException, CancellationException;
 
     /**
      * Retrieves all named item versions of the repository item at the given path. This method is
