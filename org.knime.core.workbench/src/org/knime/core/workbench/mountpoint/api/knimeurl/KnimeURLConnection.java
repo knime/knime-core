@@ -44,79 +44,43 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Oct 31, 2024 (wiswedel): created
+ *   Aug 20, 2025 (magnus): created
  */
-package org.knime.core.workbench.mountpoint.contribution.local;
+package org.knime.core.workbench.mountpoint.api.knimeurl;
 
-import java.util.Optional;
-
-import org.knime.core.workbench.WorkbenchActivator;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointStateFactory;
-import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
- * State for local workspace.
+ * URL connection for KNIME URL's.
  *
- * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+ * @author Magnus Gohm, KNIME AG, Konstanz, Germany
  * @since 5.7
  */
-public final class LocalWorkspaceMountPointState implements WorkbenchMountPointState {
+public abstract class KnimeURLConnection extends URLConnection {
 
-    private String m_mountID;
-
-    /** The type of this mount point. */
-    public static final WorkbenchMountPointType TYPE =
-        WorkbenchActivator.getInstance().getMountPointTypeOrFail("org.knime.workbench.explorer.workspace");
-
-    /** Factory for the local workspace. */
-    public static final class Factory implements WorkbenchMountPointStateFactory<LocalWorkspaceMountPointState> {
-
-        @Override
-        public LocalWorkspaceMountPointState newInstance(final WorkbenchMountPointSettings settings) {
-            return new LocalWorkspaceMountPointState(settings.mountID());
-        }
-
-        @Override
-        public WorkbenchMountPointStateSettings getCurrentSettings(final LocalWorkspaceMountPointState state) {
-            return WorkbenchMountPointState.EMPTY_SETTINGS;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "Local Workspace";
-        }
-
-        @Override
-        public Optional<WorkbenchMountPointStateSettings> getDefaultStateSettings() {
-            return Optional.of(WorkbenchMountPointState.EMPTY_SETTINGS);
-        }
-
-        @Override
-        public String getContentDisplayString(final WorkbenchMountPointSettings mountSettings) {
-            // has always been redundant
-            return getDisplayName();
-        }
-    }
-
-    private LocalWorkspaceMountPointState(final String mountID) {
-        m_mountID = mountID;
+    /**
+     * Constructor for a KNIME URL connection.
+     *
+     * @param knimeURL the KNIME URL associated with this connection
+     */
+    protected KnimeURLConnection(final URL knimeURL) {
+        super(knimeURL);
     }
 
     @Override
-    public WorkbenchMountPointType getType() {
-        return TYPE;
-    }
+    public abstract void connect() throws IOException;
 
-    /**
-     * Retrieves the ID of the mount point.
-     *
-     * @return the mountID
-     * @since 5.7
-     */
-    public String getMountID() {
-        return m_mountID;
-    }
+    @Override
+    public abstract InputStream getInputStream() throws IOException;
+
+    @Override
+    public abstract OutputStream getOutputStream() throws IOException;
+
+    @Override
+    public abstract int getContentLength();
 
 }

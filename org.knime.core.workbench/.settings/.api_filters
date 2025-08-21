@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core.workbench" version="2">
+    <resource path="src/org/knime/core/workbench/mountpoint/contribution/temp/TempSpaceMountPointState.java" type="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointState">
+        <filter comment="Added mount point ID as constructor argument" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.workbench.mountpoint.contribution.temp.TempSpaceMountPointState"/>
+                <message_argument value="TempSpaceMountPointState()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
