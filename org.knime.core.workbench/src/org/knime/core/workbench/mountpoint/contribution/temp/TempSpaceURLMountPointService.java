@@ -23,24 +23,34 @@
 package org.knime.core.workbench.mountpoint.contribution.temp;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URLConnection;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.CoreConstants;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
+import org.knime.core.workbench.mountpoint.api.knimeurl.KnimeURLConnection;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactory;
 
 /**
  * URL service for the temp space mount point.
  *
- * @author GitHub Copilot
+ * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
  * @since 5.7
  */
 public final class TempSpaceURLMountPointService implements MountPointURLService {
@@ -57,12 +67,66 @@ public final class TempSpaceURLMountPointService implements MountPointURLService
     }
 
     @Override
-    public URLConnection newURLConnection(final IPath relativePath, final ItemVersion version) throws IOException {
-        final Path rootDirPath = m_state.getTempDir().toPath();
-        final Path filePath = rootDirPath.resolve(relativePath.toOSString());
-        return filePath.toUri().toURL().openConnection();
+    public KnimeURLConnection newURLConnection(final IPath path,
+        final ItemVersion version) throws IOException {
+        final var tempFile = toLocalOrTempFile(path, null, null);
+
+        // Rebuild knime URL for URL connection
+        final var uriBuilder = new URIBuilder();
+        uriBuilder.setScheme(CoreConstants.SCHEME);
+        uriBuilder.setHost(m_state.getMountID());
+        uriBuilder.setPathSegments(path.segments());
+
+        URL url = null;
+        try {
+            url = uriBuilder.build().toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
+            throw new IOException(
+                "Couldn't create URL connection: Invalid URL: %s".formatted(uriBuilder.toString()), e);
+        }
+
+        return new KnimeURLConnection(url) {
+
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new FileOutputStream(tempFile);
+            }
+
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new FileInputStream(tempFile);
+            }
+
+            @Override
+            public int getContentLength() {
+               final var fileLength = tempFile.length();
+               return fileLength > Integer.MAX_VALUE ? -1 : (int)fileLength;
+            }
+
+            @Override
+            public void connect() throws IOException {
+                // noop
+            }
+        };
     }
 
+    @Override
+    public File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor)
+        throws IOException, CancellationException {
+        final Path rootDirPath = m_state.getTempDir().toPath();
+        return rootDirPath.resolve(path.toOSString()).toFile();
+    }
+
+    @Override
+    public List<NamedItemVersion> getVersions(final IPath path) throws UnsupportedOperationException, IOException {
+        throw new UnsupportedOperationException("Item versions are not supported in the temp space");
+    }
+
+    /**
+     * {@link MountPointURLServiceFactory} implementation for the {@link TempSpaceURLMountPointService}.
+     *
+     * @author Bernd Wiswedel, KNIME GmbH, Konstanz, Germany
+     */
     public static final class Factory implements MountPointURLServiceFactory {
         @Override
         public MountPointURLService createMountPointURLService(final WorkbenchMountPointState state) {
@@ -73,13 +137,4 @@ public final class TempSpaceURLMountPointService implements MountPointURLService
         }
     }
 
-    @Override
-    public File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor) throws IOException {
-        return null;
-    }
-
-    @Override
-    public List<NamedItemVersion> getVersions(final IPath path) throws UnsupportedOperationException, IOException {
-        throw new UnsupportedOperationException("Item versions are not supported in the temp space");
-    }
 }

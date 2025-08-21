@@ -36,6 +36,8 @@ import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
  */
 public final class TempSpaceMountPointState implements WorkbenchMountPointState {
 
+    private String m_mountID;
+
     /** The type of this mount point. */
     public static final WorkbenchMountPointType TYPE =
         WorkbenchActivator.getInstance().getMountPointTypeOrFail("com.knime.explorer.tempspace");
@@ -45,7 +47,7 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
 
         @Override
         public TempSpaceMountPointState newInstance(final WorkbenchMountPointSettings settings) {
-            return new TempSpaceMountPointState();
+            return new TempSpaceMountPointState(settings.mountID());
         }
 
         @Override
@@ -68,6 +70,10 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
             return getDisplayName();
         }
 
+    }
+
+    private TempSpaceMountPointState(final String mountID) {
+        m_mountID = mountID;
     }
 
     /**
@@ -112,4 +118,15 @@ public final class TempSpaceMountPointState implements WorkbenchMountPointState 
     public WorkbenchMountPointType getType() {
         return TYPE;
     }
+
+    /**
+     * Retrieves the ID of the mount point.
+     *
+     * @return the mountID
+     * @since 5.7
+     */
+    public String getMountID() {
+        return m_mountID;
+    }
+
 }
