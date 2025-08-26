@@ -51,6 +51,7 @@ package org.knime.testing.core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -125,6 +126,15 @@ public abstract class TestrunJanitor {
      */
     public void injectCredentials(final CredentialsProvider provider) {
         // may be overwritten if credentials are needed
+    }
+
+    /**
+     * Called by the framework before {@link #before()} is invoked and allows the janitor to extract flow variables.
+     *
+     * @param flowVariables the map of flow variables
+     */
+    public void injectFlowVariables(final Map<String, FlowVariable> flowVariables) {
+        // may be overwritten if flow variables are needed
     }
 
     /**
