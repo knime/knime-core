@@ -95,8 +95,8 @@ public final class BinningSettings {
             public static final String NAME_EQUAL_WIDTH = "Equal width";
 
             public static final String DESC_EQUAL_WIDTH = """
-                    Each bin will have the same width. The number \
-                    of bins must be specified.
+                    Creates bins of equal size across the value range. \
+                    Requires a specified number of bins.
                     """;
         }
 
@@ -112,11 +112,9 @@ public final class BinningSettings {
             public static final String NAME_EQUAL_FREQUENCY = "Equal frequency";
 
             public static final String DESC_EQUAL_FREQUENCY = """
-                    Each bin will contain the same number of values \
-                    (or as close as possible). The number of bins \
-                    must be specified.
+                    Creates bins with approximately the same number of values. \
+                    Requires a specified number of bins.
                     """;
-
         }
 
         /**
@@ -134,16 +132,15 @@ public final class BinningSettings {
             private static final String QUANTILE_URL = "https://en.wikipedia.org/wiki/Quantile";
 
             public static final String DESC_CUSTOM_QUANTILES = """
-                    Bins will be created based on a fixed list of \
-                    quantiles. The quantiles are specified as \
-                    boundaries, i.e. the values that define \
-                    the bin edges. At least two quantiles must \
-                    be provided.
-
-                    The quantiles will be converted to bin edges \
+                    Define bin edges based on quantile values. \
+                    At least two quantiles are required. \
+                    Quantiles are converted to bin edges \
                     using the R-7 algorithm, see <a href="
                     """ + QUANTILE_URL + """
-                    ">WP:Quantile</a> for more details.
+                    ">WP:Quantile</a> for more details. \
+                    Note that when setting an upper or lower bound \
+                    values outside the bounds are considered \
+                    when calculating the quantiles.
                     """;
 
         }
@@ -159,11 +156,8 @@ public final class BinningSettings {
             public static final String NAME_CUSTOM_CUTOFFS = "Custom cutoffs";
 
             public static final String DESC_CUSTOM_CUTOFFS = """
-                    Bins will be created based on a fixed list of \
-                    cutoffs. The cutoffs are specified as \
-                    boundaries, i.e. the values that define \
-                    the bin edges. At least two cutoffs must \
-                    be provided.
+                    Manually define bin edges using a list of cutoff values. \
+                    At least two cutoffs are required.
                     """;
         }
     }
@@ -222,11 +216,11 @@ public final class BinningSettings {
             // Utility class, no instances allowed
         }
 
-        public static final String DESC_NUMBERED = "Bins will be named by their number, e.g. Bin 1";
+        public static final String DESC_NUMBERED = "Bins are labeled by index (e.g., Bin 1, Bin 2).";
 
-        public static final String DESC_BORDERS = "Bins will be named by their borders, e.g. [0.0, 1.0)";
+        public static final String DESC_BORDERS = "Bins are labeled using interval borders (e.g., [0.0, 1.0)).";
 
-        public static final String DESC_MIDPOINTS = "Bins will be named by their midpoints, e.g. 0.5";
+        public static final String DESC_MIDPOINTS = "Bins are labeled using the midpoint of each interval.";
 
         public static final String NAME_NUMBERED = "Numbered";
 
@@ -297,8 +291,7 @@ public final class BinningSettings {
             }
 
             /** for numbers less than 0.0001. */
-            private static DecimalFormat smallFormat =
-                new DecimalFormat("0.00E0", new DecimalFormatSymbols(Locale.US));
+            private static DecimalFormat smallFormat = new DecimalFormat("0.00E0", new DecimalFormatSymbols(Locale.US));
 
             /** in all other cases, use the default Java formatter. */
             private static NumberFormat defaultFormat = NumberFormat.getNumberInstance(Locale.US);
@@ -498,17 +491,11 @@ public final class BinningSettings {
 
             public static final String NAME_TO_LOWER_BIN = "To lower bin";
 
-            public static final String DESC_TO_LOWER_BIN = """
-                    Values that fall on the bin border will be assigned \
-                    to the lower bin.
-                    """;
+            public static final String DESC_TO_LOWER_BIN = "Assign to the bin below the cutoff.";
 
             public static final String NAME_TO_UPPER_BIN = "To upper bin";
 
-            public static final String DESC_TO_UPPER_BIN = """
-                    Values that fall on the bin border will be assigned \
-                    to the upper bin.
-                    """;
+            public static final String DESC_TO_UPPER_BIN = "Assign to the bin above the cutoff.";
         }
     }
 }
