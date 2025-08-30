@@ -56,8 +56,13 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Delegates bin access function to local structure.
  *
+ * Important disclaimer: The {{@link #covers(DataCell)} method has a bug where a half-open zero-width interval [x, x)
+ * contains the value x (which it should not). To not accidentally introduce any regressions, we accept this bug and
+ * ensure instead that this class is never used with a zero-width interval.
+ *
  * @author Mor Kalla
  * @since 3.6
+ *
  */
 public class NumericBin implements Bin {
 

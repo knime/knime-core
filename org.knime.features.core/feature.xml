@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.core"
       label="KNIME AP Core feature"
-      version="5.6.1.qualifier"
+      version="5.7.0.qualifier"
       provider-name="KNIME AG, Zurich, Switzerland">
 
    <description>
@@ -15,12 +15,12 @@
 
    <license>
       GNU GENERAL PUBLIC LICENSE with Additional Permissions according to Sec. 7
-*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
-Please see below the General Public License (GPL), Version 3, 
-and the Additional Permissions according to Sec. 7 
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+Please see below the General Public License (GPL), Version 3,
+and the Additional Permissions according to Sec. 7
 applying to the files in this folder:
 
-*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -697,10 +697,10 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.
 
-*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
 
 Additional permissions under GNU GPL Version 3 Section 7:
- 
+
 KNIME interoperates with ECLIPSE solely via ECLIPSE&apos;s plug-in APIs.
 Hence, KNIME and ECLIPSE are both independent programs and are not
 derived from each other. Should, however, the interpretation of the
@@ -711,8 +711,8 @@ ECLIPSE with only the license terms in place for ECLIPSE applying to
 ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
 license terms of ECLIPSE themselves allow for the respective use and
 propagation of ECLIPSE together with KNIME.
- 
- 
+
+
 Additional permission relating to nodes for KNIME that extend the Node
 Extension (and in particular that are based on subclasses of NodeModel,
 NodeDialog, and NodeView) and that only interoperate with KNIME through

@@ -57,7 +57,10 @@ package org.knime.core.util.binning.auto;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated Not used by modern UI nodes.
  */
+@Deprecated
 public enum PrecisionMode {
         /**
          * Round to given number of decimal places.

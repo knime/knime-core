@@ -142,6 +142,7 @@ import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
+import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -2193,14 +2194,21 @@ public final class Node {
     }
 
     /**
-     * Returns true if this node can show a dialog. This is the case either,
-     * if the node implementation provides a dialog, if the node has output
-     * ports, or if more than one job managers are available.
+     * Returns true if this node can show a swing-based dialog.<br/>
+     * In the ClassicUI, this is the case either, if the node implementation provides a dialog, if the node has output
+     * ports, or if more than one job manager is available.<br/>
+     * In the ModernUI, this is only the case if the node implementation provides a dialog.
+     *
      * @return <code>true</code> if a dialog is available.
      */
     public boolean hasDialog() {
         if (m_factory.hasDialog()) {
             return true;
+        }
+        if (!EclipseUtil.determineClassicUIUsage()) {
+            // in the ModernUI, we don't want a swing-based dialog only for memory policy settings or the
+            // job manager selection
+            return false;
         }
         if (getNrOutPorts() > 0) {
             // the framework creates a dialog for memory policy settings

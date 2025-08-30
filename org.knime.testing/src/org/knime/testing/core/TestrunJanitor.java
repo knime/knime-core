@@ -51,6 +51,7 @@ package org.knime.testing.core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -59,6 +60,7 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowVariable;
 
 
@@ -70,6 +72,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @since 2.11
  */
 public abstract class TestrunJanitor {
+
     /**
      * Returns a list of workflow variables that should be injected into the workflow. The number and values may be
      * changed by {@link #before()} and {@link #after()}.
@@ -115,6 +118,24 @@ public abstract class TestrunJanitor {
      * @return a description, never null
      */
     public abstract String getDescription();
+
+    /**
+     * Called by the framework before {@link #before()} is invoked and allows the janitor to extract credentials.
+     *
+     * @param provider credentials provider
+     */
+    public void injectCredentials(final CredentialsProvider provider) {
+        // may be overwritten if credentials are needed
+    }
+
+    /**
+     * Called by the framework before {@link #before()} is invoked and allows the janitor to extract flow variables.
+     *
+     * @param flowVariables the map of flow variables
+     */
+    public void injectFlowVariables(final Map<String, FlowVariable> flowVariables) {
+        // may be overwritten if flow variables are needed
+    }
 
     /**
      * Returns a list with all registered testrun janitors. Each call will create new instances.

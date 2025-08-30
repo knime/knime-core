@@ -57,7 +57,10 @@ package org.knime.core.util.binning.auto;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated No longer used by modern nodes.
  */
+@Deprecated
 public enum EqualityMethod {
         /**
          * Sizes of the bins are equal.

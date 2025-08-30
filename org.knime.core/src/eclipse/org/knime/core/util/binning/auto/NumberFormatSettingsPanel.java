@@ -76,7 +76,10 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
+ * @deprecated No longer used by modern UI nodes.
  */
+@Deprecated
 public class NumberFormatSettingsPanel extends JPanel {
 
     private static final long serialVersionUID = 4476999170649693854L;

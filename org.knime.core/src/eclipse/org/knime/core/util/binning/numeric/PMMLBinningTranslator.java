@@ -66,6 +66,7 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
  *
  * @author Mor Kalla
  * @since 3.6
+ *
  */
 public class PMMLBinningTranslator implements PMMLPreprocTranslator {
 
