@@ -81,6 +81,14 @@ public interface WorkbenchMountPointState {
     }
 
     /**
+     * @return If this mount point is authenticated. Only plausible for server or hub mount points.
+     * @since 5.7
+     */
+    default boolean isAuthenticated() {
+        return false;
+    }
+
+    /**
      * Save the current state of this mount point to a new {@link WorkbenchMountPointStateSettings} instance.
      * Default implementation redirects to the corresponding factory.
      * @return a new instance representing the current state.
