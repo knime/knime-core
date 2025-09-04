@@ -53,6 +53,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -64,11 +65,15 @@ import org.eclipse.core.internal.net.PreferenceManager;
 import org.eclipse.core.internal.net.ProxyData;
 import org.eclipse.core.internal.net.ProxyManager;
 import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.proxy.EnvironmentProxyConfigProvider;
 import org.knime.core.util.proxy.ExcludedHostsTokenizer;
 import org.knime.core.util.proxy.GlobalProxyConfig;
 import org.knime.core.util.proxy.ProxyProtocol;
+import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * Enriches the native {@link AbstractProxyProvider} with full environment variables
@@ -197,7 +202,7 @@ public final class NativeProxyProviderWrapper extends AbstractProxyProvider {
         final var proxyManager = invokeDefaultConstructorReflective(manager);
 
         // (2) modify copied manager to always have native proxies enabled
-        final var prefManager = PreferenceManager.createConfigurationManager("foo.bar.baz");
+        final var prefManager = createDummyPreferenceManager();
         prefManager.putBoolean(PreferenceManager.ROOT, "proxiesEnabled", true);
         prefManager.putBoolean(PreferenceManager.ROOT, "systemProxiesEnabled", true);
         setFieldReflective(proxyManager, "preferenceManager", prefManager);
@@ -225,6 +230,36 @@ public final class NativeProxyProviderWrapper extends AbstractProxyProvider {
                 return proxyManager.getNativeNonProxiedHosts();
             }
         };
+    }
+
+    /**
+     * This is a dummy preference manager since it (1) has constant preference values
+     * and (2) is only used in the context of one {@link ProxyManager} instance. It is possible
+     * to use a dummy ID for the preference namespace here, since the preferences within the
+     * {@link ProxyManager} are referenced via this instance, not re-fetched from the global scope.
+     * <p>
+     * We use the invented {@code internal.org.knime.core.net} ID here, to avoid clashes with
+     * current definitions of preference namespaces. Further, it mimics {@code org.eclipse.core.net},
+     * the proper, configurable preference namespace regarding (native) proxies.
+     * </p>
+     *
+     * @return a dummy preference manager instance
+     */
+    private static PreferenceManager createDummyPreferenceManager() {
+        // used this ID before, but it caused confusion when exported, switching V1 -> V2
+        // makes the internal dummy preference namespace blend it better
+        final var dummyIDv1 = "foo.bar.baz";
+        try {
+            for (var scope : List.of(ConfigurationScope.INSTANCE, DefaultScope.INSTANCE)) {
+                // remove if the old ID has been persisted in any scope
+                if (scope.getNode("").nodeExists(dummyIDv1)) {
+                    scope.getNode(dummyIDv1).removeNode();
+                }
+            }
+        } catch (BackingStoreException ignored) { // NOSONAR
+        }
+        final var dummyIDv2 = String.format("internal.%s.net", CorePlugin.PLUGIN_SYMBOLIC_NAME);
+        return PreferenceManager.createConfigurationManager(dummyIDv2);
     }
 
     private static void setFieldReflective(final Object obj, final String name, final Object value)
