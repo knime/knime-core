@@ -138,9 +138,9 @@ public final class BinningSettings {
                     using the R-7 algorithm, see <a href="
                     """ + QUANTILE_URL + """
                     ">WP:Quantile</a> for more details. \
-                    Note that when setting an upper or lower bound \
-                    values outside the bounds are considered \
-                    when calculating the quantiles.
+                    Note that when setting upper or lower \
+                    bounds quantiles are calculated only on \
+                    values within those bounds.
                     """;
 
         }
@@ -216,15 +216,15 @@ public final class BinningSettings {
             // Utility class, no instances allowed
         }
 
-        public static final String DESC_NUMBERED = "Bins are labeled by index (e.g., Bin 1, Bin 2).";
+        public static final String DESC_NUMBERED = "Bins are labeled by index.";
 
-        public static final String DESC_BORDERS = "Bins are labeled using interval borders (e.g., [0.0, 1.0)).";
+        public static final String DESC_BORDERS = "Bins are labeled using interval borders.";
 
         public static final String DESC_MIDPOINTS = "Bins are labeled using the midpoint of each interval.";
 
-        public static final String NAME_NUMBERED = "Numbered";
+        public static final String NAME_NUMBERED = "Numbered (e.g., Bin 1, Bin 2)";
 
-        public static final String NAME_BORDERS = "Borders";
+        public static final String NAME_BORDERS = "Borders (e.g., [0.0, 1.0))";
 
         public static final String NAME_MIDPOINTS = "Midpoints";
 
