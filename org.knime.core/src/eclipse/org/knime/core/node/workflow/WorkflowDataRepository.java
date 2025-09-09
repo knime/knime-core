@@ -57,11 +57,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.data.IDataRepository;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
@@ -77,6 +80,27 @@ import org.knime.core.node.util.CheckUtils;
 public class WorkflowDataRepository implements IDataRepository {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowDataRepository.class);
+
+    /**
+     * Instance counter used by the application health checkers etc. Not public API.
+     *
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.8
+     */
+    public static final InstanceCounter<WorkflowDataRepository> INSTANCE_COUNTER =
+        InstanceCounter.register(WorkflowDataRepository.class);
+
+    /**
+     * Data table counters used by the application health checkers. Tracks known implementors of {@link ContainerTable}.
+     * Has to be static for compatibility reasons with metrics observers, e.g. Prometheus.
+     * Uses strings instead of classes to avoid accidental class initialization.
+     */
+    private static final Map<String, LongAdder> DATA_TABLES_COUNTER = new ConcurrentHashMap<>(Map.of( //
+        "org.knime.core.data.container.BufferedContainerTable", new LongAdder(), //
+        "org.knime.core.data.columnar.table.VirtualTableExtensionTable", new LongAdder(), //
+        "org.knime.core.data.columnar.table.UnsavedColumnarContainerTable", new LongAdder(), //
+        "org.knime.core.data.columnar.table.SavedColumnarContainerTable", new LongAdder() //
+    ));
 
     /** Instance used for old workflows where KNIME didn't have blobs and such. */
     public static final WorkflowDataRepository OLD_WORKFLOWS_INSTANCE = new Version1xWorkflowDataRepository();
@@ -98,7 +122,40 @@ public class WorkflowDataRepository implements IDataRepository {
         // synchronized as per bug 3383: workflow manager's table repository must synchronized
         // (problems with GroupLoop start "forgetting" its sorted table)
         m_globalTableRepository = Collections.synchronizedMap(new HashMap<Integer, ContainerTable>());
-        m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
+        m_handlerMap = new ConcurrentHashMap<>();
+
+        INSTANCE_COUNTER.track(this); // NOSONAR (partially constructed instance)
+    }
+
+    /**
+     * Instance counts used by the application health checkers etc. Not public API.
+     * Counts track instances of {@link DataTable} classes across all instances
+     * of {@link WorkflowDataRepository}.
+     *
+     * @return snapshot of the counts of data tables across all repositories
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.8
+     */
+    public static Map<String, Long> takeDataTableCountsSnapshot() {
+        final Map<String, Long> snapshot = new HashMap<>();
+        DATA_TABLES_COUNTER.forEach((k, v) -> snapshot.put(k, v.sum()));
+        return Collections.unmodifiableMap(snapshot);
+    }
+
+    /**
+     * Instance counts of the {@link DataTable} with the given class name across
+     * all instances of {@link WorkflowDataRepository}. In case the table cannot
+     * be found, it returns zero.
+     *
+     * @param name class name of the {@link DataTable}.
+     * @return snapshot of the count for the specified data table name.
+     * @noreference This field is not intended to be referenced by clients.
+     * @since 5.8
+     */
+    public static long takeDataTableCountSnapshotFor(final String name) {
+        return Optional.ofNullable(DATA_TABLES_COUNTER.get(name)) //
+            .map(LongAdder::sum) //
+            .orElse(0L);
     }
 
     /**
@@ -131,19 +188,44 @@ public class WorkflowDataRepository implements IDataRepository {
             lastId -> (id != -1 && Integer.toUnsignedLong(id) > Integer.toUnsignedLong(lastId)) ? id : lastId);
     }
 
+    @SuppressWarnings("resource") // ownership is not transferred to us
     @Override
     public void addTable(final int key, final ContainerTable table) {
-        m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
+        final var result = m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
+        if (result == null) {
+            DATA_TABLES_COUNTER.compute(table.getClass().getName(), (k, a) -> {
+                if (a == null) {
+                    // reduce log messages if unknown implementors are heavily used
+                    LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
+                        ContainerTable.class.getSimpleName(), k);
+                    // track unknown implementor, might not be visible in metrics
+                    a = new LongAdder();
+                }
+                a.increment();
+                return a;
+            });
+        }
     }
 
+    @SuppressWarnings("resource") // we do not own the table
     @Override
     public Optional<ContainerTable> getTable(final int key) {
         return Optional.ofNullable(m_globalTableRepository.get(key));
     }
 
+    @SuppressWarnings("resource") // ownership of the table was not transferred to us
     @Override
     public Optional<ContainerTable> removeTable(final Integer key) {
-        return Optional.ofNullable(m_globalTableRepository.remove(key));
+        final var result = Optional.ofNullable(m_globalTableRepository.remove(key));
+        if (result.isPresent()) {
+            DATA_TABLES_COUNTER.compute(result.get().getClass().getName(), (k, a) -> {
+                a.decrement();
+                // there are currently only a handful of `ContainerTable` classes,
+                // we do not remove counters here - even if they are zero
+                return a;
+            });
+        }
+        return result;
     }
 
     /** Used in test case.

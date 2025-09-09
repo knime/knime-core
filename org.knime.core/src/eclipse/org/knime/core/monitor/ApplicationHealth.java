@@ -65,6 +65,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ObjectName;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.internal.ApplicationHealthInternal;
 import org.knime.core.internal.ApplicationHealthInternal.LoadAvgIntervals;
@@ -73,11 +74,13 @@ import org.knime.core.monitor.beans.ApplicationHealthMetric;
 import org.knime.core.monitor.beans.Counter;
 import org.knime.core.monitor.beans.CounterMXBean;
 import org.knime.core.monitor.beans.CountersMXBean;
+import org.knime.core.monitor.beans.DataTableCountsMXBean;
 import org.knime.core.monitor.beans.GlobalPoolMXBean;
 import org.knime.core.monitor.beans.InstanceCountersMXBean;
 import org.knime.core.monitor.beans.NodeStates;
 import org.knime.core.monitor.beans.NodeStatesMXBean;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 
 /**
  * Utility class centralizing metrics that can be monitored, e.g. in metrics end points etc. While the class is public,
@@ -114,6 +117,8 @@ public final class ApplicationHealth implements AutoCloseable {
             "org.knime.core:type=Memory,name=ObjectInstances", //
             (InstanceCountersMXBean)() -> ApplicationHealth.getInstanceCounters().stream() //
                 .collect(Collectors.toMap(InstanceCounter::getName, InstanceCounter::get)), //
+            "org.knime.core:type=Memory,name=DataTablesRepository", //
+            (DataTableCountsMXBean)ApplicationHealth::getDataTableCounts, //
             "org.knime.core:type=Execution,name=NodeStates", //
             (NodeStatesMXBean)() -> new NodeStates(ApplicationHealth.getNodeStateExecutedCount(),
                 ApplicationHealth.getNodeStateExecutingCount(), ApplicationHealth.getNodeStateOtherCount())));
@@ -176,6 +181,27 @@ public final class ApplicationHealth implements AutoCloseable {
      */
     public static List<InstanceCounter<?>> getInstanceCounters() { // NOSONAR (generic wildcards)
         return ApplicationHealthInternal.INSTANCE_COUNTERS;
+    }
+
+    /**
+     * Counts for {@link DataTable} classes used within all instances of {@link WorkflowDataRepository}.
+     *
+     * @return That non-modifiable map.
+     * @since 5.8
+     */
+    public static Map<String, Long> getDataTableCounts() {
+        return WorkflowDataRepository.takeDataTableCountsSnapshot();
+    }
+
+    /**
+     * Count for the {@link DataTable} with the given class name within all {@link WorkflowDataRepository}s.
+     *
+     * @param name class name of the {@link DataTable}.
+     * @return Snapshot of the count for the specified data table name.
+     * @since 5.8
+     */
+    public static long getDataTableCountFor(final String name) {
+        return WorkflowDataRepository.takeDataTableCountSnapshotFor(name);
     }
 
     /**

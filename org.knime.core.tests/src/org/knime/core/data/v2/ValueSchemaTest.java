@@ -270,7 +270,7 @@ public class ValueSchemaTest {
         assertEquals(factoryClass, loadedSchema.getValueFactory(1).getClass());
     }
 
-    public static final class DummyWriteFileStoreHandler implements IWriteFileStoreHandler {
+    public static class DummyWriteFileStoreHandler implements IWriteFileStoreHandler {
 
         @Override
         public IDataRepository getDataRepository() {

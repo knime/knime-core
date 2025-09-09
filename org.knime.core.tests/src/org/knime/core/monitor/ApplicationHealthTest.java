@@ -77,14 +77,18 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 import org.junit.jupiter.api.Test;
+import org.knime.core.data.container.BufferedContainerTable;
+import org.knime.core.data.container.DataContainerTest;
 import org.knime.core.monitor.ApplicationHealth.LoadAverages;
 import org.knime.core.monitor.beans.CounterMXBean;
 import org.knime.core.monitor.beans.CountersMXBean;
+import org.knime.core.monitor.beans.DataTableCountsMXBean;
 import org.knime.core.monitor.beans.GlobalPoolMXBean;
 import org.knime.core.monitor.beans.InstanceCountersMXBean;
 import org.knime.core.monitor.beans.NodeStatesMXBean;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.workflow.WorkflowDataRepositoryTest;
 
 /**
  * Tests for {@link ApplicationHealth}.
@@ -118,7 +122,7 @@ final class ApplicationHealthTest {
             data.values().forEach(row -> {
                 // Our Map<String, Long> is mapped to TabularData by JMX
                 final var cd = (CompositeData)row;
-                assertTrue(cd.values().size() == 2, "TabularData row contains two columns");
+                assertEquals(2, cd.values().size(), "TabularData row contains two columns");
                 final var counterName = (String)cd.get("key");
                 final var counterValue = (Long)cd.get("value");
                 assertTrue(knownInstanceCounters.remove(counterName), "Unknown counter: " + counterName);
@@ -127,6 +131,54 @@ final class ApplicationHealthTest {
             assertTrue(knownInstanceCounters.isEmpty(),
                 "Some known instance counters are missing: " + String.join(", ", knownInstanceCounters));
         }
+    }
+
+    @SuppressWarnings("static-method")
+    @Test
+    final void testDataTableCounts() throws IntrospectionException, InstanceNotFoundException,
+        MalformedObjectNameException, ReflectionException, AttributeNotFoundException, MBeanException {
+        // currently hard-coding data tables names in map, so should always be non-empty
+        assertFalse(ApplicationHealth.getDataTableCounts().isEmpty(), "data tables counts map should not be empty");
+
+        final var repository = WorkflowDataRepositoryTest.createWorkflowDataRepository();
+        @SuppressWarnings("resource")
+        final var table = DataContainerTest.generateSmallSizedTable();
+        final var count = ApplicationHealth.getDataTableCountFor(BufferedContainerTable.class.getName());
+        repository.addTable(table.getTableId(), table);
+
+        try (final var app = new ApplicationHealth()) {
+            assertEquals(1, ApplicationHealth.getDataTableCountFor(BufferedContainerTable.class.getName()) - count, //
+                "one buffered container table should be counted");
+
+            // and now via JMX
+            final var server = ManagementFactory.getPlatformMBeanServer();
+            final var name = new ObjectName("org.knime.core:type=Memory,name=DataTablesRepository");
+            final var info = server.getMBeanInfo(name);
+            for (final var attr : info.getAttributes()) {
+                final var attrName = attr.getName();
+                final var attrValue = server.getAttribute(name, attrName);
+                NodeLogger.getLogger(ApplicationHealthTest.class).info(attrName + ": " + attrValue);
+            }
+            final var data = (TabularData)server.getAttribute(name, "DataTableCounts");
+            assertFalse(data.isEmpty(), "DataTable counts should not be empty");
+
+            // test that we have exactly the known data table counts
+            final var knownDataTableCounts =
+                ApplicationHealth.getDataTableCounts().keySet().stream().collect(Collectors.toSet());
+            data.values().forEach(row -> {
+                // our Map<String, Long> is mapped to TabularData by JMX
+                final var cd = (CompositeData)row;
+                assertEquals(2, cd.values().size(), "TabularData row contains two columns");
+                final var countName = (String)cd.get("key");
+                final var countValue = (Long)cd.get("value");
+                assertTrue(knownDataTableCounts.remove(countName), "Unknown count: " + countName);
+                assertTrue(countValue >= 0, "Count value should be non-negative");
+            });
+            assertTrue(knownDataTableCounts.isEmpty(),
+                "Some known DataTable counts are missing: " + String.join(", ", knownDataTableCounts));
+        }
+
+        table.close();
     }
 
     @SuppressWarnings("static-method")
@@ -203,6 +255,8 @@ final class ApplicationHealthTest {
             beans.add(assertMXBeanRegistered("org.knime.core:type=Execution,name=GlobalPool", GlobalPoolMXBean.class));
             beans.add(assertMXBeanRegistered("org.knime.core:type=Memory,name=ObjectInstances",
                 InstanceCountersMXBean.class));
+            beans.add(assertMXBeanRegistered("org.knime.core:type=Memory,name=DataTablesRepository",
+                DataTableCountsMXBean.class));
             if (ProcessStateUtil.supportsPSS()) {
                 beans.add(assertMXBeanRegistered("org.knime.core:type=Memory,name=ExternalProcessesPss",
                     CountersMXBean.class));

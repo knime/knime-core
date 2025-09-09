@@ -56,6 +56,7 @@ import org.knime.core.data.util.memory.InstanceCounter;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.WorkflowDataRepository;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.LoadTracker;
 
@@ -94,7 +95,8 @@ public final class ApplicationHealthInternal {
         NativeNodeContainer.INSTANCE_COUNTER, //
         NodeModel.INSTANCE_COUNTER, //
         WorkflowManager.PROJECT_COUNTER, //
-        WorkflowManager.NO_PROJECT_COUNTER);
+        WorkflowManager.NO_PROJECT_COUNTER, //
+        WorkflowDataRepository.INSTANCE_COUNTER);
 
     /**
      * The intervals tracked in the load tracker observing the global thread pool load.

@@ -780,7 +780,7 @@ public class DataContainerTest extends TestCase {
      *
      * @return a small-sized table
      */
-    static ContainerTable generateSmallSizedTable() {
+    public static ContainerTable generateSmallSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = newContainer(SPEC_STR_INT_DBL, true, 20, false);
         final int count = 5;
@@ -797,7 +797,7 @@ public class DataContainerTest extends TestCase {
      *
      * @return a medium-sized table
      */
-    static ContainerTable generateMediumSizedTable() {
+    public static ContainerTable generateMediumSizedTable() {
         // in particular, we simply instantiate a tiny container and add a slighlty larger number of rows to it
         final DataContainer container = newContainer(SPEC_STR_INT_DBL, true, 10, false);
         final int count = 20;
