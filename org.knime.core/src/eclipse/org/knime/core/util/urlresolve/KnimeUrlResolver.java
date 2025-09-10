@@ -71,6 +71,8 @@ import org.knime.core.node.workflow.contextv2.ServerJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2.LocationType;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -435,7 +437,7 @@ public abstract class KnimeUrlResolver {
             case MOUNTPOINT_ABSOLUTE -> resolveMountpointAbsolute(url, url.getAuthority(), path, version);
             case MOUNTPOINT_RELATIVE -> resolveMountpointRelative(url, path, version);
             case HUB_SPACE_RELATIVE  -> resolveSpaceRelative(url, path, version);
-            case WORKFLOW_RELATIVE   -> resolveWorkflowRelative(url, path, version);
+            case WORKFLOW_RELATIVE   -> resolveWorkflowRelativeInternal(url, path, version);
             case NODE_RELATIVE       -> { //NOSONAR one line too long
                 if (version != null) {
                     throw new ResourceAccessException(
@@ -446,6 +448,49 @@ public abstract class KnimeUrlResolver {
         };
 
         return Optional.of(resolved);
+    }
+
+    private ResolvedURL resolveWorkflowRelativeInternal(final URL url, final IPath path, final ItemVersion version)
+        throws ResourceAccessException {
+        var virtualDataAreaPath = checkVirtualNodeContextRestrictionsAndGetVirtualDataAreaPath(url);
+        if (virtualDataAreaPath != null) {
+            return resolveVirtualDataArea(url, virtualDataAreaPath);
+        }
+        return resolveWorkflowRelative(url, path, version);
+    }
+
+    private static java.nio.file.Path checkVirtualNodeContextRestrictionsAndGetVirtualDataAreaPath(final URL url)
+        throws ResourceAccessException {
+        var virtualNodeContext = VirtualNodeContext.getContext().orElse(null);
+        if (virtualNodeContext == null) {
+            return null;
+        }
+        if (isDataAreaRelative(url)) {
+            var virtualDataAreaPath = virtualNodeContext.getVirtualDataAreaPath().orElse(null);
+            if (virtualDataAreaPath == null
+                && virtualNodeContext.hasRestriction(Restriction.WORKFLOW_DATA_AREA_ACCESS)) {
+                throw new ResourceAccessException(
+                    "Node is not allowed to access workflow data area because it's executed within in a restricted (virtual) scope.");
+            }
+            return virtualDataAreaPath;
+        } else {
+            if (virtualNodeContext.hasRestriction(Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS)) {
+                throw new ResourceAccessException(
+                    "Node is not allowed to access workflow-relative resources because it's executed within in a restricted (virtual) scope.");
+            }
+        }
+        return null;
+    }
+
+    private static boolean isDataAreaRelative(final URL url) {
+        var path = java.nio.file.Path.of(url.getPath()).normalize();
+        return path.startsWith("/data");
+    }
+
+    private static ResolvedURL resolveVirtualDataArea(final URL url, final java.nio.file.Path dataAreaPath)
+        throws ResourceAccessException {
+        var resolved = dataAreaPath.resolve(url.getPath().substring("/data/".length()));
+        return new ResolvedURL(null, null, null, null, URLResolverUtil.toURL(resolved), false);
     }
 
     /**
@@ -636,4 +681,5 @@ public abstract class KnimeUrlResolver {
     static final IPath toRelativeIPath(final String posixPath) {
         return Path.forPosix(LEADING_SLASHES.matcher(posixPath).replaceFirst("")).makeRelative();
     }
+
 }

@@ -62,6 +62,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -69,16 +70,24 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.Functions;
+import org.apache.commons.lang3.function.FailableRunnable;
 import org.junit.Assume;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.agentic.tool.TestNodeFactory;
+import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
+import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -428,6 +437,75 @@ class KnimeUrlResolverTest {
             assertThat(e).hasMessageContaining("Leaving the workflow is not allowed");
         });
 
+    }
+
+    @ParameterizedTest
+    @MethodSource({"org.knime.core.util.urlresolve.URLMethodSources#localApContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#knwfContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#tempCopyHubContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#tempCopyServerContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
+        "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()"})
+    void testWithVirtualNodeContext(final Context context) throws Exception {
+        // happy path, with a 'virtual' data area path given
+        var tmpDataAreaPath = FileUtil.createTempDir("test_data_area").toPath();
+        withVirtualNodeContext(() -> {
+            var resolver = context.getResolver();
+            var expectedUrl = URLResolverUtil.toURL(tmpDataAreaPath.resolve("somefile.txt"));
+            assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
+        }, tmpDataAreaPath);
+
+        // no 'virtual' data area given, but with restriction to access the actual one
+        withVirtualNodeContext(() -> {
+            var resolver = context.getResolver();
+            var e = Assertions.assertThrows(ResourceAccessException.class,
+                () -> resolver.resolve(new URL("knime://knime.workflow/data/somefile.txt")));
+            assertThat(e).hasMessageContaining("Node is not allowed to access workflow data area");
+        }, null, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+
+        // workflow relative only, with restriction
+        withVirtualNodeContext(() -> {
+            var resolver = context.getResolver();
+            var e = Assertions.assertThrows(ResourceAccessException.class,
+                () -> resolver.resolve(new URL("knime://knime.workflow/somefile.txt")));
+            assertThat(e).hasMessageContaining("Node is not allowed to access workflow-relative resources");
+        }, tmpDataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS);
+
+        // leaving data area
+        withVirtualNodeContext(() -> {
+            var resolver = context.getResolver();
+            var e = Assertions.assertThrows(ResourceAccessException.class,
+                () -> resolver.resolve(new URL("knime://knime.workflow/data/../somefile.txt")));
+            assertThat(e).hasMessageContaining("Node is not allowed to access workflow-relative resources");
+        }, tmpDataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS);
+
+        // without restrictions and virtual data area
+        withVirtualNodeContext(() -> {
+            var resolver = context.getResolver();
+            var expectedUrl = new URL("file:/W%C3%B6rk%20%E2%80%93%20%C3%9Fp%C3%A4ce/group/workflow/data/somefile.txt");
+            assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
+            expectedUrl = new URL("file:/W%C3%B6rk%20%E2%80%93%20%C3%9Fp%C3%A4ce/group/workflow/somefile.txt");
+            assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/somefile.txt"));
+        }, null);
+
+    }
+
+    private static void withVirtualNodeContext(final FailableRunnable<Exception> runnable, final Path dataAreaPath,
+        final Restriction... restrictions) throws Exception {
+        var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(), new WorkflowCreationHelper());
+        var nc = (NativeNodeContainer)wfm.getNodeContainer(wfm.createAndAddNode(new TestNodeFactory()));
+        try (var unused = wfm.lock()) {
+            wfm.createAndSetFlowObjectStackFor(nc,
+                new FlowObjectStack[]{FlowObjectStack.createFromFlowVariableList(List.of(), nc.getID())});
+        }
+        nc.getFlowObjectStack().push(new FlowVirtualScopeContext(nc.getID(), dataAreaPath, restrictions));
+        NodeContext.pushContext(nc);
+        try {
+            runnable.run();
+        } finally {
+            WorkflowManager.ROOT.removeProject(wfm.getID());
+            NodeContext.removeLastContext();
+        }
     }
 
     static void assertResolvedURLEquals(final String message, final KnimeUrlResolver resolver,
