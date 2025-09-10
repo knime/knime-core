@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ------------------------------------------------------------------------
  *
  *  Copyright by KNIME AG, Zurich, Switzerland
@@ -71,6 +71,8 @@ import org.knime.core.node.workflow.contextv2.ServerJobExecutorInfo;
 import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2.LocationType;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext;
+import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
@@ -435,7 +437,7 @@ public abstract class KnimeUrlResolver {
             case MOUNTPOINT_ABSOLUTE -> resolveMountpointAbsolute(url, url.getAuthority(), path, version);
             case MOUNTPOINT_RELATIVE -> resolveMountpointRelative(url, path, version);
             case HUB_SPACE_RELATIVE  -> resolveSpaceRelative(url, path, version);
-            case WORKFLOW_RELATIVE   -> resolveWorkflowRelative(url, path, version);
+            case WORKFLOW_RELATIVE   -> resolveWorkflowRelativeInternal(url, path, version);
             case NODE_RELATIVE       -> { //NOSONAR one line too long
                 if (version != null) {
                     throw new ResourceAccessException(
@@ -446,6 +448,41 @@ public abstract class KnimeUrlResolver {
         };
 
         return Optional.of(resolved);
+    }
+
+    private ResolvedURL resolveWorkflowRelativeInternal(final URL url, final IPath path, final ItemVersion version)
+        throws ResourceAccessException {
+        final var resolved = resolveWorkflowRelative(url, path, version);
+        var virtualNodeContext = VirtualNodeContext.getContext().orElse(null);
+        if (virtualNodeContext == null) {
+            // normal operation, no restrictions
+            return resolved;
+        }
+
+        if (resolved.pathInsideWorkflow != null && "data".equals(resolved.pathInsideWorkflow.segment(0))) {
+            // data-area access in virtual context
+            final var virtualDataAreaPath = virtualNodeContext.getVirtualDataAreaPath().orElse(null);
+            if (virtualDataAreaPath == null) {
+                if (virtualNodeContext.hasRestriction(Restriction.WORKFLOW_DATA_AREA_ACCESS)) {
+                    throw new ResourceAccessException("Node is not allowed to access workflow data area "
+                        + "because it's executed within in a restricted (virtual) scope.");
+                }
+                return resolved;
+            }
+
+            final var pathInsideDataArea = resolved.pathInsideWorkflow.removeFirstSegments(1);
+            final var resolvedInVirtualArea = virtualDataAreaPath.resolve(pathInsideDataArea.toOSString()).normalize();
+            return new ResolvedURL(resolved.mountID(), resolved.path(), resolved.version(),
+                resolved.pathInsideWorkflow(), URLResolverUtil.toURL(resolvedInVirtualArea),
+                resolved.canBeRelativized());
+        } else {
+            if (virtualNodeContext.hasRestriction(Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS)) {
+                // not allowed to access workflow-relative resources at all
+                throw new ResourceAccessException("Node is not allowed to access workflow-relative resources "
+                    + "because it's executed within in a restricted (virtual) scope.");
+            }
+            return resolved;
+        }
     }
 
     /**
@@ -636,4 +673,5 @@ public abstract class KnimeUrlResolver {
     static final IPath toRelativeIPath(final String posixPath) {
         return Path.forPosix(LEADING_SLASHES.matcher(posixPath).replaceFirst("")).makeRelative();
     }
+
 }
