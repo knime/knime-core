@@ -4,7 +4,126 @@
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
+                <message_argument value="org.knime.core_5.7.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Should not have been exported" id="305422471">
+            <message_arguments>
+                <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
                 <message_argument value="org.knime.core_5.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningPMMLApplyUtil.java" type="org.knime.core.util.binning.BinningPMMLApplyUtil">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningPMMLApplyUtil"/>
+                <message_argument value="org.knime.core_5.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings"/>
+                <message_argument value="org.knime.core_5.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinBoundary$BinBoundaryExactMatchBehaviour">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinBoundary.BinBoundaryExactMatchBehaviour"/>
+                <message_argument value="DESC_TO_LOWER_BIN"/>
+                <message_argument value="Values that fall on the bin border will be assigned to the lower bin.&#10;"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinBoundary.BinBoundaryExactMatchBehaviour"/>
+                <message_argument value="DESC_TO_UPPER_BIN"/>
+                <message_argument value="Values that fall on the bin border will be assigned to the upper bin.&#10;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinNamingUtils">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="DESC_BORDERS"/>
+                <message_argument value="Bins will be named by their borders, e.g. [0.0, 1.0)"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="DESC_MIDPOINTS"/>
+                <message_argument value="Bins will be named by their midpoints, e.g. 0.5"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="DESC_NUMBERED"/>
+                <message_argument value="Bins will be named by their number, e.g. Bin 1"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="NAME_BORDERS"/>
+                <message_argument value="Borders"/>
+            </message_arguments>
+        </filter>
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="NAME_NUMBERED"/>
+                <message_argument value="Numbered"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinningMethod$EqualCount">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinningMethod.EqualCount"/>
+                <message_argument value="DESC_EQUAL_FREQUENCY"/>
+                <message_argument value="Each bin will contain the same number of values (or as close as possible). The number of bins must be specified.&#10;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinningMethod$EqualWidth">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinningMethod.EqualWidth"/>
+                <message_argument value="DESC_EQUAL_WIDTH"/>
+                <message_argument value="Each bin will have the same width. The number of bins must be specified.&#10;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinningMethod$FixedBoundaries">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinningMethod.FixedBoundaries"/>
+                <message_argument value="DESC_CUSTOM_CUTOFFS"/>
+                <message_argument value="Bins will be created based on a fixed list of cutoffs. The cutoffs are specified as boundaries, i.e. the values that define the bin edges. At least two cutoffs must be provided.&#10;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinningMethod$FixedQuantiles">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinningMethod.FixedQuantiles"/>
+                <message_argument value="DESC_CUSTOM_QUANTILES"/>
+                <message_argument value="Bins will be created based on a fixed list of quantiles. The quantiles are specified as boundaries, i.e. the values that define the bin edges. At least two quantiles must be provided.&#10;&#10;The quantiles will be converted to bin edges using the R-7 algorithm, see &lt;a href=&quot;&#10;https://en.wikipedia.org/wiki/Quantile&quot;&gt;WP:Quantile&lt;/a&gt; for more details.&#10;"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningUtil.java" type="org.knime.core.util.binning.BinningUtil">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningUtil"/>
+                <message_argument value="org.knime.core_5.8.0"/>
             </message_arguments>
         </filter>
     </resource>

@@ -74,7 +74,7 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  * Converts a {@link PMMLPortObject} into a {@link ColumnRearranger}.
  *
  * @author David Hickey, TNG Technology Consulting GmbH
- * @since 5.7
+ * @since 5.8
  *
  * @see BinningUtil
  */

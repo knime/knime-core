@@ -69,7 +69,7 @@ import org.knime.core.util.binning.BinningSettings.BinningMethod.FixedQuantiles;
  *
  *
  * @author David Hickey, TNG Technology Consulting GmbH
- * @since 5.7
+ * @since 5.8
  */
 public final class BinningSettings {
 

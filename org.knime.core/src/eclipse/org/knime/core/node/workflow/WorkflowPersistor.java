@@ -584,7 +584,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          * @param filter A filter for the least severity level
          * @return A list of all error messages (possibly empty but never null).
          *
-         * @since 5.7
+         * @since 5.8
          */
         public List<String> getFilteredErrors(final String indent,
                 final LoadResultEntryType filter) {

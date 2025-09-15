@@ -77,7 +77,7 @@ import org.knime.core.util.binning.numeric.NumericBin;
  * Given various settings, creates bins.
  *
  * @author David Hickey, TNG Technology Consulting GmbH
- * @since 5.7
+ * @since 5.8
  *
  * @see BinningPMMLApplyUtil
  */
