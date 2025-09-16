@@ -49,6 +49,7 @@
 package org.knime.core.data.container;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -81,6 +82,8 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.exec.dataexchange.PortObjectRepository;
+import org.knime.core.node.port.PortObject;
 import org.knime.testing.core.ExecutionContextExtension;
 import org.knime.testing.data.blob.LargeBlobCell;
 import org.knime.testing.data.filestore.LargeFile;
@@ -449,6 +452,42 @@ class BufferedRowContainerTest {
             assertTrue(row.getCell(0).isMissing());
             assertEquals(new DoubleCell(2.0), row.getCell(1));
             assertEquals(new StringCell("Row 2"), row.getCell(2));
+        }
+    }
+
+    /**
+     * Copies the original table twice, once per 'setFrom', another time via cell-by-cell cloning.
+     * Asserts data is correct (no need to check execution time again).
+     *
+     * @see #testAP23029_SetFromVsCopyCell(ExecutionContext)
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    final void testAP24943_CloneBlobCells(final ExecutionContext context) throws Exception {
+        final BufferedDataTable origTable = createTable(context);
+
+        /* Clone cell-by-cell - not efficient at all in case of blobs */
+        BufferedDataTable cellByCellCloneTable = null;
+        PortObject clone = PortObjectRepository.copy(origTable, context, context);
+        if (clone instanceof BufferedDataTable out) {
+            cellByCellCloneTable = out;
+        }
+        assertNotNull(cellByCellCloneTable);
+        assertEquals(origTable.size(), cellByCellCloneTable.size());
+
+        try (CloseableRowIterator origIterator = origTable.iterator(); //
+                CloseableRowIterator cellByCellCopyIterator = cellByCellCloneTable.iterator()) {
+            for (long rowIndex = 0; origIterator.hasNext(); rowIndex++) {
+                final DataRow origRow = origIterator.next();
+                final DataRow cellByCellCopyRow = cellByCellCopyIterator.next();
+                assertNotSame(origRow, cellByCellCopyRow, "Row (cell by cell) " + rowIndex);
+                // iterate rowkey and all cells and call equals on them
+                assertEquals(origRow.getKey(), cellByCellCopyRow.getKey(), "RowKey of row index " + rowIndex);
+                for (int cellIndex = 0; cellIndex < origRow.getNumCells(); cellIndex++) {
+                    assertEquals(origRow.getCell(cellIndex), cellByCellCopyRow.getCell(cellIndex),
+                        "Cell " + cellIndex + " of row " + rowIndex);
+                }
+            }
         }
     }
 }

@@ -50,14 +50,7 @@ package org.knime.core.node.exec.dataexchange;
 
 import static java.lang.System.identityHashCode;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamClass;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,17 +58,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.DataCellDataOutput;
-import org.knime.core.data.DataCellSerializer;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTypeRegistry;
-import org.knime.core.data.container.BlobDataCell;
-import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.container.DataContainerSettings;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -217,44 +202,29 @@ public final class PortObjectRepository {
      * @throws IOException In case of exceptions while accessing the streams
      * @throws CanceledExecutionException If canceled.
      */
-    public static final PortObject copy(final PortObject object, final ExecutionContext exec,
-        final ExecutionMonitor progress) throws IOException, CanceledExecutionException {
-        if (object instanceof BufferedDataTable) {
-            // need to copy the table cell by cell
-            // this is to workaround the standard knime philosophy according
-            // to which tables are referenced. A row-based copy will not work
-            // as it still will reference blobs
-            BufferedDataTable in = (BufferedDataTable)object;
-            BufferedDataContainer con = exec.createDataContainer(
-                    in.getSpec(), true, 0);
+    public static PortObject copy(final PortObject object, final ExecutionContext exec, final ExecutionMonitor progress)
+        throws IOException, CanceledExecutionException {
+        if (object instanceof BufferedDataTable in) {
+            final var settings = DataContainerSettings.internalBuilder() //
+                .withInitializedDomain(true) //
+                .withMaxCellsInMemory(0) //
+                .withForceCopyOfBlobs(true) //
+                .build();
+
             final long rowCount = in.size();
             long row = 0;
-            boolean hasLoggedCloneProblem = false;
-            for (DataRow r : in) {
-                DataCell[] cells = new DataCell[r.getNumCells()];
-                for (int i = 0; i < cells.length; i++) {
-                    DataCell c = r.getCell(i); // deserialize blob
-                    if (c instanceof BlobDataCell) {
-                        try {
-                            c = cloneBlobCell(c);
-                        } catch (Exception e) {
-                            if (!hasLoggedCloneProblem) {
-                                LOGGER.warn("Can't clone blob object: " + e.getMessage(), e);
-                                hasLoggedCloneProblem = true;
-                                LOGGER.debug("Suppressing futher warnings.");
-                            }
-                        }
-                    }
-                    cells[i] = c;
+            try (final var rowContainer = exec.createRowContainer(in.getSpec(), settings);
+                    final var writeCursor = rowContainer.createCursor();
+                    final var readCursor = in.cursor()) {
+                while (readCursor.canForward()) {
+                    writeCursor.commit(readCursor.forward());
+                    final var finalRow = row;
+                    progress.setProgress(row / (double)rowCount, () -> "Copied row " + finalRow + "/" + rowCount);
+                    progress.checkCanceled();
+                    row++;
                 }
-                con.addRowToTable(new DefaultRow(r.getKey(), cells));
-                progress.setProgress(row / (double)rowCount, "Copied row " + row + "/" + rowCount);
-                progress.checkCanceled();
-                row++;
+                return rowContainer.finish();
             }
-            con.close();
-            return con.getTable();
-
         }
         return Node.copyPortObject(object, exec);
     }
@@ -336,126 +306,5 @@ public final class PortObjectRepository {
         }
 
         return inID;
-    }
-
-    /** Deep-clones a data cell. Most important for blob cell to get rid
-     * of their blob address.
-     * @param blobCell The cell to clone.
-     * @return A clone copy of the arg
-     * @throws IOException If that fails for any reason.
-     */
-    private static DataCell cloneBlobCell(final DataCell blobCell)
-        throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataCellCloneObjectOutputStream out =
-            new DataCellCloneObjectOutputStream(bos);
-        Optional<DataCellSerializer<DataCell>> cellSerializer =
-            DataTypeRegistry.getInstance().getSerializer(blobCell.getClass());
-        if (cellSerializer.isPresent()) {
-            cellSerializer.get().serialize(blobCell, out);
-        } else {
-            out.writeObject(blobCell);
-        }
-        out.close();
-
-        try (DataCellCloneObjectInputStream in = new DataCellCloneObjectInputStream(
-            new ByteArrayInputStream(bos.toByteArray()), blobCell.getClass().getClassLoader())) {
-            if (cellSerializer.isPresent()) {
-                return cellSerializer.get().deserialize(in);
-            } else {
-                try {
-                    return (DataCell)in.readObject();
-                } catch (ClassNotFoundException e) {
-                    throw new IOException("Can't read from object input stream: " + e.getMessage(), e);
-                }
-            }
-        }
-    }
-
-    /** Input stream used for cloning the a data cell. */
-    private static final class DataCellCloneObjectInputStream
-        extends ObjectInputStream implements DataCellDataInput {
-
-        private final ClassLoader m_loader;
-
-        /** Create new stream.
-         * @param in to read from
-         * @param loader class loader for restoring cell.
-         * @throws IOException if super constructor throws it.
-         */
-        DataCellCloneObjectInputStream(final InputStream in,
-                final ClassLoader loader) throws IOException {
-            super(in);
-            m_loader = loader;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public DataCell readDataCell() throws IOException {
-            try {
-                return readDataCellImpl();
-            } catch (IOException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new IOException("Can't read nested cell: "
-                        + e.getMessage(), e);
-            }
-        }
-
-        private DataCell readDataCellImpl() throws Exception {
-            String clName = readUTF();
-            Class<? extends DataCell> cellClass = DataTypeRegistry.getInstance().getCellClass(clName)
-                    .orElseThrow(() -> new IOException("No implementation for cell class '" + clName + "' found."));
-            Optional<DataCellSerializer<DataCell>> cellSerializer =
-                DataTypeRegistry.getInstance().getSerializer(cellClass);
-            if (cellSerializer.isPresent()) {
-                return cellSerializer.get().deserialize(this);
-            } else {
-                return (DataCell)readObject();
-            }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        protected Class<?> resolveClass(final ObjectStreamClass desc)
-                throws IOException, ClassNotFoundException {
-            if (m_loader != null) {
-                try {
-                    return Class.forName(desc.getName(), true, m_loader);
-                } catch (ClassNotFoundException cnfe) {
-                    // ignore and let super do it.
-                }
-            }
-            return super.resolveClass(desc);
-        }
-
-    }
-
-    /** Output stream used for cloning a data cell. */
-    private static final class DataCellCloneObjectOutputStream
-        extends ObjectOutputStream implements DataCellDataOutput {
-
-        /** Call super.
-         * @param out To delegate
-         * @throws IOException If super throws it.
-         *
-         */
-        DataCellCloneObjectOutputStream(
-                final OutputStream out) throws IOException {
-            super(out);
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void writeDataCell(final DataCell cell) throws IOException {
-            writeUTF(cell.getClass().getName());
-            Optional<DataCellSerializer<DataCell>> cellSerializer =
-                    DataTypeRegistry.getInstance().getSerializer(cell.getClass());
-            if (cellSerializer.isPresent()) {
-                cellSerializer.get().serialize(cell, this);
-            } else {
-                writeObject(cell);
-            }
-        }
     }
 }
