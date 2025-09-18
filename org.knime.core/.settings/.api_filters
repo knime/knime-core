@@ -4,13 +4,21 @@
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.7.0"/>
+                <message_argument value="org.knime.core_5.6.0"/>
             </message_arguments>
         </filter>
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.6.0"/>
+                <message_argument value="org.knime.core_5.7.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowDataRepository.java" type="org.knime.core.node.workflow.WorkflowDataRepository">
+        <filter comment="internal API" id="336658481">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowDataRepository"/>
+                <message_argument value="INSTANCE_COUNTER"/>
             </message_arguments>
         </filter>
     </resource>

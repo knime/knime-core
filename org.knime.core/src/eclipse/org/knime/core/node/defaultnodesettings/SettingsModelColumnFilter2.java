@@ -96,16 +96,17 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     }
 
     /**
-     * Accepts only columns of the specified type(s). The dialog component to this settings model will
-     * show a name pattern filter and type filter. This is useful if you want to restrict the initial selection to specific
-     * types, but the user should still be able to further restrict the selection by type.
+     * Accepts only columns of the specified type(s). The dialog component to this settings model will show a name
+     * pattern filter and type filter. This is useful if you want to restrict the initial selection to specific types,
+     * but the user should still be able to further restrict the selection by type.
      *
      * @param configName the root config name
      * @param enableTypeFilter whether to enable the type filter in the dialog component
      * @param allowedTypes The allowed data types
-     * @since 5.7
+     * @since 5.8
      */
-    public SettingsModelColumnFilter2(final String configName, final boolean enableTypeFilter, final Class<? extends DataValue>... allowedTypes) {
+    public SettingsModelColumnFilter2(final String configName, final boolean enableTypeFilter,
+        @SuppressWarnings("unchecked") final Class<? extends DataValue>... allowedTypes) {
         this(new DataColumnSpecFilterConfiguration(configName, new DataTypeColumnFilter(allowedTypes),
             enableTypeFilter
                 ? DataColumnSpecFilterConfiguration.FILTER_BY_DATATYPE | NameFilterConfiguration.FILTER_BY_NAMEPATTERN
