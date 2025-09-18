@@ -1967,10 +1967,10 @@ public final class Node {
      * leak memory due to disposable tables not being removed from the data repository!
      * </p>
      *
-     * @param repository the {@link WorkflowDataRepository} to remove {@link ContainerTable}s from
+     * @param repository the {@link WorkflowDataRepository} to remove {@link ContainerTable}s from (null allowed)
      * @since 5.8
      */
-    public void cleanup(WorkflowDataRepository repository) {
+    public void cleanup(final WorkflowDataRepository repository) {
         m_model.cleanup();
         try {
             m_model.onDispose();
