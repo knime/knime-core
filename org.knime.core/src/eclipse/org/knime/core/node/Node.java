@@ -1730,17 +1730,23 @@ public final class Node {
         clearNodeMessageAndNotify();
     }
 
-    /** Sets output objects to null, disposes tables that are created by
-     * this node.
+    /**
+     * Sets output objects to null, disposes tables that are created by this node.
+     * Deprecated because not passing the {@link WorkflowDataRepository} reference may
+     * cause a memory leak (see ticket AP-15779).
+     *
      * @deprecated Framework code should call {@link #cleanOutPorts(boolean, WorkflowDataRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
-    @Deprecated
+    @Deprecated(since = "4.5", forRemoval = true)
     public void cleanOutPorts() {
         cleanOutPorts(false, null);
     }
 
-    /** Sets output objects to null.
+    /**
+     * Sets output objects to null. Deprecated because not passing the
+     * {@link WorkflowDataRepository} reference may cause a memory leak (see ticket AP-15779).
+     *
      * @param isLoopRestart If true, does not clear tables that are part
      * of the internally held tables (loop start nodes implements the
      * {@link BufferedDataTableHolder} interface). This can only be true
@@ -1748,7 +1754,7 @@ public final class Node {
      * @deprecated Framework code should call {@link #cleanOutPorts(boolean, WorkflowDataRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
-    @Deprecated
+    @Deprecated(since = "4.5", forRemoval = true)
     public void cleanOutPorts(final boolean isLoopRestart) {
     	cleanOutPorts(isLoopRestart, null);
     }
@@ -1942,18 +1948,37 @@ public final class Node {
     }
 
     /**
+     * Deletes any temporary resources associated with this node. Any output and intermediate tables
+     * must already be removed from the WorkflowDataRepository. Deprecated because not passing the
+     * {@link WorkflowDataRepository} reference may cause a memory leak (see ticket AP-24936).
+     *
+     * @deprecated Framework code should call {@link #cleanOutPorts(boolean, WorkflowDataRepository)}
+     */
+    @Deprecated(since = "5.8", forRemoval = true)
+    public void cleanup() {
+        cleanup(null);
+    }
+
+    /**
      * Deletes any temporary resources associated with this node.
      * Any output and intermediate tables must already be removed from the WorkflowDataRepository.
+     * <p>
+     * It is important to call this method instead of {@link #cleanup()}, as that one may
+     * leak memory due to disposable tables not being removed from the data repository!
+     * </p>
+     *
+     * @param repository the {@link WorkflowDataRepository} to remove {@link ContainerTable}s from
+     * @since 5.8
      */
-    public void cleanup() {
+    public void cleanup(WorkflowDataRepository repository) {
         m_model.cleanup();
         try {
             m_model.onDispose();
-        } catch (Throwable t) {
+        } catch (Throwable t) { // NOSONAR
             LOGGER.error(t.getClass().getSimpleName() + " during cleanup of node: " + t.getMessage(), t);
         }
         // all callers
-        cleanOutPorts(false, null);
+        cleanOutPorts(false, repository);
     }
 
     /**

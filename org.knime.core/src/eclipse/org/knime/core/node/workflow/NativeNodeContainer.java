@@ -401,7 +401,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
     void cleanup() {
         NodeContext.pushContext(this);
         try {
-            m_node.cleanup();
+            // pass data repository to remove tables from, avoiding memory leak (AP-24936)
+            m_node.cleanup(getParent().getWorkflowDataRepository());
             m_node.setFlowObjectStack(null, null); // flow objects (scopes, loops) might have refs to WFM
             clearFileStoreHandler();
         } finally {
