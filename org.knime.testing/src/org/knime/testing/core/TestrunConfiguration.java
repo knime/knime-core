@@ -72,6 +72,8 @@ public class TestrunConfiguration {
 
     private boolean m_testDialogs;
 
+    private boolean m_testMUIDialogs;
+
     private boolean m_testViews = true;
 
     private boolean m_checkForLoadWarnings;
@@ -111,6 +113,17 @@ public class TestrunConfiguration {
     }
 
     /**
+     * Set if all modern UI ("MUI") dialogs backed by NodeParameters should be tested, i.e. load settings from
+     * the workflow, then load&apply via the dialog's NodeParameters class.
+     *
+     * @param b the value to set
+     * @since 5.8
+     */
+    public void setTestMUIDialogs(final boolean b) {
+        m_testMUIDialogs = b;
+    }
+
+    /**
      * Sets if all views should be opened prior to running the workflow.
      *
      * @param b <code>true</code> if views should be opened, <code>false</code> otherwise
@@ -138,6 +151,14 @@ public class TestrunConfiguration {
      */
     public boolean isTestDialogs() {
         return m_testDialogs;
+    }
+
+    /**
+     * Getter for {@link #setTestMUIDialogs(boolean)}.
+     * @return the value of {@link #setTestMUIDialogs(boolean)}
+     */
+    public boolean isTestMUIDialogs() {
+        return m_testMUIDialogs;
     }
 
     /**
