@@ -64,7 +64,7 @@ import org.knime.core.data.DataTableSpec;
  * {@code this.getSourceSpec().getColumnSpec(i)} corresponds to {@code this.getColumn(i+1).dataColumnSpec())}.
  *
  * @author Tobias Pietzsch
- * @since 5.7
+ * @since 5.8
  */
 public interface DataTableValueSchema extends ValueSchema {
 

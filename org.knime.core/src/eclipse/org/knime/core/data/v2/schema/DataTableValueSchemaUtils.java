@@ -68,7 +68,7 @@ import org.knime.core.table.schema.traits.LogicalTypeTrait;
  * Utility class for creating, transforming, saving and loading of {@link DataTableValueSchema DataTableValueSchemas}.
  *
  * @author Tobias Pietzsch
- * @since 5.7
+ * @since 5.8
  * @noreference This class is not intended to be referenced by clients.
  */
 public class DataTableValueSchemaUtils {
@@ -80,7 +80,7 @@ public class DataTableValueSchemaUtils {
      * @param rowKeyType type of the {@link RowKey}
      * @param fileStoreHandler file-store handler
      * @return the value schema.
-     * @since 5.7
+     * @since 5.8
      */
     public static final DataTableValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
@@ -118,7 +118,7 @@ public class DataTableValueSchemaUtils {
      * @param spec the data table spec that the {@link ValueSchema} should wrap
      * @param valueFactories one for the row key, and one for each column in spec
      * @return the value schema
-     * @since 5.7
+     * @since 5.8
      */
     public static final DataTableValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
         return new DefaultDataTableValueSchema(spec, valueFactories);
@@ -149,7 +149,7 @@ public class DataTableValueSchemaUtils {
      * @return the loaded {@link ValueSchema}.
      *
      * @throws InvalidSettingsException if the settings in loadContext are invalid
-     * @since 5.7
+     * @since 5.8
      */
     public static final DataTableValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
         throws InvalidSettingsException {
@@ -184,7 +184,7 @@ public class DataTableValueSchemaUtils {
      *
      * @param schema to check
      * @return true if the schema was created before KNIME AP 4.5.0
-     * @since 5.7
+     * @since 5.8
      */
     public static boolean storesDataCellSerializersSeparately(final DataTableValueSchema schema) {
         if (schema instanceof SerializerFactoryValueSchema) {

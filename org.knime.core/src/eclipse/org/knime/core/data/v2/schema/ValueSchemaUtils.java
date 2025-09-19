@@ -74,7 +74,7 @@ public final class ValueSchemaUtils {
      *
      * @param columns the column specs
      * @return a ValueSchema with the specified columns
-     * @since 5.7
+     * @since 5.8
      */
     public static final ValueSchema create(final ValueSchemaColumn... columns) {
         return new DefaultValueSchema(columns);
@@ -85,7 +85,7 @@ public final class ValueSchemaUtils {
      *
      * @param columns the column specs
      * @return a ValueSchema with the specified columns
-     * @since 5.7
+     * @since 5.8
      */
     public static final ValueSchema create(final Collection<ValueSchemaColumn> columns) {
         return create(columns.toArray(ValueSchemaColumn[]::new));
@@ -99,7 +99,7 @@ public final class ValueSchemaUtils {
      * @param metadataMap the columnar metadata used to update
      *
      * @return a new {@link ValueSchema}, with updated DataColumnSpecs
-     * @since 5.7
+     * @since 5.8
      */
     public static final ValueSchema updateDataColumnSpecs(final ValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
@@ -164,7 +164,7 @@ public final class ValueSchemaUtils {
      * @return DataTableSpec for the schema
      *
      * @throws IllegalArgumentException if the provided schema does not satisfy the constraints
-     * @since 5.7
+     * @since 5.8
      */
     public static DataTableSpec createDataTableSpec(final ValueSchema schema) throws IllegalArgumentException {
         return new DataTableSpec(dataColumnSpecs(schema));
@@ -179,7 +179,7 @@ public final class ValueSchemaUtils {
      * @return extracted DataColumnSpecs (not including the RowKey)
      *
      * @throws IllegalArgumentException if the provided schema does not have RowKey at column 0
-     * @since 5.7
+     * @since 5.8
      */
     public static DataColumnSpec[] dataColumnSpecs(final ValueSchema schema) throws IllegalArgumentException {
         if (schema.numColumns() < 1 || !schema.getColumn(0).isRowKey()) {

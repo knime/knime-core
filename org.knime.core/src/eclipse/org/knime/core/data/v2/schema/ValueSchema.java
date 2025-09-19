@@ -90,7 +90,7 @@ public interface ValueSchema extends ColumnarSchema {
      *
      * @param index colunm index
      * @return the DataColumnSpec of the column at the given index
-     * @since 5.7
+     * @since 5.8
      */
     default DataColumnSpec getDataColumnSpec(final int index) {
         return getColumn(index).dataColumnSpec();
@@ -104,7 +104,7 @@ public interface ValueSchema extends ColumnarSchema {
      *
      * @param columnName name of the column
      * @return the index of the first column with the specified columnName
-     * @since 5.7
+     * @since 5.8
      */
     default int findColumnIndex(final String columnName) {
         if (columnName != null) {
@@ -155,7 +155,7 @@ public interface ValueSchema extends ColumnarSchema {
      * <li>may contain multiple columns with identical names.</li>
      * </ul>
      *
-     * @since 5.7
+     * @since 5.8
      */
     public record ValueSchemaColumn( //
         DataColumnSpec dataColumnSpec, //
@@ -280,7 +280,7 @@ public interface ValueSchema extends ColumnarSchema {
      *
      * @param index
      * @return column properties
-     * @since 5.7
+     * @since 5.8
      */
     ValueSchemaColumn getColumn(int index);
 
@@ -288,7 +288,7 @@ public interface ValueSchema extends ColumnarSchema {
      * Get properties of all columns.
      *
      * @return column properties
-     * @since 5.7
+     * @since 5.8
      */
     default ValueSchemaColumn[] getColumns() {
         final var columns = new ValueSchemaColumn[numColumns()];
