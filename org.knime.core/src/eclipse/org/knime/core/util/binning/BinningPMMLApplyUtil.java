@@ -62,6 +62,7 @@ import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.def.StringCell.StringCellFactory;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
@@ -79,6 +80,8 @@ import org.knime.core.util.binning.numeric.PMMLBinningTranslator;
  * @see BinningUtil
  */
 public final class BinningPMMLApplyUtil {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(BinningPMMLApplyUtil.class);
 
     private BinningPMMLApplyUtil() {
         // Utility class, no instances allowed
@@ -121,10 +124,20 @@ public final class BinningPMMLApplyUtil {
         final var derivedFields = outputPmml.getDerivedFields();
         final var derivedFieldMapper = new DerivedFieldMapper(derivedFields);
 
+        var discretizeCount = 0;
+
         // Each derived field corresponds to the binning of one column
         for (int i = 0; i < derivedFields.length; i++) {
             final var derivedField = derivedFields[i];
-            final var targetColumnName = derivedField.getDiscretize().getField();
+            final var discretize = derivedField.getDiscretize();
+            if (discretize == null) {
+                LOGGER.warn(
+                    String.format("Derived field \"%s\" at index %d does not contain a discretize element, skipping.",
+                        derivedField.getName(), i));
+                continue;
+            }
+            discretizeCount++;
+            final var targetColumnName = discretize.getField();
             final var targetColumnIndex = inSpec.findColumnIndex(targetColumnName);
             if (targetColumnIndex < 0) {
                 throw new IllegalStateException("Input column " + targetColumnName + " not found in input spec.");
@@ -145,6 +158,10 @@ public final class BinningPMMLApplyUtil {
                 rearranger.replace(cellFactory, outputColumnName);
             }
         }
+
+        if (discretizeCount == 0) {
+            throw new IllegalArgumentException("PMML does not contain any derived fields with binning information.");
+        }
         return rearranger;
 
     }
@@ -159,7 +176,7 @@ public final class BinningPMMLApplyUtil {
         final var interval = bin.getInterval();
         final var leftRightOpen = getBoundariesOpenValues(interval.getClosure());
         final var leftValue = interval.isSetLeftMargin() ? interval.getLeftMargin() : Double.NEGATIVE_INFINITY;
-        final var rightValue = interval.isSetRightMargin() ?  interval.getRightMargin() : Double.POSITIVE_INFINITY;
+        final var rightValue = interval.isSetRightMargin() ? interval.getRightMargin() : Double.POSITIVE_INFINITY;
 
         return new NumericBin( //
             bin.getBinValue(), //
