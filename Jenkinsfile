@@ -1,7 +1,8 @@
 #!groovy
 def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2025-12'
 
-library "knime-pipeline@$BN"
+// library "knime-pipeline@$BN"
+library "knime-pipeline@fix/AP-24514-n-ix-make-sure-python-extensions-can-be-installed-while-being-offline"
 
 properties([
     pipelineTriggers([upstream(
