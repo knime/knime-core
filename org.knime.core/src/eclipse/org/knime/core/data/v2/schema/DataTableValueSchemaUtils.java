@@ -71,7 +71,10 @@ import org.knime.core.table.schema.traits.LogicalTypeTrait;
  * @since 5.8
  * @noreference This class is not intended to be referenced by clients.
  */
-public class DataTableValueSchemaUtils {
+public final class DataTableValueSchemaUtils {
+
+    private DataTableValueSchemaUtils() {
+    }
 
     /**
      * Creates a new {@link DataTableValueSchema} based up-on the provided {@link DataTableSpec}.
@@ -82,7 +85,7 @@ public class DataTableValueSchemaUtils {
      * @return the value schema.
      * @since 5.8
      */
-    public static final DataTableValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
+    public static DataTableValueSchema create(final DataTableSpec spec, final RowKeyType rowKeyType,
         final IWriteFileStoreHandler fileStoreHandler) {
         final var factories = new ValueFactory<?, ?>[spec.getNumColumns() + 1];
         factories[0] = ValueFactoryUtils.getRowKeyValueFactory(rowKeyType);
@@ -120,7 +123,8 @@ public class DataTableValueSchemaUtils {
      * @return the value schema
      * @since 5.8
      */
-    public static final DataTableValueSchema create(final DataTableSpec spec, final ValueFactory<?, ?>... valueFactories) {
+    public static DataTableValueSchema create(final DataTableSpec spec,
+        final ValueFactory<?, ?>... valueFactories) {
         return new DefaultDataTableValueSchema(spec, valueFactories);
     }
 
@@ -131,9 +135,9 @@ public class DataTableValueSchemaUtils {
      * @param settings the settings to save the ValueSchema to.
      * @since 5.7
      */
-    public static final void save(final DataTableValueSchema schema, final NodeSettingsWO settings) {
-        if (schema instanceof SerializerFactoryValueSchema) {
-            SerializerFactoryValueSchema.Serializer.save((SerializerFactoryValueSchema)schema, settings);
+    public static void save(final DataTableValueSchema schema, final NodeSettingsWO settings) {
+        if (schema instanceof SerializerFactoryValueSchema serializerSchema) {
+            SerializerFactoryValueSchema.Serializer.save(serializerSchema, settings);
         } else if (schema instanceof DefaultDataTableValueSchema) {
             // nothing to save
         } else {
@@ -151,7 +155,7 @@ public class DataTableValueSchemaUtils {
      * @throws InvalidSettingsException if the settings in loadContext are invalid
      * @since 5.8
      */
-    public static final DataTableValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
+    public static DataTableValueSchema load(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext)
         throws InvalidSettingsException {
         if (hasTypeTraits(schema)) {
             return createWithTypeTraits(schema, loadContext);
@@ -168,7 +172,8 @@ public class DataTableValueSchemaUtils {
             .allMatch(t -> t.hasTrait(LogicalTypeTrait.class));
     }
 
-    private static DataTableValueSchema createWithTypeTraits(final ColumnarSchema schema, final ValueSchemaLoadContext loadContext) {
+    private static DataTableValueSchema createWithTypeTraits(final ColumnarSchema schema,
+        final ValueSchemaLoadContext loadContext) {
         var source = loadContext.getTableSpec();
         var dataRepository = loadContext.getDataRepository();
         int numDataColumns = source.getNumColumns();

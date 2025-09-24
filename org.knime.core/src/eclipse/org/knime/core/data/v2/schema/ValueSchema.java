@@ -144,17 +144,21 @@ public interface ValueSchema extends ColumnarSchema {
     /**
      * Describes a single column in a {@link ValueSchema}.
      * <p>
-     * A {@code ValueSchemaColumn} contains a {@link DataColumnSpec} with the logical type and name of the column, as well as a {@link ValueFactory} and {@link DataTraits}.
-     * (If the {@link #valueFactory()} is a {@code RowKeyValueFactory}, the {@link #dataColumnSpec()} is {@code null}.)
+     * A {@code ValueSchemaColumn} contains a {@link DataColumnSpec} with the logical type and name of the column, as
+     * well as a {@link ValueFactory} and {@link DataTraits}. (If the {@link #valueFactory()} is a
+     * {@code RowKeyValueFactory}, the {@link #dataColumnSpec()} is {@code null}.)
      * <p>
-     * Compared to {@link DataTableValueSchema} (and {@link DataTableSpec}) there are less constraints on names or types of columns in a {@link ValueSchema}.
-     * In particular, a {@code ValueSchema}
+     * Compared to {@link DataTableValueSchema} (and {@link DataTableSpec}) there are less constraints on names or types
+     * of columns in a {@link ValueSchema}. In particular, a {@code ValueSchema}
      * <ul>
      * <li>need not contain a RowKey column,</li>
      * <li>may contain more than one RowKey column,</li>
      * <li>may contain multiple columns with identical names.</li>
      * </ul>
      *
+     * @param dataColumnSpec the DataColumnSpec of this column (or {@code null}, if this is a RowKey column)
+     * @param valueFactory the ValueFactory of this column
+     * @param dataTraits the DataTraits of this column
      * @since 5.8
      */
     public record ValueSchemaColumn( //
@@ -172,7 +176,8 @@ public interface ValueSchema extends ColumnarSchema {
         public ValueSchemaColumn {
             if (dataColumnSpec == null) {
                 if (!(valueFactory instanceof RowKeyValueFactory)) {
-                    throw new IllegalArgumentException("if dataColumnSpec==null, then valueFactory must be a RowKeyValueFactory");
+                    throw new IllegalArgumentException(
+                        "if dataColumnSpec==null, then valueFactory must be a RowKeyValueFactory");
                 }
             } else {
                 if (!dataColumnSpec.getType().equals(ValueFactoryUtils.getDataTypeForValueFactory(valueFactory))) {
@@ -187,8 +192,8 @@ public interface ValueSchema extends ColumnarSchema {
          * <p>
          * DataTraits are created via {@link ValueFactoryUtils#getTraits(ValueFactory)}.
          *
-         * @param dataColumnSpec
-         * @param valueFactory
+         * @param dataColumnSpec the DataColumnSpec of this column
+         * @param valueFactory the ValueFactory of this column
          */
         public ValueSchemaColumn(final DataColumnSpec dataColumnSpec, final ValueFactory<?, ?> valueFactory) {
             this(dataColumnSpec, valueFactory, ValueFactoryUtils.getTraits(valueFactory));
@@ -202,7 +207,7 @@ public interface ValueSchema extends ColumnarSchema {
          *
          * @param name the column name
          * @param type the column type
-         * @param valueFactory
+         * @param valueFactory the ValueFactory of this column
          * @throws NullPointerException if either the column name or type is <code>null</code>
          */
         public ValueSchemaColumn(final String name, final DataType type, final ValueFactory<?, ?> valueFactory) {
@@ -220,9 +225,10 @@ public interface ValueSchema extends ColumnarSchema {
         }
 
         /**
-         * Get a ValueSchemaColumn with the given {@code DataColumnSpec} and otherwise the same properties as {@code this} one.
+         * Get a ValueSchemaColumn with the given {@code DataColumnSpec} and otherwise the same properties as
+         * {@code this} one.
          *
-         * @param columnSpec
+         * @param columnSpec the DataColumnSpec of the new column
          * @return a ValueSchemaColumn with the given DataColumnSpec
          */
         public ValueSchemaColumn with(final DataColumnSpec columnSpec) {
@@ -263,7 +269,7 @@ public interface ValueSchema extends ColumnarSchema {
          * Returns {@code true}, if the {@link #dataColumnSpec()} of {@code this} and the given {@code column} have
          * {@link DataColumnSpec#equalStructure} (or are both {@code null}).
          *
-         * @param column
+         * @param column the column to compare with
          * @return true, if this and the given column have equal structure
          */
         public boolean equalStructure(final ValueSchemaColumn column) {
@@ -278,7 +284,7 @@ public interface ValueSchema extends ColumnarSchema {
     /**
      * Get the properties of the column at the given {@code index}.
      *
-     * @param index
+     * @param index column index
      * @return column properties
      * @since 5.8
      */

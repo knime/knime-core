@@ -59,8 +59,8 @@ import org.knime.core.data.DataTableSpec;
  * <li>All columns (except column 0) have unique column names.</li>
  * </ul>
  * <p>
- * Note that the {@link #getSourceSpec() DataTableSpec} column indices do not include the RowKey column.
- * Therefore, {@code this.getSourceSpec().getNumColumns()== this.numColumns()-1}, and column indices are offset by 1, that is,
+ * Note that the {@link #getSourceSpec() DataTableSpec} column indices do not include the RowKey column. Therefore,
+ * {@code this.getSourceSpec().getNumColumns()== this.numColumns()-1}, and column indices are offset by 1, that is,
  * {@code this.getSourceSpec().getColumnSpec(i)} corresponds to {@code this.getColumn(i+1).dataColumnSpec())}.
  *
  * @author Tobias Pietzsch

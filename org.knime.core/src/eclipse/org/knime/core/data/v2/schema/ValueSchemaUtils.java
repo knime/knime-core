@@ -76,7 +76,7 @@ public final class ValueSchemaUtils {
      * @return a ValueSchema with the specified columns
      * @since 5.8
      */
-    public static final ValueSchema create(final ValueSchemaColumn... columns) {
+    public static ValueSchema create(final ValueSchemaColumn... columns) {
         return new DefaultValueSchema(columns);
     }
 
@@ -87,7 +87,7 @@ public final class ValueSchemaUtils {
      * @return a ValueSchema with the specified columns
      * @since 5.8
      */
-    public static final ValueSchema create(final Collection<ValueSchemaColumn> columns) {
+    public static ValueSchema create(final Collection<ValueSchemaColumn> columns) {
         return create(columns.toArray(ValueSchemaColumn[]::new));
     }
 
@@ -101,7 +101,7 @@ public final class ValueSchemaUtils {
      * @return a new {@link ValueSchema}, with updated DataColumnSpecs
      * @since 5.8
      */
-    public static final ValueSchema updateDataColumnSpecs(final ValueSchema schema,
+    public static ValueSchema updateDataColumnSpecs(final ValueSchema schema,
         final Map<Integer, DataColumnDomain> domainMap, final Map<Integer, DataColumnMetaData[]> metadataMap) {
 
         final int numCols = schema.numColumns();
@@ -147,7 +147,7 @@ public final class ValueSchemaUtils {
      * @param schema to check
      * @return true if the schema has a RowID column
      */
-    public static final boolean hasRowID(final ValueSchema schema) {
+    public static boolean hasRowID(final ValueSchema schema) {
         return schema.numColumns() > 0 && schema.getColumn(0).isRowKey();
     }
 
