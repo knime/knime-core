@@ -189,9 +189,9 @@ public abstract class WebResourceController {
         if (nodeIDsToReset == null) {
             filteredViewContentMap = viewContentMap;
         } else {
-			var nodesToReset = WizardPageUtil
-					.getSuccessorWizardPageNodesWithinComponent(manager, subnodeID, nodeIDsToReset)
-					.map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
+            var nodesToReset =
+                WizardPageUtil.getSuccessorWizardPageNodesWithinComponent(manager, subnodeID, nodeIDsToReset)
+                    .map(p -> p.getFirst().toString()).collect(Collectors.toCollection(HashSet::new));
             filteredViewContentMap = filterViewValues(nodesToReset, viewContentMap);
         }
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", filteredViewContentMap.size());
@@ -218,7 +218,9 @@ public abstract class WebResourceController {
             manager.resetSubnodeForViewUpdate(subnodeID, this);
         } else {
             for (NodeID nodeID : nodeIDsToReset) {
-                manager.resetSubnodeForViewUpdate(subnodeID, this, nodeID);
+                if (canResetNodeWithinSubnode(nodeID, subNodeNC)) {
+                    manager.resetSubnodeForViewUpdate(subnodeID, this, nodeID);
+                }
             }
         }
 
@@ -249,6 +251,18 @@ public abstract class WebResourceController {
             : List.of(nodeIDToReset);
 
         return loadValuesIntoPageInternal(viewContentMap, subnodeID, validate, useAsDefault, nodeIDsToReset);
+    }
+
+    /**
+     * @return {@code true}, if the node can be reset, {@code false} otherwise
+     */
+    private static final boolean canResetNodeWithinSubnode(final NodeID nodeID, final SubNodeContainer snc) {
+        final var nc = snc.getWorkflowManager().findNodeContainer(nodeID);
+        if (nc instanceof NativeNodeContainer nnc) {
+            // only reset if node is not idle (otherwise no need to reset)
+            return !nnc.getNodeContainerState().isIdle();
+        }
+        return true;
     }
 
     @SuppressWarnings("rawtypes")
