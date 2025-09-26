@@ -53,7 +53,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -561,4 +564,134 @@ public final class ThreadPoolTest {
         Callable<Integer> failCallable = () -> root.runInvisible(() -> root.runInvisible(innerFailCallable));
         assertThrows(ExecutionException.class, () -> root.submit(failCallable).get());
     }
+
+    /**
+     * Tests that the ThreadPool properly handles and logs Throwable instances (including Errors)
+     * that occur during task execution, and that the uncaught exception handler is properly set.
+     *
+     * This test verifies:
+     * <ul>
+     *   <li>RuntimeExceptions thrown in tasks are wrapped in ExecutionException and can be retrieved via Future.get().</li>
+     *   <li>Errors (such as AssertionError and OutOfMemoryError) are also properly handled and wrapped in ExecutionException.</li>
+     *   <li>The ThreadPool remains functional after handling such Throwables and can execute subsequent tasks.</li>
+     * </ul>
+     *
+     * @throws Exception if any unexpected error occurs during the test
+     */
+    @Test
+    void testThrowableHandlingAndUncaughtExceptionHandler() throws Exception {
+        ThreadPool pool = new ThreadPool(2);
+
+        // Test that RuntimeException is properly handled (existing behavior)
+        Callable<Void> runtimeExceptionTask = () -> {
+            throw new RuntimeException("Test runtime exception");
+        };
+        Future<Void> future1 = pool.enqueue(runtimeExceptionTask);
+        ExecutionException ee = assertThrows(ExecutionException.class, () -> future1.get());
+        assertTrue(ee.getCause() instanceof RuntimeException);
+        assertEquals("Test runtime exception", ee.getCause().getMessage());
+
+        // Test that Error is properly handled (new behavior from AP-25062)
+        Callable<Void> errorTask = () -> {
+            throw new AssertionError("Test assertion error");
+        };
+        Future<Void> future2 = pool.enqueue(errorTask);
+        ExecutionException ee2 = assertThrows(ExecutionException.class, () -> future2.get());
+        assertTrue(ee2.getCause() instanceof AssertionError);
+        assertEquals("Test assertion error", ee2.getCause().getMessage());
+
+        // Test that OutOfMemoryError is properly handled
+        Callable<Void> oomTask = () -> {
+            throw new OutOfMemoryError("Test OOM error");
+        };
+        Future<Void> future3 = pool.enqueue(oomTask);
+        ExecutionException ee3 = assertThrows(ExecutionException.class, () -> future3.get());
+        assertTrue(ee3.getCause() instanceof OutOfMemoryError);
+        assertEquals("Test OOM error", ee3.getCause().getMessage());
+
+        // Wait for all tasks to complete and verify pool is still functional
+        pool.waitForTermination();
+
+        // Verify pool can still execute normal tasks after handling Throwables
+        Callable<String> normalTask = () -> "Success after error handling";
+        Future<String> future4 = pool.enqueue(normalTask);
+        assertEquals("Success after error handling", future4.get());
+
+        pool.shutdown();
+    }
+
+    /**
+     * Tests that Errors thrown in regular (non-invisible) threads in the ThreadPool are properly handled.
+     *
+     * This test submits several tasks that throw InternalError and verifies that:
+     * <ul>
+     *   <li>The thrown Error is wrapped in ExecutionException.</li>
+     *   <li>The cause and message of the Error are preserved.</li>
+     * </ul>
+     *
+     * @throws Exception if any unexpected error occurs during the test
+     */
+    @Test
+    void testErrorThrowingRegularThread() throws Exception {
+        ThreadPool pool = new ThreadPool(2);
+
+        final String expectedErrorMessage = "Test assertion error in invisible thread";
+        for (int i = 0; i < 5; i++) {
+            Future<Object> failingFuture = pool.enqueue(() -> {
+                throw new InternalError(expectedErrorMessage);
+            });
+            ExecutionException ee = assertThrows(ExecutionException.class, () -> failingFuture.get());
+            assertTrue(ee.getCause() instanceof InternalError);
+            assertEquals(expectedErrorMessage, ee.getCause().getMessage());
+        }
+
+        pool.shutdown();
+    }
+
+    /**
+     * Tests that Errors thrown in invisible threads in the ThreadPool are properly handled.
+     *
+     * This test submits several tasks to runInvisible that throw InternalError and verifies that:
+     * <ul>
+     *   <li>The thrown Error is wrapped in ExecutionException.</li>
+     *   <li>The cause and message of the Error are preserved.</li>
+     * </ul>
+     *
+     * @throws Exception if any unexpected error occurs during the test
+     */
+    @Test
+    void testErrorThrowingInvisibleThread() throws Exception {
+        final ThreadPool pool = new ThreadPool(2);
+
+        final int threadCount = 5;
+        CyclicBarrier invisibleThreadBarrier = new CyclicBarrier(threadCount);
+
+        final String expectedErrorMessage = "Test assertion error in invisible thread";
+
+        Callable<Void> innerBarrierWaitTask = () -> {
+            invisibleThreadBarrier.await();
+            throw new InternalError(expectedErrorMessage);
+        };
+
+        List<Future<Void>> invisFutures = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            invisFutures.add(pool.submit(() -> pool.runInvisible(innerBarrierWaitTask)));
+        }
+
+        for (Future<Void> failingFuture : invisFutures) {
+            ExecutionException ee = assertThrows(ExecutionException.class, () -> failingFuture.get());
+            assertTrue(ee.getCause() instanceof InternalError);
+            assertEquals(expectedErrorMessage, ee.getCause().getMessage());
+        }
+        int waitPolls = 5;
+        while (pool.getRunningThreads() > 0 && waitPolls-- > 0) {
+            Thread.sleep(50); // Future#get doesn't immediately release the thread (#workerFinished called from thread)
+        }
+
+        assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads after error handling");
+        assertEquals(0, pool.getRunningThreads(), "Expected no running threads after error handling");
+
+        pool.shutdown();
+    }
+
 }
