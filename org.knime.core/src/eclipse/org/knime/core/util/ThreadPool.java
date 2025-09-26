@@ -76,6 +76,24 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public class ThreadPool {
 
+    /** Feature flag / system property to disable "slot reacquisition" after {@link #runInvisible(Callable)}.
+     * Added in 5.5.2 and 5.8.0 as part of AP-25062.
+     * @deprecated to be removed again once problem is understood/solved.
+     */
+    @Deprecated(since = "5.8.0", forRemoval = true)
+    private static final String SYSPROP_DISABLE_INVISIBLE_SYNC = "org.knime.threadpool.disableInvisibleSync"; // NOSONAR
+
+    private static final boolean DISABLE_INVISIBLE_SYNC;
+
+    static {
+        DISABLE_INVISIBLE_SYNC = Boolean.getBoolean(SYSPROP_DISABLE_INVISIBLE_SYNC); // NOSONAR
+        if (DISABLE_INVISIBLE_SYNC) {
+            NodeLogger.getLogger(ThreadPool.class).infoWithFormat(
+                "ThreadPool invisible synchronization is disabled via system property: %s",
+                SYSPROP_DISABLE_INVISIBLE_SYNC); // NOSONAR
+        }
+    }
+
     private class MyFuture<T> extends FutureTask<T> {
         private final CountDownLatch m_startWaiter = new CountDownLatch(1);
         private final ClassLoader m_contextClassloader = Thread.currentThread().getContextClassLoader();
@@ -156,8 +174,7 @@ public class ThreadPool {
          */
         @Override
         public T get() throws InterruptedException, ExecutionException {
-            if (Thread.currentThread() instanceof Worker) {
-                Worker w = (Worker)Thread.currentThread();
+            if (Thread.currentThread() instanceof Worker w) {
                 w.m_startedFrom.m_invisibleThreads.incrementAndGet();
                 try {
                     checkQueue();
@@ -181,8 +198,7 @@ public class ThreadPool {
         public T get(final long timeout, final TimeUnit unit)
                 throws InterruptedException, ExecutionException,
                 TimeoutException {
-            if (Thread.currentThread() instanceof Worker) {
-                Worker w = (Worker)Thread.currentThread();
+            if (Thread.currentThread() instanceof Worker w) {
                 w.m_startedFrom.m_invisibleThreads.incrementAndGet();
                 try {
                     checkQueue();
@@ -198,7 +214,7 @@ public class ThreadPool {
 
     private static int workerCounter;
 
-    private static class Worker extends Thread {
+    private static final class Worker extends Thread {
         private final Object m_lock = new Object();
 
         private MyFuture<?> m_runnable;
@@ -216,13 +232,22 @@ public class ThreadPool {
         private final ClassLoader m_contextClassLoaderAtInit;
 
         /**
-         * Creates a new worker.
+         * Creates a new worker (internal code, use {@link #startNewWorker()} instead).
          */
-        public Worker() {
+        private Worker() {
             super("KNIME-Worker-" + workerCounter++);
             setPriority(Thread.MIN_PRIORITY + 2);
             setDaemon(true);
             m_contextClassLoaderAtInit = getContextClassLoader();
+        }
+
+        /** @return new worker with an exception handler. */
+        static Worker startNewWorker() {
+            final Worker w = new Worker();
+            w.setUncaughtExceptionHandler((t, e) -> NodeLogger.getLogger(ThreadPool.class)
+                .error("An uncaught exception occurred in a worker thread.", e));
+            w.start();
+            return w;
         }
 
         /**
@@ -261,7 +286,7 @@ public class ThreadPool {
                             NodeLogger.getLogger(ThreadPool.class).error(
                                 "An exception occurred while executing a runnable.", ex.getCause());
                         }
-                    } catch (Exception ex) {
+                    } catch (Exception ex) { // dead code as the #run method is from a FutureTask, catching Throwable
                         // prevent the worker from being terminated
                         NodeLogger.getLogger(ThreadPool.class).error("An exception occurred while executing "
                                 + "a runnable.", ex);
@@ -541,8 +566,7 @@ public class ThreadPool {
                 if (m_parent == null) {
                     w = m_availableWorkers.poll();
                     while ((w == null) || !w.wakeup(task, pool)) {
-                        w = new Worker();
-                        w.start();
+                        w = Worker.startNewWorker();
                     }
                 } else {
                     w = m_parent.wakeupWorker(task, pool);
@@ -576,6 +600,14 @@ public class ThreadPool {
         // no synchronization b/c it's only an estimate
         // we exclude invisible threads because we assume they're not doing compute-heavy tasks
         return m_runningWorkers.size() - m_invisibleThreads.get();
+    }
+
+    /**
+     * @return the invisibleThreads
+     * @since 5.8
+     */
+    int getInvisibleThreads() {
+        return m_invisibleThreads.get();
     }
 
     private boolean hasFreeWorkerSlot() {
@@ -680,7 +712,7 @@ public class ThreadPool {
                     "ThreadPool.runInvisible() called while workflow is locked");
 
                 // no need to re-acquire a slot if we want to pass on the callable interrupt
-                if (!interruptInCallable && !isLockedWorkflow) {
+                if (!interruptInCallable && !isLockedWorkflow && !DISABLE_INVISIBLE_SYNC) {
                     // reacquire a "slot" among visible workers
                     // Getting interrupted here can trigger a special case (see below in finally block)
                     while (!hasFreeWorkerSlot()) {
