@@ -44,22 +44,65 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Jun 6, 2025 (wiswedel): created
+ *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal;
+package org.knime.core.internal.diagnostics;
 
-import org.knime.core.monitor.ProcessWatchdog;
-import org.knime.core.util.IEarlyStartup;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+
+import org.knime.core.node.KNIMEConstants;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- * {@link IEarlyStartup} implementation that starts the watchdog as part of the application (via extension point).
+ * KNIME-specific information diagnostic collector.
  *
- * @since 5.5
+ * @since 5.8
  */
-public final class ProcessWatchdogEarlyStartup implements IEarlyStartup {
+public final class KNIMEInfoCollector implements Collector {
+
+    /** The singleton instance. */
+    public static final KNIMEInfoCollector INSTANCE = new KNIMEInfoCollector();
+
+    private KNIMEInfoCollector() {
+        // Singleton
+    }
 
     @Override
-    public void run() {
-        ProcessWatchdog.getInstance();
+    public boolean isEnabled(final DiagnosticInstructions instructions) {
+        return instructions.knimeInfo();
+    }
+
+    @Override
+    public String getJsonKey() {
+        return "knimeInfo";
+    }
+
+    @Override
+    public void collect(final Instant timestamp, final DiagnosticInstructions instructions,
+        final JsonGenerator generator, final Path outputDir) throws IOException {
+        generator.writeStringField("coreVersion", KNIMEConstants.VERSION);
+        generator.writeStringField("buildInfo", "%s%s %s".formatted(KNIMEConstants.BUILD,
+            (KNIMEConstants.isNightlyBuild() ? " (nightly)" : ""), KNIMEConstants.BUILD_DATE));
+        generator.writeStringField("installationPath", System.getProperty("osgi.install.area", ""));
+        generator.writeStringField("knimeHomeDir", KNIMEConstants.getKNIMEHomeDir());
+
+        final var knimeTempPath = KNIMEConstants.getKNIMETempDir();
+        generator.writeStringField("knimeTempDir", knimeTempPath);
+
+        final var tempPath = Paths.get(knimeTempPath).toFile();
+        long freeSpace = tempPath.getFreeSpace();
+        long totalSpace = tempPath.getTotalSpace();
+        long usableSpace = tempPath.getUsableSpace();
+
+        generator.writeObjectFieldStart("knimeTempDiskSpace");
+        generator.writeNumberField("freeBytes", freeSpace);
+        generator.writeNumberField("totalBytes", totalSpace);
+        generator.writeNumberField("usableBytes", usableSpace);
+
+        generator.writeEndObject();
     }
 }
