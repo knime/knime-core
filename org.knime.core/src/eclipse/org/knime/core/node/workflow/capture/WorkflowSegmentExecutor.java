@@ -406,8 +406,9 @@ public final class WorkflowSegmentExecutor {
     public WorkflowSegmentExecutionResult executeWorkflowAndCollectNodeMessages(final PortObject[] inputData,
         final ExecutionContext exec) throws Exception {
         var executionResult = executeWorkflow(inputData, exec);
-        return new WorkflowSegmentExecutionResult(executionResult.getFirst(), executionResult.getSecond(),
-            recursivelyExtractNodeMessages(m_wfm));
+        boolean executionSuccessful = m_wfm.getNodeContainerState().isExecuted();
+        return new WorkflowSegmentExecutionResult(executionSuccessful ? executionResult.getFirst() : null,
+            executionResult.getSecond(), recursivelyExtractNodeMessages(m_wfm));
     }
 
     private void checkWfmNonNull() {
