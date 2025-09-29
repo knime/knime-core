@@ -826,7 +826,7 @@
             class="org.knime.core.eclipseUtil.URLConnectionCacheDisabler">
       </provider>
       <provider
-            class="org.knime.core.internal.ProcessWatchdogEarlyStartup"
+            class="org.knime.core.internal.ApplicationHealthEarlyStartup"
             startupStage="BEFORE_WFM_CLASS_LOADED">
       </provider>
    </extension>

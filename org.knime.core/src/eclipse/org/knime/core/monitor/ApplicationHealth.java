@@ -252,9 +252,9 @@ public final class ApplicationHealth implements AutoCloseable {
     /**
      * @param type the type of the external process
      * @return the current PSS (proportional set size) of all external processes of the given type (and their children)
-     *         in bytes
+     *         in bytes, or -1 if no such process is running or PSS is not supported on the current platform
      */
     public static long getExternalProcessesPssBytes(final ExternalProcessType type) {
-        return ProcessWatchdog.EXTERNAL_PROCESS_PSS.get(type);
+        return ProcessWatchdog.EXTERNAL_PROCESS_PSS.getOrDefault(type, -1L);
     }
 }
