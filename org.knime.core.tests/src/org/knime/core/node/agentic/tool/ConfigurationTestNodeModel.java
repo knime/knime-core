@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.agentic.tool;
 
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -56,7 +57,10 @@ import org.knime.core.node.dialog.DialogNodePanel;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.dialog.SubNodeDescriptionProvider;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.util.JsonUtil;
 
 import jakarta.json.JsonException;
@@ -72,6 +76,16 @@ public class ConfigurationTestNodeModel extends TestNodeModel implements DialogN
 
     ConfigurationTestNodeModel() {
         super(null, FlowVariablePortObject.TYPE);
+    }
+
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new PortObjectSpec[] {FlowVariablePortObjectSpec.INSTANCE};
+    }
+
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        return new PortObject[] {FlowVariablePortObject.INSTANCE};
     }
 
     @Override

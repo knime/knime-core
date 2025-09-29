@@ -160,8 +160,6 @@ class WorkflowToolCellTest {
 
     @Test
     void testCellCreatedFromFullFledgedToolWorkflow() throws IOException, ToolIncompatibleWorkflowException {
-        WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 0, 0); // un-connected input node
-        WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 0, 0); // un-connected input node
         WorkflowManagerUtil.createAndAddNode(m_toolWfm, new ConfigurationTestNodeFactory(), 0, 0); // configuration node
         var messageOutput = addAndConnectNodes(m_toolWfm, inData -> {
             var projectWfm = NodeContext.getContext().getWorkflowManager();
@@ -177,7 +175,7 @@ class WorkflowToolCellTest {
         assertThat(cell.getDescription()).isEqualTo("tool description");
         assertThatJson(cell.getParameterSchema()).isEqualTo(
             """
-                    {"configuration-parameter-name-3":{"type":"string","default":"default config value","description":"config decription"}}""");
+                    {"configuration-parameter-name-1":{"type":"string","default":"default config value","description":"config decription"}}""");
         assertThat(cell.getInputs()).hasSize(1);
         var toolInput = cell.getInputs()[0];
         assertThat(toolInput.name()).isEqualTo("test-input-parameter");
@@ -201,7 +199,7 @@ class WorkflowToolCellTest {
         ConfigurationTestNodeModel.jsonValue = null;
         var exec = executionContextExtension.getExecutionContext();
         var res = cell.execute("""
-                {"configuration-parameter-name-3": "config value" }
+                {"configuration-parameter-name-1": "config value" }
                  """, new PortObject[]{TestNodeModel.createTable(exec)}, exec, Map.of());
         assertThat(res.message()).isEqualTo("val1");
         assertThat(res.outputs()[0]).isNotNull();
