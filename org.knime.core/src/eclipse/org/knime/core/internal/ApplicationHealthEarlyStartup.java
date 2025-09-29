@@ -79,6 +79,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  * {@link IEarlyStartup} implementation that starts the watchdog as part of the application (via extension point).
  *
  * @since 5.8
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class ApplicationHealthEarlyStartup implements IEarlyStartup {
 
@@ -98,27 +99,6 @@ public final class ApplicationHealthEarlyStartup implements IEarlyStartup {
             LOGGER.debug(() -> "KNIME diagnostics system is disabled, to enable it set the system property %s=true"
                 .formatted(FEATURE_FLAG_DIAGNOSTICS));
         }
-    }
-
-    /**
-     * Creates a diagnostic dump with default settings for testing purposes.
-     *
-     * @return the path to the created dump directory
-     * @throws IOException if an I/O error occurs
-     */
-    public static Path createDefaultDiagnostics() throws IOException {
-        return DiagnosticsFileDump.getInstance().exportDefault();
-    }
-
-    /**
-     * Creates a diagnostic dump with default settings for testing purposes.
-     *
-     * @param instructions custom instructions to include/exclude specific information
-     * @return the path to the created dump directory
-     * @throws IOException if an I/O error occurs
-     */
-    public static Path createDiagnostics(final DiagnosticInstructions instructions) throws IOException {
-        return DiagnosticsFileDump.getInstance().export(instructions);
     }
 
     static final class DiagnosticsFileDump {

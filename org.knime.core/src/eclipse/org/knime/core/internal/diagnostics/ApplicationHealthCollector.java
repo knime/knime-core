@@ -130,14 +130,5 @@ public final class ApplicationHealthCollector implements Collector {
             generator.writeNumberField(type.name() + "PssBytes", ApplicationHealth.getExternalProcessesPssBytes(type));
         }
         generator.writeEndObject();
-
-        generator.writeArrayFieldStart("dataTableCounts");
-        for (final var dtc : ApplicationHealth.getDataTableCounts().entrySet()) {
-            generator.writeStartObject();
-            generator.writeStringField("tableImpl", dtc.getKey());
-            generator.writeNumberField("count", dtc.getValue());
-            generator.writeEndObject();
-        }
-        generator.writeEndArray();
     }
 }

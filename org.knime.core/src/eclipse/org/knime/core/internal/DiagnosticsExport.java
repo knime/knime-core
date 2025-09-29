@@ -73,6 +73,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * of all diagnostic collectors and manages the JSON object structure and enablement checks.
  *
  * @since 5.8
+ * @noreference This class is not intended to be referenced by clients.
  */
 public final class DiagnosticsExport {
 
