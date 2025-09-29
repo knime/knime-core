@@ -507,7 +507,7 @@ public final class WorkflowSegmentExecutor {
          */
         public String compileSingleErrorMessage() {
             var errorMessages =
-                nodeMessages.stream().filter(msg -> msg.message().getMessageType() == Type.ERROR).toList();
+                nodeMessages.stream().toList();
             // determine the number of failed nodes that are not containers
             List<WorkflowSegmentNodeMessage> leafErrorMessages = new ArrayList<>();
             for (WorkflowSegmentNodeMessage message : errorMessages) {
