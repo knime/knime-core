@@ -500,7 +500,7 @@ public final class WorkflowSegmentExecutor {
 
         private static void recursivelyExtractLeafNodeErrorMessages(final WorkflowSegmentNodeMessage message,
             final List<WorkflowSegmentNodeMessage> result) {
-            if (message.message().getMessageType() != Type.ERROR) {
+            if (message.message().getMessageType() == Type.RESET) {
                 return;
             }
             if (message.recursiveMessages().isEmpty()) {
