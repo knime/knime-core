@@ -57,6 +57,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.v2.RowKeyValueFactory;
 import org.knime.core.data.v2.ValueFactory;
 import org.knime.core.data.v2.ValueFactoryUtils;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.table.access.ReadAccess;
 import org.knime.core.table.access.WriteAccess;
 import org.knime.core.table.schema.ColumnarSchema;
@@ -165,6 +166,9 @@ public interface ValueSchema extends ColumnarSchema {
         DataColumnSpec dataColumnSpec, //
         ValueFactory<?, ?> valueFactory, //
         DataTraits dataTraits) {
+
+        private static final NodeLogger LOGGER = NodeLogger.getLogger(ValueSchemaColumn.class);
+
         /**
          * Create a {@code ValueSchemaColumn}. The {@code dataColumnSpec} and {@code valueFactory} must be compatible.
          * (The {@code dataColumnSpec} for a {@code RowKeyValueFactory} must be {@code null}.)
@@ -181,7 +185,8 @@ public interface ValueSchema extends ColumnarSchema {
                 }
             } else {
                 if (!dataColumnSpec.getType().equals(ValueFactoryUtils.getDataTypeForValueFactory(valueFactory))) {
-                    throw new IllegalArgumentException("dataColumnSpec and valueFactory don't match");
+                    // NB: We don't throw this exception here to keep loading of some old workflows functional. Workflows written with 4.5.0 may have wrong serialized DataTraits.
+                    LOGGER.error(new IllegalArgumentException("dataColumnSpec and valueFactory don't match"));
                 }
             }
         }
