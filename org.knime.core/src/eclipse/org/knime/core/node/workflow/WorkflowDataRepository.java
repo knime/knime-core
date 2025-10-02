@@ -99,7 +99,8 @@ public class WorkflowDataRepository implements IDataRepository {
         "org.knime.core.data.container.BufferedContainerTable", new LongAdder(), //
         "org.knime.core.data.columnar.table.VirtualTableExtensionTable", new LongAdder(), //
         "org.knime.core.data.columnar.table.UnsavedColumnarContainerTable", new LongAdder(), //
-        "org.knime.core.data.columnar.table.SavedColumnarContainerTable", new LongAdder() //
+        "org.knime.core.data.columnar.table.ColumnarContainerTableLoader$SavedColumnarContainerTable", //
+            new LongAdder()
     ));
 
     /** Instance used for old workflows where KNIME didn't have blobs and such. */
@@ -192,7 +193,8 @@ public class WorkflowDataRepository implements IDataRepository {
     @Override
     public void addTable(final int key, final ContainerTable table) {
         final var result = m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
-        if (result == null) {
+        final var countsChanged = result == null || result.getClass() != table.getClass();
+        if (countsChanged) {
             DATA_TABLES_COUNTER.compute(table.getClass().getName(), (k, a) -> {
                 if (a == null) {
                     // reduce log messages if unknown implementors are heavily used
@@ -217,8 +219,14 @@ public class WorkflowDataRepository implements IDataRepository {
     @Override
     public Optional<ContainerTable> removeTable(final Integer key) {
         final var result = Optional.ofNullable(m_globalTableRepository.remove(key));
-        if (result.isPresent()) {
+        final var countsChanged = result.isPresent();
+        if (countsChanged) {
             DATA_TABLES_COUNTER.compute(result.get().getClass().getName(), (k, a) -> {
+                if (a == null) {
+                    LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
+                        ContainerTable.class.getSimpleName(), k);
+                    return null;
+                }
                 a.decrement();
                 // there are currently only a handful of `ContainerTable` classes,
                 // we do not remove counters here - even if they are zero
