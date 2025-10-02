@@ -49,7 +49,6 @@ package org.knime.core.workbench;
 
 import java.io.File;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 import org.knime.core.node.util.CheckUtils;
@@ -102,8 +101,9 @@ public final class KNIMEWorkspacePath {
         try {
             URL workspaceURL = org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
             if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
-                // we can create our home only in local workspaces
-                File wsDir = Paths.get(workspaceURL.toURI()).toFile();
+                // do not use Path.get(url.toURI()) as that fails if the url contains spaces, see
+                // https://github.com/eclipse-platform/eclipse.platform/issues/35?
+                File wsDir = new File(workspaceURL.getPath());
                 if (!wsDir.exists() && !wsDir.mkdirs()) {
                     throw new IllegalArgumentException("Unable to create workspace directory "
                         + wsDir.getAbsolutePath());
