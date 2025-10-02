@@ -192,9 +192,12 @@ public class WorkflowDataRepository implements IDataRepository {
     @SuppressWarnings("resource") // ownership is not transferred to us
     @Override
     public void addTable(final int key, final ContainerTable table) {
+        // avoid over-counting replaced values by actively removing them,
+        // so that they are never implicitly removed by `Map#put` (to update counters)
+        this.removeTable(key);
+
         final var result = m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
-        final var countsChanged = result == null || result.getClass() != table.getClass();
-        if (countsChanged) {
+        if (result == null) {
             DATA_TABLES_COUNTER.compute(table.getClass().getName(), (k, a) -> {
                 if (a == null) {
                     // reduce log messages if unknown implementors are heavily used
@@ -219,12 +222,10 @@ public class WorkflowDataRepository implements IDataRepository {
     @Override
     public Optional<ContainerTable> removeTable(final Integer key) {
         final var result = Optional.ofNullable(m_globalTableRepository.remove(key));
-        final var countsChanged = result.isPresent();
-        if (countsChanged) {
+        if (result.isPresent()) {
             DATA_TABLES_COUNTER.compute(result.get().getClass().getName(), (k, a) -> {
                 if (a == null) {
-                    LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
-                        ContainerTable.class.getSimpleName(), k);
+                    // already logging unknown implementors in `#addTable(...)`
                     return null;
                 }
                 a.decrement();
