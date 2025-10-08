@@ -72,7 +72,7 @@ public class TestrunConfiguration {
 
     private boolean m_testDialogs;
 
-    private boolean m_testMUIDialogs;
+    private boolean m_testMUIDialogs = true;
 
     private boolean m_testViews = true;
 
