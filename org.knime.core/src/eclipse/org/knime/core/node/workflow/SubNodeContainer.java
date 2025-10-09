@@ -2647,6 +2647,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                         nnc.saveModelSettingsToDefault();
                         nnc.setDirty();
                     }
+                    resetOutputNodeForLayoutChanges();
                 }
             }
         }
