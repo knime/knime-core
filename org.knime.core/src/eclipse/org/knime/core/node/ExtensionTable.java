@@ -70,8 +70,10 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 public abstract class ExtensionTable implements ContainerTable {
 
     private static final String CFG_TABLE_IMPL = "table_implementation";
-    private static final String CFG_TABLE_DERIVED_SETTINGS =
-        "table_derived_settings";
+
+    private static final String CFG_TABLE_DERIVED_SETTINGS = "table_derived_settings";
+
+    private static final String CFG_TABLE_ID = "table_ID";
 
     @Override
     public CloseableRowIterator iteratorWithFilter(final TableFilter filter, final ExecutionMonitor exec) {
@@ -94,15 +96,20 @@ public abstract class ExtensionTable implements ContainerTable {
 
         private final IDataRepository m_repository;
 
+        private final int m_tableId;
+
         private LoadContext(final ReferencedFile dataFileRef,
                 final DataTableSpec tableSpec,
                 final NodeSettingsRO settings,
                 final Map<Integer, BufferedDataTable> tableRepository,
                 final ExecutionMonitor executionMonitor,
-                final IDataRepository repository) {
+                final IDataRepository repository) throws InvalidSettingsException {
             m_dataFileRef = dataFileRef;
             m_tableSpec = tableSpec;
-            m_settings = settings;
+            // previously, `AbstractColumnarContainerTable`s used ID "-1" because
+            // it was not made available via the load context - now it is
+            m_tableId = settings.getInt(CFG_TABLE_ID, -1);
+            m_settings = settings.getNodeSettings(CFG_TABLE_DERIVED_SETTINGS);
             m_tableRepository = tableRepository;
             m_executionMonitor = executionMonitor;
             m_repository = repository;
@@ -121,6 +128,14 @@ public abstract class ExtensionTable implements ContainerTable {
         @Override
         public DataTableSpec getTableSpec() {
             return m_tableSpec;
+        }
+
+        /**
+         * @return the id of the {@link ContainerTable}
+         * @since 5.8
+         */
+        public int getTableID() {
+            return m_tableId;
         }
 
         /**
@@ -291,21 +306,16 @@ public abstract class ExtensionTable implements ContainerTable {
      * @param dataRepository IDataRepository for FileStoreCells and BlobCells
      * @return the loaded table
      * @throws InvalidSettingsException If settings are invalid
-     * @throws IOException If reading fails
-     * @throws CanceledExecutionException If canceled
      * @since 4.3
      * @noreference This method is not intended to be referenced by clients.
      */
     public static ExtensionTable loadExtensionTable(final ReferencedFile fileRef, final DataTableSpec spec,
         final NodeSettingsRO s, final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
         final IDataRepository dataRepository)
-        throws InvalidSettingsException, IOException, CanceledExecutionException {
+        throws InvalidSettingsException {
 
-        final String tableImpl = s.getString(CFG_TABLE_IMPL);
-        NodeSettingsRO derivedSettings = s.getNodeSettings(CFG_TABLE_DERIVED_SETTINGS);
-        LoadContext context = new LoadContext(fileRef, spec, derivedSettings, tblRep, exec, dataRepository);
-
-        return ExtensionTableRegistry.getInstance().loadExtensionTable(context, tableImpl);
+        final var context = new LoadContext(fileRef, spec, s, tblRep, exec, dataRepository);
+        return ExtensionTableRegistry.getInstance().loadExtensionTable(context, s.getString(CFG_TABLE_IMPL));
 
     }
 
