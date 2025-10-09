@@ -193,20 +193,27 @@ public class WorkflowDataRepository implements IDataRepository {
     @Override
     public void addTable(final int key, final ContainerTable table) {
         final var result = m_globalTableRepository.put(key, CheckUtils.checkArgumentNotNull(table));
-        final var countsChanged = result == null || result.getClass() != table.getClass();
-        if (countsChanged) {
-            DATA_TABLES_COUNTER.compute(table.getClass().getName(), (k, a) -> {
-                if (a == null) {
-                    // reduce log messages if unknown implementors are heavily used
-                    LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
-                        ContainerTable.class.getSimpleName(), k);
-                    // track unknown implementor, might not be visible in metrics
-                    a = new LongAdder();
-                }
-                a.increment();
-                return a;
-            });
+        if (result == null) {
+            incrementCounter(table.getClass());
+        } else if (result != table) {
+            // ideally, we would have always thrown an exception here, however, we only discovered in 5.9 that
+            // implementations of `AbstractColumnarContainerTable` are consistently re-using table ID "-1"
+            LOGGER.codingWithFormat("Detected two tables with the same table ID \"%s\": %s and %s", key, result, table);
         }
+    }
+
+    private static void incrementCounter(final Class<? extends ContainerTable> clazz) {
+        DATA_TABLES_COUNTER.compute(clazz.getName(), (k, a) -> {
+            if (a == null) {
+                // reduce log messages if unknown implementors are heavily used
+                LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
+                    ContainerTable.class.getSimpleName(), k);
+                // track unknown implementor, might not be visible in metrics
+                a = new LongAdder();
+            }
+            a.increment();
+            return a;
+        });
     }
 
     @SuppressWarnings("resource") // we do not own the table
@@ -219,21 +226,24 @@ public class WorkflowDataRepository implements IDataRepository {
     @Override
     public Optional<ContainerTable> removeTable(final Integer key) {
         final var result = Optional.ofNullable(m_globalTableRepository.remove(key));
-        final var countsChanged = result.isPresent();
-        if (countsChanged) {
-            DATA_TABLES_COUNTER.compute(result.get().getClass().getName(), (k, a) -> {
-                if (a == null) {
-                    LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
-                        ContainerTable.class.getSimpleName(), k);
-                    return null;
-                }
-                a.decrement();
-                // there are currently only a handful of `ContainerTable` classes,
-                // we do not remove counters here - even if they are zero
-                return a;
-            });
+        if (result.isPresent()) {
+            decrementCounter(result.get().getClass());
         }
         return result;
+    }
+
+    private static void decrementCounter(final Class<? extends ContainerTable> clazz) {
+        DATA_TABLES_COUNTER.compute(clazz.getName(), (k, a) -> {
+            if (a == null) {
+                LOGGER.debugWithFormat("Encountered unknown implementor of \"%s\" in repository: %s",
+                    ContainerTable.class.getSimpleName(), k);
+                return null;
+            }
+            a.decrement();
+            // there are currently only a handful of `ContainerTable` classes,
+            // we do not remove counters here - even if they are zero
+            return a;
+        });
     }
 
     /** Used in test case.
