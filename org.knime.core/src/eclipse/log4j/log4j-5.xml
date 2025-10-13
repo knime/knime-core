@@ -48,6 +48,9 @@
             -->
             <param name="ConversionPattern" value="%d{ISO8601} : %-5p : %t : %J : %c{1} : %N : %I : %m%n" />
         </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="INFO" />
+        </filter>
     </appender>
     
     <appender name="knimeConsole" class="org.apache.log4j.varia.NullAppender">
