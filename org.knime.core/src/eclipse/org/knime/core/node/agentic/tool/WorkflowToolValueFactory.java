@@ -49,6 +49,7 @@
 package org.knime.core.node.agentic.tool;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
@@ -58,6 +59,8 @@ import org.knime.core.data.v2.filestore.AbstractFileStoreValueFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.agentic.tool.ToolValue.ToolPort;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.capture.CombinedExecutor;
+import org.knime.core.node.workflow.capture.CombinedExecutor.PortId;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
@@ -208,6 +211,14 @@ public final class WorkflowToolValueFactory extends AbstractFileStoreValueFactor
         public WorkflowToolResult execute(final String parameters, final PortObject[] inputs,
             final ExecutionContext exec, final Map<String, String> executionHints) {
             return ((WorkflowToolValue)super.getDataCell()).execute(parameters, inputs, exec, executionHints);
+        }
+
+
+        @Override
+        public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
+            final List<PortId> inputs, final ExecutionContext exec, final Map<String, String> executionHints) {
+            return ((WorkflowToolValue)super.getDataCell()).execute(workflowExecutor, parameters, inputs, exec,
+                executionHints);
         }
 
     }
