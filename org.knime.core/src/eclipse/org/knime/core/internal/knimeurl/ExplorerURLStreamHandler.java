@@ -260,13 +260,9 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
     }
 
     private static Optional<Authenticator> getServerAuthenticator(final WorkflowContextV2 workflowContextV2) {
-        if (workflowContextV2.getExecutorInfo() instanceof JobExecutorInfo jobExecutorInfo
-            && jobExecutorInfo.isRemote()) {
-            return Optional.of(workflowContextV2)
+        return Optional.of(workflowContextV2)
                 .flatMap(ctx -> ClassUtils.castOptional(RestLocationInfo.class, ctx.getLocationInfo()))
                 .map(RestLocationInfo::getAuthenticator);
-        }
-        return Optional.empty();
     }
 
     private static void authorizeClient(final WorkflowContextV2 workflowContext, final URLConnection conn)
