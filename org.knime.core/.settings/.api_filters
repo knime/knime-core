@@ -8,4 +8,21 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/agentic/tool/WorkflowToolValue.java" type="org.knime.core.node.agentic.tool.WorkflowToolValue$WorkflowToolResult">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.agentic.tool.WorkflowToolValue.WorkflowToolResult"/>
+                <message_argument value="WorkflowToolResult(String, PortObject[], WorkflowManager, String[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/capture/WorkflowSegmentExecutor.java" type="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor$WorkflowSegmentNodeMessage">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="5.8"/>
+                <message_argument value="5.9"/>
+                <message_argument value="compileSingleErrorMessage(List&lt;WorkflowSegmentExecutor.WorkflowSegmentNodeMessage&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

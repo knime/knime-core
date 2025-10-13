@@ -340,8 +340,6 @@ public final class WorkflowManager extends NodeContainer
     /** Workflow annotations, order defines "z-order" */
     private final List<WorkflowAnnotation> m_annotations = new ArrayList<>();
 
-    private int m_nextAnnotationID = 0;
-
     /** for internal usage, holding output table references and file store handlers */
     private WorkflowDataRepository m_dataRepository;
 

@@ -138,7 +138,7 @@ public interface ToolValue extends DataValue {
      * Executes the tool with the given parameters and inputs.
      *
      * @param parameters the parameters to use for the tool execution
-     * @param inputs
+     * @param inputs the input data to use for the tool execution
      * @param exec the execution context for cancellation and to create tables
      * @param executionHints optional hints controlling the tool execution - doesn't need to be respected by the
      *            implementation

@@ -63,7 +63,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -100,13 +102,15 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.capture.CombinedExecutor;
+import org.knime.core.node.workflow.capture.IsolatedExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegment.PortID;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
-import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentExecutionResult;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentNodeMessage;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.JsonUtil;
@@ -245,6 +249,12 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         var paramSchema = JsonUtil.getProvider().createObjectBuilder();
         for (var configNodeEntry : configNodes.entrySet()) {
             var paramName = configNodeEntry.getKey();
+            // remove "-<nodeId>" suffix from config node name
+            // TODO re-visit (parameter name clashes etc.)
+            var dashIdx = paramName.lastIndexOf('-');
+            if (dashIdx > 0) {
+                paramName = paramName.substring(0, dashIdx);
+            }
             var dialogNode = configNodeEntry.getValue();
             var value = dialogNode.getDefaultValue().toJson();
             var valueWithDescription = JsonUtil.getProvider().createObjectBuilder((JsonObject)value);
@@ -453,24 +463,32 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         final Map<String, String> executionHints) {
         var ws = deserializeWorkflowSegment();
         var name = ws.loadWorkflow().getName();
-        var hostNode = NodeContext.getContext().getNodeContainer();
-        WorkflowSegmentExecutor wsExecutor = null;
+        var hostNode = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
+        IsolatedExecutor wsExecutor = null;
         var execMode =
             ExecutionMode.valueOf(Optional.ofNullable(executionHints.get("execution-mode")).orElse("DEFAULT"));
         var isDebugMode = execMode == ExecutionMode.DEBUG;
         Path dataAreaPath = null;
         boolean disposeWorkflowSegmentExecutor = false;
         try {
-            var metanodeName = (isDebugMode ? "Debug: " : "") + name;
+            var workflowName = (isDebugMode ? "Debug: " : "") + name;
             dataAreaPath = copyDataAreaToTempDir().orElse(null);
-            wsExecutor = new WorkflowSegmentExecutor(ws, metanodeName, hostNode, execMode, true, warning -> {
-            }, dataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
-            if (!StringUtils.isBlank(parameters)) {
-                wsExecutor.configureWorkflow(parseParameters(parameters));
-            }
-            var result = wsExecutor.executeWorkflowAndCollectNodeMessages(inputs, exec);
-            disposeWorkflowSegmentExecutor = !isDebugMode || result.portObjectCopies() != null;
-            var wfm = wsExecutor.getWorkflowManager();
+            wsExecutor = WorkflowSegmentExecutor.builder( //
+                hostNode, //
+                execMode, //
+                workflowName, //
+                warning -> {
+                }, //
+                exec, //
+                false).isolated(true).build();
+            var result = wsExecutor.execute( //
+                ws, //
+                inputs, //
+                StringUtils.isBlank(parameters) ? null : parseParameters(parameters), //
+                dataAreaPath, //
+                Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+            disposeWorkflowSegmentExecutor = !isDebugMode || result.outputs() != null;
+            var wfm = wsExecutor.getWorkflow();
             String[] viewNodeIds = null;
             WorkflowManager virtualProject = null;
             if (Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
@@ -483,17 +501,57 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
                     disposeWorkflowSegmentExecutor = false;
                 }
             }
-            return new WorkflowToolResult(extractMessage(result), removeMessageOutput(result.portObjectCopies()),
-                virtualProject, viewNodeIds);
+            return new WorkflowToolResult(
+                extractMessage(result.outputs(),
+                    () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
+                null, removeMessageOutput(result.outputs()), virtualProject, viewNodeIds);
         } catch (Exception ex) {
             var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
             NodeLogger.getLogger(getClass()).error(message, ex);
             disposeWorkflowSegmentExecutor = !isDebugMode;
-            return new WorkflowToolResult(message, null, null, null);
+            return new WorkflowToolResult(message, null, null, null, null);
         } finally {
             if (wsExecutor != null && disposeWorkflowSegmentExecutor) {
                 wsExecutor.dispose();
             }
+            if (dataAreaPath != null) {
+                FileUtils.deleteQuietly(dataAreaPath.toFile());
+            }
+        }
+    }
+
+    @Override
+    public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
+        final List<CombinedExecutor.PortId> inputs, final ExecutionContext exec,
+        final Map<String, String> executionHints) {
+        var ws = deserializeWorkflowSegment();
+        var name = ws.loadWorkflow().getName();
+        Path dataAreaPath = null;
+        try {
+            dataAreaPath = copyDataAreaToTempDir().orElse(null);
+            var result = workflowExecutor.execute(ws, inputs, parseParameters(parameters), dataAreaPath,
+                Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+
+            String[] viewNodeIds = null;
+            if (Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
+                viewNodeIds = result.component().getWorkflowManager().getNodeContainers().stream()
+                    .filter(nc -> nc instanceof NativeNodeContainer nnc
+                        && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
+                    .map(nc -> NodeIDSuffix.create(workflowExecutor.getWorkflow().getID(), nc.getID()).toString())
+                    .toArray(String[]::new);
+            }
+
+            var outputIds = Stream.of(result.outputIds()).map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex())
+                .toArray(String[]::new);
+            return new WorkflowToolResult(
+                extractMessage(result.outputs(),
+                    () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
+                removeMessageOutput(outputIds), removeMessageOutput(result.outputs()), null, viewNodeIds);
+        } catch (Exception ex) {
+            var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
+            NodeLogger.getLogger(getClass()).error(message, ex);
+            return new WorkflowToolResult(message, null, null, null, null);
+        } finally {
             if (dataAreaPath != null) {
                 FileUtils.deleteQuietly(dataAreaPath.toFile());
             }
@@ -517,7 +575,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         }
     }
 
-    private PortObject[] removeMessageOutput(final PortObject[] outputs) {
+    private <T> T[] removeMessageOutput(final T[] outputs) {
         if (outputs == null) {
             return null;
         }
@@ -534,10 +592,9 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
      * @param result the workflow segment execution result.
      * @return the extracted tool message as a single string.
      */
-    private String extractMessage(final WorkflowSegmentExecutionResult result) {
-        var outputs = result.portObjectCopies();
+    private String extractMessage(final PortObject[] outputs, final Supplier<String> singleErrorMessages) {
         if (outputs == null) {
-            return "Tool execution failed with: " + result.compileSingleErrorMessage();
+            return "Tool execution failed with: " + singleErrorMessages.get();
         }
         if (m_messageOutputPortIndex == -1) {
             return "Tool executed successfully (no custom tool message output)";
