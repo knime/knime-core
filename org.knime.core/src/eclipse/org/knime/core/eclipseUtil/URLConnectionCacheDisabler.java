@@ -48,16 +48,8 @@
  */
 package org.knime.core.eclipseUtil;
 
-import java.lang.reflect.InaccessibleObjectException;
 import java.net.HttpURLConnection;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
 
-import org.knime.core.node.NodeLogger;
 import org.knime.core.util.IEarlyStartup;
 
 /**
@@ -69,111 +61,13 @@ import org.knime.core.util.IEarlyStartup;
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  * @since 5.3
+ * @deprecated not necessary anymore with Java 21 (see AP-23956)
  */
+@Deprecated(since = "5.9", forRemoval = true)
 public class URLConnectionCacheDisabler implements IEarlyStartup {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(URLConnectionCacheDisabler.class);
-
-    private static final String AUTH_VALUE_CLASS_NAME = "sun.net.www.protocol.http.AuthCacheValue";
-
-    private static final String CACHE_IMPL_CLASS_NAME = "sun.net.www.protocol.http.AuthCacheImpl";
 
     @Override
     public void run() {
-        try {
-            // retrieving auth value holding the cache
-            final Class<?> cacheValueClass = Class.forName(AUTH_VALUE_CLASS_NAME);
-            final var cacheImplField = cacheValueClass.getDeclaredField("cache");
-            cacheImplField.setAccessible(true); // NOSONAR
-
-            // retrieving actual cache
-            final Class<?> cacheImplClass = Class.forName(CACHE_IMPL_CLASS_NAME);
-            final var hashMapField = cacheImplClass.getDeclaredField("hashtable");
-            hashMapField.setAccessible(true); // NOSONAR
-
-            /*
-             * Retrieves the static cache field from the sun.net implementation, then extracts
-             * its internal cache (being a HashMap), and replaces it by our no-op HashMap.
-             */
-            hashMapField.set(cacheImplField.get(null), new NoOpHashMap<String, LinkedList<?>>()); // NOSONAR
-        } catch (ReflectiveOperationException
-                | SecurityException
-                | IllegalArgumentException
-                | InaccessibleObjectException e) {
-            LOGGER.debug(String.format("Could not disable the authentication cache of the %s",
-                HttpURLConnection.class.getName()), e);
-        }
-    }
-
-    /**
-     * A {@link HashMap} that does nothing.
-     * Overrides every method of the {@link Map} interface to a no-operation.
-     *
-     * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
-     */
-    private static class NoOpHashMap<K, V> extends HashMap<K, V> {
-
-        private static final long serialVersionUID = -1L;
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return true;
-        }
-
-        @Override
-        public boolean containsKey(final Object key) {
-            return false;
-        }
-
-        @Override
-        public boolean containsValue(final Object value) {
-            return false;
-        }
-
-        @Override
-        public V get(final Object key) {
-            return null;
-        }
-
-        @Override
-        public V put(final K key, final V value) {
-            return null;
-        }
-
-        @Override
-        public V remove(final Object key) {
-            return null;
-        }
-
-        @Override
-        public void putAll(final Map<? extends K, ? extends V> m) {
-            // does nothing
-
-        }
-
-        @Override
-        public void clear() {
-            // does nothing
-        }
-
-        @Override
-        public Set<K> keySet() {
-            return Collections.emptySet();
-        }
-
-        @Override
-        public Collection<V> values() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public Set<Entry<K, V>> entrySet() {
-            return Collections.emptySet();
-        }
+        // deprecated, hollowed-out method
     }
 }
