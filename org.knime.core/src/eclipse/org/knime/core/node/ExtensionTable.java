@@ -132,7 +132,7 @@ public abstract class ExtensionTable implements ContainerTable {
 
         /**
          * @return the id of the {@link ContainerTable}
-         * @since 5.8
+         * @since 5.9
          */
         public int getTableID() {
             return m_tableId;
