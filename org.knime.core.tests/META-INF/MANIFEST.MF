@@ -32,7 +32,7 @@ Require-Bundle: org.hamcrest.library;bundle-version="[2.2.0,3.0.0)",
  org.knime.core.data.uritype;bundle-version="[5.6.0,6.0.0)",
  net.javacrumbs.json-unit.json-unit-assertj;bundle-version="[2.38.0,3.0.0)",
  org.junit;bundle-version="[4.13.2,5.0.0)",
- org.mockito.mockito-core;bundle-version="[2.28.2,3.0.0)"
+ org.mockito.mockito-core;bundle-version="[5.18.0,6.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-17
 Import-Package: org.knime.core.data.convert.map,
  org.knime.core.data.join.results,
