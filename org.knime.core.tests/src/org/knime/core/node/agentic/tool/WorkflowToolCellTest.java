@@ -98,6 +98,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
+import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext;
@@ -180,7 +181,7 @@ class WorkflowToolCellTest {
         assertThat(cell.getDescription()).isEqualTo("tool description");
         assertThatJson(cell.getParameterSchema()).isEqualTo(
             """
-                    {"configuration-parameter-name-1":{"type":"string","default":"default config value","description":"config decription"}}""");
+                    {"configuration-parameter-name":{"type":"string","default":"default config value","description":"config decription"}}""");
         assertThat(cell.getInputs()).hasSize(1);
         var toolInput = cell.getInputs()[0];
         assertThat(toolInput.name()).isEqualTo("test-input-parameter");
@@ -449,6 +450,50 @@ class WorkflowToolCellTest {
         res = cell.execute("", inputs, exec, Map.of("with-view-nodes", "true", "execution-mode", "DEBUG"));
         assertThat(res.virtualProject()).isNull();
         assertThat(res.viewNodeIds()).hasSize(1);
+    }
+
+    /**
+     * Tests
+     * {@link WorkflowToolCell#execute(org.knime.core.node.workflow.capture.CombinedExecutor, String, java.util.List, org.knime.core.node.ExecutionContext, Map)}.
+     *
+     * @throws IOException
+     * @throws ToolIncompatibleWorkflowException
+     */
+    @Test
+    void testExecuteToolsWithCombinedWorkflow() throws ToolIncompatibleWorkflowException, IOException {
+        var input = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 1, 0);
+        var node = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(null), 0, 0);
+        var output = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 1, 1);
+        m_toolWfm.addConnection(input.getID(), 1, node.getID(), 1);
+        m_toolWfm.addConnection(node.getID(), 1, output.getID(), 1);
+        var nodeWithViewID =
+            WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WithViewTestNodeFactory(), 1, 1).getID();
+        m_toolWfm.addConnection(node.getID(), 1, nodeWithViewID, 1);
+        var cell = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null,
+            FileStoreFactory.createNotInWorkflowFileStoreFactory());
+
+        var exec = executionContextExtension.getExecutionContext();
+        var inputs = new PortObject[]{TestNodeModel.createTable(exec)};
+        var hostNode = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
+        var combinedExecutor =
+            WorkflowSegmentExecutor.builder(hostNode, ExecutionMode.DETACHED, "test_combined_tools_workflow", s -> {
+            }, exec, false).combined(inputs).build();
+        var res = cell.execute(combinedExecutor, "{}", combinedExecutor.getSourcePortIds(), exec,
+            Map.of("with-view-nodes", "true"));
+        assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
+        assertThat(res.viewNodeIds()).hasSize(1);
+        assertThat(res.virtualProject()).isNull();
+        assertThat(res.outputIds()).hasSize(1);
+        assertThat(res.outputs()).hasSize(1);
+        var combinedWorkflow = combinedExecutor.getWorkflow();
+        assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isTrue();
+        assertThat(combinedWorkflow.getNodeContainerState().isExecuted()).isTrue();
+        assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(3); // virtual in and out + tool component
+
+        combinedExecutor.dispose();
+        assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isFalse();
+        assertThat(combinedExecutor.getWorkflow()).isNull();
+        assertThat(combinedExecutor.getSourcePortIds()).isNull();
     }
 
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {

@@ -480,7 +480,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
                 warning -> {
                 }, //
                 exec, //
-                false).isolated(true).build();
+                true).isolated(true).build();
             var result = wsExecutor.execute( //
                 ws, //
                 inputs, //
