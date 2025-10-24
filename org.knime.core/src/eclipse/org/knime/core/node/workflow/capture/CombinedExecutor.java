@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.knime.core.node.ExecutionContext;
@@ -136,6 +137,8 @@ public final class CombinedExecutor {
 
     private final ExecutionContext m_exec;
 
+    private List<PortId> m_sourcePortIds;
+
     private CombinedExecutor(final Builder builder) {
         m_hostNode = builder.m_params.hostNode();
         var mode = builder.m_params.mode();
@@ -171,6 +174,17 @@ public final class CombinedExecutor {
         }
         m_collectMessages = builder.m_params.collectMessages();
         m_exec = builder.m_params.exec();
+
+        if (builder.m_initialInputs != null) {
+            var inputs = builder.m_initialInputs;
+            var inputNodeId =
+                m_wfm.findNodes(DefaultVirtualPortObjectInNodeModel.class, false).keySet().iterator().next();
+            m_sourcePortIds = IntStream.range(0, inputs.length)
+                .mapToObj(i -> new PortId(NodeIDSuffix.create(m_wfm.getID(), inputNodeId), (i + 1))).toList();
+        } else {
+            m_sourcePortIds = null;
+        }
+
     }
 
     /**
@@ -178,6 +192,13 @@ public final class CombinedExecutor {
      */
     public WorkflowManager getWorkflow() {
         return m_wfm;
+    }
+
+    /**
+     * @return the port references of output ports of the source node within the combined workflow
+     */
+    public List<PortId> getSourcePortIds() {
+        return m_sourcePortIds;
     }
 
     /**
@@ -351,6 +372,7 @@ public final class CombinedExecutor {
         }
         m_wfm = null;
         m_hostNode = null;
+        m_sourcePortIds = null;
     }
 
 }
