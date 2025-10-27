@@ -49,6 +49,7 @@
 package org.knime.core.eclipseUtil;
 
 import java.lang.reflect.InaccessibleObjectException;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,10 +63,11 @@ import org.knime.core.util.IEarlyStartup;
 
 /**
  * Utilizes the reflection API to once - during startup - replace the {@link HttpURLConnection}'s
- * authentication cache with a no-op cache (see {@link NoOpHashMap} in this file).
+ * default authentication cache with a no-op cache (see {@link NoOpHashMap} in this file).
  * <p>
- * All auth-cache-requests are therefore no-ops and do not spill sensitive credentials data between
- * executions or nodes or workflows or users.
+ * All auth-cache-requests for the default key {@code null} are therefore no-ops,
+ * and do not spill sensitive credentials data between nodes/workflows/users.
+ * </p>
  *
  * @author Leon Wenzler, KNIME GmbH, Konstanz, Germany
  * @since 5.3
@@ -74,33 +76,30 @@ public class URLConnectionCacheDisabler implements IEarlyStartup {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(URLConnectionCacheDisabler.class);
 
-    private static final String AUTH_VALUE_CLASS_NAME = "sun.net.www.protocol.http.AuthCacheValue";
-
     private static final String CACHE_IMPL_CLASS_NAME = "sun.net.www.protocol.http.AuthCacheImpl";
 
     @Override
     public void run() {
         try {
-            // retrieving auth value holding the cache
-            final Class<?> cacheValueClass = Class.forName(AUTH_VALUE_CLASS_NAME);
-            final var cacheImplField = cacheValueClass.getDeclaredField("cache");
-            cacheImplField.setAccessible(true); // NOSONAR
+            // (1) Retrieve the cache class and method.
+            final var authCacheImplClass = Class.forName(CACHE_IMPL_CLASS_NAME);
+            final var getAuthCacheForMethod =
+                authCacheImplClass.getDeclaredMethod("getAuthCacheFor", Authenticator.class);
 
-            // retrieving actual cache
-            final Class<?> cacheImplClass = Class.forName(CACHE_IMPL_CLASS_NAME);
-            final var hashMapField = cacheImplClass.getDeclaredField("hashtable");
+            // (2) Retrieve the default cache (under key `null`).
+            final var defaultAuthCache = getAuthCacheForMethod.invoke(null, (Authenticator)null);
+
+            // (3) Extract the internal cache (being a HashMap).
+            final var hashMapField = authCacheImplClass.getDeclaredField("hashtable");
             hashMapField.setAccessible(true); // NOSONAR
 
-            /*
-             * Retrieves the static cache field from the sun.net implementation, then extracts
-             * its internal cache (being a HashMap), and replaces it by our no-op HashMap.
-             */
-            hashMapField.set(cacheImplField.get(null), new NoOpHashMap<String, LinkedList<?>>()); // NOSONAR
+            // (4) Replace that internal, shared HashMap with our no-op instance.
+            hashMapField.set(defaultAuthCache, new NoOpHashMap<String, LinkedList<?>>()); // NOSONAR
         } catch (ReflectiveOperationException
                 | SecurityException
                 | IllegalArgumentException
                 | InaccessibleObjectException e) {
-            LOGGER.debug(String.format("Could not disable the authentication cache of the %s",
+            LOGGER.debug(String.format("Could not disable the default authentication cache of the %s",
                 HttpURLConnection.class.getName()), e);
         }
     }
