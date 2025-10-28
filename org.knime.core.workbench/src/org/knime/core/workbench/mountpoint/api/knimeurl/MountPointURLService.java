@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLConnection;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -109,6 +110,33 @@ public interface MountPointURLService extends MountPointProvider {
      */
     File toLocalOrTempFile(IPath path, ItemVersion version, IProgressMonitor monitor)
             throws IOException, CancellationException;
+
+    /**
+     * Resolves the given path and version into a local file. If the path does not represent a local file
+     * (e.g. on hub) it is downloaded first to a temporary directory and then the temporary copy is returned.
+     * <p>
+     * In contrast to {@link #toLocalOrTempFile(IPath, ItemVersion, IProgressMonitor)}, this method allows
+     * specifying a cut-off date to attach as {@code If-Modified-Since} header to HTTP requests
+     * that resolve the item to the {@link File}. This method will return {@code Optional#empty()}
+     * if the conditional check determines that no newer version exists after the cut-off date.
+     * </p>
+     * NOTE: The cut-off date is not used for conditional checks on local files, they will always be
+     * returned as a non-empty {@link File} value.
+     *
+     * @param path the path relative to the mount point root, not {@code null}
+     * @param version the version of the item, possibly null if "latest" or not applicable
+     * @param ifModifiedSince the if-modified-since date for a conditional request, can be {@code null}
+     * @param monitor a progress monitor to report progress, may be {@link NullProgressMonitor}
+     * @return a local or temporary file {@link File} represented by the given path and version
+     * @throws IOException if an I/O error occurs while resolving the file
+     * @throws CancellationException if the operation is cancelled
+     * @since 5.9
+     */
+    default Optional<File> toLocalOrTempFileConditional(final IPath path, final ItemVersion version,
+        final Instant ifModifiedSince, final IProgressMonitor monitor) throws IOException, CancellationException {
+        // technically the `null` check is unnecessary, but we want to be sure here
+        return Optional.ofNullable(toLocalOrTempFile(path, version, monitor));
+    }
 
     /**
      * Retrieves all named item versions of the repository item at the given path. This method is

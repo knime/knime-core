@@ -56,6 +56,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -143,8 +144,9 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             if (MountPointURLUtil.resolveMountPointState(uri).isRemote()) {
                 return null;
             }
-            return toLocalOrTempFile(uri.toURL(), monitor);
-        } catch (Exception e) {
+            // not conditional, since `ifModifiedSince` argument is null
+            return toLocalOrTempFileMaybeConditional(uri.toURL(), null, monitor);
+        } catch (Exception e) { // NOSONAR
             throw new ResourceAccessException("Can't resolve KNIME URL \"" + uri + "\" to local file or folder", e);
         }
     }
@@ -155,7 +157,7 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     }
 
     private static File resolveToLocalOrTempFileInternal(final URI uri, final IProgressMonitor monitor,
-        final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
+        final Instant ifModifiedSince) throws ResourceAccessException {
         if (uri == null) {
             throw new IllegalArgumentException("Can't resolve null URI to file");
         }
@@ -176,13 +178,13 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     }
 
     private static File resolveKnimeUriToLocalOrTempFile(final URI uri, final IProgressMonitor monitor,
-        final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
+        final Instant ifModifiedSince) throws ResourceAccessException {
         var url = ExplorerURLStreamHandler.resolveKNIMEURL(URLResolverUtil.toURL(uri));
         if (FILE_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
             return FileUtil.getFileFromURL(url);
         } else if (CoreConstants.SCHEME.equals(url.getProtocol())) {
             try {
-                return toLocalOrTempFile(url, monitor);
+                return toLocalOrTempFileMaybeConditional(url, ifModifiedSince, monitor);
             } catch (IOException ex) {
                 throw new ResourceAccessException("Can't resolve URI \"" + uri + "\" to local or temp file", ex);
             }
@@ -195,10 +197,11 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     @Override
     public Optional<File> resolveToLocalOrTempFileConditional(final URI uri, final IProgressMonitor monitor,
         final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
-        return Optional.ofNullable(resolveToLocalOrTempFileInternal(uri, monitor, ifModifiedSince));
+        // we are not interested in the time zone information, forget immediately
+        return Optional.ofNullable(resolveToLocalOrTempFileInternal(uri, monitor, ifModifiedSince.toInstant()));
     }
 
-    private static File fetchRemoteFile(final URL url, final ZonedDateTime ifModifiedSince)
+    private static File fetchRemoteFile(final URL url, final Instant ifModifiedSince)
         throws ResourceAccessException {
         InputStream inputStream = addAuthHeaderAndOpenStream(url, ifModifiedSince);
         File f = null;
@@ -215,7 +218,7 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         return f;
     }
 
-    private static InputStream addAuthHeaderAndOpenStream(final URL url, final ZonedDateTime ifModifiedSince)
+    private static InputStream addAuthHeaderAndOpenStream(final URL url, final Instant ifModifiedSince)
         throws ResourceAccessException {
         try (final var c = ThreadLocalHTTPAuthenticator.suppressAuthenticationPopups()) {
             final var uc = URLConnectionFactory.getConnection(url);
@@ -228,7 +231,7 @@ public class URIToFileResolveImpl implements URIToFileResolve {
                 uc.setRequestProperty("Authorization", basicAuth);
             }
             if (ifModifiedSince != null) {
-                uc.setIfModifiedSince(ifModifiedSince.toInstant().toEpochMilli());
+                uc.setIfModifiedSince(ifModifiedSince.toEpochMilli());
                 uc.connect();
                 if (uc instanceof HttpURLConnection huc
                     && huc.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
@@ -363,11 +366,19 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         }
     }
 
-    private static File toLocalOrTempFile(final URL url, final IProgressMonitor monitor) throws IOException {
-        ItemVersion itemVersion =
+    private static File toLocalOrTempFileMaybeConditional(final URL url, final Instant ifModifiedSince,
+        final IProgressMonitor monitor) throws IOException {
+        final var itemVersion =
             MountPointURLUtil.getVersionParam(url).map(ItemVersion::convertToItemVersion).orElse(null);
-        return MountPointURLUtil.getMountPointURLService(url) //
-            .toLocalOrTempFile(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
+        final var service = MountPointURLUtil.getMountPointURLService(url);
+        if (ifModifiedSince != null) {
+            return service.toLocalOrTempFileConditional( //
+                IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, ifModifiedSince, monitor) //
+                .orElse(null); // will be re-wrapped as empty in `#resolveToLocalOrTempFileConditional`
+        } else {
+            return service.toLocalOrTempFile( //
+                IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
+        }
     }
 
     @Override
