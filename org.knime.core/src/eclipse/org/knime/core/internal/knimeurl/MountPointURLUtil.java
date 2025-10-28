@@ -59,6 +59,8 @@ import org.apache.hc.core5.net.URIBuilder;
 import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
+import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.KnimeUrlType;
@@ -106,9 +108,13 @@ final class MountPointURLUtil {
     }
 
     private static MountPointURLService getMountPointURLService(final String mountPointId) throws IOException {
-        final var mountPoint = WorkbenchMountTable.getMountPoint(mountPointId)
-            .orElseThrow(() -> new IOException("Mount point with ID '" + mountPointId + "' is not mounted."));
-
+        final var optMountPoint = WorkbenchMountTable.getMountPoint(mountPointId);
+        if (optMountPoint.isEmpty()) {
+            return getExecutorURLService(mountPointId) //
+                .orElseThrow(
+                    () -> new IOException("No URL service was found for mount ID \"%s\".".formatted(mountPointId)));
+        }
+        final var mountPoint = optMountPoint.get();
         final var mountPointURLServiceFactory = MountPointURLServiceFactoryCollector.getInstance()
             .getMountPointURLServiceFactory(mountPoint.getType().getTypeIdentifier())
             .orElseThrow(() -> new ResourceAccessException("No mount point URL service factory found for type '"
@@ -116,6 +122,19 @@ final class MountPointURLUtil {
 
         return mountPoint.getProvider(MountPointURLService.class,
             () -> mountPointURLServiceFactory.createMountPointURLService(mountPoint.getState()));
+    }
+
+    private static Optional<MountPointURLService> getExecutorURLService(final String mountPointId) {
+        final var context = NodeContext.getContextOptional() //
+            .flatMap(nodeCtx -> nodeCtx.getContextObjectForClass(WorkflowContextV2.class)) //
+            .orElse(null);
+        if (context != null && context.getExecutorInfo() instanceof JobExecutorInfo jobExec
+            && context.getLocationInfo() instanceof RestLocationInfo restLoc
+            && restLoc.getDefaultMountId().equals(mountPointId)) {
+            // on an executor
+            return MountPointURLService.getExecutorURLService(jobExec, restLoc);
+        }
+        return Optional.empty();
     }
 
     /**
