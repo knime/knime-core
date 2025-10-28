@@ -135,8 +135,9 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             if (MountPointURLUtil.resolveMountPointState(uri).isRemote()) {
                 return null;
             }
-            return toLocalOrTempFile(uri.toURL(), monitor);
-        } catch (Exception e) {
+            // not conditional, since `ifModifiedSince` argument is null
+            return toLocalOrTempFileMaybeConditional(uri.toURL(), null, monitor);
+        } catch (Exception e) { // NOSONAR
             throw new ResourceAccessException("Can't resolve KNIME URL \"" + uri + "\" to local file or folder", e);
         }
     }
@@ -174,7 +175,7 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             return FileUtil.getFileFromURL(url);
         } else if (CoreConstants.SCHEME.equals(url.getProtocol())) {
             try {
-                return toLocalOrTempFile(url, monitor);
+                return toLocalOrTempFileMaybeConditional(url, ifModifiedSince, monitor);
             } catch (IOException ex) {
                 throw new ResourceAccessException("Can't resolve URI \"" + uri + "\" to local or temp file", ex);
             }
@@ -342,10 +343,18 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         }
     }
 
-    private static File toLocalOrTempFile(final URL url, final IProgressMonitor monitor) throws IOException {
-        ItemVersion itemVersion =
+    private static File toLocalOrTempFileMaybeConditional(final URL url, final ZonedDateTime ifModifiedSince,
+        final IProgressMonitor monitor) throws IOException {
+        final var itemVersion =
             MountPointURLUtil.getVersionParam(url).map(ItemVersion::convertToItemVersion).orElse(null);
-        return MountPointURLUtil.getMountPointURLService(url) //
-            .toLocalOrTempFile(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
+        final var service = MountPointURLUtil.getMountPointURLService(url);
+        if (ifModifiedSince != null) {
+            return service.toLocalOrTempFileConditional( //
+                IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, ifModifiedSince, monitor) //
+                .orElse(null); // will be re-wrapped as empty in `#resolveToLocalOrTempFileConditional`
+        } else {
+            return service.toLocalOrTempFile( //
+                IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
+        }
     }
 }
