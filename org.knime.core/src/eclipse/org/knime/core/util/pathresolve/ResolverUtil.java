@@ -48,7 +48,10 @@
 package org.knime.core.util.pathresolve;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -56,10 +59,13 @@ import java.util.Optional;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.knime.core.internal.knimeurl.ExplorerURLStreamHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService.ItemInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -329,5 +335,47 @@ public final class ResolverUtil {
         var resolver = SERVICE_TRACKER.getService();
         CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
         return resolver.getHubItemVersionList(uri);
+    }
+
+    /**
+     * Resolved the correct {@link MountPointURLService} for the given KNIME URL.
+     *
+     * @param knimeUrl KNIME URL (may be relative)
+     * @return resolved URL service if found, {@link Optional#empty()} otherwise
+     * @since 5.9
+     */
+    public static Optional<MountPointURLService> getURLService(final URI knimeUrl) {
+        CheckUtils.checkState(SERVICE_TRACKER != null, "No service available to resolve uri: %s", knimeUrl);
+        var resolver = SERVICE_TRACKER.getService();
+        CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", knimeUrl);
+        return resolver.getURLService(knimeUrl);
+    }
+
+    /**
+     * Fetches information about an item referenced by a KNIME URL.
+     *
+     * @param url KNIME URL referencing the item
+     * @param monitor progress monitor for cancellation
+     * @return item info if it could be resolved, {@link Optional#empty()} otherwise
+     * @throws IOException if an error occurred during resolution
+     * @since 5.9
+     */
+    public static Optional<ItemInfo> fetchItemInfo(final URL url, final IProgressMonitor monitor) throws IOException {
+        final var absoluteUrl = ExplorerURLStreamHandler.resolveKNIMEURLToAbsolute(url);
+        if (absoluteUrl.isEmpty()) {
+            return Optional.empty();
+        }
+
+        try {
+            final var absoluteUri = absoluteUrl.get().toURI();
+            final var mpUrlService = ResolverUtil.getURLService(absoluteUri);
+            if (mpUrlService.isPresent()) {
+                return mpUrlService.get().fetchItemInfo(absoluteUri, monitor);
+            }
+        } catch (URISyntaxException ex) {
+            throw new IOException(ex.getMessage(), ex);
+        }
+
+        return Optional.empty();
     }
 }

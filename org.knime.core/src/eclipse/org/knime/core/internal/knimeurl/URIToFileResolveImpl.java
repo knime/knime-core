@@ -68,6 +68,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.CoreConstants;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeUrlType;
@@ -76,10 +80,14 @@ import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.hub.NamedItemVersion;
+import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.SpaceVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.knime.core.util.proxy.URLConnectionFactory;
 import org.knime.core.util.urlresolve.URLResolverUtil;
+import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLServiceFactoryCollector;
 
 /**
  *
@@ -278,8 +286,7 @@ public class URIToFileResolveImpl implements URIToFileResolve {
         if (FILE_PROTOCOL.equalsIgnoreCase(uri.getScheme())) {
             try {
                 final var url = uri.toURL();
-                final var file = FileUtil.getFileFromURL(url);
-                return Optional.of(new KNIMEURIDescription(url.getHost(), file.getAbsolutePath(), file.getName()));
+                return getLocalDescription(url);
             } catch (final MalformedURLException e) {
                 LOGGER.debug("Failed to resolve name from file: '%s'".formatted(uri), e);
                 return Optional.empty();
@@ -288,11 +295,20 @@ public class URIToFileResolveImpl implements URIToFileResolve {
 
         if (KnimeUrlType.getType(uri).isPresent()) {
             try {
+                final var knimeUrl = uri.toURL();
+                final var resolved = ExplorerURLStreamHandler.resolveKNIMEURL(knimeUrl);
+                if (FILE_PROTOCOL.equalsIgnoreCase(resolved.getProtocol())) {
+                    // local files (local mountpoint or inside the current workflow)
+                    return getLocalDescription(resolved);
+                }
+
                 // for Hub: fetch metadata if path contains an item ID (e.g. knime://hub/*12345)
-                final var service = MountPointURLUtil.getMountPointURLService(uri);
-                final var path = service.resolveItemPath(uri);
-                final var name = path.lastSegment();
-                return Optional.of(new KNIMEURIDescription(service.getMountId(), path.toString(), name));
+                final var optInfo = ResolverUtil.fetchItemInfo(knimeUrl, monitor);
+                if (optInfo.isPresent()) {
+                    final var itemInfo = optInfo.get();
+                    final var path = itemInfo.path();
+                    return Optional.of(new KNIMEURIDescription(itemInfo.mountId(), path.toString(), path.lastSegment()));
+                }
             } catch (final IOException e) {
                 LOGGER.debug("Failed to resolve name from mountpoint: '%s'".formatted(uri), e);
                 return Optional.empty();
@@ -301,6 +317,11 @@ public class URIToFileResolveImpl implements URIToFileResolve {
 
         // neither a knime:// nor a file:// URL
         return Optional.empty();
+    }
+
+    private static Optional<KNIMEURIDescription> getLocalDescription(final URL url) {
+        final var file = FileUtil.getFileFromURL(url);
+        return Optional.of(new KNIMEURIDescription(url.getHost(), file.getAbsolutePath(), file.getName()));
     }
 
     @Override
@@ -347,5 +368,40 @@ public class URIToFileResolveImpl implements URIToFileResolve {
             MountPointURLUtil.getVersionParam(url).map(ItemVersion::convertToItemVersion).orElse(null);
         return MountPointURLUtil.getMountPointURLService(url) //
             .toLocalOrTempFile(IPath.forPosix(URIPathEncoder.decodePath(url)), itemVersion, monitor);
+    }
+
+    @Override
+    public Optional<MountPointURLService> getURLService(final URI uri) {
+        final var optType = KnimeUrlType.getType(uri);
+        if (optType.isEmpty()) {
+            return Optional.empty();
+        }
+
+        final var mountId = MountPointURLUtil.resolveMountID(uri);
+
+        final var optMountPoint = WorkbenchMountTable.getMountPoint(mountId);
+        if (optMountPoint.isPresent()) {
+            final var mountPoint = optMountPoint.get();
+            final var optMountPointURLServiceFactory = MountPointURLServiceFactoryCollector.getInstance()
+                    .getMountPointURLServiceFactory(mountPoint.getType().getTypeIdentifier());
+            if (optMountPointURLServiceFactory.isEmpty()) {
+                return Optional.empty();
+            }
+
+            return Optional.of(mountPoint.getProvider(MountPointURLService.class,
+                () -> optMountPointURLServiceFactory.get().createMountPointURLService(mountPoint.getState())));
+        }
+
+        final var context = NodeContext.getContextOptional() //
+                .flatMap(nodeCtx -> nodeCtx.getContextObjectForClass(WorkflowContextV2.class)) //
+                .orElse(null);
+        if (context != null && context.getExecutorInfo() instanceof JobExecutorInfo jobExec
+                && context.getLocationInfo() instanceof RestLocationInfo restLoc
+                && restLoc.getDefaultMountId().equals(mountId)) {
+            // on an executor
+            return MountPointURLService.getExecutorURLService(jobExec, restLoc);
+        }
+
+        return Optional.empty();
     }
 }

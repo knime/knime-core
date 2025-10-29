@@ -48,6 +48,10 @@
  */
 package org.knime.core.workbench.mountpoint.api.knimeurl;
 
+import java.util.Optional;
+
+import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState;
 
 /**
@@ -64,4 +68,16 @@ public interface MountPointURLServiceFactory {
      * @return A new {@link MountPointURLService} instance.
      */
     MountPointURLService createMountPointURLService(WorkbenchMountPointState state);
+
+    /**
+     * Creates a {@link MountPointURLService} for the given executor information if the types (Hub/Server) match.
+     *
+     * @param execInfo job executor info
+     * @param restLoc REST location info of the current job
+     * @return URL service if this is the correct factory, {@link Optional#empty()} otherwise
+     */
+    default Optional<MountPointURLService> createExecutorMountPointURLService(final JobExecutorInfo execInfo,
+        final RestLocationInfo restLoc) {
+        return Optional.empty();
+    }
 }

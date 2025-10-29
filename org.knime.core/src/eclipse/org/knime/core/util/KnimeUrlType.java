@@ -150,6 +150,13 @@ public enum KnimeUrlType {
     public static final String SCHEME = "knime";
 
     /**
+     * Name of the query parameter specifying the Hub item version.
+     *
+     * @since 5.9
+     */
+    public static final String VERSION_QUERY_PARAM = "version";
+
+    /**
      * Authority of the corresponding URLs, {@code null} for {@link #MOUNTPOINT_ABSOLUTE}.
      */
     private final String m_authority;

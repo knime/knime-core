@@ -160,7 +160,7 @@ public class ExplorerURLStreamHandlerTest {
         final var url = new URL("knime://knime.workflow/workflow.knime");
         final var e = assertThrows(IOException.class, () -> m_handler.openConnection(url));
         assertTrue("Error should indicate that no workflow context is set.",
-            e.getMessage().contains("does not have a context"));
+            e.getMessage().contains("without a workflow context"));
     }
 
     /**

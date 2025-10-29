@@ -53,11 +53,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLConnection;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CancellationException;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.knime.core.node.workflow.contextv2.JobExecutorInfo;
+import org.knime.core.node.workflow.contextv2.RestLocationInfo;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.hub.NamedItemVersion;
@@ -124,5 +131,66 @@ public interface MountPointURLService extends MountPointProvider {
      */
     default IPath resolveItemPath(final URI uri) throws ResourceAccessException {
         return IPath.forPosix(uri.getPath() == null ? "/" : uri.getPath());
+    }
+
+    /**
+     * Information about an item.
+     *
+     * @param mountId mount ID of the containing mountpoint
+     * @param path item path
+     * @param id item ID (if applicable)
+     * @param version item version (if applicable)
+     * @param size item size (in bytes, if applicable)
+     * @param isFolder whether or not the item is a folder (space, remote workflow group or local file system folder)
+     */
+    record ItemInfo(String mountId, IPath path, Optional<String> id, Optional<ItemVersion> version, OptionalLong size,
+        boolean isFolder) {
+    }
+
+    /**
+     * Fetches information about an item.
+     *
+     * @param uri absolute KNIME URL identifying the item
+     * @param monitor a progress monitor to report progress, may be {@code null}
+     * @return information about the item if it exists, {@link Optional#empty()} if it doesn't
+     * @throws IOException if the information can't be fetched
+     */
+    default Optional<ItemInfo> fetchItemInfo(final URI uri, final IProgressMonitor monitor) throws IOException {
+        final var path = IPath.forPosix(StringUtils.firstNonBlank(uri.getPath(), "/"));
+        final var itemVersion = new URIBuilder(uri).getQueryParams().stream() //
+            .filter(nv -> "version".equals(nv.getName())) //
+            .map(NameValuePair::getValue) //
+            .map(ItemVersion::convertToItemVersion) //
+            .findFirst() //
+            .orElse(null);
+        return fetchItemInfo(path, itemVersion, monitor);
+    }
+
+    /**
+     * Fetches information about an item.
+     *
+     * @param path the path relative to the mount point root, not {@code null}
+     * @param version the version of the item, possibly null if "latest" or not applicable
+     * @param monitor a progress monitor to report progress, may be {@code null}
+     * @return information about the item if it exists, {@link Optional#empty()} if it doesn't
+     * @throws IOException if the information can't be fetched
+     */
+    Optional<ItemInfo> fetchItemInfo(IPath path, final ItemVersion version, final IProgressMonitor monitor)
+        throws IOException;
+
+    /**
+     * Creates a {@link MountPointURLService} for the executor described by the given executor and location info if possible.
+     *
+     * @param execInfo executor info
+     * @param restLoc location info
+     * @return URL service if it could be created, {@link Optional#empty()} otherwise
+     */
+    public static Optional<MountPointURLService> getExecutorURLService(final JobExecutorInfo execInfo,
+        final RestLocationInfo restLoc) {
+        final var collector = MountPointURLServiceFactoryCollector.getInstance();
+        return collector.getRegisteredTypeIdentifiers().stream() //
+            .flatMap(id -> collector.getMountPointURLServiceFactory(id).stream()) //
+            .flatMap(factory -> factory.createExecutorMountPointURLService(execInfo, restLoc).stream()) //
+            .findFirst();
     }
 }

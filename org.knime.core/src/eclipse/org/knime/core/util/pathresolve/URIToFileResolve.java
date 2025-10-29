@@ -55,6 +55,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.NamedItemVersion;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 
 /**
  * A service interface to convert a URI into a local file. The URI is usually (always?) either a file URI or a URI
@@ -273,5 +274,16 @@ public interface URIToFileResolve {
         public String getMountpointName() {
             return m_mountpointName;
         }
+    }
+
+    /**
+     * Tries to resolve or create a {@link MountPointURLService} responsible for the given KNIME URL.
+     *
+     * @param knimeUrl KNIME URL to find the URL service for
+     * @return URL service if it could be resolved, {@link Optional#empty()} otherwise
+     * @since 5.9
+     */
+    default Optional<MountPointURLService> getURLService(final URI knimeUrl) {
+        throw new UnsupportedOperationException();
     }
 }
