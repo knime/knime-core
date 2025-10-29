@@ -60,6 +60,7 @@ import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
+import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
@@ -329,5 +330,18 @@ public final class ResolverUtil {
         var resolver = SERVICE_TRACKER.getService();
         CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", uri);
         return resolver.getHubItemVersionList(uri);
+    }
+
+    /**
+     *
+     * @param knimeUrl
+     * @return
+     * @since 5.8.1
+     */
+    public static Optional<MountPointURLService> getURLService(final URI knimeUrl) {
+        CheckUtils.checkState(SERVICE_TRACKER != null, "No service available to resolve uri: %s", knimeUrl);
+        var resolver = SERVICE_TRACKER.getService();
+        CheckUtils.checkState(resolver != null, "No resolver available to resolve uri: %s", knimeUrl);
+        return resolver.getURLService(knimeUrl);
     }
 }
