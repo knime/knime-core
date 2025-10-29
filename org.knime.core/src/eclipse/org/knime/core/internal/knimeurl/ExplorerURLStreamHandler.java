@@ -201,9 +201,13 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
      * @return the resolved URL
      * @throws ResourceAccessException if an error occurs while resolving the URL
      */
-
     public static URL resolveKNIMEURL(final URL url) throws ResourceAccessException {
         return resolveKNIMEURL(url, getUrlType(url));
+    }
+
+    public static Optional<URL> resolveKNIMEURLToAbsolute(final URL url) throws ResourceAccessException {
+        final KnimeUrlResolver resolver = getURLResolver(url, getUrlType(url));
+        return resolver.resolveToAbsolute(url);
     }
 
     private static KnimeUrlType getUrlType(final URL url) throws ResourceAccessException {
@@ -212,6 +216,12 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
     }
 
     private static URL resolveKNIMEURL(final URL url, final KnimeUrlType urlType) throws ResourceAccessException {
+        final KnimeUrlResolver resolver = getURLResolver(url, urlType);
+        return resolver.resolve(url);
+    }
+
+    private static KnimeUrlResolver getURLResolver(final URL url, final KnimeUrlType urlType)
+        throws ResourceAccessException {
         final var nodeContext = NodeContext.getContextOptional();
         final var workflowContextV2Opt =
             nodeContext.flatMap(ctx -> ctx.getContextObjectForClass(WorkflowContextV2.class));
@@ -219,7 +229,7 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
             if (nodeContext.isEmpty()) {
                 throw new ResourceAccessException("No context for relative URL available");
             } else if (workflowContextV2Opt.isEmpty()) {
-                throw new ResourceAccessException("Workflow " + url.toString() + " does not have a context");
+                throw new ResourceAccessException("Cannot resolve URL " + url + " without a workflow context");
             }
         }
 
@@ -245,8 +255,7 @@ public class ExplorerURLStreamHandler extends AbstractURLStreamHandlerService {
         } else {
             resolver = KnimeUrlResolver.getResolver(workflowContextV2);
         }
-
-        return resolver.resolve(url);
+        return resolver;
     }
 
     private static Optional<URI> getRemoteRepositoryAddress(final WorkflowContextV2 workflowContextV2) {

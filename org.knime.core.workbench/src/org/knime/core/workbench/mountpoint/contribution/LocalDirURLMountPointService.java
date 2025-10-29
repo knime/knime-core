@@ -59,8 +59,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalLong;
 
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.annotation.Owning;
@@ -150,6 +152,18 @@ public abstract class LocalDirURLMountPointService implements MountPointURLServi
     public final File toLocalOrTempFile(final IPath path, final ItemVersion version, final IProgressMonitor monitor)
         throws IOException {
         return getRootDirectory().resolve(path.makeRelative().toOSString()).toFile();
+    }
+
+    @Override
+    public Optional<ItemInfo> fetchItemInfo(final IPath path, final ItemVersion version, final IProgressMonitor monitor)
+        throws IOException {
+        final var localFile = toLocalOrTempFile(path, version, monitor);
+        if (!localFile.exists()) {
+            return Optional.empty();
+        }
+
+        final var size = localFile.isFile() ? OptionalLong.of(localFile.length()) : OptionalLong.empty();
+        return Optional.of(new ItemInfo(m_mountId, path, Optional.empty(), Optional.empty(), size, localFile.isDirectory()));
     }
 
     @Override

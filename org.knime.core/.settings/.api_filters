@@ -9,24 +9,10 @@
         </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.internal.ProcessWatchdogEarlyStartup">
-        <filter comment="renamed internal API (no matches in BitBucket)" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.internal.ProcessWatchdogEarlyStartup"/>
-                <message_argument value="org.knime.core_5.7.0"/>
-            </message_arguments>
-        </filter>
         <filter comment="renamed non-api class (no matches in bitbucket)" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.internal.ProcessWatchdogEarlyStartup"/>
                 <message_argument value="org.knime.core_5.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowDataRepository.java" type="org.knime.core.node.workflow.WorkflowDataRepository">
-        <filter comment="internal API" id="336658481">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowDataRepository"/>
-                <message_argument value="INSTANCE_COUNTER"/>
             </message_arguments>
         </filter>
     </resource>
@@ -35,6 +21,52 @@
             <message_arguments>
                 <message_argument value="org.knime.core.internal.KNIMEPath"/>
                 <message_argument value="setWorkspaceDirPath(File)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/KnimeUrlType.java" type="org.knime.core.util.KnimeUrlType">
+        <filter comment="Introduced in bugfix version" id="1175453698">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="5.8"/>
+                <message_argument value="VERSION_QUERY_PARAM"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Introduced in bugfix version" id="1176502275">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="VERSION_QUERY_PARAM"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/pathresolve/ResolverUtil.java" type="org.knime.core.util.pathresolve.ResolverUtil">
+        <filter comment="Introduced in 5.8.1 and 5.9.0" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="5.8"/>
+                <message_argument value="fetchItemInfo(URL, IProgressMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Introduced in 5.8.1 and 5.9.0" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="5.8"/>
+                <message_argument value="getURLService(URI)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/util/pathresolve/URIToFileResolve.java" type="org.knime.core.util.pathresolve.URIToFileResolve">
+        <filter comment="Introduced in bugfix version" id="1210056707">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="getURLService(URI)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Introduced in bugfix version" id="1209008130">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="5.8"/>
+                <message_argument value="getURLService(URI)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -127,27 +159,7 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/util/binning/BinningUtil.java" type="org.knime.core.util.binning.BinningUtil">
-        <filter id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.core.util.binning.BinningUtil"/>
-                <message_argument value="org.knime.core_5.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/data/v2/schema/ValueSchema.java" type="org.knime.core.data.v2.schema.ValueSchema">
-        <filter comment="AP-23831" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
-                <message_argument value="getColumn(int)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="AP-23831" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
-                <message_argument value="getDataColumnSpec(int)"/>
-            </message_arguments>
-        </filter>
         <filter comment="AP-23831: moved to DataTableValueSchema" id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.data.v2.schema.ValueSchema"/>
