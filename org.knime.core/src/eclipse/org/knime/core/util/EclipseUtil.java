@@ -168,6 +168,11 @@ public final class EclipseUtil {
             TESTFLOW_RUNNER("org.knime.testing.NGTestflowRunner", false),
 
             /**
+             * The warmstart application for pre-warming containers.
+             */
+            WARMSTART("org.knime.product.KNIME_WARMSTART_APPLICATION", true),
+
+            /**
              * If the application is not among the knowns ones above.
              */
             UNKNOWN("<unknown>", false);
