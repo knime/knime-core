@@ -24,6 +24,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/EclipseUtil.java" type="org.knime.core.util.EclipseUtil$Application">
+        <filter id="1176502275">
+            <message_arguments>
+                <message_argument value="5.8.2"/>
+                <message_argument value="WARMSTART"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/util/KnimeUrlType.java" type="org.knime.core.util.KnimeUrlType">
         <filter comment="Introduced in bugfix version" id="1175453698">
             <message_arguments>

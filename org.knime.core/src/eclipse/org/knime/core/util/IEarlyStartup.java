@@ -187,7 +187,8 @@ public interface IEarlyStartup {
         static final EnumSet<Application> PROFILE_AWARE_APPLICATIONS = EnumSet.of( //
             Application.AP, //
             Application.EXECUTOR, //
-            Application.TESTFLOW_RUNNER);
+            Application.TESTFLOW_RUNNER, //
+            Application.WARMSTART);
 
         private static final IExtensionPoint EXTENSION_POINT;
         static {
