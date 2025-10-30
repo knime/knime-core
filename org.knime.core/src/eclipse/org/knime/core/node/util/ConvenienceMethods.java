@@ -62,6 +62,7 @@ import java.util.function.Predicate;
 
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.Pair;
 
 /**
  * Collection of methods that are useful in different contexts.
@@ -166,28 +167,47 @@ public final class ConvenienceMethods {
         return getShortStringFrom(objs.iterator(), objs.size(), maxToPrint);
     }
 
-    /** Get string summary from argument iterator for printing in warning messages.
-     * Here are some examples with maxToPrint = 3: <br>
-     * [foo, bar, foobar, barfoo, barfuss] -&gt; "foo", "bar", "foobar", ... &lt;1 more&gt;
-     * [foo, bar] -&gt; "foo", "bar"
-     *
+    /** Get string summary from argument iterator for printing in warning messages,
+     * see {@link #getShortStringFrom(Iterator, int, int, Pair)} for details.
      * @param it The non null (0-position) iterator
      * @param length Length of the underlying collection
      * @param maxToPrint length to print, rest will be cut.
      * @return Such a short string summary.
      * @since 3.2 */
     public static String getShortStringFrom(final Iterator<?> it, final int length, final int maxToPrint) {
-        StringBuilder b = new StringBuilder();
-        int l = 0;
+        return getShortStringFrom(it, length, maxToPrint, Pair.create("\"", "\""));
+    }
+
+    /**
+     * Get string summary from argument iterator for printing in warning messages.
+     * Here are some examples with maxToPrint = 3:
+     * <pre>
+     * [foo, bar, foobar, barfoo, barfuss] -&gt; "foo", "bar", "foobar", ... &lt;1 more&gt;
+     * [foo, bar] -&gt; "foo", "bar"
+     * </pre>
+     * The delimiters can be added for the left and right enclosure of each printed object.
+     * The other `getShortString` methods will default to quotes.
+     *
+     * @param it the non null (0-position) iterator
+     * @param length Length of the underlying collection
+     * @param maxToPrint length to print, rest will be cut
+     * @param enclosures the left and right enclosure for each printed object
+     * @return a short string summary
+     * @since 5.9
+     */
+    public static String getShortStringFrom(final Iterator<?> it, final int length, final int maxToPrint,
+        final Pair<String, String> enclosures) {
+        final var b = new StringBuilder();
+        var l = 0;
         while (it.hasNext()) {
             Object o = it.next();
             if (l > 0) {
                 b.append(", ");
             }
             if (l < maxToPrint) {
-                b.append("\"");
+                b.append(enclosures.getFirst());
                 b.append(o == null ? "<null>" : o);
-                b.append("\"");
+                b.append(enclosures.getSecond());
             } else {
                 b.append(" ... <").append(length - maxToPrint).append(" more>");
                 break;
@@ -196,7 +216,6 @@ public final class ConvenienceMethods {
         }
         return b.toString();
     }
-
 
     /**
      * Returns all generic superclasses extended by the given class.
