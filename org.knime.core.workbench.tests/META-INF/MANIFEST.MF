@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Test cases for KNIME Core Workbench Plug-In
 Bundle-SymbolicName: org.knime.core.workbench.tests;singleton:=true
-Bundle-Version: 5.8.0.qualifier
+Bundle-Version: 5.9.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Fragment-Host: org.knime.core.workbench;bundle-version="[5.8.0,6.0.0)"
 Require-Bundle: org.knime.core;bundle-version="[5.7.0,6.0.0)",

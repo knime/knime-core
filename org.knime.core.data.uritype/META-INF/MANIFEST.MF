@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME URL Type Definition (Preview)
 Bundle-SymbolicName: org.knime.core.data.uritype;singleton:=true
-Bundle-Version: 5.6.0.qualifier
+Bundle-Version: 5.9.0.qualifier
 Bundle-Vendor: KNIME AG, Zurich, Switzerland
 Export-Package: org.knime.core.data.uri
 Require-Bundle: org.knime.core;bundle-version="[5.6.0,6.0.0)",
