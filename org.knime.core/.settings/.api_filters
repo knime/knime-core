@@ -165,4 +165,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/util/binning/BinningSettings.java" type="org.knime.core.util.binning.BinningSettings$BinNamingUtils">
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.util.binning.BinningSettings.BinNamingUtils"/>
+                <message_argument value="numberedBinNaming"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
