@@ -64,7 +64,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.binning.BinningSettings.BinBoundary;
 import org.knime.core.util.binning.BinningSettings.BinBoundary.BinBoundaryExactMatchBehaviour;
@@ -266,7 +265,6 @@ public final class BinningUtil {
      *
      * Package scoped for testing purposes.
      *
-     * @param singleColumnSpec the column spec for which to calculate the bounds. It should have a domain with bounds.
      * @param min the lower bound to use for the first bin boundary; if not present, the minimum value from the column
      *            domain
      * @param max the upper bound to use for the last bin boundary; if not present, the maximum value from the column
@@ -276,8 +274,9 @@ public final class BinningUtil {
      * @param numBins the number of bins to create
      * @return a list of bin boundaries, each with an exact match behaviour describing how to handle values that exactly
      *         match the boundary value.
+     * @since 5.9
      */
-    static List<BinBoundary> createEdgesForEqualWidth( //
+    public static List<BinBoundary> createEdgesForEqualWidth( //
         final double min, //
         final double max, //
         final boolean integerBounds, //
@@ -562,12 +561,12 @@ public final class BinningUtil {
      *
      * Package scoped for testing purposes.
      *
-     * @param edgesMap a map where keys are column names and values are lists of bin boundaries
+     * @param edges a map where keys are column names and values are lists of bin boundaries
      * @param binNamingSettings the settings for naming the bins
      * @return a map where keys are column names and values are lists of bins created from the edges
-     * @throws InvalidSettingsException if the edges map contains less than 2 edges for any column
+     * @since 5.9
      */
-    static List<NumericBin> createBins( //
+    public static List<NumericBin> createBins( //
         final List<BinBoundary> edges, //
         final BinNamingScheme binNamingSettings) {
 

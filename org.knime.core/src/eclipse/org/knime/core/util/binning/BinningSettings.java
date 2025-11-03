@@ -272,7 +272,12 @@ public final class BinningSettings {
 
         public static final String NAME_MIDPOINTS = "Midpoints";
 
-        public static final BinNaming numberedBinNaming = (index, lower, upper) -> "Bin " + (index + 1);
+        /**
+         * @since 5.9
+         */
+        public static BinNaming getNumberedBinNaming(final String binPrefix) {
+            return (index, lower, upper) -> binPrefix + (index + 1);
+        }
 
         public static BinNaming getBordersBinNaming(final BinNamingNumberFormatter numberFormatter) {
             return (index, lower, upper) -> {
@@ -343,7 +348,10 @@ public final class BinningSettings {
             /** the threshold where we switch between {@link #smallFormat} and {@link #defaultFormat} */
             private static double smallNumberThreshold = 0.0001;
 
-            private static final BinNamingNumberFormatter defaultFormatHandler = value -> {
+            /**
+             * @since 5.9
+             */
+            public static final BinNamingNumberFormatter defaultFormatHandler = value -> {
 
                 if (value == 0.0) { // NOSONAR we actually want exact equality here
                     return "0";
