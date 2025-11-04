@@ -1089,6 +1089,72 @@ public final class FileUtil {
         return createTempFile(prefix, suffix, true);
     }
 
+    /**
+     * Creates a temp file that is deleted when the returned resource is closed.
+     *
+     * @param prefix see {@link #createTempFile(String, String)}
+     * @param suffix see {@link #createTempFile(String, String)}
+     * @return a resource representing the created temp file. The file is deleted when the resource is closed.
+     * @throws IOException if the file could not be created
+     * @since 5.9
+     */
+    public static TempDirResource createTempDirResource(final String name)
+        throws IOException {
+        final var tempDir = createTempDir(name);
+        return new TempDirResource(tempDir);
+    }
+
+    /**
+     * Creates a temp file that is deleted when the returned resource is closed.
+     *
+     * @param prefix see {@link #createTempFile(String, String)}
+     * @param suffix see {@link #createTempFile(String, String)}
+     * @param rootDir directory in which the file should be created, {@code null} uses the workflow temp directory
+     * @return a resource representing the created temp file. The file is deleted when the resource is closed.
+     * @throws IOException if the file could not be created
+     * @since 5.9
+     */
+    public static TempDirResource createTempDirResource(final String prefix, final String suffix,
+                                                        final File rootDir) throws IOException {
+        final var tempFile = createTempFile(prefix, suffix,
+            rootDir != null ? rootDir : getWorkflowTempDir(), false);
+        return new TempDirResource(tempFile);
+    }
+
+    /**
+     * Auto closeable representation of a temporary file created through {@link #createTempDirResource(String, String)}.
+     *
+     * @since 5.9
+     */
+    public static final class TempDirResource implements AutoCloseable {
+
+        private final File m_dir;
+
+        private TempDirResource(final File dir) {
+            m_dir = dir;
+        }
+
+        /**
+         * @return the created file
+         */
+        public File getFile() {
+            return m_dir;
+        }
+
+        /**
+         * @return the {@link Path} of the created file
+         */
+        public Path getPath() {
+            return m_dir.toPath();
+        }
+
+        @Override
+        public void close() throws IOException {
+            TEMP_FILES.remove(m_dir);
+            Files.deleteIfExists(m_dir.toPath());
+        }
+    }
+
     private static Pattern FORBIDDEN_WINDOWS_NAMES = Pattern
         .compile("^(?:(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\\.[^.]*)?|[ \\.])$");
 
