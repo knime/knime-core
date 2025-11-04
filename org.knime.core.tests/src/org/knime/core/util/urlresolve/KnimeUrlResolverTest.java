@@ -492,9 +492,10 @@ class KnimeUrlResolverTest {
             withVirtualNodeContext(() -> {
                 var resolver = context.getResolver();
                 var expectedUrl =
-                    new URL("file:/W%C3%B6rk%20%E2%80%93%20%C3%9Fp%C3%A4ce/group/workflow/data/somefile.txt");
+                    URLResolverUtil.toURL(Path.of("/Wörk – ßpäce/group/workflow/data/somefile.txt").toAbsolutePath());
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
-                expectedUrl = new URL("file:/W%C3%B6rk%20%E2%80%93%20%C3%9Fp%C3%A4ce/group/workflow/somefile.txt");
+                expectedUrl =
+                    URLResolverUtil.toURL(Path.of("/Wörk – ßpäce/group/workflow/somefile.txt").toAbsolutePath());
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/somefile.txt"));
             }, null);
         } finally {
