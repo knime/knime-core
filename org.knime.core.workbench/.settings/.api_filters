@@ -9,4 +9,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/core/workbench/mountpoint/api/knimeurl/MountPointURLService.java" type="org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService">
+        <filter comment="Introduced in AP 5.8.1 and 5.9.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="5.8.1"/>
+                <message_argument value="toLocalOrTempFileConditional(IPath, ItemVersion, Instant, IProgressMonitor)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

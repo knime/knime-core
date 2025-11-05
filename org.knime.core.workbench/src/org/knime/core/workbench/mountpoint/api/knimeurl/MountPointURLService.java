@@ -130,7 +130,7 @@ public interface MountPointURLService extends MountPointProvider {
      * @return a local or temporary file {@link File} represented by the given path and version
      * @throws IOException if an I/O error occurs while resolving the file
      * @throws CancellationException if the operation is cancelled
-     * @since 5.9
+     * @since 5.8.1
      */
     default Optional<File> toLocalOrTempFileConditional(final IPath path, final ItemVersion version,
         final Instant ifModifiedSince, final IProgressMonitor monitor) throws IOException, CancellationException {
