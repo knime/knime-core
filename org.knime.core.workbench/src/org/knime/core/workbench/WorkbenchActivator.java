@@ -52,18 +52,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.core.runtime.preferences.DefaultScope;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointType;
-import org.knime.core.workbench.preferences.MountPointsPreferencesUtil;
-import org.knime.core.workbench.preferences.MountPointsPrefsSyncer;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.prefs.BackingStoreException;
-import org.slf4j.LoggerFactory;
 
 /**
  * Activator for the Core Workbench plugin, access point for the {@link WorkbenchMountPointType} registry.
@@ -77,8 +69,6 @@ import org.slf4j.LoggerFactory;
 public final class WorkbenchActivator implements BundleActivator {
 
     private static WorkbenchActivator instance;
-
-    private final AtomicBoolean m_prefSyncerAdded = new AtomicBoolean();
 
     private Map<String, WorkbenchMountPointType> m_mountPointTypeMap;
 
@@ -94,7 +84,6 @@ public final class WorkbenchActivator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         instance = this;
         m_mountPointTypeMap = WorkbenchMountPointType.collectMountPointTypes();
-        addPrefSyncer();
     }
 
     @Override
@@ -130,28 +119,5 @@ public final class WorkbenchActivator implements BundleActivator {
         return getMountPointType(typeIdentifier)
             .orElseThrow(() -> new IllegalStateException(
                 String.format("No mount point definition found for \"%s\"", typeIdentifier)));
-    }
-
-    private void addPrefSyncer() {
-        if (!m_prefSyncerAdded.getAndSet(true)) {
-            // AP-8989 switching to IEclipsePreferences
-            final MountPointsPrefsSyncer prefsSyncer = new MountPointsPrefsSyncer();
-            final IEclipsePreferences defaultPrefs =
-                DefaultScope.INSTANCE.getNode(MountPointsPreferencesUtil.getMountpointPreferenceLocation());
-            defaultPrefs.addPreferenceChangeListener(prefsSyncer);
-            final IEclipsePreferences preferences =
-                InstanceScope.INSTANCE.getNode(MountPointsPreferencesUtil.getMountpointPreferenceLocation());
-            preferences.addNodeChangeListener(prefsSyncer);
-            preferences.addPreferenceChangeListener(prefsSyncer);
-            try {
-                for (String childName : preferences.childrenNames()) {
-                    IEclipsePreferences childPreference = (IEclipsePreferences)preferences.node(childName);
-                    childPreference.addNodeChangeListener(prefsSyncer);
-                    childPreference.addPreferenceChangeListener(prefsSyncer);
-                }
-            } catch (BackingStoreException e) {
-                LoggerFactory.getLogger(getClass()).atWarn().setCause(e).log("Unable to access preferences");
-            }
-        }
     }
 }

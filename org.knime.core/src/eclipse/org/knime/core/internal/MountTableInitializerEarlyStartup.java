@@ -48,9 +48,11 @@
  */
 package org.knime.core.internal;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.IEarlyStartup;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointHostFilter;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
+import org.knime.core.workbench.preferences.MountPointsPrefsSyncer;
 
 /**
  * Initializes the mountpoints after the profiles have been loaded.
@@ -66,6 +68,14 @@ public final class MountTableInitializerEarlyStartup implements IEarlyStartup {
         final var filter = CorePlugin.getInstance().getCustomizationService() //
             .map(x -> (WorkbenchMountPointHostFilter)x.getCustomization().mountpoint()) //
             .orElse(WorkbenchMountPointHostFilter.ALLOW_ALL);
+
+        // AP-25290: install the prefs syncer before initializing the mount table, but after instance location is set
+        if (!MountPointsPrefsSyncer.install()) {
+            // we expect to be the first and only ones to add the syncer
+            // if it is added before the instance location is set, it will lead to accidental setting of the
+            // workspace to the default location
+            NodeLogger.getLogger(getClass()).coding("MountPointPrefsSyncer was already installed");
+        }
         WorkbenchMountTable.init(filter);
     }
 }

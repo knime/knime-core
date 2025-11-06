@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core.workbench" version="2">
+    <resource path="src/org/knime/core/workbench/preferences/MountPointsPrefsSyncer.java" type="org.knime.core.workbench.preferences.MountPointsPrefsSyncer">
+        <filter comment="Backport of fix from 5.9" id="1141899266">
+            <message_arguments>
+                <message_argument value="5.9"/>
+                <message_argument value="5.8"/>
+                <message_argument value="install()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>
