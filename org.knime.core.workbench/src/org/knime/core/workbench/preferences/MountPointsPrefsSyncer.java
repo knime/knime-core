@@ -49,7 +49,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.INodeChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
@@ -59,6 +61,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountException;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountTable;
+import org.osgi.service.prefs.BackingStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +78,49 @@ public final class MountPointsPrefsSyncer implements IPreferenceChangeListener, 
 
     private List<WorkbenchMountPointSettings> m_previousValues;
 
+    private static final AtomicBoolean m_isInstalled = new AtomicBoolean();
+
     /**
      * Creates a new preference syncer.
      */
     public MountPointsPrefsSyncer() {
         m_previousValues = getUserOrDefaultValue();
+    }
+
+    /**
+     * Installs the prefs syncer once. The return value indicates if this call installed the prefs syncer or not.
+     * {@code false} does not mean no prefs syncer is installed.
+     *
+     * @return {@code true} if this call installed the prefs syncer, {@code false} otherwise
+     * @since 5.9
+     */
+    public static boolean install() {
+        final var wasInstalled = m_isInstalled.getAndSet(true);
+        if (wasInstalled) {
+            return false;
+        }
+        // AP-8989 switching to IEclipsePreferences
+        final var prefsSyncer = new MountPointsPrefsSyncer();
+
+        final IEclipsePreferences defaultPrefs =
+            DefaultScope.INSTANCE.getNode(MountPointsPreferencesUtil.getMountpointPreferenceLocation());
+        defaultPrefs.addPreferenceChangeListener(prefsSyncer);
+
+        final IEclipsePreferences preferences =
+            InstanceScope.INSTANCE.getNode(MountPointsPreferencesUtil.getMountpointPreferenceLocation());
+        preferences.addNodeChangeListener(prefsSyncer);
+        preferences.addPreferenceChangeListener(prefsSyncer);
+        try {
+            for (String childName : preferences.childrenNames()) {
+                IEclipsePreferences childPreference = (IEclipsePreferences)preferences.node(childName);
+                childPreference.addNodeChangeListener(prefsSyncer);
+                childPreference.addPreferenceChangeListener(prefsSyncer);
+            }
+        } catch (BackingStoreException e) {
+            LoggerFactory.getLogger(MountPointsPrefsSyncer.class).atWarn().setCause(e)
+                .log("Unable to access preferences");
+        }
+        return true;
     }
 
     @Override

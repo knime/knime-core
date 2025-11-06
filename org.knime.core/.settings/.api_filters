@@ -8,4 +8,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/internal/MountTableInitializerEarlyStartup.java" type="org.knime.core.internal.MountTableInitializerEarlyStartup">
+        <filter comment="Our own internal API" id="576725006">
+            <message_arguments>
+                <message_argument value="IEarlyStartup"/>
+                <message_argument value="MountTableInitializerEarlyStartup"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
