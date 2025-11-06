@@ -1098,7 +1098,6 @@ public final class FileUtil {
      * @throws IOException if the file could not be created
      * @since 5.9
      */
-    // TODO unit tests
     public static TempFileResource createTempFileResource(final String prefix, final String suffix)
         throws IOException {
         final var tempFile = createTempFile(prefix, suffix);
@@ -1113,7 +1112,6 @@ public final class FileUtil {
      * @throws IOException if the directory could not be created
      * @since 5.9
      */
-    // TODO unit tests
     public static TempDirResource createTempDirResource(final String name)
         throws IOException {
         final var tempDir = createTempDir(name);

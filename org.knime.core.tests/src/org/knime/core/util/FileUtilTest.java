@@ -376,4 +376,56 @@ public class FileUtilTest {
             FileUtil.unzip(zipFile.toFile(), destDir.toFile());
         });
     }
+
+    /**
+     * Test for {@link FileUtil#createTempFileResource(String, String)} - verifies file is deleted when resource is closed.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testCreateTempFileResource() throws Exception {
+        File tempFile;
+        try (FileUtil.TempFileResource resource = FileUtil.createTempFileResource("test", ".tmp")) {
+            tempFile = resource.getFile();
+            assertThat("Temp file should exist", tempFile.exists(), is(true));
+            assertThat("Temp file should be a file", tempFile.isFile(), is(true));
+        }
+        assertThat("Temp file should be deleted after resource is closed", tempFile.exists(), is(false));
+    }
+
+    /**
+     * Test for {@link FileUtil#createTempDirResource(String)} - verifies directory is deleted when resource is closed.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testCreateTempDirResource() throws Exception {
+        File tempDir;
+        try (FileUtil.TempDirResource resource = FileUtil.createTempDirResource("test")) {
+            tempDir = resource.getFile();
+            assertThat("Temp directory should exist", tempDir.exists(), is(true));
+            assertThat("Temp directory should be a directory", tempDir.isDirectory(), is(true));
+        }
+        assertThat("Temp directory should be deleted after resource is closed", tempDir.exists(), is(false));
+    }
+
+    /**
+     * Test for {@link FileUtil#createTempDirResource(String)} - verifies directory with contents is deleted when resource is closed.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testCreateTempDirResourceWithContents() throws Exception {
+        File tempDir;
+        File childFile;
+        try (FileUtil.TempDirResource resource = FileUtil.createTempDirResource("test")) {
+            tempDir = resource.getFile();
+            childFile = new File(tempDir, "child.txt");
+            Files.write(childFile.toPath(), "test content".getBytes(StandardCharsets.UTF_8));
+            assertThat("Temp directory should exist", tempDir.exists(), is(true));
+            assertThat("Child file should exist", childFile.exists(), is(true));
+        }
+        assertThat("Temp directory should be deleted after resource is closed", tempDir.exists(), is(false));
+        assertThat("Child file should be deleted after resource is closed", childFile.exists(), is(false));
+    }
 }
