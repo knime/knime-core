@@ -60,10 +60,12 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.internal.knimeurl.ExplorerURLStreamHandler;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.exception.ResourceAccessException;
 import org.knime.core.util.hub.NamedItemVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve.KNIMEURIDescription;
+import org.knime.core.util.urlresolve.KnimeUrlResolver;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService;
 import org.knime.core.workbench.mountpoint.api.knimeurl.MountPointURLService.ItemInfo;
 import org.osgi.framework.Bundle;
@@ -376,6 +378,23 @@ public final class ResolverUtil {
             throw new IOException(ex.getMessage(), ex);
         }
 
+        return Optional.empty();
+    }
+
+    /**
+     * Requests the catalog path and ID of the given URL if it references an item in a Hub catalog.
+     *
+     * @param url KNIME URL to translate
+     * @return ID and path of the item if located on Hub, {@link Optional#empty()} otherwise
+     */
+    public static Optional<KnimeUrlResolver.IdAndPath> translateHubUrl(final URL url) {
+        try {
+            return fetchItemInfo(url, new NullProgressMonitor())
+                    .filter(ii -> ii.id().isPresent()) // Hub only
+                    .map(ii -> new KnimeUrlResolver.IdAndPath(ii.id().orElseThrow(), ii.path().makeRelative()));
+        } catch (final IOException e) {
+            NodeLogger.getLogger(ResolverUtil.class).error(e);
+        }
         return Optional.empty();
     }
 }
