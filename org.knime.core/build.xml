@@ -6,9 +6,24 @@
 
 	<!-- ========================== build ==== -->
 	<target name="schemas.check">
-		<uptodate property="schemas.notRequired" targetfile="lib/schemas.jar">
+		<!-- Check if file is up-to-date -->
+		<uptodate property="schemas.uptodate" targetfile="lib/schemas.jar">
 			<srcfiles dir="src" includes="**/*.xsd" />
 		</uptodate>
+		
+		<!-- Check if file has non-zero size -->
+		<condition property="schemas.hasSize">
+			<length file="lib/schemas.jar" when="greater" length="0" />
+		</condition>
+		
+		<!-- Both conditions must be true -->
+		<condition property="schemas.notRequired">
+			<and>
+				<isset property="schemas.uptodate" />
+				<isset property="schemas.hasSize" />
+			</and>
+		</condition>
+		
 	</target>
 
 	<target name="build" depends="schemas.check,init" unless="schemas.notRequired">
