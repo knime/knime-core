@@ -386,6 +386,7 @@ public final class ResolverUtil {
      *
      * @param url KNIME URL to translate
      * @return ID and path of the item if located on Hub, {@link Optional#empty()} otherwise
+     * @since 5.9
      */
     public static Optional<KnimeUrlResolver.IdAndPath> translateHubUrl(final URL url) {
         try {
