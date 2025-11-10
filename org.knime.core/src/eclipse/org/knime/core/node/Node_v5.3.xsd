@@ -296,8 +296,8 @@
   <xs:element name="s" type="Inline"/>
   <xs:element name="samp" type="Inline" />
   <xs:element name="pre">
-    <xs:complexType>
-      <xs:choice>
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="a" />
         <xs:group ref="fontstyle" />
         <xs:element ref="br" />
