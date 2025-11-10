@@ -378,22 +378,6 @@ public class FileUtilTest {
     }
 
     /**
-     * Test for {@link FileUtil#createTempFileResource(String, String)} - verifies file is deleted when resource is closed.
-     *
-     * @throws Exception if an error occurs
-     */
-    @Test
-    public void testCreateTempFileResource() throws Exception {
-        File tempFile;
-        try (FileUtil.TempFileResource resource = FileUtil.createTempFileResource("test", ".tmp")) {
-            tempFile = resource.getFile();
-            assertThat("Temp file should exist", tempFile.exists(), is(true));
-            assertThat("Temp file should be a file", tempFile.isFile(), is(true));
-        }
-        assertThat("Temp file should be deleted after resource is closed", tempFile.exists(), is(false));
-    }
-
-    /**
      * Test for {@link FileUtil#createTempDirResource(String)} - verifies directory is deleted when resource is closed.
      *
      * @throws Exception if an error occurs

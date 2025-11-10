@@ -1090,21 +1090,6 @@ public final class FileUtil {
     }
 
     /**
-     * Creates a temp file that is deleted when the returned resource is closed.
-     *
-     * @param prefix see {@link #createTempFile(String, String)}
-     * @param suffix see {@link #createTempFile(String, String)}
-     * @return a resource representing the created temp file. The file is deleted when the resource is closed.
-     * @throws IOException if the file could not be created
-     * @since 5.9
-     */
-    public static TempFileResource createTempFileResource(final String prefix, final String suffix)
-        throws IOException {
-        final var tempFile = createTempFile(prefix, suffix);
-        return new TempFileResource(tempFile);
-    }
-
-    /**
      * Creates a temp directory that is deleted when the returned resource is closed.
      *
      * @param name the name prefix for the directory
@@ -1150,40 +1135,6 @@ public final class FileUtil {
             if (m_dir.exists()) {
                 deleteRecursively(m_dir, true);
             }
-        }
-    }
-
-    /**
-     * Auto closeable representation of a temporary file created through {@link #createTempFileResource(String, String)}.
-     *
-     * @since 5.9
-     */
-    public static final class TempFileResource implements AutoCloseable {
-
-        private final File m_file;
-
-        private TempFileResource(final File file) {
-            m_file = file;
-        }
-
-        /**
-         * @return the created file
-         */
-        public File getFile() {
-            return m_file;
-        }
-
-        /**
-         * @return the {@link Path} of the created file
-         */
-        public Path getPath() {
-            return m_file.toPath();
-        }
-
-        @Override
-        public void close() throws IOException {
-            TEMP_FILES.remove(m_file);
-            Files.deleteIfExists(m_file.toPath());
         }
     }
 
