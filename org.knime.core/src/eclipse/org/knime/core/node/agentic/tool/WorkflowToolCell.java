@@ -57,6 +57,7 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -214,7 +215,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
     private Path m_dataAreaPath;
 
     private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath,
-        final FileStore... fileStores) {
+        final FileStore... fileStores) throws ToolIncompatibleWorkflowException {
         super(fileStores);
         var wsInputs = new ArrayList<WorkflowSegment.Input>();
         var wsOutputs = new ArrayList<WorkflowSegment.Output>();
@@ -245,19 +246,26 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         m_messageOutputPortIndex = messageOutputPortIndex;
     }
 
-    private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm) {
+    private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm)
+        throws ToolIncompatibleWorkflowException {
         var configNodes = wfm.getConfigurationNodes(false);
         if (configNodes.isEmpty()) {
             return "";
         }
         var paramSchema = JsonUtil.getProvider().createObjectBuilder();
+        var paramNameSet = new HashSet<String>();
         for (var configNodeEntry : configNodes.entrySet()) {
             var paramName = configNodeEntry.getKey();
             // remove "-<nodeId>" suffix from config node name
-            // TODO re-visit (parameter name clashes etc.)
             var dashIdx = paramName.lastIndexOf('-');
             if (dashIdx > 0) {
                 paramName = paramName.substring(0, dashIdx);
+            }
+            if (paramNameSet.contains(paramName)) {
+                throw new ToolIncompatibleWorkflowException(
+                    "Duplicate parameter name '" + paramName + "' found in configuration nodes.");
+            } else {
+                paramNameSet.add(paramName);
             }
             var dialogNode = configNodeEntry.getValue();
             var value = dialogNode.getDefaultValue().toJson();
