@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -99,7 +100,6 @@ import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.Port;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
@@ -318,18 +318,19 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         final List<ToolPort> toolInputs, final List<ToolPort> toolOutputs, final NodeID toolMessageOutputNodeID) {
         List<NodeID> nodesToRemove = new ArrayList<>();
         var messageOutputPortIndex = new AtomicInteger(-1);
-        for (NodeContainer nc : wfm.getNodeContainers()) {
-            if (nc instanceof NativeNodeContainer nnc) {
-                if (collectInputs(wfm, wsInputs, toolInputs, nnc)) {
-                    nodesToRemove.add(nnc.getID());
-                    collectNodesUpstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
-                } else if (collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc,
-                    toolMessageOutputNodeID)) {
-                    nodesToRemove.add(nnc.getID());
-                    collectNodesDownstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
+        wfm.getNodeContainers().stream().sorted(Comparator.comparingInt(nc -> nc.getUIInformation().getBounds()[1]))
+            .forEach(nc -> {
+                if (nc instanceof NativeNodeContainer nnc) {
+                    if (collectInputs(wfm, wsInputs, toolInputs, nnc)) {
+                        nodesToRemove.add(nnc.getID());
+                        collectNodesUpstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
+                    } else if (collectOutputs(wfm, wsOutputs, messageOutputPortIndex, toolOutputs, nnc,
+                        toolMessageOutputNodeID)) {
+                        nodesToRemove.add(nnc.getID());
+                        collectNodesDownstreamOf(List.of(nnc.getID()), wfm, nodesToRemove);
+                    }
                 }
-            }
-        }
+            });
         nodesToRemove.forEach(wfm::removeNode);
         return messageOutputPortIndex.get();
     }
