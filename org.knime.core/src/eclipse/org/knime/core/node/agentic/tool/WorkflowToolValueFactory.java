@@ -178,7 +178,10 @@ public final class WorkflowToolValueFactory extends AbstractFileStoreValueFactor
         private static ToolPort[] readToolPorts(final ListReadAccess access) {
             final StructReadAccess portAccess = access.getAccess();
             return IntStream.range(0, access.size())//
-                .mapToObj(i -> readToolPort(portAccess))//
+                .mapToObj(i -> {
+                    access.setIndex(i);
+                    return readToolPort(portAccess);
+                })//
                 .toArray(ToolPort[]::new);
         }
 
