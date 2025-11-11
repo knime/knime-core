@@ -312,14 +312,17 @@ public final class CombinedExecutor {
             throw exception.get();
         }
 
-        var outputs = m_wfm.getIncomingConnectionsFor(outputNodeId).stream() //
-            .filter(cc -> cc.getSource().equals(componentId)) //
-            .map(cc -> component.getOutPort(cc.getSourcePort()).getPortObject()) //
-            .toArray(PortObject[]::new);
-        var outputIds = m_wfm.getIncomingConnectionsFor(outputNodeId).stream() //
-            .filter(cc -> cc.getSource().equals(componentId)) //
-            .map(cc -> new PortId(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort())) //
-            .toArray(PortId[]::new);
+        var outputs = new PortObject[wsOutputs.size()];
+        var outputIds = new PortId[wsOutputs.size()];
+        var outIdx = 0;
+        for (int i = 0; i < outPorts.size(); i++) {
+            var cc = m_wfm.getIncomingConnectionFor(outputNodeId, i + 1);
+            if (cc.getSource().equals(componentId)) {
+                outputs[outIdx] = m_wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObject();
+                outputIds[outIdx] = new PortId(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort());
+                outIdx++;
+            }
+        }
         var flowVars =
             WorkflowSegmentExecutor.getFlowVariablesFromNC((SingleNodeContainer)m_wfm.getNodeContainer(outputNodeId));
         boolean executionSuccessful = m_wfm.getNodeContainerState().isExecuted();

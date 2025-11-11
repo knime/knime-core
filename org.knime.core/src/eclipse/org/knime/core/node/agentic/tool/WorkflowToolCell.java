@@ -95,14 +95,18 @@ import org.knime.core.node.dialog.SubNodeDescriptionProvider;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.wizard.page.WizardPageContribution;
+import org.knime.core.node.workflow.ComponentMetadata;
+import org.knime.core.node.workflow.ComponentMetadata.Port;
 import org.knime.core.node.workflow.ConnectionID;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.capture.CombinedExecutor;
+import org.knime.core.node.workflow.capture.CombinedExecutor.PortId;
 import org.knime.core.node.workflow.capture.IsolatedExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
@@ -533,16 +537,19 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
                 Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
 
             String[] viewNodeIds = null;
+            var component = result.component();
             if (Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
-                viewNodeIds = result.component().getWorkflowManager().getNodeContainers().stream()
+                viewNodeIds = component.getWorkflowManager().getNodeContainers().stream()
                     .filter(nc -> nc instanceof NativeNodeContainer nnc
                         && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
                     .map(nc -> NodeIDSuffix.create(workflowExecutor.getWorkflow().getID(), nc.getID()).toString())
                     .toArray(String[]::new);
             }
 
+            setComponentMetadata(workflowExecutor, inputs, result.outputIds(), component);
+
             var outputIds = Stream.of(result.outputIds()).map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex())
-                .toArray(String[]::new);
+                    .toArray(String[]::new);
             return new WorkflowToolResult(
                 extractMessage(result.outputs(),
                     () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
@@ -556,6 +563,39 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
                 FileUtils.deleteQuietly(dataAreaPath.toFile());
             }
         }
+    }
+
+    private void setComponentMetadata(final CombinedExecutor workflowExecutor, final List<PortId> inputs,
+        final PortId[] outputs, final SubNodeContainer component) {
+        var metadataBuilder = ComponentMetadata.fluentBuilder();
+        var wfm = workflowExecutor.getWorkflow();
+        var inPortMetadata = new Port[component.getNrInPorts() - 1];
+        for (int i = 0; i < inPortMetadata.length; i++) {
+            var portId = inputs.get(i);
+            var toolInput = m_inputs[i];
+            wfm.getOutgoingConnectionsFor(portId.nodeIDSuffix().prependParent(wfm.getID()), portId.portIndex()).stream()
+                .filter(cc -> cc.getDest().equals(component.getID())).forEach(
+                    cc -> inPortMetadata[cc.getDestPort() - 1] = new Port(toolInput.name(), toolInput.description()));
+        }
+        for (var pm : inPortMetadata) {
+            metadataBuilder.withInPort(pm.name(), pm.description());
+        }
+        var outPortMetadata = new Port[component.getNrOutPorts() - 1];
+        for (int i = 0; i < outPortMetadata.length; i++) {
+            var portId = outputs[i];
+            if (i == m_messageOutputPortIndex) {
+                outPortMetadata[portId.portIndex() - 1] = new Port("tool-message", "Output port for the tool message");
+            } else {
+                var toolOutput = m_outputs[i > m_messageOutputPortIndex && m_messageOutputPortIndex >= 0 ? (i - 1) : i];
+                assert portId.nodeIDSuffix().prependParent(wfm.getID()).equals(component.getID());
+                outPortMetadata[portId.portIndex() - 1] = new Port(toolOutput.name(), toolOutput.description());
+            }
+        }
+        for (var pm : outPortMetadata) {
+            metadataBuilder.withOutPort(pm.name(), pm.description());
+        }
+        var metadata = metadataBuilder.withHtmlContent().withLastModifiedNow().withDescription(m_description).build();
+        component.setMetadata(metadata);
     }
 
     private Optional<Path> copyDataAreaToTempDir() throws IOException {
