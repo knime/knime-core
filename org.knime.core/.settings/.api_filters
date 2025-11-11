@@ -16,4 +16,56 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/agentic/tool/WorkflowToolValue.java" type="org.knime.core.node.agentic.tool.WorkflowToolValue$WorkflowToolResult">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.agentic.tool.WorkflowToolValue.WorkflowToolResult"/>
+                <message_argument value="WorkflowToolResult(String, PortObject[], WorkflowManager, String[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/capture/WorkflowSegmentExecutor.java" type="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="cancel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="configureWorkflow(Map&lt;String,JsonValue&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="dispose()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="executeWorkflow(PortObject[], ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="executeWorkflowAndCollectNodeMessages(PortObject[], ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor"/>
+                <message_argument value="getWorkflowManager()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentExecutionResult"/>
+                <message_argument value="org.knime.core_5.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

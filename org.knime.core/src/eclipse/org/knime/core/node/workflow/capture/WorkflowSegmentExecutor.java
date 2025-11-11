@@ -372,7 +372,7 @@ public final class WorkflowSegmentExecutor {
          *
          * @return the compiled error message
          *
-         * @since 5.8
+         * @since 5.9
          */
         public static String compileSingleErrorMessage(final List<WorkflowSegmentNodeMessage> nodeMessages) {
             var errorMessages = nodeMessages.stream().toList();
