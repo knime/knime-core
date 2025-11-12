@@ -43,7 +43,7 @@
 		<profile>
 			<id>test</id>
 			<modules>
-			    <module>org.knime.testing</module>
+				<module>org.knime.testing</module>
 				<module>org.knime.core.data.uritype</module>
 				<module>org.knime.core.pmml</module>
 				<module>org.knime.core</module>
@@ -65,11 +65,11 @@
 					<layout>p2</layout>
 					<url>${knime.base.p2}</url>
 				</repository>
-                <repository>
-                    <id>p2-knime-filehandling-core</id>
-                    <layout>p2</layout>
-                    <url>${knime.filehandling.core.p2}</url>
-                </repository>
+				<repository>
+					<id>p2-knime-filehandling-core</id>
+					<layout>p2</layout>
+					<url>${knime.filehandling.core.p2}</url>
+				</repository>
 				<repository>
 					<id>p2-knime-workbench</id>
 					<layout>p2</layout>
@@ -234,6 +234,14 @@
 		</profile>
 	</profiles>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-dependency-tools-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
 
 	<repositories>
 		<repository>

@@ -142,6 +142,7 @@ public interface MountPointURLService extends MountPointProvider {
      * @param version item version (if applicable)
      * @param size item size (in bytes, if applicable)
      * @param isFolder whether or not the item is a folder (space, remote workflow group or local file system folder)
+     * @since 5.9
      */
     record ItemInfo(String mountId, IPath path, Optional<String> id, Optional<ItemVersion> version, OptionalLong size,
         boolean isFolder) {
@@ -154,6 +155,7 @@ public interface MountPointURLService extends MountPointProvider {
      * @param monitor a progress monitor to report progress, may be {@code null}
      * @return information about the item if it exists, {@link Optional#empty()} if it doesn't
      * @throws IOException if the information can't be fetched
+     * @since 5.9
      */
     default Optional<ItemInfo> fetchItemInfo(final URI uri, final IProgressMonitor monitor) throws IOException {
         final var path = IPath.forPosix(StringUtils.firstNonBlank(uri.getPath(), "/"));
@@ -174,9 +176,9 @@ public interface MountPointURLService extends MountPointProvider {
      * @param monitor a progress monitor to report progress, may be {@code null}
      * @return information about the item if it exists, {@link Optional#empty()} if it doesn't
      * @throws IOException if the information can't be fetched
+     * @since 5.9
      */
-    Optional<ItemInfo> fetchItemInfo(IPath path, final ItemVersion version, final IProgressMonitor monitor)
-        throws IOException;
+    Optional<ItemInfo> fetchItemInfo(IPath path, ItemVersion version, IProgressMonitor monitor) throws IOException;
 
     /**
      * Creates a {@link MountPointURLService} for the executor described by the given executor and location info if possible.
@@ -184,8 +186,9 @@ public interface MountPointURLService extends MountPointProvider {
      * @param execInfo executor info
      * @param restLoc location info
      * @return URL service if it could be created, {@link Optional#empty()} otherwise
+     * @since 5.9
      */
-    public static Optional<MountPointURLService> getExecutorURLService(final JobExecutorInfo execInfo,
+    static Optional<MountPointURLService> getExecutorURLService(final JobExecutorInfo execInfo,
         final RestLocationInfo restLoc) {
         final var collector = MountPointURLServiceFactoryCollector.getInstance();
         return collector.getRegisteredTypeIdentifiers().stream() //

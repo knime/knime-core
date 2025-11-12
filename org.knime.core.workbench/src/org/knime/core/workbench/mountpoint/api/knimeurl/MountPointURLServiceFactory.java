@@ -75,6 +75,7 @@ public interface MountPointURLServiceFactory {
      * @param execInfo job executor info
      * @param restLoc REST location info of the current job
      * @return URL service if this is the correct factory, {@link Optional#empty()} otherwise
+     * @since 5.9
      */
     default Optional<MountPointURLService> createExecutorMountPointURLService(final JobExecutorInfo execInfo,
         final RestLocationInfo restLoc) {
