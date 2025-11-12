@@ -62,8 +62,8 @@ import org.eclipse.core.runtime.Path;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.core.util.CoreConstants;
+import org.knime.core.util.EclipseUtil;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointSettings;
 import org.knime.core.workbench.mountpoint.api.WorkbenchMountPointState.WorkbenchMountPointStateSettings;
 import org.knime.core.workbench.preferences.MountPointsPreferencesUtil;
@@ -86,7 +86,7 @@ final class MountPointPreferencesTest {
         Bundle myself = FrameworkUtil.getBundle(MountPointPreferencesTest.class);
         URL url = FileLocator.find(myself, new Path("/files/testing.epf"), null);
         URL fileUrl = FileLocator.toFileURL(url);
-        BatchExecutor.setPreferences(new File(fileUrl.getFile()));
+        EclipseUtil.setPreferences(new File(fileUrl.getFile()));
     }
 
     /**

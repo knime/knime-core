@@ -46,8 +46,12 @@
  */
 package org.knime.core.util;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
@@ -57,14 +61,21 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.core.runtime.preferences.IExportedPreferences;
+import org.eclipse.core.runtime.preferences.IPreferenceFilter;
+import org.eclipse.core.runtime.preferences.IPreferencesService;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.osgi.internal.loader.ModuleClassLoader;
 import org.eclipse.osgi.internal.loader.classpath.ClasspathEntry;
@@ -72,6 +83,7 @@ import org.eclipse.osgi.internal.loader.classpath.ClasspathManager;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.storage.bundlefile.BundleFile;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.application.ApplicationHandle;
@@ -489,5 +501,43 @@ public final class EclipseUtil {
                 .debug(() -> "Invalid perspective property: \"%s\"".formatted(perspectiveProperty));
         }
         return Optional.empty();
+    }
+
+    /**
+     * Sets the workspace preferences using the given file. This method should only be used by application
+     * definitions, e.g., KNIME Executor. It must not be used by node implementations.
+     *
+     * @param preferenceFile the preferences file
+     * @throws IOException if the given file is not a file, or cannot be read
+     * @throws CoreException if applying the preferences fails
+     * @since 5.9
+     */
+    public static void setPreferences(final File preferenceFile) throws IOException, CoreException {
+        CheckUtils.check(preferenceFile.isFile(), FileNotFoundException::new,
+            () -> String.format("Preference file '%s' does not exist", preferenceFile.getAbsolutePath()));
+
+        final IPreferencesService prefService = Platform.getPreferencesService();
+        final IExportedPreferences prefs;
+        try (InputStream in = new BufferedInputStream(new FileInputStream(preferenceFile))) {
+            prefs = prefService.readPreferences(in);
+        }
+        IPreferenceFilter filter = new IPreferenceFilter() {
+            @Override
+            public String[] getScopes() {
+                return new String[]{InstanceScope.SCOPE, ConfigurationScope.SCOPE, "profile"};
+            }
+
+            @Override
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            public Map getMapping(final String scope) {
+                return null; // NOSONAR this filter is applicable for all nodes
+            }
+        };
+        /*
+         * Calling this method with filters and not the applyPreferences without
+         * filters is very important! The other method does not merge the
+         * preferences but deletes all default values.
+         */
+        prefService.applyPreferences(prefs, new IPreferenceFilter[]{filter});
     }
 }

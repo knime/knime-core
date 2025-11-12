@@ -681,7 +681,7 @@ public class NodeContextTest {
     }
 
     private static File findInPlugin(final String name) throws IOException {
-        Bundle thisBundle = FrameworkUtil.getBundle(BatchExecutorTestcase.class);
+        Bundle thisBundle = FrameworkUtil.getBundle(NodeContextTest.class);
         URL url = FileLocator.find(thisBundle, new Path(name), null);
         if (url == null) {
             throw new FileNotFoundException(thisBundle.getLocation() + name);

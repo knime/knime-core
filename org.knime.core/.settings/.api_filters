@@ -24,6 +24,103 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/BatchExecutor.java" type="org.knime.core.node.workflow.BatchExecutor">
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="BatchExecutor(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="EXIT_ERR_EXECUTION"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="EXIT_ERR_LOAD"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="EXIT_ERR_PRESTART"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="EXIT_SUCCESS"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="EXIT_WARN"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="createWorkflowVariable(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="getOptionsString()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="getPropertiesString()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="main(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="mainRun(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="runAll()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor"/>
+                <message_argument value="splitWorkflowVariableArg(String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor.BatchException"/>
+                <message_argument value="org.knime.core_5.9.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="AP-25314 - batch executor is not public API, reduced to bare minimum" id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.BatchExecutor.IllegalOptionException"/>
+                <message_argument value="org.knime.core_5.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/capture/WorkflowSegmentExecutor.java" type="org.knime.core.node.workflow.capture.WorkflowSegmentExecutor">
         <filter id="338792546">
             <message_arguments>

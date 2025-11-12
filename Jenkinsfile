@@ -26,6 +26,7 @@ try {
     workflowTests.runTests(
         dependencies: [
             repositories: [
+                'knime-ap-batch',
                 'knime-aws',
                 'knime-buildworkflows',
                 'knime-chemistry',
