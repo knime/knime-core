@@ -169,6 +169,7 @@ public final class CombinedExecutor {
             ((DefaultVirtualPortObjectInNodeModel)((NativeNodeContainer)m_wfm.getNodeContainer(virtualInId))
                 .getNodeModel())
                     .setVirtualNodeInput(new VirtualNodeInput(builder.m_initialInputs, Collections.emptyList()));
+            m_wfm.executeUpToHere(virtualInId);
         } else {
             m_wfm = builder.m_combinedWorkflow;
         }
