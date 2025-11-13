@@ -65,6 +65,7 @@ import org.knime.core.util.JsonUtil;
 
 import jakarta.json.JsonException;
 import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
 
 /**
@@ -73,6 +74,8 @@ import jakarta.json.JsonValue;
 public class ConfigurationTestNodeModel extends TestNodeModel implements DialogNode {
 
     static JsonValue jsonValue;
+
+    private DialogNodeValue m_value;
 
     ConfigurationTestNodeModel() {
         super(null, FlowVariablePortObject.TYPE);
@@ -124,6 +127,7 @@ public class ConfigurationTestNodeModel extends TestNodeModel implements DialogN
 
     @Override
     public void setDialogValue(final DialogNodeValue value) {
+        m_value = value;
         jsonValue = value.toJson();
     }
 
@@ -144,7 +148,7 @@ public class ConfigurationTestNodeModel extends TestNodeModel implements DialogN
 
     @Override
     public DialogNodeValue getDialogValue() {
-        return null;
+        return m_value;
     }
 
     @Override
@@ -178,7 +182,9 @@ public class ConfigurationTestNodeModel extends TestNodeModel implements DialogN
 
         @Override
         public void saveToNodeSettings(final NodeSettingsWO settings) {
-            //
+            if (m_json instanceof JsonString js) {
+                settings.addString("string", js.getString());
+            }
         }
 
         @Override

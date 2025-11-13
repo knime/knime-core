@@ -86,6 +86,8 @@ import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.ToolIncompatibleWorkflowException;
 import org.knime.core.node.agentic.tool.WorkflowToolCell.WorkflowToolCellSerializer;
 import org.knime.core.node.port.PortObject;
@@ -93,6 +95,7 @@ import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainerMetadata.ContentType;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID.NodeIDSuffix;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowMetadata;
@@ -458,12 +461,15 @@ class WorkflowToolCellTest {
      *
      * @throws IOException
      * @throws ToolIncompatibleWorkflowException
+     * @throws InvalidSettingsException
      */
     @Test
-    void testExecuteToolsWithCombinedWorkflow() throws ToolIncompatibleWorkflowException, IOException {
+    void testExecuteToolsWithCombinedWorkflow()
+        throws ToolIncompatibleWorkflowException, IOException, InvalidSettingsException {
         var input = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowInputTestNodeFactory(), 1, 0);
         var node = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new TestNodeFactory(null), 0, 0);
         var output = WorkflowManagerUtil.createAndAddNode(m_toolWfm, new WorkflowOutputTestNodeFactory(), 1, 1);
+        WorkflowManagerUtil.createAndAddNode(m_toolWfm, new ConfigurationTestNodeFactory(), 0, 0); // configuration node
         m_toolWfm.addConnection(input.getID(), 1, node.getID(), 1);
         m_toolWfm.addConnection(node.getID(), 1, output.getID(), 1);
         var nodeWithViewID =
@@ -478,8 +484,9 @@ class WorkflowToolCellTest {
         var combinedExecutor =
             WorkflowSegmentExecutor.builder(hostNode, ExecutionMode.DETACHED, "test_combined_tools_workflow", s -> {
             }, exec, false).combined(inputs).build();
-        var res = cell.execute(combinedExecutor, "{}", combinedExecutor.getSourcePortIds(), exec,
-            Map.of("with-view-nodes", "true"));
+        var res = cell.execute(combinedExecutor, """
+                {"configuration-parameter-name": "config value" }
+                """, combinedExecutor.getSourcePortIds(), exec, Map.of("with-view-nodes", "true"));
         assertThat(res.message()).startsWith("Tool executed successfully (no custom tool message output");
         assertThat(res.viewNodeIds()).hasSize(1);
         assertThat(res.virtualProject()).isNull();
@@ -489,6 +496,16 @@ class WorkflowToolCellTest {
         assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isTrue();
         assertThat(combinedWorkflow.getNodeContainerState().isExecuted()).isTrue();
         assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(3); // virtual in and out + tool component
+        var iterator = combinedWorkflow.getNodeContainers().iterator();
+        iterator.next(); // skip virtual input
+        iterator.next(); // skip virtual output
+        var component = iterator.next();
+        assertThat(component).isInstanceOf(SubNodeContainer.class);
+        var settings = new NodeSettings("blub");
+        component.getParent().saveNodeSettings(component.getID(), settings);
+        assertThat(
+            settings.getNodeSettings("model").getNodeSettings("configuration-parameter-name-4").getString("string"))
+                .isEqualTo("config value");
 
         combinedExecutor.dispose();
         assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isFalse();

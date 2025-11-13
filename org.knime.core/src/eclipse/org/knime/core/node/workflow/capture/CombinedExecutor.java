@@ -59,6 +59,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortTypeRegistry;
@@ -294,12 +296,9 @@ public final class CombinedExecutor {
             m_wfm.collapseIntoMetaNode(copyContent.getNodeIDs(), copyContent.getAnnotationIDs(), ws.getName())
                 .getCollapsedMetanodeID())
             .getConvertedNodeID();
-
-        // configuration nodes
         var component = (SubNodeContainer)m_wfm.getNodeContainer(componentId);
-        if (parameters != null && !parameters.isEmpty()) {
-            component.getWorkflowManager().setConfigurationNodes(parameters);
-        }
+
+        configureComponent(parameters, component);
 
         var flowVirtualScopeContext = new FlowVirtualScopeContext(m_hostNode.getID(), dataAreaPath, restrictions);
         component.getWorkflowManager().setInitialScopeContext(flowVirtualScopeContext);
@@ -336,6 +335,27 @@ public final class CombinedExecutor {
         }
         return new WorkflowSegmentExecutionResult(outputs, flowVars, nodeMessages, outputIds, component);
 
+    }
+
+    private static void configureComponent(final Map<String, JsonValue> parameters, final SubNodeContainer component)
+        throws InvalidSettingsException {
+        if (parameters != null && !parameters.isEmpty()) {
+            var wfm = component.getParent();
+            var componentWfm = component.getWorkflowManager();
+            componentWfm.setConfigurationNodes(parameters);
+            var settings = new NodeSettings("component_settings");
+            wfm.saveNodeSettings(component.getID(), settings);
+            var modelSettings = settings.addNodeSettings("model");
+            var dialogNodes = componentWfm.getConfigurationNodes(false);
+            for (var entry : dialogNodes.entrySet()) {
+                var dialogValue = entry.getValue().getDialogValue();
+                if (dialogValue != null) {
+                    var subSettings = modelSettings.addNodeSettings(entry.getKey());
+                    dialogValue.saveToNodeSettings(subSettings);
+                }
+            }
+            wfm.loadNodeSettings(component.getID(), settings);
+        }
     }
 
     private static void layout(final WorkflowManager wfm) {
