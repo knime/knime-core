@@ -91,7 +91,7 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
                 NativeProxyProviderWrapper.installNativeWrapper();
                 isInstalledGlobally = true;
 
-                LOGGER.debug("(3/3) Successfully installed proxy support");
+                LOGGER.debug("(3/3) Successfully installed proxy support.");
             }
         } finally {
             tracker.close();
@@ -139,7 +139,7 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
             }
         });
         tracker.open();
-        LOGGER.debug("(1/3) Opened OSGi service tracker for '%s'".formatted(PROXY_SERVICE_NAME));
+        LOGGER.debug("(1/3) Opened OSGi service tracker for '%s'.".formatted(PROXY_SERVICE_NAME));
     }
 
     /**
@@ -158,7 +158,7 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
     @Override
     public void run() {
         // (2) Initialize Eclipse proxy service (using the above-set listeners and properties).
+        LOGGER.debug("(2/3) Initializing OSGi service '%s'...".formatted(PROXY_SERVICE_NAME));
         ensureInitialized();
-        LOGGER.debug("(2/3) Initialized OSGi service '%s'".formatted(PROXY_SERVICE_NAME));
     }
 }
