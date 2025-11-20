@@ -10329,8 +10329,7 @@ public final class WorkflowManager extends NodeContainer
             final List<NodeID> idList =
                 new ArrayList<NodeID>(m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet());
             for (ListIterator<NodeID> reverseIt = idList.listIterator(idList.size()); reverseIt.hasPrevious();) {
-                NodeContainer nc = getNodeContainer(reverseIt.previous());
-                nc.cleanup();
+                tryGetNodeContainer(reverseIt.previous()).ifPresent(NodeContainer::cleanup);
             }
             getConnectionContainers().stream().forEach(c -> c.cleanup());
             if (m_workflowResourceCache != null) {
