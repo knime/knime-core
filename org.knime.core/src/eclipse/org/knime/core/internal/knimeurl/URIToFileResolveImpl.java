@@ -197,8 +197,12 @@ public class URIToFileResolveImpl implements URIToFileResolve {
     @Override
     public Optional<File> resolveToLocalOrTempFileConditional(final URI uri, final IProgressMonitor monitor,
         final ZonedDateTime ifModifiedSince) throws ResourceAccessException {
-        // we are not interested in the time zone information, forget immediately
-        return Optional.ofNullable(resolveToLocalOrTempFileInternal(uri, monitor, ifModifiedSince.toInstant()));
+        Instant instant = null;
+        if (ifModifiedSince != null) {
+            // we are not interested in the time zone information, forget immediately
+            instant = ifModifiedSince.toInstant();
+        }
+        return Optional.ofNullable(resolveToLocalOrTempFileInternal(uri, monitor, instant));
     }
 
     private static File fetchRemoteFile(final URL url, final Instant ifModifiedSince)
