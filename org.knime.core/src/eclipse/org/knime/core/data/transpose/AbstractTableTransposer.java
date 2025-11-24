@@ -206,7 +206,7 @@ public abstract class AbstractTableTransposer {
                     DataType newType = row.getCell(i).getType();
                     type = type == null ? newType : DataType.getCommonSuperType(type, newType);
                 }
-                if (type == null) {
+                if (type == null || type.isMissingValueType()) {
                     type = DataType.getType(DataCell.class);
                 }
                 String colName = row.getKey().getString().trim();
