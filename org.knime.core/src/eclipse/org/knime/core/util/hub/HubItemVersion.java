@@ -63,14 +63,14 @@ import org.knime.core.util.urlresolve.URLResolverUtil;
 /**
  * Reference to a KNIME Hub item version. Provides utility methods for conversion to/from URI query parameters.
  *
+ * <p><b>IMPORTANT: To be removed very soon, with the future LTS after 5.8!</b></p>
+ *
  * @param linkType whether this refers to a fixed version, the latest version, or the staging area. Never {@code null}.
  * @param versionNumber only for fixed version: the id of the version
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.1
- * @deprecated Use {@link ItemVersion} for version references and {@link URLResolverUtil} for URL query parameter handling
- * @see ItemVersion
- * @see URLResolverUtil
+ * @deprecated use {@link ItemVersion} instead
  */
 @Deprecated(since = "5.5", forRemoval = true)
 public record HubItemVersion(LinkType linkType, Integer versionNumber) {

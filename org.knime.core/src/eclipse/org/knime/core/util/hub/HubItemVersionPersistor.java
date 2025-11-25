@@ -67,10 +67,11 @@ import org.knime.core.node.workflow.VariableType;
  * as string</li>
  * <li>as an easy union type that can hold fixed versions (integers) and version references (enum constants)</li>
  * </ul>
+ * <p><b>IMPORTANT: To be removed very soon, with the future LTS after 5.8!</b></p>
  *
  * @author Carl Witt, KNIME AG, Zurich, Switzerland
  * @since 5.2
- * @deprecated use {@link ItemVersion} and {@link ItemVersionStringPersistor} instead
+ * @deprecated use {@link ItemVersionStringPersistor} instead
  */
 @Deprecated(since = "5.5", forRemoval = true)
 public final class HubItemVersionPersistor {

@@ -98,6 +98,7 @@ public final class TemplateUpdateUtil {
      *      <li>If no {@code version} query parameter is given or {@code version=current-state} the current state
      * (i.e., the staging area) of the space is referenced.</li>
      * </ul>
+     * <p><b>IMPORTANT: To be removed very soon, with the future LTS after 5.8!</b></p>
      *
      * @since 5.0
      * @deprecated prefer {@link ItemVersion} for working with Hub item versions
