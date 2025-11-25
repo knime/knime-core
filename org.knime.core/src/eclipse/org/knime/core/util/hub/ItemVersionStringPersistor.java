@@ -110,13 +110,13 @@ public final class ItemVersionStringPersistor {
      */
     private static ItemVersion fromString(final String versionString) throws InvalidSettingsException {
         if (CURRENT_STATE_LINK_TYPE.equals(versionString)) {
-            return CurrentState.getInstance();
+            return ItemVersion.currentState();
         }
         if (MOST_RECENT_LINK_TYPE.equals(versionString)) {
-            return MostRecent.getInstance();
+            return ItemVersion.mostRecent();
         }
         try {
-            return new SpecificVersion(Integer.parseUnsignedInt(versionString));
+            return ItemVersion.of(Integer.parseUnsignedInt(versionString));
         } catch (final NumberFormatException e) {
             throw new InvalidSettingsException(
                 "Invalid Hub item version \"%s\". Valid values are \"%s\", \"%s\", or a non-negative integer value."
