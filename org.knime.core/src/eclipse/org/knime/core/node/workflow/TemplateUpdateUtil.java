@@ -91,113 +91,42 @@ import org.knime.core.util.urlresolve.URLResolverUtil;
 public final class TemplateUpdateUtil {
 
     /**
-     * A link to a template on Hub can contain three different kinds of version information through a query parameter.
-     * <ul>
-     *      <li>A specific item version can be referenced: {@code version=42}</li>
-     *      <li>The link can point to the <i>latest</i> version: {@code version=most-recent}</li>
-     *      <li>If no {@code version} query parameter is given or {@code version=current-state} the current state
-     * (i.e., the staging area) of the space is referenced.</li>
-     * </ul>
+     * Hollowed-out enum, throws {@link UnsupportedOperationException} in every method.
+     * To be removed soon!
      *
      * @since 5.0
      * @deprecated prefer {@link ItemVersion} for working with Hub item versions
      */
     @Deprecated(since = "5.5", forRemoval = true)
     public enum LinkType {
-        /** Specific version is selected, no updates will be available. */
-        FIXED_VERSION(Object::toString, null, null),
+            FIXED_VERSION(Object::toString, null, null),
+            LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
+            LATEST_STATE(v -> null, "current-state", "-1");
 
-        /** <i>Latest version</i> is selected. */
-        LATEST_VERSION(v -> "most-recent", "most-recent", "latest"),
-
-        /** <i>Current state</i> is selected, which includes unversioned changes. */
-        LATEST_STATE(v -> null, "current-state", "-1");
-
-        private final Function<Integer, String> m_paramString;
-        private final String m_identifier;
-        private final String m_legacyIdentifier;
-
-        /**
-         * The key used in KNIME hub catalog service query parameters to specify the version of a repository item.
-         * Note that the hub execution service uses "itemVersion" instead.
-         * @since 5.1
-         */
         public static final String VERSION_QUERY_PARAM = "version";
 
-        /**
-         * spaceVersion query parameter was used prior to item level versioning. Space versions do not exist anymore.
-         * However, when the KNIME hub migrated from space versions to item versions, item versions were created such
-         * that item version X matches the content in space version X.
-         * @since 5.1
-         */
         public static final String LEGACY_SPACE_VERSION_QUERY_PARAM = "spaceVersion";
 
-        /**
-         * Creates a link type.
-         *
-         * @param paramString function to create the query parameter for the numeric version
-         * @param identifier identifier to denote a non-numeric version
-         * @param legacyIdentifier legacy identifier (space versioning)
-         */
+        @Deprecated(since = "5.5", forRemoval = true)
         LinkType(final Function<Integer, String> paramString, final String identifier, final String legacyIdentifier) {
-            m_paramString = paramString;
-            m_identifier = identifier;
-            m_legacyIdentifier = legacyIdentifier;
+            // Intentionally left empty: this enum is deprecated.
+            throw new UnsupportedOperationException();
         }
 
-        /**
-         * Creates the value for the {@code version} query parameter.
-         *
-         * @param version item version number, only used for {@link #FIXED_VERSION}
-         * @return parameter value, e.g. {@code "most-recent"}, {@code "current-state"} or {@code "123"}
-         */
         public String getParameterString(final Integer version) {
-            return m_paramString.apply(version);
+            throw new UnsupportedOperationException();
         }
 
-        /**
-         * @return the value used in query parameters to denote a specific link type. {@code null} for FIXED_VERSION.
-         * @since 5.1
-         */
         public String getIdentifier() {
-            return m_identifier;
+            throw new UnsupportedOperationException();
         }
 
-        /**
-         * @return the value previously used in query parameters (for Space Versioning) to denote a specific link type.
-         * {@code null} for FIXED_VERSION.
-         * @since 5.1
-         */
         public String getLegacyIdentifier() {
-            return m_legacyIdentifier;
+            throw new UnsupportedOperationException();
         }
 
-        /**
-         * @return a permanent identifier for this link type
-         * @since 5.2
-         */
-        @Override
-        public String toString() {
-            return switch (this) {
-                case LATEST_STATE -> "LATEST_STATE";
-                case LATEST_VERSION -> "LATEST_VERSION";
-                case FIXED_VERSION -> "FIXED_VERSION";
-            };
-        }
-
-        /**
-         * @param s permanent identifier as returned by {@link #toString()}
-         * @return the link type for the given string representation, or {@link Optional#empty()} if the string does
-         *         not match any identifier.
-         * @since 5.2
-         */
         public static Optional<LinkType> fromString(final String s) {
-            return switch (s) {
-                case "LATEST_STATE" -> Optional.of(LATEST_STATE);
-                case "LATEST_VERSION" -> Optional.of(LATEST_VERSION);
-                case "FIXED_VERSION" -> Optional.of(FIXED_VERSION);
-                default -> Optional.empty();
-            };
+            throw new UnsupportedOperationException();
         }
     }
 

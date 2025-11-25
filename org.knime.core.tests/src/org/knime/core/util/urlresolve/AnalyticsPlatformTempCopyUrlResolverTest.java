@@ -81,7 +81,7 @@ import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.KnimeUrlType;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.urlresolve.URLMethodSources.Context;
 import org.knime.core.util.urlresolve.URLMethodSources.WorkspaceType;
 /**
@@ -250,7 +250,7 @@ class AnalyticsPlatformTempCopyUrlResolverTest {
             "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeLeavingScope()"
         })
         void testResolveRelativeItemVersion(final URL unversioned, final URL withVersion, final URL bothVersions,
-                final HubItemVersion version) throws ResourceAccessException, MalformedURLException {
+                final ItemVersion version) throws ResourceAccessException, MalformedURLException {
             var resolvedWithoutVersion = m_resolver.resolve(unversioned);
             for (final var url : new URL[] { withVersion, bothVersions }) {
                 var resolved = m_resolver.resolve(url);
