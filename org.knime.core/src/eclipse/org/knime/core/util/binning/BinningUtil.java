@@ -274,7 +274,7 @@ public final class BinningUtil {
      * @param numBins the number of bins to create
      * @return a list of bin boundaries, each with an exact match behaviour describing how to handle values that exactly
      *         match the boundary value.
-     * @since 5.9
+     * @since 5.10
      */
     public static List<BinBoundary> createEdgesForEqualWidth( //
         final double min, //
@@ -564,7 +564,7 @@ public final class BinningUtil {
      * @param edges a map where keys are column names and values are lists of bin boundaries
      * @param binNamingSettings the settings for naming the bins
      * @return a map where keys are column names and values are lists of bins created from the edges
-     * @since 5.9
+     * @since 5.10
      */
     public static List<NumericBin> createBins( //
         final List<BinBoundary> edges, //

@@ -273,7 +273,7 @@ public final class BinningSettings {
         public static final String NAME_MIDPOINTS = "Midpoints";
 
         /**
-         * @since 5.9
+         * @since 5.10
          */
         public static BinNaming getNumberedBinNaming(final String binPrefix) {
             return (index, lower, upper) -> binPrefix + (index + 1);
@@ -349,7 +349,7 @@ public final class BinningSettings {
             private static double smallNumberThreshold = 0.0001;
 
             /**
-             * @since 5.9
+             * @since 5.10
              */
             public static final BinNamingNumberFormatter defaultFormatHandler = value -> {
 

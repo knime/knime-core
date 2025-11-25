@@ -13,6 +13,6 @@
 	<packaging>eclipse-repository</packaging>
 
 	<properties>
-		<revision>5.9.0</revision>
+		<revision>5.10.0</revision>
 	</properties>
 </project>
