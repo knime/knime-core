@@ -80,7 +80,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.contextv2.AnalyticsPlatformExecutorInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * Tests for {@link AnalyticsPlatformLocalUrlResolver}. For more generic tests see {@link KnimeUrlResolverTest}.
@@ -212,7 +212,7 @@ class AnalyticsPlatformLocalUrlResolverTest {
         @ParameterizedTest
         @MethodSource("org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()")
         void testResolveNodeRelativeLocalNotSaved(final URL unversioned, final URL withVersion, final URL bothVersions,
-            @SuppressWarnings("unused") final HubItemVersion version) throws Exception {
+            @SuppressWarnings("unused") final ItemVersion version) throws Exception {
             withNodeContext(null, () -> {
                 final var exc = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(unversioned));
                 assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
@@ -260,7 +260,7 @@ class AnalyticsPlatformLocalUrlResolverTest {
             "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeLeavingScope()",
             "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()"})
         void testResolveRelativeIgnoresItemVersion(final URL unversioned, final URL withVersion, final URL bothVersions,
-            @SuppressWarnings("unused") final HubItemVersion version)
+            @SuppressWarnings("unused") final ItemVersion version)
             throws ResourceAccessException, MalformedURLException {
             // given a local workflow
             // when resolving a URL with a version

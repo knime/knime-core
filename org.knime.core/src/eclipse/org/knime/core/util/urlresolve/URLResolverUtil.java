@@ -58,10 +58,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.IntConsumer;
-import java.util.function.IntFunction;
 
-import org.apache.commons.lang3.function.FailableCallable;
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URIBuilder;
@@ -69,10 +66,7 @@ import org.apache.hc.core5.net.WWWFormCodec;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.URIPathEncoder;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.CurrentState;
 import org.knime.core.util.hub.ItemVersion;
-import org.knime.core.util.hub.MostRecent;
-import org.knime.core.util.hub.SpecificVersion;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 
 /**
@@ -149,25 +143,14 @@ public final class URLResolverUtil {
     private URLResolverUtil() {
     }
 
-    // utilities to work with item version
-
     // from core LinkType.LATEST_VERSION.getIdentifier()
     private static final String MOST_RECENT_IDENTIFIER = "most-recent";
-
-    private static final String LEGACY_SPACE_VERSION_MOST_RECENT = "latest";
-
-    // from core LinkType.LATEST_STATE.getIdentifier()
-    private static final String CURRENT_STATE_IDENTIFIER = "current-state";
-
-    private static final String LEGACY_SPACE_VERSION_CURRENT = "-1";
 
     // from core LinkType.VERSION_QUERY_PARAM
     private static final String VERSION_QUERY_PARAM_NAME = "version";
 
     // from core LinkType.SPACE_VERSION_QUERY_PARAM, needed for backwards compatibility
     private static final String SPACE_VERSION_QUERY_PARAM_NAME = "spaceVersion";
-
-    // these methods formerly lived in the HubItemVersion class
 
     /**
      * Applies the given {@link ItemVersion} to the given query parameters by adding/replacing the version. In case the
@@ -185,6 +168,25 @@ public final class URLResolverUtil {
     }
 
     /**
+     * Calls {@link #applyTo(ItemVersion, List)} on the given {@link URI} and replaces its
+     * query parameters using the {@link URIBuilder} from Apache HC5.
+     *
+     * @param version to apply to the URI
+     * @param uri the {@link URI} to process
+     * @return the modified URI
+     * @throws URISyntaxException if the URI with the applied {@link ItemVersion} cannot be parsed
+     * @since 5.10
+     */
+    public static URI applyTo(final ItemVersion version, final URI uri) throws URISyntaxException {
+        if (version == null || uri == null) {
+            return uri;
+        }
+        final var builder = new URIBuilder(uri);
+        builder.setParameters(applyTo(version, builder.getQueryParams()));
+        return builder.build();
+    }
+
+    /**
      * Adds the version information to the query parameters consumer if the given non-{@code null} version is
      * {@link ItemVersion#isVersioned}.
      *
@@ -194,11 +196,8 @@ public final class URLResolverUtil {
      */
     public static void addVersionQueryParameter(final ItemVersion version,
         final BiConsumer<String, String> parameterConsumer) {
-        match(version, //
-            () -> { }, // nothing to do for current-state, like the old method
-            () -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, MOST_RECENT_IDENTIFIER), //
-            v -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, Integer.toString(v)) //
-        );
+        getQueryParameterValue(version) //
+            .ifPresent(value -> parameterConsumer.accept(VERSION_QUERY_PARAM_NAME, value));
     }
 
     /**
@@ -261,7 +260,7 @@ public final class URLResolverUtil {
                 final var value = CheckUtils.checkArgumentNotNull(param.getValue(),
                     "Version parameter value for \"%s\" cannot be empty in query parameters \"%s\"", name,
                     queryForLogging);
-                final ItemVersion versionHere = matchVersionValue(value).orElse(null);
+                final var versionHere = ItemVersion.convertToItemVersion(value);
                 if (found != null && !found.equals(versionHere)) {
                     throw new IllegalArgumentException(
                         "Conflicting version parameters in query parameters \"%s\": \"%s\" vs. \"%s\""
@@ -281,83 +280,12 @@ public final class URLResolverUtil {
      *         current state.
      */
     private static Optional<String> getQueryParameterValue(final ItemVersion version) {
-        return matchFn(version, //
-            Optional::empty, //
+        CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
+        return version.match( //
+            Optional::empty, // nothing to return for current-state, like the old method
             () -> Optional.of(MOST_RECENT_IDENTIFIER), //
             v -> Optional.of(Integer.toString(v)) //
         );
     }
 
-    /**
-     * Matches one of the functions with the given non-{@code null} version and applies it.
-     *
-     * @param <T> return type of the functions
-     * @param version {@code null}able version to apply functions to
-     * @param currentState function to apply if given current-state version
-     * @param mostRecent function to apply if given most-recent version
-     * @param versionFn function to apply if given fixed version number
-     * @return function return value or {@code null} if version was {@code null}
-     */
-    private static <T, E extends Throwable> T matchFn(final ItemVersion version,
-        final FailableCallable<T, E> currentState, final FailableCallable<T, E> mostRecent,
-            final IntFunction<T> versionFn) throws E {
-        CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
-        // good candidate for pattern-matching switch in next Java version (preview in Java 17)
-        if (version instanceof CurrentState) {
-            return currentState.call();
-        }
-        if (version instanceof MostRecent) {
-            return mostRecent.call();
-        }
-        if (version instanceof SpecificVersion sv) {
-            return versionFn.apply(sv.version());
-        }
-        throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
-    }
-
-    /**
-     * Matches one of the given callbacks with the given non-{@code null} version and runs it.
-     * @param version {@code null}able version to apply functions to
-     * @param currentState callback to run if given current-state version
-     * @param mostRecent callback to run if given most-recent version
-     * @param versionConsumer callback to run if given fixed version number
-     */
-    private static void match(final ItemVersion version, final Runnable currentState,
-        final Runnable mostRecent, final IntConsumer versionConsumer) {
-        CheckUtils.checkArgumentNotNull(version, "Version cannot be null");
-        // good candidate for pattern-matching switch in next Java version (preview in Java 17)
-        if (version instanceof CurrentState) {
-            currentState.run();
-        } else if (version instanceof MostRecent) {
-            mostRecent.run();
-        } else if (version instanceof SpecificVersion sv) {
-            versionConsumer.accept(sv.version());
-        } else {
-            throw new IllegalStateException("Unexpected item version class: \"%s\"".formatted(version.getClass()));
-        }
-    }
-
-    /**
-     * Matches the given query parameter value potentially representing an {@link ItemVersion} to the proper
-     * {@link ItemVersion} if possible.
-     *
-     * @param itemVersionParamValue query parameter value to match to {@link ItemVersion}
-     * @return {@link ItemVersion} if it can be matched (parsed), otherwise {@link Optional#empty()}
-     */
-    private static Optional<ItemVersion> matchVersionValue(final String itemVersionParamValue) {
-        return switch (itemVersionParamValue) {
-            case CURRENT_STATE_IDENTIFIER, LEGACY_SPACE_VERSION_CURRENT -> Optional.of(CurrentState.getInstance());
-            case MOST_RECENT_IDENTIFIER, LEGACY_SPACE_VERSION_MOST_RECENT -> Optional.of(MostRecent.getInstance());
-            default -> parseIntegerVersion(itemVersionParamValue);
-        };
-    }
-
-    private static Optional<ItemVersion> parseIntegerVersion(final String itemVersionParamValue) {
-        try {
-            return Optional.of(new SpecificVersion(Integer.parseUnsignedInt(itemVersionParamValue)));
-        } catch (final NumberFormatException e) {
-            throw new IllegalArgumentException(
-                "Cannot parse specific version from value: \"%s\"".formatted(itemVersionParamValue), e);
-        }
-    }
 }

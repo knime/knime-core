@@ -61,7 +61,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * Utility class to provide {@link MethodSource method sources} to parameterized test methods.
@@ -296,19 +296,19 @@ final class URLMethodSources {
             Arguments.of("knime://My-Knime-Hub/Users/john/Private/test.txt",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=3",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://My-Knime-Hub/Users/john/Private/test.txt",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?spaceVersion=3",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://My-Knime-Hub/Users/john/Private/test.txt",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=most-recent",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=most-recent&spaceVersion=latest",
-                         HubItemVersion.latestVersion()),
+                         ItemVersion.mostRecent()),
             Arguments.of("knime://My-Knime-Hub/Users/john/Private/test.txt",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=current-state",
                          "knime://My-Knime-Hub/Users/john/Private/test.txt?version=current-state&spaceVersion=-1",
-                         HubItemVersion.currentState())
+                         ItemVersion.currentState())
         );
     }
 
@@ -318,19 +318,19 @@ final class URLMethodSources {
             Arguments.of("knime://knime.mountpoint/test.txt",
                          "knime://knime.mountpoint/test.txt?version=3",
                          "knime://knime.mountpoint/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.mountpoint/test.txt",
                          "knime://knime.mountpoint/test.txt?spaceVersion=3",
                          "knime://knime.mountpoint/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.mountpoint/test.txt",
                          "knime://knime.mountpoint/test.txt?version=most-recent",
                          "knime://knime.mountpoint/test.txt?version=most-recent&spaceVersion=latest",
-                         HubItemVersion.latestVersion()),
+                         ItemVersion.mostRecent()),
             Arguments.of("knime://knime.mountpoint/test.txt",
                          "knime://knime.mountpoint/test.txt?version=current-state",
                          "knime://knime.mountpoint/test.txt?version=current-state&spaceVersion=-1",
-                         HubItemVersion.currentState())
+                         ItemVersion.currentState())
         );
     }
 
@@ -340,19 +340,19 @@ final class URLMethodSources {
             Arguments.of("knime://knime.space/test.txt",
                          "knime://knime.space/test.txt?version=3",
                          "knime://knime.space/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.space/test.txt",
                          "knime://knime.space/test.txt?spaceVersion=3",
                          "knime://knime.space/test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.space/test.txt",
                          "knime://knime.space/test.txt?version=most-recent",
                          "knime://knime.space/test.txt?version=most-recent&spaceVersion=latest",
-                         HubItemVersion.latestVersion()),
+                         ItemVersion.mostRecent()),
             Arguments.of("knime://knime.space/test.txt",
                          "knime://knime.space/test.txt?version=current-state",
                          "knime://knime.space/test.txt?version=current-state&spaceVersion=-1",
-                         HubItemVersion.currentState())
+                         ItemVersion.currentState())
         );
     }
 
@@ -362,19 +362,19 @@ final class URLMethodSources {
             Arguments.of("knime://knime.workflow/../test.txt",
                          "knime://knime.workflow/../test.txt?version=3",
                          "knime://knime.workflow/../test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.workflow/../test.txt",
                          "knime://knime.workflow/../test.txt?spaceVersion=3",
                          "knime://knime.workflow/../test.txt?version=3&spaceVersion=3",
-                         HubItemVersion.of(3)),
+                         ItemVersion.of(3)),
             Arguments.of("knime://knime.workflow/../test.txt",
                          "knime://knime.workflow/../test.txt?version=most-recent",
                          "knime://knime.workflow/../test.txt?version=most-recent&spaceVersion=latest",
-                         HubItemVersion.latestVersion()),
+                         ItemVersion.mostRecent()),
             Arguments.of("knime://knime.workflow/../test.txt",
                          "knime://knime.workflow/../test.txt?version=current-state",
                          "knime://knime.workflow/../test.txt?version=current-state&spaceVersion=-1",
-                         HubItemVersion.currentState())
+                         ItemVersion.currentState())
         );
     }
 
