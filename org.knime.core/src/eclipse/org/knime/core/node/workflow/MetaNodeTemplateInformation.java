@@ -68,7 +68,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.LoadVersion;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.urlresolve.URLResolverUtil;
 import org.knime.shared.workflow.def.TemplateInfoDef;
 
@@ -294,8 +294,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     public MetaNodeTemplateInformation createLinkWithUpdatedSource(final URI newSource)
         throws InvalidSettingsException {
         // ifModifiedSince is set to null because always perform a download for components with a space version.
-        final var newLastModified = HubItemVersion.of(newSource).filter(HubItemVersion::isVersioned).isPresent()
-                ? Instant.EPOCH : null;
+        final var newLastModified = URLResolverUtil.parseVersion(newSource.getQuery()) //
+            .filter(ItemVersion::isVersioned) //
+            .isPresent() ? Instant.EPOCH : null;
         return createLinkWithUpdatedSource(newSource, newLastModified);
     }
 
@@ -442,7 +443,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throw new IllegalStateException("Argument not a template or link: " + this);
         }
 
-        if (HubItemVersion.of(m_sourceURI).filter(HubItemVersion::isVersioned).isPresent()) {
+        if (URLResolverUtil.parseVersion(m_sourceURI.getQuery()).filter(ItemVersion::isVersioned).isPresent()) {
             return !m_timestamp.equals(other.m_timestamp);
         } else {
             return m_timestamp.isAfter(other.m_timestamp);
