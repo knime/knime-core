@@ -76,7 +76,7 @@ import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 
 /**
  * Tests for {@link HubExecutorUrlResolver}, currently only with a focus on item version handling.
@@ -137,7 +137,7 @@ class HubExecutorUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#spaceRelative()"
     })
     void testResolveWithVersionParameter(final URL unversioned, final URL withItemOrSpaceVersion, final URL withBoth,
-            final HubItemVersion version) throws ResourceAccessException, MalformedURLException {
+            final ItemVersion version) throws ResourceAccessException, MalformedURLException {
         final var resolvedPlain = m_resolver.resolve(unversioned);
 
             var resolved = m_resolver.resolve(withItemOrSpaceVersion);
@@ -147,10 +147,10 @@ class HubExecutorUrlResolverTest {
         if (version == null || version.isVersioned()) {
             assertNotEquals(resolvedPlain, resolved, "Should not ignore version parameter");
             assertNotEquals(resolvedPlain, resolvedWithBoth, "Should not ignore version parameter(s)");
-            final var fromEither = HubItemVersion.of(resolved);
+            final var fromEither = URLResolverUtil.parseVersion(resolved.getQuery());
             assertEquals(version, fromEither.orElse(null),
                 "Has correct version when specifying either query parameter");
-            final var fromBoth = HubItemVersion.of(resolvedWithBoth);
+            final var fromBoth = URLResolverUtil.parseVersion(resolvedWithBoth.getQuery());
             assertEquals(version, fromBoth.orElse(null), "Has correct version when specifying both query parameters");
         }
     }
@@ -160,7 +160,7 @@ class HubExecutorUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#workflowRelativeInScope()"
     })
     void testResolveWorkflowRelative(final URL unversioned, final URL withVersion, final URL withBoth,
-        @SuppressWarnings("unused") final HubItemVersion version) throws ResourceAccessException {
+        @SuppressWarnings("unused") final ItemVersion version) throws ResourceAccessException {
         assertThat(m_resolver.resolve(unversioned)).hasProtocol("file");
 
         assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(withVersion),
@@ -174,7 +174,7 @@ class HubExecutorUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
     })
     void testResolveNodeRelative(final URL unversioned, final URL withVersion, final URL withBoth,
-        @SuppressWarnings("unused") final HubItemVersion version) {
+        @SuppressWarnings("unused") final ItemVersion version) {
         final var exc = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(unversioned));
         org.junit.Assert.assertEquals("Workflow must be saved before node-relative URLs can be used", exc.getLocalizedMessage());
 
