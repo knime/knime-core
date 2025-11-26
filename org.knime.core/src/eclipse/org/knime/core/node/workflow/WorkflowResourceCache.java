@@ -144,16 +144,30 @@ public final class WorkflowResourceCache {
     }
 
     /**
+     * Returns the resource instance for the given class if it is already present in the cache.
+     *
+     * @since 5.10
+     * @param <T>  type of resource
+     * @param clazz the class used as key for the resource, must not be {@code null}
+     * @return an {@link Optional} containing the cached instance if present; otherwise {@link Optional#empty()}
+     */
+    public synchronized <T extends WorkflowResource> Optional<T> getFromCache(final Class<T> clazz) {
+        CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
+        return Optional.ofNullable((T) m_classToInstanceMap.get(clazz));
+    }
+
+    /**
      * Registers a new workflow resource with this workflow. The resource is associated with the given class.
      * An existing value is returned or {@code null} if the class was previously not associated with a resource.
      *
+     * @since 5.10
      * @param <T> Type of resource (extension dependent)
      * @param clazz The class of {@code T}
      * @param value The resource instance to register
      * @return The previous value associated with the class or {@code null} if no such value existed
      */
     @SuppressWarnings("unchecked")
-    synchronized <T extends WorkflowResource> T put(final Class<T> clazz, final T value) {
+    public synchronized <T extends WorkflowResource> T put(final Class<T> clazz, final T value) {
         CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
         CheckUtils.checkArgumentNotNull(value, "Value must not be null.");
         CheckUtils.checkState(!m_isDisposed, "Cache is disposed.");

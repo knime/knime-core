@@ -188,6 +188,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowResourceCache;
 import org.knime.core.node.workflow.WorkflowResourceCache.WorkflowResource;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
@@ -9958,11 +9959,12 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public void setDirty() {
-        boolean sendEvent = !isDirty();
+        boolean sendWorkflowDirtyEvent = !isDirty();
         super.setDirty();
-        if (sendEvent) {
+        if (sendWorkflowDirtyEvent) {
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
         }
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_CHANGED, getID(), null, null));
     }
 
     //////////////////////////////////////
@@ -11350,9 +11352,10 @@ public final class WorkflowManager extends NodeContainer
 
     /**
      * @return for projects, the non-null {@link WorkflowResourceCache}. For other instances, null.
-     * @since 5.4
+     * @apiNote Public since 5.10, was default visibility since 5.4.
+     * @since 5.10
      */
-    WorkflowResourceCache getWorkflowResourceCache() {
+    public WorkflowResourceCache getWorkflowResourceCache() {
         return m_workflowResourceCache;
     }
 

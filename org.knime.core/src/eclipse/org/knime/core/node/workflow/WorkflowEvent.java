@@ -98,6 +98,12 @@ public class WorkflowEvent {
              * @since 4.6 */
             WORKFLOW_CLEAN,
             /**
+             * The workflow has changed
+             *
+             * @since 5.10
+             */
+            WORKFLOW_CHANGED,
+            /**
              * Metadata of the currently open workflow (e.g. project or component) has changed
              *
              * @since 5.1
