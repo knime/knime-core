@@ -65,10 +65,20 @@ public interface WorkflowListener {
     void workflowChanged(final WorkflowEvent event);
 
     /**
+     * Called from the manager if anything has changed, independent of the event. Also called if anything has changed
+     * within any nested workflow (i.e. metanode or component).
+     *
+     * @since 5.10
+     */
+    default void workflowChanged() {
+        //
+    }
+
+    /**
      * Called from the manager if something changed.
      * <p>
-     * Catches *all* {@link RuntimeException}s that are thrown by the
-     * {@link #workflowChanged(WorkflowEvent)}. Use this with caution!
+     * Catches *all* {@link RuntimeException}s that are thrown by the {@link #workflowChanged(WorkflowEvent)}. Use this
+     * with caution!
      * </p>
      *
      * @param listener {@link WorkflowListener} instance to notify about state change
@@ -81,7 +91,11 @@ public interface WorkflowListener {
             return;
         }
         try {
-            listener.workflowChanged(event);
+            if (event == null) {
+                listener.workflowChanged();
+            } else {
+                listener.workflowChanged(event);
+            }
         } catch (RuntimeException rex) {
             NodeLogger.getLogger(WorkflowListener.class) //
                 .error("Caught an exception while notifying workflow state listeners, "

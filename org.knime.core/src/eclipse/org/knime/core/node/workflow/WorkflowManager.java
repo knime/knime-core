@@ -8391,7 +8391,7 @@ public final class WorkflowManager extends NodeContainer
      * @param evt event
      */
     void notifyWorkflowListeners(final WorkflowEvent evt) {
-        if (!evt.getType().equals(WorkflowEvent.Type.WORKFLOW_DIRTY)) {
+        if (evt != null && !evt.getType().equals(WorkflowEvent.Type.WORKFLOW_DIRTY)) {
             findChangesTracker().ifPresent(ct -> ct.otherChange());
         }
         if (m_wfmListeners.isEmpty()) {
@@ -9958,11 +9958,12 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public void setDirty() {
-        boolean sendEvent = !isDirty();
+        boolean sendWorkflowDirtyEvent = !isDirty();
         super.setDirty();
-        if (sendEvent) {
+        if (sendWorkflowDirtyEvent) {
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
         }
+        notifyWorkflowListeners(null);
     }
 
     //////////////////////////////////////
