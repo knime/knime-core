@@ -44,7 +44,9 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -165,6 +167,30 @@ public final class SettingsModelAuthentication extends SettingsModel {
          */
         public static AuthenticationType get(final String actionCommand) {
             return valueOf(actionCommand);
+        }
+
+        /**
+         * Get the AuthenticationType from a string value.
+         *
+         * @param value the string value
+         * @return the corresponding {@link AuthenticationType}
+         * @throws InvalidSettingsException if the value does not correspond to any AuthenticationType
+         *
+         * @since 5.10
+         */
+        public static AuthenticationType getFromValue(final String value) throws InvalidSettingsException {
+            for (final AuthenticationType authType : values()) {
+                if (authType.name().equals(value)) {
+                    return authType;
+                }
+            }
+            throw new InvalidSettingsException(createInvalidSettingsExceptionMessage(value));
+        }
+
+        private static String createInvalidSettingsExceptionMessage(final String name) {
+            var values = List.of(NONE.name(), USER.name(), PWD.name(),
+                USER_PWD.name(), CREDENTIALS.name(), KERBEROS.name()).stream().collect(Collectors.joining(", "));
+            return String.format("Invalid value '%s'. Possible values: %s", name, values);
         }
     }
 
