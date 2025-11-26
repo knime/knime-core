@@ -9958,11 +9958,12 @@ public final class WorkflowManager extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public void setDirty() {
-        boolean sendEvent = !isDirty();
+        boolean sendWorkflowDirtyEvent = !isDirty();
         super.setDirty();
-        if (sendEvent) {
+        if (sendWorkflowDirtyEvent) {
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
         }
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_CHANGED, getID(), null, null));
     }
 
     //////////////////////////////////////
