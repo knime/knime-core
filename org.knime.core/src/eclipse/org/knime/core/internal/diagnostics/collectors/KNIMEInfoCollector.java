@@ -46,81 +46,65 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 
-import org.knime.core.node.NodeLogger;
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
+import org.knime.core.node.KNIMEConstants;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.sun.management.HotSpotDiagnosticMXBean;
 
 /**
- * Heap dump diagnostic collector.
+ * KNIME-specific information diagnostic collector.
  *
  * @since 5.8
  */
-public final class HeapDumpCollector implements Collector {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(HeapDumpCollector.class);
-
-    private static final String HOTSPOT_BEAN_NAME = "com.sun.management:type=HotSpotDiagnostic";
+public final class KNIMEInfoCollector implements Collector {
 
     /** The singleton instance. */
-    public static final HeapDumpCollector INSTANCE = new HeapDumpCollector();
+    public static final KNIMEInfoCollector INSTANCE = new KNIMEInfoCollector();
 
-    private HeapDumpCollector() {
+    private KNIMEInfoCollector() {
         // Singleton
     }
 
     @Override
     public boolean isEnabled(final DiagnosticInstructions instructions) {
-        return instructions.heapDumpPath() != null;
+        return instructions.knimeInfo();
     }
 
     @Override
     public String getJsonKey() {
-        return "heapDump";
+        return "knimeInfo";
     }
 
     @Override
     public void collect(final Instant timestamp, final DiagnosticInstructions instructions,
         final JsonGenerator generator, final Path outputDir) throws IOException {
-        try {
-            var heapDumpPath = instructions.heapDumpPath();
-            if (heapDumpPath == null || heapDumpPath.toString().isBlank()) {
-                generator.writeStringField("status", "skipped");
-                generator.writeStringField("error", "No heap dump path specified");
-                generator.writeStringField("filePath", null);
-                generator.writeNumberField("fileSize", 0);
-                LOGGER.info("Skipping heap dump creation -- no path specified");
-                return;
-            }
+        generator.writeStringField("coreVersion", KNIMEConstants.VERSION);
+        generator.writeStringField("buildInfo", "%s%s %s".formatted(KNIMEConstants.BUILD,
+            (KNIMEConstants.isNightlyBuild() ? " (nightly)" : ""), KNIMEConstants.BUILD_DATE));
+        generator.writeStringField("installationPath", System.getProperty("osgi.install.area", ""));
+        generator.writeStringField("knimeHomeDir", KNIMEConstants.getKNIMEHomeDir());
 
-            if (!heapDumpPath.isAbsolute()) {
-                heapDumpPath = outputDir.resolve(heapDumpPath).toAbsolutePath();
-            }
-            // pass absolute path otherwise will be relative to JVM working dir
-            LOGGER.infoWithFormat("Creating heap dump at \"%s\" ...", heapDumpPath);
-            ManagementFactory.newPlatformMXBeanProxy(ManagementFactory.getPlatformMBeanServer(), HOTSPOT_BEAN_NAME,
-                HotSpotDiagnosticMXBean.class).dumpHeap(heapDumpPath.toString(), true);
+        final var knimeTempPath = KNIMEConstants.getKNIMETempDir();
+        generator.writeStringField("knimeTempDir", knimeTempPath);
 
-            generator.writeStringField("status", "success");
-            generator.writeStringField("filePath", heapDumpPath.toString());
-            generator.writeNumberField("fileSize", heapDumpPath.toFile().length());
+        final var tempPath = Paths.get(knimeTempPath).toFile();
+        long freeSpace = tempPath.getFreeSpace();
+        long totalSpace = tempPath.getTotalSpace();
+        long usableSpace = tempPath.getUsableSpace();
 
-            LOGGER.infoWithFormat("Created heap dump at \"%s\"", heapDumpPath);
+        generator.writeObjectFieldStart("knimeTempDiskSpace");
+        generator.writeNumberField("freeBytes", freeSpace);
+        generator.writeNumberField("totalBytes", totalSpace);
+        generator.writeNumberField("usableBytes", usableSpace);
 
-        } catch (final Exception e) {
-            generator.writeStringField("status", "failed");
-            generator.writeStringField("error", e.getMessage());
-            generator.writeStringField("filePath", null);
-            generator.writeNumberField("fileSize", 0);
-
-            LOGGER.error("Failed to create heap dump", e);
-        }
+        generator.writeEndObject();
     }
 }

@@ -46,83 +46,83 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.time.Instant;
 
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
+import org.knime.core.node.NodeLogger;
+
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.sun.management.HotSpotDiagnosticMXBean;
 
 /**
- * JVM information diagnostic collector including memory information.
+ * Heap dump diagnostic collector.
  *
  * @since 5.8
  */
-public final class JvmInfoCollector implements Collector {
+public final class HeapDumpCollector implements Collector {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(HeapDumpCollector.class);
+
+    private static final String HOTSPOT_BEAN_NAME = "com.sun.management:type=HotSpotDiagnostic";
 
     /** The singleton instance. */
-    public static final JvmInfoCollector INSTANCE = new JvmInfoCollector();
+    public static final HeapDumpCollector INSTANCE = new HeapDumpCollector();
 
-    private JvmInfoCollector() {
+    private HeapDumpCollector() {
         // Singleton
     }
 
     @Override
     public boolean isEnabled(final DiagnosticInstructions instructions) {
-        return instructions.jvmInfo();
+        return instructions.heapDumpPath() != null;
     }
 
     @Override
     public String getJsonKey() {
-        return "jvmInfo";
+        return "heapDump";
     }
 
     @Override
     public void collect(final Instant timestamp, final DiagnosticInstructions instructions,
         final JsonGenerator generator, final Path outputDir) throws IOException {
+        try {
+            var heapDumpPath = instructions.heapDumpPath();
+            if (heapDumpPath == null || heapDumpPath.toString().isBlank()) {
+                generator.writeStringField("status", "skipped");
+                generator.writeStringField("error", "No heap dump path specified");
+                generator.writeStringField("filePath", null);
+                generator.writeNumberField("fileSize", 0);
+                LOGGER.info("Skipping heap dump creation -- no path specified");
+                return;
+            }
 
-        final var runtimeBean = ManagementFactory.getRuntimeMXBean();
-        final var memoryBean = ManagementFactory.getMemoryMXBean();
-        final var runtime = Runtime.getRuntime();
+            if (!heapDumpPath.isAbsolute()) {
+                heapDumpPath = outputDir.resolve(heapDumpPath).toAbsolutePath();
+            }
+            // pass absolute path otherwise will be relative to JVM working dir
+            LOGGER.infoWithFormat("Creating heap dump at \"%s\" ...", heapDumpPath);
+            ManagementFactory.newPlatformMXBeanProxy(ManagementFactory.getPlatformMBeanServer(), HOTSPOT_BEAN_NAME,
+                HotSpotDiagnosticMXBean.class).dumpHeap(heapDumpPath.toString(), true);
 
-        generator.writeStringField("jvmVersion", System.getProperty("java.version"));
-        generator.writeStringField("jvmVendor", System.getProperty("java.vendor"));
-        generator.writeStringField("jvmName", runtimeBean.getVmName());
-        generator.writeNumberField("uptimeMS", runtimeBean.getUptime());
-        generator.writeStringField("startTime", Instant.ofEpochMilli(runtimeBean.getStartTime()).toString());
-        generator.writeNumberField("availableProcessors", Runtime.getRuntime().availableProcessors());
+            generator.writeStringField("status", "success");
+            generator.writeStringField("filePath", heapDumpPath.toString());
+            generator.writeNumberField("fileSize", heapDumpPath.toFile().length());
 
-        generator.writeArrayFieldStart("jvmArguments");
-        for (String arg : runtimeBean.getInputArguments()) {
-            generator.writeString(arg);
+            LOGGER.infoWithFormat("Created heap dump at \"%s\"", heapDumpPath);
+
+        } catch (final Exception e) {
+            generator.writeStringField("status", "failed");
+            generator.writeStringField("error", e.getMessage());
+            generator.writeStringField("filePath", null);
+            generator.writeNumberField("fileSize", 0);
+
+            LOGGER.error("Failed to create heap dump", e);
         }
-        generator.writeEndArray();
-
-        generator.writeObjectFieldStart("memory");
-
-        // Heap memory
-        generator.writeObjectFieldStart("heap");
-        generator.writeNumberField("used", memoryBean.getHeapMemoryUsage().getUsed());
-        generator.writeNumberField("committed", memoryBean.getHeapMemoryUsage().getCommitted());
-        generator.writeNumberField("max", memoryBean.getHeapMemoryUsage().getMax());
-        generator.writeEndObject();
-
-        // Non-heap memory
-        generator.writeObjectFieldStart("nonHeap");
-        generator.writeNumberField("used", memoryBean.getNonHeapMemoryUsage().getUsed());
-        generator.writeNumberField("committed", memoryBean.getNonHeapMemoryUsage().getCommitted());
-        generator.writeNumberField("max", memoryBean.getNonHeapMemoryUsage().getMax());
-        generator.writeEndObject();
-
-        // Runtime memory
-        generator.writeObjectFieldStart("runtime");
-        generator.writeNumberField("totalMemory", runtime.totalMemory());
-        generator.writeNumberField("freeMemory", runtime.freeMemory());
-        generator.writeNumberField("maxMemory", runtime.maxMemory());
-        generator.writeEndObject();
-
-        generator.writeEndObject();
     }
 }

@@ -46,7 +46,7 @@
  * History
  *   29 Sept 2025 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -62,6 +62,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 import org.knime.core.node.NodeLogger;
 
 import com.fasterxml.jackson.core.JsonGenerator;

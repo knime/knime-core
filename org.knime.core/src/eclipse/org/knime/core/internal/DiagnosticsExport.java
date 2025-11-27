@@ -54,16 +54,16 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.core.internal.diagnostics.ApplicationHealthCollector;
 import org.knime.core.internal.diagnostics.Collector;
 import org.knime.core.internal.diagnostics.DiagnosticInstructions;
-import org.knime.core.internal.diagnostics.GcInfoCollector;
-import org.knime.core.internal.diagnostics.HeapDumpCollector;
-import org.knime.core.internal.diagnostics.JvmInfoCollector;
-import org.knime.core.internal.diagnostics.KNIMEInfoCollector;
-import org.knime.core.internal.diagnostics.SystemInfoCollector;
-import org.knime.core.internal.diagnostics.ThreadDumpCollector;
-import org.knime.core.internal.diagnostics.WorkflowManagersCollector;
+import org.knime.core.internal.diagnostics.collectors.ApplicationHealthCollector;
+import org.knime.core.internal.diagnostics.collectors.GcInfoCollector;
+import org.knime.core.internal.diagnostics.collectors.HeapDumpCollector;
+import org.knime.core.internal.diagnostics.collectors.JvmInfoCollector;
+import org.knime.core.internal.diagnostics.collectors.KNIMEInfoCollector;
+import org.knime.core.internal.diagnostics.collectors.SystemInfoCollector;
+import org.knime.core.internal.diagnostics.collectors.ThreadDumpCollector;
+import org.knime.core.internal.diagnostics.collectors.WorkflowManagersCollector;
 import org.knime.core.node.NodeLogger;
 
 import com.fasterxml.jackson.core.JsonGenerator;

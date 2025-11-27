@@ -67,7 +67,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param workflowManagers whether to collect workflow manager state information
  * @param threadDump whether to collect thread dump information
  *
- * @since 5.8
+ * @since 5.10
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record DiagnosticInstructions(//
@@ -80,7 +80,6 @@ public record DiagnosticInstructions(//
     @JsonProperty("knimeInfo") boolean knimeInfo, // KNIMEInfoCollector
     @JsonProperty("workflowManagers") boolean workflowManagers, // WorkflowManagersCollector
     @JsonProperty("threadDump") boolean threadDump // ThreadDumpCollector
-
 ) {
 
     /**

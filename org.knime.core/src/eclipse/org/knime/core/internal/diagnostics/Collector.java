@@ -58,7 +58,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * Common interface for diagnostic data collectors. Each collector is responsible for writing its diagnostic data under
  * a specific JSON key.
  *
- * @since 5.8
+ * @since 5.10
  */
 public interface Collector {
 

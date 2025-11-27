@@ -46,7 +46,7 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -56,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;

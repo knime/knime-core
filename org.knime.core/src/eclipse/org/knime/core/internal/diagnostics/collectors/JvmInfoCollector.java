@@ -46,62 +46,85 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 
-import org.knime.core.node.KNIMEConstants;
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
 /**
- * KNIME-specific information diagnostic collector.
+ * JVM information diagnostic collector including memory information.
  *
  * @since 5.8
  */
-public final class KNIMEInfoCollector implements Collector {
+public final class JvmInfoCollector implements Collector {
 
     /** The singleton instance. */
-    public static final KNIMEInfoCollector INSTANCE = new KNIMEInfoCollector();
+    public static final JvmInfoCollector INSTANCE = new JvmInfoCollector();
 
-    private KNIMEInfoCollector() {
+    private JvmInfoCollector() {
         // Singleton
     }
 
     @Override
     public boolean isEnabled(final DiagnosticInstructions instructions) {
-        return instructions.knimeInfo();
+        return instructions.jvmInfo();
     }
 
     @Override
     public String getJsonKey() {
-        return "knimeInfo";
+        return "jvmInfo";
     }
 
     @Override
     public void collect(final Instant timestamp, final DiagnosticInstructions instructions,
         final JsonGenerator generator, final Path outputDir) throws IOException {
-        generator.writeStringField("coreVersion", KNIMEConstants.VERSION);
-        generator.writeStringField("buildInfo", "%s%s %s".formatted(KNIMEConstants.BUILD,
-            (KNIMEConstants.isNightlyBuild() ? " (nightly)" : ""), KNIMEConstants.BUILD_DATE));
-        generator.writeStringField("installationPath", System.getProperty("osgi.install.area", ""));
-        generator.writeStringField("knimeHomeDir", KNIMEConstants.getKNIMEHomeDir());
 
-        final var knimeTempPath = KNIMEConstants.getKNIMETempDir();
-        generator.writeStringField("knimeTempDir", knimeTempPath);
+        final var runtimeBean = ManagementFactory.getRuntimeMXBean();
+        final var memoryBean = ManagementFactory.getMemoryMXBean();
+        final var runtime = Runtime.getRuntime();
 
-        final var tempPath = Paths.get(knimeTempPath).toFile();
-        long freeSpace = tempPath.getFreeSpace();
-        long totalSpace = tempPath.getTotalSpace();
-        long usableSpace = tempPath.getUsableSpace();
+        generator.writeStringField("jvmVersion", System.getProperty("java.version"));
+        generator.writeStringField("jvmVendor", System.getProperty("java.vendor"));
+        generator.writeStringField("jvmName", runtimeBean.getVmName());
+        generator.writeNumberField("uptimeMS", runtimeBean.getUptime());
+        generator.writeStringField("startTime", Instant.ofEpochMilli(runtimeBean.getStartTime()).toString());
+        generator.writeNumberField("availableProcessors", Runtime.getRuntime().availableProcessors());
 
-        generator.writeObjectFieldStart("knimeTempDiskSpace");
-        generator.writeNumberField("freeBytes", freeSpace);
-        generator.writeNumberField("totalBytes", totalSpace);
-        generator.writeNumberField("usableBytes", usableSpace);
+        generator.writeArrayFieldStart("jvmArguments");
+        for (String arg : runtimeBean.getInputArguments()) {
+            generator.writeString(arg);
+        }
+        generator.writeEndArray();
+
+        generator.writeObjectFieldStart("memory");
+
+        // Heap memory
+        generator.writeObjectFieldStart("heap");
+        generator.writeNumberField("used", memoryBean.getHeapMemoryUsage().getUsed());
+        generator.writeNumberField("committed", memoryBean.getHeapMemoryUsage().getCommitted());
+        generator.writeNumberField("max", memoryBean.getHeapMemoryUsage().getMax());
+        generator.writeEndObject();
+
+        // Non-heap memory
+        generator.writeObjectFieldStart("nonHeap");
+        generator.writeNumberField("used", memoryBean.getNonHeapMemoryUsage().getUsed());
+        generator.writeNumberField("committed", memoryBean.getNonHeapMemoryUsage().getCommitted());
+        generator.writeNumberField("max", memoryBean.getNonHeapMemoryUsage().getMax());
+        generator.writeEndObject();
+
+        // Runtime memory
+        generator.writeObjectFieldStart("runtime");
+        generator.writeNumberField("totalMemory", runtime.totalMemory());
+        generator.writeNumberField("freeMemory", runtime.freeMemory());
+        generator.writeNumberField("maxMemory", runtime.maxMemory());
+        generator.writeEndObject();
 
         generator.writeEndObject();
     }
