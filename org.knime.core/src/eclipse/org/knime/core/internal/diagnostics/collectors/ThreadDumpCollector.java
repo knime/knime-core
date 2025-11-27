@@ -46,7 +46,7 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -60,6 +60,8 @@ import javax.management.MBeanException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ReflectionException;
 
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 import org.knime.core.node.NodeLogger;
 
 import com.fasterxml.jackson.core.JsonGenerator;

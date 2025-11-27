@@ -46,7 +46,7 @@
  * History
  *   Sep 29, 2025 (manuelhotz): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
@@ -54,6 +54,9 @@ import java.lang.management.ManagementFactory;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 

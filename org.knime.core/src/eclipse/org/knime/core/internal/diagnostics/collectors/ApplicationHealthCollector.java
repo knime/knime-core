@@ -46,12 +46,14 @@
  * History
  *   29 Sept 2025 (Manuel Hotz, KNIME GmbH, Konstanz, Germany): created
  */
-package org.knime.core.internal.diagnostics;
+package org.knime.core.internal.diagnostics.collectors;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 
+import org.knime.core.internal.diagnostics.Collector;
+import org.knime.core.internal.diagnostics.DiagnosticInstructions;
 import org.knime.core.monitor.ApplicationHealth;
 import org.knime.core.monitor.ExternalProcessType;
 import org.knime.core.node.NodeLogger;
