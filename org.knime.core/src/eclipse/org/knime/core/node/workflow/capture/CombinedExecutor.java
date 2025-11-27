@@ -242,7 +242,7 @@ public final class CombinedExecutor {
      * @return the execution result
      * @throws Exception if the workflow segment loading, configuration or execution fails
      */
-    public WorkflowSegmentExecutionResult execute(final WorkflowSegment ws, final List<PortId> inputs,
+    public synchronized WorkflowSegmentExecutionResult execute(final WorkflowSegment ws, final List<PortId> inputs,
         final Map<String, JsonValue> parameters, final Path dataAreaPath, final Restriction... restrictions)
         throws Exception {
         var segmentWorkflow = ws.loadWorkflow();
