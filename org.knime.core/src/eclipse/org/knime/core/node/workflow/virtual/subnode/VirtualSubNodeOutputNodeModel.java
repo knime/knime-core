@@ -57,6 +57,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -80,6 +82,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.report.ReportConfiguration;
 import org.knime.core.node.port.report.ReportUtil;
 import org.knime.core.node.streamable.InputPortRole;
 import org.knime.core.node.streamable.PartitionInfo;
@@ -166,22 +169,45 @@ public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-            throws Exception {
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        // (1) Wait for content to load (if report generation is enabled).
         if (isReportEnabledOrModern51Component()) {
             waitForContentToExecute();
         }
-        final PortObject[] objects;
-        if (m_subNodeContainer.getReportConfiguration().isPresent()) {
-            final var reportExecContext = exec.createSubExecutionContext(1.0);
-            exec.setMessage("Creating report");
-            final var reportObject = ReportUtil.computeReportObject(m_subNodeContainer, reportExecContext);
-            objects = ArrayUtils.add(inObjects, reportObject);
-            reportExecContext.setProgress(1.0);
-        } else {
-            objects = inObjects;
+        // (2) If no report was configured to be generated, abort early.
+        if (m_subNodeContainer.getReportConfiguration().isEmpty()) {
+            setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
+            return new PortObject[0];
         }
+        // (3) Invoke new report generation.
+        final var reportExecContext = exec.createSubExecutionContext(1.0);
+        final PortObject reportObject;
+        try {
+            reportExecContext.setMessage("Creating report...");
+            reportObject = ReportUtil.computeReportObjectWithExceptions(m_subNodeContainer, reportExecContext);
+        } catch (TimeoutException e) {
+            final var seconds = m_subNodeContainer.getReportConfiguration() //
+                .map(cfg -> cfg.getTimeoutDuration().toSeconds()) //
+                .orElseGet(() -> (long)ReportConfiguration.getReportGenerationTimeout());
+            final var property = ReportConfiguration.getReportGenerationTimeoutSystemProperty();
+            throw createMessageBuilder() //
+                .withSummary(String.format("The report generation ran into a timeout after %ss of waiting. ", seconds)
+                    + "The individual pages were not initialized or generated in time.") //
+                .addResolutions( //
+                    String.format("Increase the timeout via the system property `%s`.", property),
+                    String.format("Refer to %s.", ReportUtil.getReportingGuideURI())) //
+                .build().orElseThrow().toKNIMEException(e);
+        } catch (ExecutionException e) {
+            throw createMessageBuilder() //
+                .withSummary("Something went wrong during the task of report generation.") //
+                .addResolutions(
+                    "Look at the displayed error details, as well as in the KNIME log for more information.",
+                    String.format("Refer to %s.", ReportUtil.getReportingGuideURI())) //
+                .build().orElseThrow().toKNIMEException(e);
+        }
+        final PortObject[] objects = ArrayUtils.add(inObjects, reportObject);
         setNewExchange(new VirtualSubNodeExchange(objects, getVisibleFlowVariables()));
+        reportExecContext.setProgress(1.0);
         return new PortObject[0];
     }
 

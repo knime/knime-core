@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.port.report;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -73,11 +74,46 @@ public final class ReportConfiguration {
 
     private static final int DEFAULT_REPORT_GENERATION_TIMEOUT_IN_SECONDS = 600;
 
+    // -- CONFIG KEYS --
+
+    private static final String ENABLE_REPORT_KEY = "enableReport";
+
+    private static final String FAIL_ON_REPORT_ERROR_KEY = "failOnReportError";
+
+    // -- CONFIG VALUES --
+
+    private final boolean m_failOnReportError;
+
     /**
+     * The instance of the default report configuration.
+     *
      * @since 5.2
      */
-    public static final ReportConfiguration INSTANCE = new ReportConfiguration();
-    private ReportConfiguration() {
+    public static final ReportConfiguration INSTANCE = new ReportConfiguration(true);
+
+    private ReportConfiguration(final boolean failOnReportError) {
+        m_failOnReportError = failOnReportError;
+    }
+
+    /**
+     * Currently not an instance value, but set statically for all report configurations.
+     * Simply calls {@link #getReportGenerationTimeout()}, might change in the future.
+     *
+     * @return the report timeout duration
+     */
+    @SuppressWarnings("static-method")
+    public Duration getTimeoutDuration() {
+        return Duration.ofSeconds(getReportGenerationTimeout());
+    }
+
+    /**
+     * Whether to fail the node execution on any errors that occur
+     * during the report generation.
+     *
+     * @return {@code true} if the node should fail, {@code false} otherwise
+     */
+    public boolean isFailOnReportError() {
+        return m_failOnReportError;
     }
 
     /**
@@ -85,9 +121,9 @@ public final class ReportConfiguration {
      *
      * @param settings To save to.
      */
-    @SuppressWarnings("static-method")
     public void save(final NodeSettingsWO settings) { //NOSONAR (more generic arg possible)
-        settings.addBoolean("enableReport", true);
+        settings.addBoolean(ENABLE_REPORT_KEY, true);
+        settings.addBoolean(FAIL_ON_REPORT_ERROR_KEY, m_failOnReportError);
     }
 
     /** Counterpart to {@link #save(NodeSettingsWO)}.
@@ -97,11 +133,18 @@ public final class ReportConfiguration {
      * @since 5.2
      */
     public static Optional<ReportConfiguration> load(final ConfigBaseRO settings) throws InvalidSettingsException {
-        if (!settings.containsKey("enableReport") && settings.containsKey("pagesize")) {
+        if (!settings.containsKey(ENABLE_REPORT_KEY) && settings.containsKey("pagesize")) {
             throw new InvalidSettingsException(
                 "Component was created with KNIME 5.1 - enable report output (again) in layout editor");
         }
-        return settings.getBoolean("enableReport") ? Optional.of(INSTANCE) : Optional.empty();
+        if (!settings.getBoolean(ENABLE_REPORT_KEY, false)) {
+            return Optional.empty();
+        }
+        if (settings.containsKey(FAIL_ON_REPORT_ERROR_KEY)) {
+            return Optional.of(new ReportConfiguration(settings.getBoolean(FAIL_ON_REPORT_ERROR_KEY)));
+        }
+        // backwards compatibility - we introduced non-failing handling first
+        return Optional.of(new ReportConfiguration(false));
     }
 
     /**
@@ -121,8 +164,16 @@ public final class ReportConfiguration {
      * @since 5.4
      */
     public static int getReportGenerationTimeout() {
-        return Integer.getInteger(DEFAULT_REPORT_GENERATION_TIMEOUT_SYS_PROP,
+        return Integer.getInteger(getReportGenerationTimeoutSystemProperty(),
             DEFAULT_REPORT_GENERATION_TIMEOUT_IN_SECONDS);
+    }
+
+    /**
+     * @return the report generation timeout system property
+     * @since 5.10
+     */
+    public static String getReportGenerationTimeoutSystemProperty() {
+        return DEFAULT_REPORT_GENERATION_TIMEOUT_SYS_PROP;
     }
 
     /**
