@@ -48,15 +48,20 @@
  */
 package org.knime.core.node.port.report;
 
+import java.net.URI;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.knime.core.internal.CorePlugin;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
+import org.knime.core.node.util.ClassUtils;
 import org.knime.core.node.workflow.SubNodeContainer;
 
 /**
@@ -81,6 +86,14 @@ public final class ReportUtil {
     }
 
     /**
+     * @return the {@link URI} to our documentation for the reporting guide
+     * @since 5.10
+     */
+    public static URI getReportingGuideURI() {
+        return URI.create("https://docs.knime.com/latest/analytics_platform_reporting_guide");
+    }
+
+    /**
      * Called after {@link SubNodeContainer} execution to fill report output. Produces inactive port when
      * extension is missing.
      *
@@ -93,6 +106,36 @@ public final class ReportUtil {
         if (serviceOptional.isPresent()) {
             return serviceOptional.map(service -> service.createOutput(container, context))
                 .map(PortObject.class::cast).orElse(InactiveBranchPortObject.INSTANCE);
+        } else {
+            LOGGER.warn("No report service registered (extension installed?) - producing inactive output");
+            return InactiveBranchPortObject.INSTANCE;
+        }
+    }
+
+    /**
+     * Called after {@link SubNodeContainer} execution to fill report output. Will consider
+     * {@link ReportConfiguration#isFailOnReportError()} to determine whether the port will be set to
+     * inactive or whether exceptions are thrown (i.e. fails node execution).
+     *
+     * @param container The subnode whose output is to be generated.
+     * @param context For progress/cancelation
+     * @return The report port object (throws exceptions if report generation fails).
+     * @throws CanceledExecutionException if the node execution was cancelled
+     * @throws TimeoutException if the reporting page(s) are not initialized or generated in time
+     * @throws ExecutionException if something goes wrong during the task of report generation
+     * @throws InterruptedException if the thread is interrupted while report generation is in progress
+     * @since 5.10
+     */
+    public static PortObject computeReportObjectWithExceptions(final SubNodeContainer container,
+        final ExecutionContext context)
+        throws CanceledExecutionException, TimeoutException, ExecutionException, InterruptedException {
+        Optional<IReportService> serviceOptional = CorePlugin.getInstance().getReportService();
+        if (serviceOptional.isPresent()) {
+            final var service = serviceOptional.get();
+            final var report = service.createOutputWithExceptions(container, context);
+            return Optional.ofNullable(report) //
+                .flatMap(po -> ClassUtils.castOptional(PortObject.class, po)) //
+                .orElse(InactiveBranchPortObject.INSTANCE);
         } else {
             LOGGER.warn("No report service registered (extension installed?) - producing inactive output");
             return InactiveBranchPortObject.INSTANCE;

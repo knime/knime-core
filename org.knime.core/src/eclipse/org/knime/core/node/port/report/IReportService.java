@@ -49,7 +49,10 @@
 package org.knime.core.node.port.report;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.SubNodeContainer;
 
@@ -66,12 +69,35 @@ public interface IReportService {
 
     /**
      * Called after execution of a {@link SubNodeContainer} to fill the report output.
+     * This method always suppresses exceptions and should return {@code null} if the
+     * report generation failed.
+     * <p>
+     * In contrast, {@link #createOutputWithExceptions(SubNodeContainer, ExecutionMonitor)}
+     * will consider the {@link ReportConfiguration#isFailOnReportError()} flag.
+     * </p>
      *
      * @param subnode The component that is about to execute.
      * @param exec Progress/cancelation.
      * @return The port object to be output by the component's report output.
      */
     IReportPortObject createOutput(final SubNodeContainer subnode, final ExecutionMonitor exec);
+
+    /**
+     * Called after execution of a {@link SubNodeContainer} to fill the report output.
+     *
+     * @param subnode The component that is about to execute.
+     * @param exec Progress/cancelation.
+     * @return The port object to be output by the component's report output.
+     * @throws CanceledExecutionException if the node execution was cancelled
+     * @throws TimeoutException if the reporting page(s) are not initialized or generated in time
+     * @throws ExecutionException if something goes wrong during the task of report generation
+     * @throws InterruptedException if the thread is interrupted while report generation is in progress
+     * @since 5.10
+     */
+    default IReportPortObject createOutputWithExceptions(final SubNodeContainer subnode, final ExecutionMonitor exec)
+        throws CanceledExecutionException, TimeoutException, ExecutionException, InterruptedException {
+        return createOutput(subnode, exec);
+    }
 
     /**
      * Determines the spec of the report output.
