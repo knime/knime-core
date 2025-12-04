@@ -100,7 +100,9 @@ public final class ReportUtil {
      * @param container The subnode whose output is to be generated.
      * @param context For progress/cancelation
      * @return The report port object (or an inactive object).
+     * @deprecated use {@link #computeReportObjectWithExceptions(SubNodeContainer, ExecutionContext)}
      */
+    @Deprecated(since = "5.10", forRemoval = true)
     public static PortObject computeReportObject(final SubNodeContainer container, final ExecutionContext context) {
         Optional<IReportService> serviceOptional = CorePlugin.getInstance().getReportService();
         if (serviceOptional.isPresent()) {

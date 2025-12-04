@@ -79,7 +79,9 @@ public interface IReportService {
      * @param subnode The component that is about to execute.
      * @param exec Progress/cancelation.
      * @return The port object to be output by the component's report output.
+     * @deprecated use {@link #createOutputWithExceptions(SubNodeContainer, ExecutionMonitor)}
      */
+    @Deprecated(since = "5.10", forRemoval = true)
     IReportPortObject createOutput(final SubNodeContainer subnode, final ExecutionMonitor exec);
 
     /**
