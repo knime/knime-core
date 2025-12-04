@@ -4,13 +4,13 @@
 	<name>Block Programmatically (Variable)</name>
 	
 	<shortDescription>
-		Used in unit tests to pause the execution until a prgrammatic "release" is triggered.
+		Used in unit tests to pause the execution until a programmatic "release" is triggered.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
 			<p>
-				Used in unit tests to pause the execution until a prgrammatic "release" is
+				Used in unit tests to pause the execution until a programmatic "release" is
 				triggered. This node is part of the workflow manager test framework. It's
 				used to simulate a long processing job. It uses a java.util.concurrent.Lock object 
 				to stall. Using this node makes	only sense if used in unit tests. In normal KNIME execution
