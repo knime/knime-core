@@ -58,6 +58,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.knime.core.data.DataCell;
@@ -150,6 +151,43 @@ class ColorModelNominalTest {
 
         assertThat(clrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
         .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
+    }
+
+    /** Derivation of color model for new values, applying palette with initial set of custom color values */
+    @SuppressWarnings("static-method")
+    @Test
+    final void testApplyNewValuesWithCustomColorValues() throws InvalidSettingsException {
+        final var map = Map.<DataCell, ColorAttr> of( //
+            new StringCell("value 1"), ColorAttr.getInstance(GREEN), //
+            new StringCell("value 2"), ColorAttr.getInstance(RED), //
+            new StringCell("value 3"), ColorAttr.getInstance(BLUE), //
+            new StringCell("value 4"), ColorAttr.getInstance(PINK));
+        final var palette = new ColorAttr[]{ //
+            ColorAttr.getInstance(GREEN), //
+            ColorAttr.getInstance(RED), //
+            ColorAttr.getInstance(BLUE)};
+        final var customColorValues = Set.<DataCell> of(new StringCell("value 3"), new StringCell("value 4"));
+
+        final var clrMdl = new ColorModelNominal(map, palette, customColorValues);
+
+        final var newValues = List.<DataCell> of(new StringCell("value 1"), new StringCell("value 3"),
+            new StringCell("value 4"), new StringCell("value 5"), new StringCell("value 6"));
+        final var appliedClrMdl = clrMdl.applyToNewValues(newValues);
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 1"))).as("Color for value 1")
+            .isEqualTo(ColorAttr.getInstance(GREEN));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 2"))).as("Color for value 2")
+            .isEqualTo(ColorAttr.getInstance(RED));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 3"))).as("Color for value 3")
+            .isEqualTo(ColorAttr.getInstance(BLUE));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 4"))).as("Color for value 4")
+            .isEqualTo(ColorAttr.getInstance(PINK));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 5"))).as("Color for value 5")
+            .isEqualTo(ColorAttr.getInstance(BLUE));
+        assertThat(appliedClrMdl.getColorAttr(new StringCell("value 6"))).as("Color for value 6")
+            .isEqualTo(ColorAttr.getInstance(GREEN));
+
+        assertThat(clrMdl.getColorAttr(new StringCell("unknown")).getColor()) //
+            .as("default color for unknowns").isEqualTo(ColorAttr.DEFAULT.getColor());
     }
 
     /** Getters, added as part of AP-20239. */
