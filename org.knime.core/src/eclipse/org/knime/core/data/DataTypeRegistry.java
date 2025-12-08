@@ -108,6 +108,8 @@ public final class DataTypeRegistry {
 
     private Collection<DataType> m_allDataTypes;
 
+    private final Map<DataType, String> m_dataTypeToNamespaceMap;
+
     private final Map<String, Class<? extends ValueFactory<?, ?>>> m_valueFactoryClassMap;
 
     private boolean m_cellToValueFactoryInitialized;
@@ -144,6 +146,7 @@ public final class DataTypeRegistry {
         m_cellToValueFactoryMap = new ConcurrentHashMap<>();
         m_valueFactoryToCellMap = new ConcurrentHashMap<>();
         m_cellClassNameToImplementationOfCellClassName = new ConcurrentHashMap<>();
+        m_dataTypeToNamespaceMap = new ConcurrentHashMap<>();
         getExtensionStream()//
             .filter(e -> (e.getAttribute(FACTORY_CLASS) != null))//
             .forEach(e -> m_factories.put(e.getAttribute(CELL_CLASS), e));
@@ -224,12 +227,14 @@ public final class DataTypeRegistry {
             final var cellClass = configElement.getAttribute(CELL_CLASS);
             try {
                 final var dataCellFactory = (DataCellFactory)configElement.createExecutableExtension(FACTORY_CLASS);
-                types.add(dataCellFactory.getDataType());
+                final var dataType = dataCellFactory.getDataType();
+                types.add(dataType);
                 final var implementationCellClassList = Stream.of(configElement.getChildren("serializer")) //
                     .map(cfe -> cfe.getAttribute(CELL_CLASS)) //
                     .filter(Objects::nonNull) //
                     .toList();
                 m_cellClassNameToImplementationOfCellClassName.put(cellClass, implementationCellClassList);
+                m_dataTypeToNamespaceMap.put(dataType, configElement.getNamespaceIdentifier());
             } catch (Throwable e) { // NOSONAR - 3rd party extension, see AP-21672
                 NodeLogger.getLogger(getClass())
                     .error("Could not create data cell factory '" + configElement.getAttribute(FACTORY_CLASS)
@@ -451,6 +456,20 @@ public final class DataTypeRegistry {
             .orElseThrow(() -> new IllegalStateException(String.format(
                 "The cell class '%s' is linked to the ValueFactory '%s' but is otherwise unknown to the framework.",
                 cellClassName, valueFactory)));
+    }
+
+    /**
+     * Gets the extension's namespace of the extension that registered the given data type.
+     *
+     * @param dataType the data type
+     * @return the namespace of the extension that registered the data type, or {@link Optional#empty()} if the data
+     *         type is unknown
+     *
+     * @since 5.10
+     */
+    public Optional<String> getDataTypeNamespace(final DataType dataType) {
+        availableDataTypes(); // ensure initialized
+        return Optional.ofNullable(m_dataTypeToNamespaceMap.get(dataType));
     }
 
     private <T extends DataCell> Optional<DataCellSerializer<T>>
