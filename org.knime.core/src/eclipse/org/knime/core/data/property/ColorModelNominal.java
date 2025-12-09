@@ -55,18 +55,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
-
 /**
- * Color model which maps a set of <code>DataCell</code> objects to
- * <code>Color</code>.
+ * Color model which maps a set of <code>DataCell</code> objects to <code>Color</code>.
  *
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @author Thomas Gabriel, University of Konstanz, Germany
@@ -76,26 +76,51 @@ public final class ColorModelNominal implements ColorModel {
     /** Maps DataCell values to ColorAttr. */
     private final Map<DataCell, ColorAttr> m_map;
 
+    /** The colors of values contained in the set are fix and do not influence the automatic color assignment. */
+    private final Set<DataCell> m_customColorValues;
+
     private final ColorAttr[] m_paletteColors;
 
     /**
      * Creates new ColorHandler based on a mapping.
+     *
      * @param map Mapping form DataCell values to ColorAttr objects.
      * @param palette The palette passed on to a applier node to assign color to new unseen values (or null)
      * @throws IllegalArgumentException If the map is null.
      * @since 5.1
      */
     public ColorModelNominal(final Map<DataCell, ColorAttr> map, final ColorAttr[] palette) {
-        if (map == null)  {
-            throw new IllegalArgumentException("Mapping must not be null.");
-        }
-        m_map = Collections.unmodifiableMap(map);
-        m_paletteColors = Objects.requireNonNullElseGet(palette, () -> new ColorAttr[] {ColorAttr.DEFAULT});
+        this(map, palette, Set.of());
     }
 
     /**
-     * Returns a ColorAttr for the given DataCell value, or
-     * <code>ColorAttr.DEFAULT</code> if not set.
+     * Creates a new ColorModel based on the mapping palette and custom color values.
+     *
+     * @param map a map from values to colors
+     * @param palette The palette passed on to an applier node to assign color to new unseen values (or null)
+     * @param customColorValues a set of fixed values which map to colors possibly outside of the palette. If the colors
+     *            of those values in the map map to colors in the palette, those colors are not skipped when applying
+     *            the palette to new values.
+     * @throws IllegalArgumentException If a map is null or the maps have common keys.
+     * @since 5.10
+     */
+    public ColorModelNominal(final Map<DataCell, ColorAttr> map, final ColorAttr[] palette,
+        final Set<DataCell> customColorValues) {
+        if (map == null) {
+            throw new IllegalArgumentException("Mapping must not be null.");
+        }
+        if (!customColorValues.stream().allMatch(map::containsKey)) {
+            throw new IllegalArgumentException(
+                "The custom color values need to have a corresponding entry in the map.");
+        }
+        m_map = Collections.unmodifiableMap(map);
+        m_paletteColors = Objects.requireNonNullElseGet(palette, () -> new ColorAttr[]{ColorAttr.DEFAULT});
+        m_customColorValues = Collections.unmodifiableSet(customColorValues);
+    }
+
+    /**
+     * Returns a ColorAttr for the given DataCell value, or <code>ColorAttr.DEFAULT</code> if not set.
+     *
      * @param dc A DataCell value to get color for.
      * @return A ColorAttr for a DataCell value.
      */
@@ -109,15 +134,17 @@ public final class ColorModelNominal implements ColorModel {
     }
 
     private static final String CFG_KEYS = "keys";
+
+    private static final String CFG_CUSTOM_COLOR_VALUES = "customColorValues";
+
     private static final String CFG_PALETTE = "palette";
 
     /**
-     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the
-     * given <code>Config</code>. The color is split into red, green, blue, and
-     * alpha component which are stored as int array.
+     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the given <code>Config</code>. The color is
+     * split into red, green, blue, and alpha component which are stored as int array.
+     *
      * @param config Save settings to.
-     * @see org.knime.core.data.property.ColorModel
-     *      #save(ConfigWO)
+     * @see org.knime.core.data.property.ColorModel #save(ConfigWO)
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
     @Override
@@ -129,21 +156,23 @@ public final class ColorModelNominal implements ColorModel {
             Color color = e.getValue().getColor();
             config.addInt(key.toString(), color.getRGB());
         }
+        if (!m_customColorValues.isEmpty()) {
+            config.addDataCellArray(CFG_CUSTOM_COLOR_VALUES, m_customColorValues.toArray(DataCell[]::new));
+        }
         config.addIntArray(CFG_PALETTE,
             Stream.of(m_paletteColors).map(ColorAttr::getColor).mapToInt(Color::getRGB).toArray());
+
     }
 
     /**
-     * Read color settings from given <code>Config</code> and returns a new
-     * <code>ColorModelNominal</code> object.
+     * Read color settings from given <code>Config</code> and returns a new <code>ColorModelNominal</code> object.
+     *
      * @param config Reads color model from.
      * @return A new <code>ColorModelNominal</code> object.
-     * @throws InvalidSettingsException If the color model settings could not
-     *         be read.
+     * @throws InvalidSettingsException If the color model settings could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static ColorModelNominal load(final ConfigRO config)
-            throws InvalidSettingsException {
+    public static ColorModelNominal load(final ConfigRO config) throws InvalidSettingsException {
         Map<DataCell, ColorAttr> map = new LinkedHashMap<>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
         for (String key : keyConfig.keySet()) {
@@ -161,7 +190,8 @@ public final class ColorModelNominal implements ColorModel {
         int[] paletteInts = config.getIntArray(CFG_PALETTE, ColorAttr.DEFAULT.getColor().getRGB());
         ColorAttr[] palette = IntStream.of(paletteInts).mapToObj(i -> new Color(i, true)).map(ColorAttr::getInstance)
             .toArray(ColorAttr[]::new);
-        return new ColorModelNominal(map, palette);
+        final var customColorValues = Set.of(config.getDataCellArray(CFG_CUSTOM_COLOR_VALUES, new DataCell[0]));
+        return new ColorModelNominal(map, palette, customColorValues);
     }
 
     /**
@@ -184,8 +214,8 @@ public final class ColorModelNominal implements ColorModel {
         if (obj == null || !(obj instanceof ColorModelNominal)) {
             return false;
         }
-        ColorModelNominal cmodel = (ColorModelNominal) obj;
-        return m_map.equals(cmodel.m_map);
+        ColorModelNominal cmodel = (ColorModelNominal)obj;
+        return m_map.equals(cmodel.m_map) && m_customColorValues.equals(cmodel.m_customColorValues);
     }
 
     /**
@@ -193,7 +223,10 @@ public final class ColorModelNominal implements ColorModel {
      */
     @Override
     public int hashCode() {
-        return m_map.hashCode();
+        return new HashCodeBuilder() //
+            .append(m_map.hashCode()) //
+            .append(m_customColorValues.hashCode()) //
+            .build();
     }
 
     /**
@@ -208,6 +241,7 @@ public final class ColorModelNominal implements ColorModel {
 
     /**
      * This model represented by a map of color hex code to data values, e.g.
+     *
      * <pre>
      * #194fab -> "Foo", "Bar"
      * #88ff00 -> "Baz"
@@ -252,11 +286,19 @@ public final class ColorModelNominal implements ColorModel {
         //   F - Color1 (start over - palette apply from scratch)
         //   G - Color2
         // (Color2 is reserved as it's used for 'B' in the original data, though not present in the data now)
+        //
+        // The custom color values set contains values that have custom assigned colors, potentially outside of the
+        // palette. Even if they contain colors that are part of the palette, those colors are not skipped in the first
+        // iteration when applying the palette.
 
         Map<DataCell, ColorAttr> map = new LinkedHashMap<>(m_map);
         final var paletteList = new ArrayList<ColorAttr>(Arrays.asList(m_paletteColors));
-        paletteList.removeAll(map.values());
+        paletteList
+            .removeAll(map.keySet().stream().filter(key -> !m_customColorValues.contains(key)).map(map::get).toList());
         for (var cell : newValues) {
+            if (m_customColorValues.contains(cell)) {
+                continue;
+            }
             if (paletteList.isEmpty()) {
                 paletteList.addAll(Arrays.asList(m_paletteColors));
             }
@@ -267,6 +309,6 @@ public final class ColorModelNominal implements ColorModel {
                 map.put(cell, paletteList.remove(0));
             }
         }
-        return new ColorModelNominal(map, m_paletteColors);
+        return new ColorModelNominal(map, m_paletteColors, m_customColorValues);
     }
 }
