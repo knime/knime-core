@@ -924,18 +924,15 @@ public final class DataType implements IdentifiableType {
         return m_collectionElementType;
     }
 
-    /**
-     * Does this type represent a collection. This method is a convenience
+    /** Does this type represent a collection. This method is a convenience
      * short cut for <code>isCompatible(CollectionDataValue.class)</code>.
-     * Additionally, this method also ensures that the type is not missing.
-     * If that would be the case, {@code false} is returned.
      *
      * <p>If this method returns true, {@link #getCollectionElementType()} is
      * guaranteed to return a non-null value.
-     * @return if this type represents a collection and is not missing
+     * @return If this type represent
      */
     public boolean isCollectionType() {
-        return isCompatible(CollectionDataValue.class) && !isMissingValueType();
+        return isCompatible(CollectionDataValue.class);
     }
 
     /**
