@@ -75,6 +75,8 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowAnnotationID;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.capture.WorkflowSegment.Output;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.BuilderParams;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.WorkflowSegmentNodeMessage;
@@ -111,6 +113,8 @@ public final class CombinedExecutor {
 
         final WorkflowManager m_combinedWorkflow;
 
+        boolean m_removeFailingSegments = false;
+
         Builder(final BuilderParams params, final PortObject[] initialInputs) {
             m_params = params;
             m_initialInputs = initialInputs;
@@ -121,6 +125,18 @@ public final class CombinedExecutor {
             m_params = params;
             m_combinedWorkflow = combinedWorkflow;
             m_initialInputs = null;
+        }
+
+        /**
+         * @param remove whether to remove failing segments from the combined workflow
+         *
+         * @return the builder
+         *
+         * @since 5.10
+         */
+        public Builder removeFailedSegments(final boolean remove) {
+            m_removeFailingSegments = remove;
+            return this;
         }
 
         /**
@@ -138,6 +154,8 @@ public final class CombinedExecutor {
     private final boolean m_collectMessages;
 
     private final ExecutionContext m_exec;
+
+    private final boolean m_removeFailingSegments;
 
     private List<PortId> m_sourcePortIds;
 
@@ -187,6 +205,7 @@ public final class CombinedExecutor {
         } else {
             m_sourcePortIds = null;
         }
+        m_removeFailingSegments = builder.m_removeFailingSegments;
 
     }
 
@@ -270,12 +289,15 @@ public final class CombinedExecutor {
         // connect outputs
         List<PortType> outTypes = new ArrayList<>();
         List<Pair<NodeID, Integer>> outPorts = new ArrayList<>();
+        WorkflowPersistor formerOutputNodePersistor = null;
         for (var outputNodeId : m_wfm.findNodes(DefaultVirtualPortObjectOutNodeModel.class, false).keySet()) {
             // collect outports that are already connected to the output node
             m_wfm.getIncomingConnectionsFor(outputNodeId).forEach(cc -> {
                 outTypes.add(m_wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortType());
                 outPorts.add(Pair.create(cc.getSource(), cc.getSourcePort()));
             });
+            formerOutputNodePersistor = m_wfm.copy(false,
+                WorkflowCopyContent.builder().setNodeIDs(outputNodeId).setIncludeInOutConnections(true).build());
             m_wfm.removeNode(outputNodeId);
         }
         var wsOutputs = ws.getConnectedOutputs();
@@ -312,28 +334,12 @@ public final class CombinedExecutor {
             throw exception.get();
         }
 
-        var outputs = new PortObject[wsOutputs.size()];
-        var outputIds = new PortId[wsOutputs.size()];
-        var outIdx = 0;
-        for (int i = 0; i < outPorts.size(); i++) {
-            var cc = m_wfm.getIncomingConnectionFor(outputNodeId, i + 1);
-            if (cc.getSource().equals(componentId)) {
-                outputs[outIdx] = m_wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObject();
-                outputIds[outIdx] = new PortId(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort());
-                outIdx++;
-            }
+        if (component.getNodeContainerState().isExecuted()) {
+            return createSuccessResult(outPorts, wsOutputs, outputNodeId, componentId, component);
+        } else {
+            return createFailureResult(formerOutputNodePersistor, outputNodeId, componentId, component);
         }
-        var flowVars =
-            WorkflowSegmentExecutor.getFlowVariablesFromNC((SingleNodeContainer)m_wfm.getNodeContainer(outputNodeId));
-        boolean executionSuccessful = m_wfm.getNodeContainerState().isExecuted();
-        if (!executionSuccessful) {
-            outputs = null;
-        }
-        List<WorkflowSegmentNodeMessage> nodeMessages = List.of();
-        if (m_collectMessages) {
-            nodeMessages = WorkflowSegmentExecutor.recursivelyExtractNodeMessages(component.getWorkflowManager());
-        }
-        return new WorkflowSegmentExecutionResult(outputs, flowVars, nodeMessages, outputIds, component);
+
 
     }
 
@@ -367,6 +373,50 @@ public final class CombinedExecutor {
                 NodeUIInformation.builder().setNodeLocation(depth * 100, countPerDepth[depth] * 100, 0, 0).build());
             countPerDepth[depth]++;
         }
+    }
+
+    private WorkflowSegmentExecutionResult createSuccessResult(final List<Pair<NodeID, Integer>> outPorts,
+        final List<Output> wsOutputs, final NodeID outputNodeId, final NodeID componentId,
+        final SubNodeContainer component) {
+
+        var outputs = new PortObject[wsOutputs.size()];
+        var outputIds = new PortId[wsOutputs.size()];
+        var outIdx = 0;
+        for (int i = 0; i < outPorts.size(); i++) {
+            var cc = m_wfm.getIncomingConnectionFor(outputNodeId, i + 1);
+            if (cc.getSource().equals(componentId)) {
+                outputs[outIdx] = m_wfm.getNodeContainer(cc.getSource()).getOutPort(cc.getSourcePort()).getPortObject();
+                outputIds[outIdx] = new PortId(NodeIDSuffix.create(m_wfm.getID(), cc.getSource()), cc.getSourcePort());
+                outIdx++;
+            }
+        }
+
+        var flowVars =
+            WorkflowSegmentExecutor.getFlowVariablesFromNC((SingleNodeContainer)m_wfm.getNodeContainer(outputNodeId));
+        final List<WorkflowSegmentNodeMessage> nodeMessages;
+        if (m_collectMessages) {
+            nodeMessages = WorkflowSegmentExecutor.recursivelyExtractNodeMessages(component.getWorkflowManager());
+        } else {
+            nodeMessages = List.of();
+        }
+
+        return new WorkflowSegmentExecutionResult(outputs, flowVars, nodeMessages, outputIds, component);
+    }
+
+    private WorkflowSegmentExecutionResult createFailureResult(final WorkflowPersistor formerOutputNodePersistor,
+        final NodeID outputNodeId, final NodeID componentId, SubNodeContainer component) {
+        var nodeMessages = WorkflowSegmentExecutor.recursivelyExtractNodeMessages(component.getWorkflowManager());
+        m_wfm.removeNode(outputNodeId);
+        if (formerOutputNodePersistor != null) {
+            m_wfm.paste(formerOutputNodePersistor);
+        }
+        if (m_removeFailingSegments) {
+            m_wfm.removeNode(componentId);
+            component = null;
+        }
+        layout(m_wfm);
+
+        return new WorkflowSegmentExecutionResult(null, List.of(), nodeMessages, null, component);
     }
 
     private NodeID toNodeID(final PortId portId) {

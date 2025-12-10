@@ -108,6 +108,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.capture.CombinedExecutor;
 import org.knime.core.node.workflow.capture.CombinedExecutor.PortId;
+import org.knime.core.node.workflow.capture.CombinedExecutor.WorkflowSegmentExecutionResult;
 import org.knime.core.node.workflow.capture.IsolatedExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.capture.WorkflowSegment.Input;
@@ -545,20 +546,10 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
             var result = workflowExecutor.execute(ws, inputs, parseParameters(parameters), dataAreaPath,
                 Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
 
-            String[] viewNodeIds = null;
-            var component = result.component();
-            if (Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
-                viewNodeIds = component.getWorkflowManager().getNodeContainers().stream()
-                    .filter(nc -> nc instanceof NativeNodeContainer nnc
-                        && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
-                    .map(nc -> NodeIDSuffix.create(workflowExecutor.getWorkflow().getID(), nc.getID()).toString())
-                    .toArray(String[]::new);
-            }
-
-            setComponentMetadata(workflowExecutor, inputs, result.outputIds(), component);
-
-            var outputIds = Stream.of(result.outputIds()).map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex())
-                    .toArray(String[]::new);
+            var viewNodeIds = getViewNodeIds(workflowExecutor, executionHints, result);
+            setComponentMetadata(workflowExecutor, inputs, result.outputIds(), result.component());
+            var outputIds = result.outputIds() == null ? null : Stream.of(result.outputIds())
+                .map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex()).toArray(String[]::new);
             return new WorkflowToolResult(
                 extractMessage(result.outputs(),
                     () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
@@ -574,8 +565,26 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         }
     }
 
+    private static String[] getViewNodeIds(final CombinedExecutor workflowExecutor,
+        final Map<String, String> executionHints, final WorkflowSegmentExecutionResult result) {
+        if (result.outputs() == null || result.component() == null
+            || !Boolean.parseBoolean(executionHints.get("with-view-nodes"))) {
+            return null;
+        }
+        var component = result.component();
+        return component.getWorkflowManager().getNodeContainers().stream()
+            .filter(nc -> nc instanceof NativeNodeContainer nnc
+                && nnc.getNode().getFactory() instanceof WizardPageContribution wpc && wpc.hasNodeView()) //
+            .map(nc -> NodeIDSuffix.create(workflowExecutor.getWorkflow().getID(), nc.getID()).toString())
+            .toArray(String[]::new);
+
+    }
+
     private void setComponentMetadata(final CombinedExecutor workflowExecutor, final List<PortId> inputs,
         final PortId[] outputs, final SubNodeContainer component) {
+        if (component == null) {
+            return;
+        }
         var metadataBuilder = ComponentMetadata.fluentBuilder();
         var wfm = workflowExecutor.getWorkflow();
         var inPortMetadata = new Port[component.getNrInPorts() - 1];
@@ -589,7 +598,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         for (var pm : inPortMetadata) {
             metadataBuilder.withInPort(pm.name(), pm.description());
         }
-        var outPortMetadata = new Port[component.getNrOutPorts() - 1];
+        var outPortMetadata = new Port[outputs == null ? 0 : component.getNrOutPorts() - 1];
         for (int i = 0; i < outPortMetadata.length; i++) {
             var portId = outputs[i];
             if (i == m_messageOutputPortIndex) {
@@ -618,6 +627,9 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
     }
 
     private static Map<String, JsonValue> parseParameters(final String parameters) {
+        if (StringUtils.isBlank(parameters)) {
+            return null;
+        }
         try (var reader = JsonUtil.getProvider().createReader(new StringReader(parameters))) {
             var jsonObject = reader.readObject();
             return jsonObject.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue));
