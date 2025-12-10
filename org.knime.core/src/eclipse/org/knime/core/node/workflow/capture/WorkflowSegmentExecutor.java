@@ -118,8 +118,8 @@ public final class WorkflowSegmentExecutor {
      * @param loadWarningConsumer callback for warning if there have while loading the workflow from the workflow
      *            segment
      * @param exec for cancellation
-     * @param collectMessages whether to collect node messages after execution or not (will be part of the execution
-     *            result)
+     * @param collectMessages whether to collect node messages after successful execution or not (will be part of the
+     *            execution result) - if the execution fails, messages are always collected
      * @return the builder to further configure the workflow segment executor
      * @since 5.9
      */

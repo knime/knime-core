@@ -104,6 +104,7 @@ import org.knime.core.node.workflow.capture.WorkflowSegment;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor;
 import org.knime.core.node.workflow.capture.WorkflowSegmentExecutor.ExecutionMode;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
+import org.knime.core.node.workflow.virtual.DefaultVirtualPortObjectOutNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.util.FileUtil;
@@ -511,6 +512,61 @@ class WorkflowToolCellTest {
         assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isFalse();
         assertThat(combinedExecutor.getWorkflow()).isNull();
         assertThat(combinedExecutor.getSourcePortIds()).isNull();
+    }
+
+    @Test
+    void testExecuteToolsWithCombinedWorkflowAndFailure() throws ToolIncompatibleWorkflowException, IOException {
+        addAndConnectNodes(m_toolWfm, inData -> {
+            throw new RuntimeException("Purposely fail on execute");
+        }, true);
+        var failingTool = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null,
+            FileStoreFactory.createNotInWorkflowFileStoreFactory());
+
+        m_toolWfm.getNodeContainers().forEach(nc -> m_toolWfm.removeNode(nc.getID()));
+        addAndConnectNodes(m_toolWfm, inData -> {
+            //
+        }, true);
+        var tool = WorkflowToolCell.createFromAndModifyWorkflow(m_toolWfm, null,
+            FileStoreFactory.createNotInWorkflowFileStoreFactory());
+
+        // setup execution
+        var exec = executionContextExtension.getExecutionContext();
+        var inputs = new PortObject[]{TestNodeModel.createTable(exec)};
+        var hostNode = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
+        var combinedExecutorBuilder =
+                WorkflowSegmentExecutor.builder(hostNode, ExecutionMode.DETACHED, "test_combined_tools_workflow", s -> {
+                }, exec, false).combined(inputs);
+        var combinedExecutor = combinedExecutorBuilder.build();
+
+        // execute a failing tool as first tool
+        var res = failingTool.execute(combinedExecutor, "", combinedExecutor.getSourcePortIds(), exec, Map.of());
+        assertThat(res.message())
+            .startsWith("Tool execution failed with: Workflow contains one node with execution failure:"
+                + System.lineSeparator() + "TestNodeFactory #3: Purposely fail on execute");
+        var combinedWorkflow = combinedExecutor.getWorkflow();
+        assertThat(WorkflowManager.ROOT.containsNodeContainer(combinedWorkflow.getID())).isTrue();
+        assertThat(combinedWorkflow.getNodeContainerState().isExecuted()).isFalse();
+        assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(2); // virtual in + tool component
+        assertThat(res.outputs()).isNull();
+        assertThat(res.outputIds()).isNull();
+
+        // execute tool successfully after failure
+        res = tool.execute(combinedExecutor, "", combinedExecutor.getSourcePortIds(), exec, Map.of());
+        assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(4); // virtual in + 2 tool components + virtual out
+        var outputNodeId =
+            combinedWorkflow.findNodes(DefaultVirtualPortObjectOutNodeModel.class, false).keySet().iterator().next();
+        assertThat(combinedWorkflow.getNodeContainer(outputNodeId).getNodeContainerState().isExecuted()).isTrue();
+
+        // execute failing tool again, but remove it from combined workflow
+        res = failingTool.execute(combinedExecutor, "", combinedExecutor.getSourcePortIds(), exec, Map.of());
+        assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(5); // virtual in + 3 tool components + virtual out
+
+        // execute failing tool again using a new combined executor, configured to remove failing tools from the combined workflow
+        combinedExecutor = combinedExecutorBuilder.removeFailedSegments(true).build();
+        res = failingTool.execute(combinedExecutor, "", combinedExecutor.getSourcePortIds(), exec, Map.of());
+        combinedWorkflow = combinedExecutor.getWorkflow();
+        assertThat(combinedWorkflow.getNodeContainers().size()).isEqualTo(1); // just the virtual in
+
     }
 
     private static NativeNodeContainer addAndConnectNodes(final WorkflowManager wfm, final boolean addMessageOutput) {
