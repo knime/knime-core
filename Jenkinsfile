@@ -1,7 +1,7 @@
 #!groovy
 def BN = (BRANCH_NAME == 'master' || BRANCH_NAME.startsWith('releases/')) ? BRANCH_NAME : 'releases/2026-06'
 
-library "knime-pipeline@$BN"
+library 'knime-pipeline@todo/DEVOPS-3619-make-maven-builds-multi-thre'
 
 properties([
     pipelineTriggers([upstream(
