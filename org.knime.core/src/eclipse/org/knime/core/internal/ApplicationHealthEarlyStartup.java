@@ -180,8 +180,27 @@ public final class ApplicationHealthEarlyStartup implements IEarlyStartup {
             final var knimeHome = KNIMEConstants.getKNIMEHomeDir();
             final var diagDir = Path.of(knimeHome).resolve("diagnostics");
             Files.createDirectories(diagDir);
-            Files.writeString(diagDir.resolve("created-by-knime"),
-                "This directory was created by the KNIME diagnostics system", StandardOpenOption.CREATE);
+
+            // Generate JSON example at runtime to ensure it stays in sync with any format changes
+            final var objectMapper = new ObjectMapper();
+            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+            final var exampleInstructions = DiagnosticInstructions.createDefaults(Path.of("diagnostic-output"));
+            final var jsonExample = objectMapper.writeValueAsString(exampleInstructions);
+
+            final var instructions = String.format("""
+                This directory was created by the KNIME diagnostics system.
+
+                To create a diagnostics dump, launch an instance with the following system property:
+                  -D%s=true
+                (If you see this file, you probably already did that.)
+
+                Then create a file in this folder called 'diagnostics-output.json' with instructions such as:
+
+                %s
+                """, FEATURE_FLAG_DIAGNOSTICS, jsonExample);
+
+            Files.writeString(diagDir.resolve("created-by-knime"), instructions, StandardOpenOption.CREATE);
             return diagDir;
         }
 

@@ -218,7 +218,7 @@ public final class SystemInfoCollector implements Collector {
 
         final String[][] topProcesses;
         try {
-            topProcesses = getTopProcesses(os, 5);
+            topProcesses = getTopProcesses(os, 100); // some large (but limited) number
             if (topProcesses != null && topProcesses.length > 0) {
                 generator.writeArrayFieldStart("topProcesses");
                 for (String[] process : topProcesses) {

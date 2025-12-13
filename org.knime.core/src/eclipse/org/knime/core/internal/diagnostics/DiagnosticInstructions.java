@@ -48,10 +48,14 @@
  */
 package org.knime.core.internal.diagnostics;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Instructions for diagnostic dumps, specifying what to collect and where to store the output.
@@ -69,10 +73,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @since 5.10
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public record DiagnosticInstructions(//
-    @JsonProperty("outputDirectory") Path outputDirectory, //
-    @JsonProperty("heapDump") Path heapDumpPath, //
+    @JsonSerialize(using = PathAsStringSerializer.class) @JsonProperty("outputDirectory") Path outputDirectory, //
+    @JsonSerialize(using = PathAsStringSerializer.class) @JsonProperty("heapDump") Path heapDumpPath, //
     @JsonProperty("systemInfo") boolean systemInfo, // SystemInfoCollector
     @JsonProperty("jvmInfo") boolean jvmInfo, // JvmInfoCollector
     @JsonProperty("gcInfo") boolean gcInfo, // GcInfoCollector
@@ -120,4 +123,22 @@ public record DiagnosticInstructions(//
             true // Thread dump
         );
     }
+
+    /**
+     * Custom serializer for {@link Path} objects that outputs simple path strings instead of file:// URLs. Without
+     * this, Jackson's default Path serialization produces URL format (e.g., "file:///path") instead of plain path
+     * syntax.
+     */
+    static final class PathAsStringSerializer extends JsonSerializer<Path> {
+        @Override
+        public void serialize(final Path path, final JsonGenerator jsonGenerator,
+            final SerializerProvider serializerProvider) throws IOException {
+            if (path != null) {
+                jsonGenerator.writeString(path.toString());
+            } else {
+                jsonGenerator.writeNull();
+            }
+        }
+    }
 }
+
