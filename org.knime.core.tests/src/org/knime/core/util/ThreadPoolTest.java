@@ -48,6 +48,7 @@
 package org.knime.core.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -56,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -63,6 +65,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.eclipse.osgi.internal.framework.ContextFinder;
@@ -284,6 +287,112 @@ public final class ThreadPoolTest {
 
         task1.task.cancel(true);
         task3.task.cancel(true);
+
+        pool.waitForTermination();
+        pool.shutdown();
+    }
+
+    /**
+     * Tests for AP-25464: #runInvisible did not clean up properly after interruption, leading to downstream
+     * tasks being blocked forever (since the Worker thread had its 'invisible' flag still set)
+     */
+    @SuppressWarnings("static-method")
+    @Test
+    void testInvisibleBlockWithInterrupt() throws InterruptedException, ExecutionException, TimeoutException {
+        final var poolSize = 1;
+        final var pool = new ThreadPool(poolSize);
+
+        ReentrantLock lock = new ReentrantLock();
+        Condition inInvisibleCondition = lock.newCondition();
+        Condition blockCondition = lock.newCondition();
+
+        Callable<Void> invisibleCallable = () -> {
+            lock.lock();
+            try {
+                inInvisibleCondition.await();
+            } finally {
+                lock.unlock();
+            }
+            return null;
+        };
+
+        Callable<Void> task1WaitCallable = () -> {
+            pool.runInvisible(invisibleCallable);
+            return null;
+        };
+
+        Future<Void> task1Future = pool.submit(task1WaitCallable);
+
+        Callable<Void> task2BlockCallable = () -> {
+            lock.lock();
+            try {
+                blockCondition.await();
+            } finally {
+                lock.unlock();
+            }
+            return null;
+        };
+        Future<Void> task2Future = pool.submit(task2BlockCallable);
+        lock.lock();
+        try {
+            inInvisibleCondition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+        task1Future.cancel(true);
+        Thread.sleep(100);
+        lock.lock();
+        try {
+            blockCondition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+
+        try {
+            task1Future.get(2, TimeUnit.SECONDS);
+        } catch (CancellationException e) {
+            // expected, canceled above
+        }
+        task2Future.get(2, TimeUnit.SECONDS); // exception test
+
+        assertEquals(0, pool.getRunningThreads(), "Expected no running threads");
+        assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads");
+
+        Lock postExecuteLock = new ReentrantLock();
+        Condition postExecuteCondition = postExecuteLock.newCondition();
+
+        Callable<Void> forSomeConditionInvisiblyCallable = () -> {
+            return pool.runInvisible(() -> {
+                postExecuteLock.lock();
+                try {
+                    postExecuteCondition.await();
+                } finally {
+                    postExecuteLock.unlock();
+                }
+                return null;
+            });
+        };
+        Future<Void> forSomeConditionInvisiblyFuture = pool.submit(forSomeConditionInvisiblyCallable);
+
+        Thread.sleep(100);
+
+        assertEquals(0, pool.getRunningThreads(), "Expected no (visible) running threads");
+
+        Callable<Void> task4Callable = () -> {
+            postExecuteLock.lock();
+            try {
+                postExecuteCondition.signalAll();
+            } finally {
+                postExecuteLock.unlock();
+            }
+            return null;
+        };
+        Future<Void> task4Future = pool.enqueue(task4Callable);
+
+        assertDoesNotThrow(() -> forSomeConditionInvisiblyFuture.get(2, TimeUnit.SECONDS),
+            "Task4 should have been run, releasing the condition");
+
+        task4Future.get(2, TimeUnit.SECONDS);
 
         pool.waitForTermination();
         pool.shutdown();
