@@ -680,10 +680,9 @@ public class ThreadPool {
                 throw new ExecutionException(ex);
             }
         } else {
-            m_invisibleThreads.incrementAndGet();
+            setThreadInvisible(thisWorker);
             checkQueue();
             var interruptInCallable = false;
-            thisWorker.m_isCurrentlyInvisible = true;
             try {
                 return r.call();
             } catch (final InterruptedException e) {
@@ -692,13 +691,22 @@ public class ThreadPool {
             } catch (final Exception ex) {
                 throw new ExecutionException(ex);
             } finally {
-                reacquireSlot(interruptInCallable);
-                thisWorker.m_isCurrentlyInvisible = false;
+                reacquireSlot(interruptInCallable, thisWorker);
             }
         }
     }
 
-    private void reacquireSlot(final boolean interruptInCallable) throws InterruptedException {
+    private void setThreadInvisible(final Worker thisWorker) {
+        m_invisibleThreads.incrementAndGet();
+        thisWorker.m_isCurrentlyInvisible = true;
+    }
+
+    private void setThreadVisible(final Worker thisWorker) {
+        m_invisibleThreads.decrementAndGet();
+        thisWorker.m_isCurrentlyInvisible = false;
+    }
+
+    private void reacquireSlot(final boolean interruptInCallable, final Worker thisWorker) throws InterruptedException {
         synchronized (m_runningWorkers) {
             try {
 
@@ -729,7 +737,7 @@ public class ThreadPool {
                  * but only actually used if the pool is not saturated anymore. This is exactly the behavior
                  * as before the "re-acquire slot after call" change in AP-24224.
                  */
-                m_invisibleThreads.decrementAndGet();
+                setThreadVisible(thisWorker);
             }
         }
     }
