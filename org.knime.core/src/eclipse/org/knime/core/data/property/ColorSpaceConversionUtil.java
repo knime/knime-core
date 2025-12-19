@@ -216,7 +216,7 @@ final class ColorSpaceConversionUtil {
             xyz[0] * CIEXYZ_LRGB[2][0] + xyz[1] * CIEXYZ_LRGB[2][1] + xyz[2] * CIEXYZ_LRGB[2][2], xyz[3]};
     }
 
-    private static double[] convertColorToCIELab(final Color color) {
+    static double[] convertColorToCIELab(final Color color) {
         final var normalizedRGBColor =
             normalizeToUnitInterval(new int[]{color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()});
         return convertSRGBColorToCIELab(normalizedRGBColor);
