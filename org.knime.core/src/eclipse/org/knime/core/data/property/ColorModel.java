@@ -62,7 +62,7 @@ import org.knime.core.node.config.ConfigWO;
  * </old>
  *
  */
-public sealed interface ColorModel permits ColorModelNominal, ColorModelRange {
+public sealed interface ColorModel permits ColorModelNominal, ColorModelRange, ColorModelRange2 {
 
     /**
      * Returns a <code>ColorAttr</code> for the given <code>DataCell</code>.
