@@ -214,6 +214,13 @@ class ColorModelRangeTest {
     }
 
     @Test
+    final void testThrowsWhenTheConstructorForPredefinedGradientsIsUsedForCustomGradients() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new ColorModelRange(SPECIAL_COLORS_MAP, ColorGradient.CUSTOM),
+            "For custom gradients use the constructor with explicit stop values and colors.");
+    }
+
+    @Test
     final void testOldConstructorDoesNotThrowWhenStopValuesAreNotANumber() {
         assertDoesNotThrow(() -> new ColorModelRange(Double.NaN, Color.WHITE, Double.NaN, Color.BLACK));
     }
@@ -251,6 +258,14 @@ class ColorModelRangeTest {
         assertThrows(IllegalArgumentException.class, () -> colorModel.applyToDomain(0, Double.NaN));
         assertThrows(IllegalArgumentException.class, () -> colorModel.applyToDomain(Double.NEGATIVE_INFINITY, 100));
         assertThrows(IllegalArgumentException.class, () -> colorModel.applyToDomain(0, Double.POSITIVE_INFINITY));
+    }
+
+    @Test
+    final void testApplyingThrowsForAlreadyAppliedModel() {
+        final var colorModel = new ColorModelRange(SPECIAL_COLORS_MAP, ColorGradient.MAGMA);
+        final var appliedColorModel = colorModel.applyToDomain(0, 100);
+        assertThrows(IllegalStateException.class, () -> appliedColorModel.applyToDomain(10, 20),
+            "Color model is already applied to a domain. Cannot apply to another domain.");
     }
 
     @Test

@@ -152,13 +152,23 @@ public final class ColorModelRange implements ColorModel {
      *
      * @param specialColors a map of special colors for special values
      * @param gradient the color gradient to use
-     * @throws IllegalArgumentException if stop values are not sorted in non-decreasing order or if there are less than
-     *             two stop colors
+     * @throws IllegalArgumentException if the gradient is CUSTOM. For custom gradients use the constructor with
+     *             explicit stop values and colors.
      * @since 5.10
      */
     public ColorModelRange(final Map<SpecialColorType, Color> specialColors, final ColorGradient gradient) {
-        this(specialColors, gradient, new double[0], gradient.getGradientColorsCIELab(), true, true);
+        this(specialColors, getNonCustomGradientOrThrow(gradient), new double[0], gradient.getGradientColorsCIELab(),
+            true, true);
+    }
 
+    private static ColorGradient getNonCustomGradientOrThrow(final ColorGradient gradient) {
+        if (gradient != ColorGradient.CUSTOM) {
+            return gradient;
+        } else {
+            throw new IllegalArgumentException(
+                "For custom gradients use the constructor with explicit stop values and colors.");
+
+        }
     }
 
     private ColorModelRange(final Map<SpecialColorType, Color> specialColors, final ColorGradient gradient,
@@ -499,6 +509,10 @@ public final class ColorModelRange implements ColorModel {
     public ColorModelRange applyToDomain(final double min, final double max) {
         checkDomainIsFinite(min);
         checkDomainIsFinite(max);
+        if (!isPercentageBased()) {
+            throw new IllegalStateException(
+                "Color model is already applied to a domain. Cannot apply to another domain.");
+        }
         final var range = max - min;
         final double[] stopValues;
         if (m_stopValues.length == m_stopColorsCIELab.length) {
