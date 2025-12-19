@@ -140,6 +140,9 @@ public final class ColorHandler implements PropertyHandler {
         } else if (modelClass.equals(ColorModelRange.class.getName())) {
             ConfigRO subConfig = config.getConfig(CFG_COLOR_MODEL);
             return new ColorHandler(ColorModelRange.load(subConfig));
+        } else if (modelClass.equals(ColorModelRange2.class.getName())) {
+            ConfigRO subConfig = config.getConfig(CFG_COLOR_MODEL);
+            return new ColorHandler(ColorModelRange2.load(subConfig));
         } else {
             throw new InvalidSettingsException("Unknown ColorModel class: "
                     + modelClass);
