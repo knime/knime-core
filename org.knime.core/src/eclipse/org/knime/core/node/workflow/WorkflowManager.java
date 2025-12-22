@@ -11353,7 +11353,7 @@ public final class WorkflowManager extends NodeContainer
      * @return for projects, the non-null {@link WorkflowResourceCache}. For other instances, null.
      * @since 5.4
      */
-    WorkflowResourceCache getWorkflowResourceCache() {
+    public org.knime.core.node.workflow.WorkflowResourceCache getWorkflowResourceCache() {
         return m_workflowResourceCache;
     }
 
