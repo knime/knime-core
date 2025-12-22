@@ -70,7 +70,7 @@ import org.knime.core.node.workflow.contextv2.ServerLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 /**
  * Tests for {@link ServerExecutorUrlResolver}, currently only with a focus on item version handling.
  *
@@ -256,7 +256,7 @@ class ServerExecutorUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#spaceRelative()"
     })
     void testResolveForbidden(@SuppressWarnings("unused") final URL unversioned, final URL withVersion,
-            final URL withBoth, @SuppressWarnings("unused") final HubItemVersion version) {
+            final URL withBoth, @SuppressWarnings("unused") final ItemVersion version) {
         for (final var url : new URL[] { withVersion, withBoth }) {
             final var ex = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(url),
                     "Must not contain version query parameter");
@@ -269,7 +269,7 @@ class ServerExecutorUrlResolverTest {
         "org.knime.core.util.urlresolve.URLMethodSources#nodeRelativeInScope()"
     })
     void testResolveNodeRelativeNoItemVersion(@SuppressWarnings("unused") final URL unversioned, final URL withVersion,
-            final URL withBoth, @SuppressWarnings("unused") final HubItemVersion version) {
+            final URL withBoth, @SuppressWarnings("unused") final ItemVersion version) {
         for (final var url : new URL[] { withVersion, withBoth }) {
             final var ex = assertThrows(ResourceAccessException.class, () -> m_resolver.resolve(url),
                     "Must not contain version query parameter");
