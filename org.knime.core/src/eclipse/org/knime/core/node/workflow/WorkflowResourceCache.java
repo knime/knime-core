@@ -143,6 +143,12 @@ public final class WorkflowResourceCache {
         });
     }
 
+    /**
+     * @since 5.10
+     * @param clazz
+     * @return
+     * @param <T>
+     */
     public synchronized <T extends WorkflowResource> Optional<T> getFromCache(final Class<T> clazz) {
         // ~todo better name
         CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
@@ -153,6 +159,7 @@ public final class WorkflowResourceCache {
      * Registers a new workflow resource with this workflow. The resource is associated with the given class.
      * An existing value is returned or {@code null} if the class was previously not associated with a resource.
      *
+     * @since 5.10
      * @param <T> Type of resource (extension dependent)
      * @param clazz The class of {@code T}
      * @param value The resource instance to register
