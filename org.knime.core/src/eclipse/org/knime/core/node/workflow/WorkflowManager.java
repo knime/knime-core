@@ -188,6 +188,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowResourceCache;
 import org.knime.core.node.workflow.WorkflowResourceCache.WorkflowResource;
 import org.knime.core.node.workflow.action.CollapseIntoMetaNodeResult;
 import org.knime.core.node.workflow.action.ExpandSubnodeResult;
@@ -11353,7 +11354,7 @@ public final class WorkflowManager extends NodeContainer
      * @return for projects, the non-null {@link WorkflowResourceCache}. For other instances, null.
      * @since 5.4
      */
-    public org.knime.core.node.workflow.WorkflowResourceCache getWorkflowResourceCache() {
+    public WorkflowResourceCache getWorkflowResourceCache() {
         return m_workflowResourceCache;
     }
 

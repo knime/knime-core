@@ -144,13 +144,14 @@ public final class WorkflowResourceCache {
     }
 
     /**
+     * Returns the resource instance for the given class if it is already present in the cache.
+     *
      * @since 5.10
-     * @param clazz
-     * @return
-     * @param <T>
+     * @param <T>  type of resource
+     * @param clazz the class used as key for the resource, must not be {@code null}
+     * @return an {@link Optional} containing the cached instance if present; otherwise {@link Optional#empty()}
      */
     public synchronized <T extends WorkflowResource> Optional<T> getFromCache(final Class<T> clazz) {
-        // ~todo better name
         CheckUtils.checkArgumentNotNull(clazz, "Class must not be null.");
         return Optional.ofNullable((T) m_classToInstanceMap.get(clazz));
     }
