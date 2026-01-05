@@ -41,10 +41,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
 import org.junit.Test;
+import org.knime.testing.util.WorkflowManagerUtil;
 import org.mockito.Mockito;
 
 /**
@@ -62,9 +64,9 @@ public class WorkflowResourceCacheTest {
     }
 
     @Test
-    public void testComputeIfAbsentCachesPerWorkflow() {
+    public void testComputeIfAbsentCachesPerWorkflow() throws IOException {
         var cache = new WorkflowResourceCache();
-        var wfm = Mockito.mock(WorkflowManager.class);
+        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
         Mockito.when(wfm.getWorkflowResourceCache()).thenReturn(cache);
 
         NodeContext.pushContext(wfm);
