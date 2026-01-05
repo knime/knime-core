@@ -43,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.junit.After;
 import org.junit.Test;
@@ -72,11 +73,12 @@ public class WorkflowResourceCacheTest {
         NodeContext.pushContext(wfm);
 
         var calls = new AtomicInteger();
-        var first = WorkflowResourceCache.computeIfAbsent(TestResource.class, () -> {
+        Supplier<org.knime.core.node.workflow.WorkflowResourceCacheTest.TestResource> testResourceSupplier = () -> {
             calls.incrementAndGet();
             return new TestResource();
-        });
-        var second = WorkflowResourceCache.computeIfAbsent(TestResource.class, TestResource::new);
+        };
+        var first = WorkflowResourceCache.computeIfAbsent(TestResource.class, testResourceSupplier);
+        var second = WorkflowResourceCache.computeIfAbsent(TestResource.class, testResourceSupplier);
 
         assertSame(first, second);
         assertEquals(1, calls.get());
