@@ -107,14 +107,14 @@ public class WorkflowResourceCacheTest {
         assertTrue("dispose() should call WorkflowResource.dispose()", resource.disposed);
     }
 
-    private static final class TestResource implements WorkflowResource {
+    private static final class TestResource implements WorkflowResourceCache.WorkflowResource {
         @Override
         public void dispose() {
             // no-op
         }
     }
 
-    private static final class DisposingResource implements WorkflowResource {
+    private static final class DisposingResource implements WorkflowResourceCache.WorkflowResource {
         boolean disposed;
 
         @Override
