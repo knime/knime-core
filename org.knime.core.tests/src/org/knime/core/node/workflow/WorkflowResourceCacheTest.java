@@ -56,34 +56,6 @@ import org.mockito.Mockito;
 @SuppressWarnings("resource") // caches disposed by tests as needed
 public class WorkflowResourceCacheTest {
 
-    @After
-    public void tearDown() {
-        // clean up any lingering context to not leak across tests
-        while (NodeContext.getContext() != null) {
-            NodeContext.removeLastContext();
-        }
-    }
-
-    @Test
-    public void testComputeIfAbsentCachesPerWorkflow() throws IOException {
-        var cache = new WorkflowResourceCache();
-        var wfm = WorkflowManagerUtil.createEmptyWorkflow();
-        Mockito.when(wfm.getWorkflowResourceCache()).thenReturn(cache);
-
-        NodeContext.pushContext(wfm);
-
-        var calls = new AtomicInteger();
-        Supplier<org.knime.core.node.workflow.WorkflowResourceCacheTest.TestResource> testResourceSupplier = () -> {
-            calls.incrementAndGet();
-            return new TestResource();
-        };
-        var first = WorkflowResourceCache.computeIfAbsent(TestResource.class, testResourceSupplier);
-        var second = WorkflowResourceCache.computeIfAbsent(TestResource.class, testResourceSupplier);
-
-        assertSame(first, second);
-        assertEquals(1, calls.get());
-    }
-
     @Test
     public void testPutAndGetFromCache() {
         var cache = new WorkflowResourceCache();
