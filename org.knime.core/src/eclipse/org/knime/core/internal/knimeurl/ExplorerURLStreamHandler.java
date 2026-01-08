@@ -57,7 +57,7 @@ import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 import org.eclipse.core.runtime.IPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ClassUtils;
