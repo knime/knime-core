@@ -53,9 +53,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -69,9 +69,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.auth.AuthScope;
 import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpException;
@@ -104,6 +102,8 @@ import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.JsonUtil;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
+import org.knime.core.util.proxy.apache5.ProxyCredentialsProvider;
+import org.knime.core.util.proxy.apache5.ProxyHttpClients;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
@@ -749,18 +749,17 @@ public final class NodeTimer {
         }
 
         @SuppressWarnings("resource")
-        private static @Owning Pair<HttpClientBuilder, HttpPost> prepareRequestToServer(final byte[] bytes)
-            throws UnsupportedEncodingException {
-            String knid = URLEncoder.encode(KNIMEConstants.getKNID(), "UTF-8");
+        private static @Owning Pair<HttpClientBuilder, HttpPost> prepareRequestToServer(final byte[] bytes) {
+            String knid = URLEncoder.encode(KNIMEConstants.getKNID(), StandardCharsets.UTF_8);
 
             // use the new v2 end point for session based files
             final var uri = URI.create(SERVER_ADDRESS + "/usage/v2/" + knid);
-            final var credentialsProvider = new BasicCredentialsProvider();
+            final var credentialsProvider = new ProxyCredentialsProvider(uri);
             credentialsProvider.setCredentials( //
                 new AuthScope(uri.getHost(), uri.getPort()), //
                 new UsernamePasswordCredentials("knime-usage-user", "knime".toCharArray()) // NOSONAR
             );
-            final var requestBuilder = HttpClients.custom() //
+            final var requestBuilder = ProxyHttpClients.custom() //
                 .setDefaultCredentialsProvider(credentialsProvider);
             HttpEntity entity = new ByteArrayEntity(bytes, ContentType.APPLICATION_JSON);
             final var post = new HttpPost(uri);
