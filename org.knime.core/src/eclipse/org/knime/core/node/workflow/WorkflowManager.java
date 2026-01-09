@@ -10328,11 +10328,11 @@ public final class WorkflowManager extends NodeContainer
             }
             // breadth first sorted list - traverse backwards (downstream before upstream nodes)
             final List<NodeID> idList =
-                new ArrayList<NodeID>(m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet());
+                new ArrayList<>(m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet());
             for (ListIterator<NodeID> reverseIt = idList.listIterator(idList.size()); reverseIt.hasPrevious();) {
-                tryGetNodeContainer(reverseIt.previous()).ifPresent(NodeContainer::cleanup);
+                tryGetNodeContainer(reverseIt.previous()).map(NodeContainer::getID).ifPresent(this::removeNode);
             }
-            getConnectionContainers().stream().forEach(c -> c.cleanup());
+            getConnectionContainers().stream().forEach(this::removeConnection); // "through-flow" connections
             if (m_workflowResourceCache != null) {
                 m_workflowResourceCache.dispose();
             }
