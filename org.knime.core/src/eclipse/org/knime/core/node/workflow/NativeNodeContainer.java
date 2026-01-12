@@ -1025,6 +1025,13 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
+    public boolean isDeletable() {
+        // in very old versions, (virtual) component input/output nodes were saved without delete lock
+        return super.isDeletable() && !isModelCompatibleTo(VirtualSubNodeInOut.class);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public boolean isInactive() {
         return m_node.isInactive();
     }
