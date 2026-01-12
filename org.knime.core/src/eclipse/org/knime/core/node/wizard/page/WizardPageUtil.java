@@ -184,8 +184,8 @@ public final class WizardPageUtil {
             LOGGER.error("Nested layouts could not be expanded: " + ex.getMessage(), ex);
         }
         try {
-            var containerID =
-                NodeID.fromString(NodeIDSuffix.create(manager.getID(), subNC.getWorkflowManager().getID()).toString());
+            var containerID = NodeID.fromString(
+                NodeIDSuffix.create(manager.getProjectWFM().getID(), subNC.getWorkflowManager().getID()).toString());
             LayoutUtil.addUnreferencedViews(layoutStringProvider, resultMap, sncMap, containerID);
         } catch (IOException ex) {
             LOGGER.error("Layout could not be amended by unreferenced views: " + ex.getMessage(), ex);
