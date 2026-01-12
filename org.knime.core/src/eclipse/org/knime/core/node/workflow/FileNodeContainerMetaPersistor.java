@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.FileNodePersistor;
@@ -59,6 +60,8 @@ import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeLocks;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeFactory;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LoadVersion;
 
@@ -79,6 +82,11 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
     private static final String CFG_JOB_MANAGER_DIR = "job.manager.dir";
 
     private static final String CFG_JOB_CONFIG = "execution.job";
+
+    private static final String CFG_FACTORY = "factory";
+
+    private static final Set<String> UNDELETABLE_NODE_FACTORIES =
+        Set.of(VirtualSubNodeInputNodeFactory.class.getName(), VirtualSubNodeOutputNodeFactory.class.getName());
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -450,8 +458,8 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             boolean isOldAutoExecutable = false;
-            if (parentSettings.containsKey("factory")) {
-                String factory = parentSettings.getString("factory");
+            if (parentSettings.containsKey(CFG_FACTORY)) {
+                String factory = parentSettings.getString(CFG_FACTORY);
                 int dotLocation = factory.lastIndexOf('.');
                 String simpleName = factory;
                 if (dotLocation >= 0 && factory.length() > dotLocation + 1) {
@@ -528,11 +536,12 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
      * @return the node locks
      */
     protected NodeLocks loadNodeLocks(final NodeSettingsRO settings) {
-        boolean isDeletable;
+        final boolean isNeverDeletable = UNDELETABLE_NODE_FACTORIES.contains(settings.getString(CFG_FACTORY, ""));
+        boolean hasDeleteLock;
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            isDeletable = true;
+            hasDeleteLock = isNeverDeletable;
         } else {
-            isDeletable = settings.getBoolean(CFG_IS_DELETABLE, true);
+            hasDeleteLock = isNeverDeletable || !settings.getBoolean(CFG_IS_DELETABLE, true);
         }
         boolean hasResetLock;
         if(getLoadVersion().isOlderThan(LoadVersion.V3010)) {
@@ -546,7 +555,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
         } else {
             hasConfigureLock = settings.getBoolean(CFG_HAS_CONFIGURE_LOCK, false);
         }
-        return new NodeLocks(!isDeletable, hasResetLock, hasConfigureLock);
+        return new NodeLocks(hasDeleteLock, hasResetLock, hasConfigureLock);
     }
 
     public static void save(final NodeSettingsWO settings, final NodeContainer nc, final ReferencedFile targetDir) {
