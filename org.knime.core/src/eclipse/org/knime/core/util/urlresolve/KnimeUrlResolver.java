@@ -203,12 +203,13 @@ public abstract class KnimeUrlResolver {
             return ContextlessUrlResolver.INSTANCE;
         }
 
-        final var executorInfo = workflowContext.getExecutorInfo();
-
-        if (VirtualNodeContext.getContext().isPresent()) {
-            return new VirtualNodeContextUrlResolver((AnalyticsPlatformExecutorInfo)executorInfo);
+        var virtualContext = VirtualNodeContext.getContext().orElse(null);
+        if (virtualContext != null) {
+            var hostContext = virtualContext.getOriginalWorkflowContext().orElseThrow();
+            return new VirtualNodeContextUrlResolver(createResolver(hostContext));
         }
 
+        final var executorInfo = workflowContext.getExecutorInfo();
         final var locationInfo = workflowContext.getLocationInfo();
 
         if (executorInfo instanceof JobExecutorInfo jobExec && jobExec.isRemote()) {
@@ -233,18 +234,24 @@ public abstract class KnimeUrlResolver {
             }
         }
 
+        return createResolver(workflowContext);
+    }
+
+    private static KnimeUrlResolver createResolver(final WorkflowContextV2 workflowContext) {
+        final var executorInfo = workflowContext.getExecutorInfo();
+        final var locationInfo = workflowContext.getLocationInfo();
+
         return switch (executorInfo.getType()) {
             case ANALYTICS_PLATFORM -> { // NOSONAR
                 final var apExecInfo = (AnalyticsPlatformExecutorInfo)executorInfo;
-                yield locationInfo.getType() == LocationType.LOCAL
-                    ? new AnalyticsPlatformLocalUrlResolver(apExecInfo)
+                yield locationInfo.getType() == LocationType.LOCAL ? new AnalyticsPlatformLocalUrlResolver(apExecInfo)
                     : new AnalyticsPlatformTempCopyUrlResolver(apExecInfo, (RestLocationInfo)locationInfo,
                         workflowContext.getMountpointURI().orElseThrow());
             }
             case HUB_EXECUTOR -> new HubExecutorUrlResolver((HubJobExecutorInfo)executorInfo,
-                    (HubSpaceLocationInfo)locationInfo);
+                (HubSpaceLocationInfo)locationInfo);
             case SERVER_EXECUTOR -> new ServerExecutorUrlResolver((ServerJobExecutorInfo)executorInfo,
-                    (ServerLocationInfo)locationInfo);
+                (ServerLocationInfo)locationInfo);
         };
     }
 

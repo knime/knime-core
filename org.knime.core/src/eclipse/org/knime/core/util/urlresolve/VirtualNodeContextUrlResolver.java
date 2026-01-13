@@ -65,7 +65,7 @@ import org.knime.core.util.hub.ItemVersion;
  * 'virtual workflow' context always has a {@link AnalyticsPlatformExecutorInfo}). Only the workflow-relative resolution
  * is adapted to take the virtual context into account. Either by not allowing it all together (depending on
  * {@link VirtualNodeContext#hasRestriction(Restriction)}), or by using the data-area as defined by the virtual context
- * (cp. {@link VirtualNodeContext#getVirtualDataAreaPath()}) - if the workflow-relativ path points to the data-area.
+ * (cp. {@link VirtualNodeContext#getVirtualDataAreaPath()}) - if the workflow-relative path points to the data-area.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  *
@@ -73,10 +73,10 @@ import org.knime.core.util.hub.ItemVersion;
  */
 final class VirtualNodeContextUrlResolver extends KnimeUrlResolver {
 
-    private final AnalyticsPlatformLocalUrlResolver m_analyticsPlatformLocalUrlResolver;
+    private final KnimeUrlResolver m_delegate;
 
-    VirtualNodeContextUrlResolver(final AnalyticsPlatformExecutorInfo executorInfo) {
-        m_analyticsPlatformLocalUrlResolver = new AnalyticsPlatformLocalUrlResolver(executorInfo);
+    VirtualNodeContextUrlResolver(final KnimeUrlResolver delegate) {
+        m_delegate = delegate;
     }
 
     @Override
@@ -87,25 +87,25 @@ final class VirtualNodeContextUrlResolver extends KnimeUrlResolver {
     @Override
     ResolvedURL resolveMountpointAbsolute(final URL url, final String mountId, final IPath path,
         final ItemVersion version) throws ResourceAccessException {
-        return m_analyticsPlatformLocalUrlResolver.resolveMountpointAbsolute(url, mountId, path, version);
+        return m_delegate.resolveMountpointAbsolute(url, mountId, path, version);
     }
 
     @Override
     ResolvedURL resolveMountpointRelative(final URL url, final IPath path, final ItemVersion version)
         throws ResourceAccessException {
-        return m_analyticsPlatformLocalUrlResolver.resolveMountpointRelative(url, path, version);
+        return m_delegate.resolveMountpointRelative(url, path, version);
     }
 
     @Override
     ResolvedURL resolveSpaceRelative(final URL url, final IPath path, final ItemVersion version)
         throws ResourceAccessException {
-        return m_analyticsPlatformLocalUrlResolver.resolveSpaceRelative(url, path, version);
+        return m_delegate.resolveSpaceRelative(url, path, version);
     }
 
     @Override
     ResolvedURL resolveWorkflowRelative(final URL url, final IPath path, final ItemVersion version)
         throws ResourceAccessException {
-        final var resolved = m_analyticsPlatformLocalUrlResolver.resolveWorkflowRelative(url, path, version);
+        final var resolved = m_delegate.resolveWorkflowRelative(url, path, version);
         var virtualNodeContext = VirtualNodeContext.getContext().orElseThrow();
 
         if (resolved.pathInsideWorkflow() != null && "data".equals(resolved.pathInsideWorkflow().segment(0))) {
@@ -114,7 +114,7 @@ final class VirtualNodeContextUrlResolver extends KnimeUrlResolver {
             if (virtualDataAreaPath == null) {
                 if (virtualNodeContext.hasRestriction(Restriction.WORKFLOW_DATA_AREA_ACCESS)) {
                     throw new ResourceAccessException("Node is not allowed to access workflow data area "
-                        + "because it's executed within in a restricted (virtual) scope.");
+                        + "because it's executed within a restricted (virtual) scope.");
                 }
                 return resolved;
             }
@@ -128,7 +128,7 @@ final class VirtualNodeContextUrlResolver extends KnimeUrlResolver {
             if (virtualNodeContext.hasRestriction(Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS)) {
                 // not allowed to access workflow-relative resources at all
                 throw new ResourceAccessException("Node is not allowed to access workflow-relative resources "
-                    + "because it's executed within in a restricted (virtual) scope.");
+                    + "because it's executed within a restricted (virtual) scope.");
             }
             return resolved;
         }
@@ -136,7 +136,7 @@ final class VirtualNodeContextUrlResolver extends KnimeUrlResolver {
 
     @Override
     ResolvedURL resolveNodeRelative(final URL url, final IPath path) throws ResourceAccessException {
-        return m_analyticsPlatformLocalUrlResolver.resolveNodeRelative(url, path);
+        throw new ResourceAccessException("Node-relative URL resolution is not supported in virtual node contexts.");
     }
 
 }
