@@ -3,7 +3,7 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter comment="new interface hierarchy in FlowVirtualScopeContext, AP-24414" id="923795461">
             <message_arguments>
-                <message_argument value="5.5.2"/>
+                <message_argument value="5.5.3"/>
                 <message_argument value="5.4.0"/>
             </message_arguments>
         </filter>
