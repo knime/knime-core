@@ -62,8 +62,11 @@ import org.knime.core.node.exec.dataexchange.PortObjectRepository;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowScopeContext;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCaptureOperation;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.AbstractPortObjectRepositoryNodeModel;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext;
 
@@ -165,6 +168,15 @@ public final class FlowVirtualScopeContext extends FlowScopeContext implements V
      */
     public boolean hasHostNode() {
         return m_nc != null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<WorkflowContextV2> getOriginalWorkflowContext() {
+        return Optional.ofNullable(m_nc).map(NodeContainer::getParent).map(WorkflowManager::getProjectWFM)
+            .map(WorkflowManager::getContextV2);
     }
 
     /**

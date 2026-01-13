@@ -324,6 +324,7 @@ public final class CombinedExecutor {
 
         var flowVirtualScopeContext = new FlowVirtualScopeContext(m_hostNode.getID(), dataAreaPath, restrictions);
         component.getWorkflowManager().setInitialScopeContext(flowVirtualScopeContext);
+        flowVirtualScopeContext.registerHostNode(m_hostNode, m_exec);
 
         layout(m_wfm);
 

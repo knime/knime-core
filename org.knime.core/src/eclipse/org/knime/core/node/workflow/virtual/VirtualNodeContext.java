@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 
 /**
@@ -94,6 +95,11 @@ public interface VirtualNodeContext {
      *         on data area access)
      */
     Optional<Path> getVirtualDataAreaPath();
+
+    /**
+     * @return the context of the original workflow that (contains the node that) created this virtual context
+     */
+    Optional<WorkflowContextV2> getOriginalWorkflowContext();
 
     /**
      * Shortcut for {@code NodeContext.getContext().getContextObjectForClass(VirtualNodeContext.class)}.
