@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
-Bundle-Version: 5.5.2.qualifier
+Bundle-Version: 5.5.3.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/schemas.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
