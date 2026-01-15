@@ -12,7 +12,7 @@
         <filter comment="renamed non-api class (no matches in bitbucket)" id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.internal.ProcessWatchdogEarlyStartup"/>
-                <message_argument value="org.knime.core_5.8.1"/>
+                <message_argument value="org.knime.core_5.8.2"/>
             </message_arguments>
         </filter>
     </resource>
