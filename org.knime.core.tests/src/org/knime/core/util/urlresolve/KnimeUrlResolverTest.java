@@ -70,6 +70,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableFunction;
 import org.apache.commons.lang3.function.FailableRunnable;
 import org.junit.Assume;
@@ -86,6 +87,7 @@ import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.node.workflow.virtual.VirtualNodeContext.Restriction;
 import org.knime.core.node.workflow.virtual.parchunk.FlowVirtualScopeContext;
 import org.knime.core.util.FileUtil;
@@ -451,21 +453,21 @@ class KnimeUrlResolverTest {
         // happy path, with a 'virtual' data area path given
         var tmpDataAreaPath = FileUtil.createTempDir("test_data_area").toPath();
         try {
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
                 var expectedUrl = URLResolverUtil.toURL(tmpDataAreaPath.resolve("somefile.txt"));
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
             }, tmpDataAreaPath);
 
             // data area path given, but with restriction to access other workflow-relative resources
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
                 var expectedUrl = URLResolverUtil.toURL(tmpDataAreaPath.resolve("somefile.txt"));
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
             }, tmpDataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS);
 
             // no 'virtual' data area given, but with restriction to access the actual one
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
                 var e = Assertions.assertThrows(ResourceAccessException.class,
                     () -> resolver.resolve(new URL("knime://knime.workflow/data/somefile.txt")));
@@ -473,7 +475,7 @@ class KnimeUrlResolverTest {
             }, null, Restriction.WORKFLOW_DATA_AREA_ACCESS);
 
             // workflow relative only, with restriction
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
                 var e = Assertions.assertThrows(ResourceAccessException.class,
                     () -> resolver.resolve(new URL("knime://knime.workflow/somefile.txt")));
@@ -481,7 +483,7 @@ class KnimeUrlResolverTest {
             }, tmpDataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS);
 
             // leaving data area
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
                 var e = Assertions.assertThrows(ResourceAccessException.class,
                     () -> resolver.resolve(new URL("knime://knime.workflow/data/../somefile.txt")));
@@ -489,13 +491,11 @@ class KnimeUrlResolverTest {
             }, tmpDataAreaPath, Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS);
 
             // without restrictions and virtual data area
-            withVirtualNodeContext(() -> {
+            withVirtualNodeContext(workflowPath -> {
                 var resolver = context.getResolver();
-                var expectedUrl =
-                    URLResolverUtil.toURL(Path.of("/Wörk – ßpäce/group/workflow/data/somefile.txt").toAbsolutePath());
+                var expectedUrl = URLResolverUtil.toURL(workflowPath.resolve("data/somefile.txt").toAbsolutePath());
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/data/somefile.txt"));
-                expectedUrl =
-                    URLResolverUtil.toURL(Path.of("/Wörk – ßpäce/group/workflow/somefile.txt").toAbsolutePath());
+                expectedUrl = URLResolverUtil.toURL(workflowPath.resolve("somefile.txt").toAbsolutePath());
                 assertResolvedURLEquals(resolver, expectedUrl, new URL("knime://knime.workflow/somefile.txt"));
             }, null);
         } finally {
@@ -503,22 +503,26 @@ class KnimeUrlResolverTest {
         }
     }
 
-    private static void withVirtualNodeContext(final FailableRunnable<Exception> runnable, final Path dataAreaPath,
-        final Restriction... restrictions) throws Exception {
-        var wfm =
-            WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(), new WorkflowCreationHelper(null));
+    private static void withVirtualNodeContext(final FailableConsumer<Path, Exception> consumer,
+        final Path dataAreaPath, final Restriction... restrictions) throws Exception {
+        var workflowFolderPath = FileUtil.createTempDir("test_workflow");
+        var wfm = WorkflowManager.ROOT.createAndAddProject("Test" + UUID.randomUUID(),
+            new WorkflowCreationHelper(WorkflowContextV2.forTemporaryWorkflow(workflowFolderPath.toPath(), null)));
         var nc = (NativeNodeContainer)wfm.getNodeContainer(wfm.createAndAddNode(new TestNodeFactory()));
         try (var unused = wfm.lock()) {
             wfm.createAndSetFlowObjectStackFor(nc,
                 new FlowObjectStack[]{FlowObjectStack.createFromFlowVariableList(List.of(), nc.getID())});
         }
-        nc.getFlowObjectStack().push(new FlowVirtualScopeContext(nc.getID(), dataAreaPath, restrictions));
+        var virtualContext = new FlowVirtualScopeContext(nc.getID(), dataAreaPath, restrictions);
+        virtualContext.registerHostNode(nc, null);
+        nc.getFlowObjectStack().push(virtualContext);
         NodeContext.pushContext(nc);
         try {
-            runnable.run();
+            consumer.accept(workflowFolderPath.toPath());
         } finally {
             WorkflowManager.ROOT.removeProject(wfm.getID());
             NodeContext.removeLastContext();
+            FileUtil.deleteRecursively(workflowFolderPath);
         }
     }
 
