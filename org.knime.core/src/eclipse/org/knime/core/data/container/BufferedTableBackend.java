@@ -281,7 +281,16 @@ public final class BufferedTableBackend implements TableBackend {
 
         private void writeSlices(final ExecutionContext exec, final BufferedDataTable table, final double numRows,
             final AutoCloseables<TableSliceWriter> writers) throws CanceledExecutionException {
-            var unionSliceFromFirstRow = Selection.all().retainColumns(m_unionSlice.columns());
+
+            var unionSliceFromFirstRow = Selection.all();
+            if (!m_unionSlice.columns().allSelected()) {
+                final int[] colIndices = IntStream.concat(//
+                    IntStream.of(0), // the row key is always part of the table
+                    IntStream.of(m_unionSlice.columns().getSelected())//
+                        .map(i -> i + 1))// the slice does not account for the row key column
+                    .toArray();
+                unionSliceFromFirstRow = unionSliceFromFirstRow.retainColumns(colIndices);
+            }
             if (!m_unionSlice.rows().allSelected()) {
                 unionSliceFromFirstRow = unionSliceFromFirstRow.retainRows(0, m_unionSlice.rows().toIndex());
             }
