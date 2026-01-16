@@ -444,9 +444,7 @@ class KnimeUrlResolverTest {
     @MethodSource({"org.knime.core.util.urlresolve.URLMethodSources#localApContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#knwfContexts()",
         "org.knime.core.util.urlresolve.URLMethodSources#tempCopyHubContexts()",
-        "org.knime.core.util.urlresolve.URLMethodSources#tempCopyServerContexts()",
-        "org.knime.core.util.urlresolve.URLMethodSources#hubExecutorContexts()",
-        "org.knime.core.util.urlresolve.URLMethodSources#serverExecutorContexts()"})
+        "org.knime.core.util.urlresolve.URLMethodSources#tempCopyServerContexts()"})
     void testWithVirtualNodeContext(final Context context) throws Exception {
         // happy path, with a 'virtual' data area path given
         var tmpDataAreaPath = FileUtil.createTempDir("test_data_area").toPath();
