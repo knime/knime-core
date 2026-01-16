@@ -70,7 +70,7 @@ import org.knime.core.node.workflow.contextv2.HubSpaceLocationInfo;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.exception.ResourceAccessException;
-import org.knime.core.util.hub.HubItemVersion;
+import org.knime.core.util.hub.ItemVersion;
 import org.knime.core.util.urlresolve.URLMethodSources.Context;
 import org.knime.core.util.urlresolve.URLMethodSources.WorkspaceType;
 
@@ -181,14 +181,14 @@ class RemoteExecutorUrlResolverTest {
             "org.knime.core.util.urlresolve.URLMethodSources#spaceRelative()"
         })
         void testVersionedUrls(final URL unversioned, final URL versioned, final URL bothVersions,
-                final HubItemVersion version) throws ResourceAccessException {
+                final ItemVersion version) throws ResourceAccessException {
             final var resolvedPlain = m_resolver.resolve(unversioned);
             for (final var url : new URL[] { versioned, bothVersions }) {
                 final var resolved = m_resolver.resolve(url);
-                final var isVersioned = !HubItemVersion.currentState().equals(version);
+                final var isVersioned = version.isVersioned();
                 if (isVersioned) {
                     assertNotEquals(resolvedPlain, resolved, "Version should not be ignored");
-                    final var fromUrl = HubItemVersion.of(resolved);
+                    final var fromUrl = URLResolverUtil.parseVersion(resolved.getQuery());
                     assertEquals(version, fromUrl.orElseThrow(), "Has correct version");
                 }
             }
@@ -226,13 +226,13 @@ class RemoteExecutorUrlResolverTest {
             "org.knime.core.util.urlresolve.URLMethodSources#mountpointAbsolute()",
         })
         void testVersionedUrls(final URL unversioned, final URL versioned, final URL bothVersions,
-                final HubItemVersion version) throws ResourceAccessException {
+                final ItemVersion version) throws ResourceAccessException {
             final var resolvedPlain = m_resolver.resolve(unversioned);
             for (final var url : new URL[] { versioned, bothVersions }) {
                 final var resolved = m_resolver.resolve(url);
-                if (!HubItemVersion.currentState().equals(version)) {
+                if (version.isVersioned()) {
                     assertNotEquals(resolvedPlain, resolved, "Version should not be ignored");
-                    final var fromUrl = HubItemVersion.of(resolved);
+                    final var fromUrl = URLResolverUtil.parseVersion(resolved.getQuery());
                     assertEquals(version, fromUrl.orElseThrow(), "Has correct version");
                 }
 
