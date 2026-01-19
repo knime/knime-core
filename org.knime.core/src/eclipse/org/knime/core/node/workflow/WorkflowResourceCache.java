@@ -105,6 +105,9 @@ public final class WorkflowResourceCache {
      * {@link Optional} is returned. If the current thread is not associated with a workflow (via NodeContext), an
      * runtime exception is thrown.
      *
+     * Note: the resource is associated with the entire workflow project. I.e. it does not matter whether the
+     * NodeContext's node is nested within metanodes or components.
+     *
      * @param <T> Type of resource (extension dependent)
      * @param clazz The class of <code>T</code>
      * @return The resource instance or an empty {@link Optional}.

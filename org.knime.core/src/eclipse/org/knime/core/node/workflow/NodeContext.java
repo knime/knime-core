@@ -204,7 +204,7 @@ public final class NodeContext {
     }
 
     /**
-     * Returns the workflow manager which currently does an operation on a node. The result may be <code>null</code> if
+     * Returns the project(!) workflow manager which currently does an operation on a node. The result may be <code>null</code> if
      * the workflow manager does not exist any more, i.e. its workflow has been closed. This is very likely an
      * implementation error because nobody should hold a node context for a closed workflow.
      *
