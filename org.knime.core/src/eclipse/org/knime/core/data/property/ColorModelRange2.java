@@ -269,6 +269,14 @@ public final class ColorModelRange2 implements ColorModel {
     }
 
     /**
+     * @return a defensive copy of the stop colors as Java colors
+     */
+    public Color[] getStopColors() {
+        return Arrays.stream(m_stopColorsCIELab).map(ColorSpaceConversionUtil::convertCIELabToJavaColor)
+            .toArray(Color[]::new);
+    }
+
+    /**
      * @return a defensive copy of the special colors map
      */
     public Map<SpecialColorType, double[]> getSpecialColorsCIELab() {
@@ -278,6 +286,13 @@ public final class ColorModelRange2 implements ColorModel {
                 e -> ColorSpaceConversionUtil.convertColorToCIELab(e.getValue()), //
                 (a, b) -> a, //
                 () -> new EnumMap<>(SpecialColorType.class)));
+    }
+
+    /**
+     * @return a defensive copy of the special colors map as Java colors
+     */
+    public Map<SpecialColorType, Color> getSpecialColors() {
+        return new EnumMap<>(m_specialColors);
     }
 
     private static final String CFG_STOP_VALUES_ARE_PERCENTAGES = "stopValuesArePercentages";
