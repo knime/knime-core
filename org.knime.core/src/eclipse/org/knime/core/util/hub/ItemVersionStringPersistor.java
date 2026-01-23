@@ -87,7 +87,20 @@ public final class ItemVersionStringPersistor {
         // hidden
     }
 
-    private static String toString(final ItemVersion version) {
+    /**
+     * Converts the given {@link ItemVersion} into its string representation used for persistence.
+     * <p>
+     * Specific versions are represented by their version string, while unspecific versions such as
+     * {@code CurrentState} and {@code MostRecent} are mapped to the special string constants
+     * {@value #CURRENT_STATE_LINK_TYPE} and {@value #MOST_RECENT_LINK_TYPE}.
+     * </p>
+     *
+     * @param version the {@link ItemVersion} to convert; may be a specific version, the current state, or the most
+     *            recent version of an item
+     * @return the string representation of the given version, suitable for storing in configuration
+     * @since 5.11
+     */
+    public static String toString(final ItemVersion version) {
         // this is the same as the code for HubItemVersion#toString(HubItemVersion)
         if (version instanceof SpecificVersion sv) {
             return sv.getVersionString();
