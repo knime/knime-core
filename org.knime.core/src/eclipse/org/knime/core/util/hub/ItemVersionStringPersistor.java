@@ -87,7 +87,13 @@ public final class ItemVersionStringPersistor {
         // hidden
     }
 
-    private static String toString(final ItemVersion version) {
+    /**
+     * -
+     * @param version -
+     * @return -
+     * @since 5.10
+     */
+    public static String toString(final ItemVersion version) {
         // this is the same as the code for HubItemVersion#toString(HubItemVersion)
         if (version instanceof SpecificVersion sv) {
             return sv.getVersionString();
