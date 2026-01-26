@@ -59,6 +59,7 @@ import java.util.stream.Stream;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.contextv2.WorkflowContextV2;
 import org.knime.core.util.auth.SimpleTokenAuthenticator;
 import org.knime.core.util.hub.ItemVersion;
@@ -137,8 +138,7 @@ final class URLMethodSources {
                 .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
                 .withScope("a", "b") //
-                .withJobCreator("job creator") //
-                .withIsRemote(false)) //
+                .withJobCreator("job creator")) //
             .withHubSpaceLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/Users/John Döë/Private/group/workflow") //
@@ -151,8 +151,7 @@ final class URLMethodSources {
             .withServerJobExecutor(exec -> exec //
                 .withUserId("user") //
                 .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
-                .withJobId(UUID.randomUUID()) //
-                .withIsRemote(false)) //
+                .withJobId(UUID.randomUUID())) //
             .withServerLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/group/workflow") //
@@ -168,7 +167,7 @@ final class URLMethodSources {
                 .withJobId(UUID.randomUUID()) //
                 .withScope("a", "b") //
                 .withJobCreator("job creator") //
-                .withIsRemote(true)) //
+                .withRemoteExecutor(mountId, KNIMEConstants.VERSION)) //
             .withHubSpaceLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/Users/John Döë/Private/group/workflow") //
@@ -183,7 +182,7 @@ final class URLMethodSources {
                 .withUserId("user") //
                 .withLocalWorkflowPath(type.workspace.resolve("group/workflow")) //
                 .withJobId(UUID.randomUUID()) //
-                .withIsRemote(true)) //
+                .withRemoteExecutor(mountId, KNIMEConstants.VERSION)) //
             .withServerLocation(loc -> loc //
                 .withRepositoryAddress(URI.create("https://127.0.0.1:12345/bla/blubb/repository")) //
                 .withWorkflowPath("/group/workflow") //
