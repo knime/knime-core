@@ -180,8 +180,7 @@ class ServerExecutorUrlResolverTest {
                 .withServerJobExecutor(exec -> exec
                     .withCurrentUserAsUserId()
                     .withLocalWorkflowPath(currentLocation)
-                    .withJobId(UUID.randomUUID())
-                    .withIsRemote(false))
+                    .withJobId(UUID.randomUUID()))
                 .withServerLocation(loc -> loc
                     .withRepositoryAddress(baseUri)
                     .withWorkflowPath("/workflow")
@@ -204,8 +203,7 @@ class ServerExecutorUrlResolverTest {
                 .withServerJobExecutor(exec -> exec
                     .withCurrentUserAsUserId()
                     .withLocalWorkflowPath(currentLocation)
-                    .withJobId(UUID.randomUUID())
-                    .withIsRemote(false))
+                    .withJobId(UUID.randomUUID()))
                 .withServerLocation(loc -> loc
                     .withRepositoryAddress(URI.create("https://localhost:8080/knime"))
                     .withWorkflowPath("/workflow")
