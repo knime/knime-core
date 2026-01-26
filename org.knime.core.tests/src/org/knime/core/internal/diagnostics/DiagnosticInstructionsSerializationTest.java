@@ -56,8 +56,9 @@ import java.nio.file.Path;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  * Tests for serialization of {@link DiagnosticInstructions}.
@@ -72,9 +73,9 @@ public class DiagnosticInstructionsSerializationTest {
     @Test
     public void testSerialization() throws Exception {
         final var objectMapper = new ObjectMapper();
-        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
         final var defaultsAsString =
-            objectMapper.writeValueAsString(DiagnosticInstructions.createDefaults(Path.of("diagnostic-output")));
+            objectMapper.writer(new DefaultPrettyPrinter().withObjectIndenter(new DefaultIndenter().withLinefeed("\n")))
+                .writeValueAsString(DiagnosticInstructions.createDefaults(Path.of("diagnostic-output")));
 
         final var json = """
             {
