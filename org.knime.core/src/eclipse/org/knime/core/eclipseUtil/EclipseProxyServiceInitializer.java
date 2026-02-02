@@ -89,6 +89,7 @@ public class EclipseProxyServiceInitializer implements IEarlyStartup {
                 DelegatingAuthenticator.installAuthenticators();
                 ProxySelectorAdapter.installProxySelector();
                 NativeProxyProviderWrapper.installNativeWrapper();
+                NonProxiedHostsChangeListener.installChangeListener();
                 isInstalledGlobally = true;
 
                 LOGGER.debug("(3/3) Successfully installed proxy support.");
