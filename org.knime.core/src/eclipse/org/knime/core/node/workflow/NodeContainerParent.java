@@ -189,7 +189,8 @@ public interface NodeContainerParent {
     }
 
     /**
-     * Determines the 'upper-most' parent workflow manager of the given node container.
+     * Determines the 'upper-most' parent workflow manager of the given node container. I.e. the workflow manager
+     * returns {@code true} for {@link WorkflowManager#isProject()} or {@link WorkflowManager#isComponentProjectWFM()}.
      *
      * @param nc the node container to find the parent for
      *
