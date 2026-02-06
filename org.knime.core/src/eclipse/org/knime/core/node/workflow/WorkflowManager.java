@@ -6394,7 +6394,7 @@ public final class WorkflowManager extends NodeContainer
                 }
                 // bug 6026: need one additional check in case the workflow only consists of metanodes
                 // TODO: improve this: each and every node in the workflow performs a check!
-                lock.queueCheckForNodeStateChangeNotification(true);
+                lock.queueCheckForNodeStateChangeNotification(true, true);
             }
         } else {
             // unsynchronized as parent may be ROOT (different mutex), see

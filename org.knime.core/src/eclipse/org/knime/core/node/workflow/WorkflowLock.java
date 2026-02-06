@@ -55,6 +55,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.NodeMessage.Type;
 
 /**
  * A lock instance associated with a workflow or subnode. It serves two purposes: preventing concurrent access to the
@@ -75,6 +76,7 @@ public final class WorkflowLock implements AutoCloseable {
     private final WorkflowManager m_wfm;
 
     private boolean m_checkForNodeStateChanges;
+    private boolean m_checkForNodeMessageChanges;
     private boolean m_propagateChanges;
 
     /** For each thread doing something with this {@link WorkflowLock} a counter how often the thread went through
@@ -163,11 +165,19 @@ public final class WorkflowLock implements AutoCloseable {
             CheckUtils.checkState(lockHierarchyLevel.intValue() > 0,
                 "ReentrantLock is held by current thread but not associated with this workflow lock");
 
-            if (lockHierarchyLevel.getValue() == 1 && m_checkForNodeStateChanges) {
+            if (lockHierarchyLevel.intValue() == 1 && m_checkForNodeStateChanges) {
                 boolean propagateChanges = m_propagateChanges;
                 m_propagateChanges = false;
                 m_checkForNodeStateChanges = false;
-                m_wfm.setInternalStateAfterLockRelease(m_wfm.computeNewState(), propagateChanges);
+                final InternalNodeContainerState newState = m_wfm.computeNewState();
+                m_wfm.setInternalStateAfterLockRelease(newState, propagateChanges);
+                if (m_checkForNodeMessageChanges && !newState.isExecutionInProgress()) {
+                    m_checkForNodeMessageChanges = false;
+                    if (!newState.isExecuted()) {
+                        m_wfm.getNodeErrorSummary().or(m_wfm::getNodeWarningSummary)
+                            .map(m -> m.toNodeMessage(Type.ERROR)).ifPresent(m_wfm::setNodeMessage);
+                    }
+                }
             }
         } finally {
             // both in finally to ensure some consistency even if errors pass through
@@ -189,17 +199,32 @@ public final class WorkflowLock implements AutoCloseable {
         return m_checkForNodeStateChanges ? m_wfm.computeNewState() : m_wfm.getMostRecentInternalState();
     }
 
-    /** Queues a state update check and notification when the lock is finally released by the calling thread.
+    /**
+     * Queues a state update check and notification when the lock is finally released by the calling thread.
      * This method is to be called when the lock is hold by the calling thread.
      * @param propagateChanges Whether to propagate state changes to the parent workflow (if any)
      * @see WorkflowManager#checkForNodeStateChanges(boolean)
      */
     void queueCheckForNodeStateChangeNotification(final boolean propagateChanges) {
-        assert m_reentrantLock.isHeldByCurrentThread() : "Can't queue state check - lock not held by current thread";
+        queueCheckForNodeStateChangeNotification(propagateChanges, false);
+    }
+
+    /**
+     * Queues a state update check and notification when the lock is finally released by the calling thread. This method
+     * is to be called when the lock is hold by the calling thread.
+     *
+     * @param propagateChanges Whether to propagate state changes to the parent workflow (if any)
+     * @param checkForNodeMessageChanges Whether to also check for node message changes when the workflow state reaches
+     *            a non-executing state (finally executed or idle/configure after, e.g. failure)
+     * @see WorkflowManager#checkForNodeStateChanges(boolean)
+     */
+    void queueCheckForNodeStateChangeNotification(final boolean propagateChanges,
+        final boolean checkForNodeMessageChanges) {
+        CheckUtils.checkState(m_reentrantLock.isHeldByCurrentThread(),
+            "Can't queue state check - lock not held by current thread");
         m_checkForNodeStateChanges = true;
-        if (propagateChanges) {
-            m_propagateChanges = true;
-        }
+        m_checkForNodeMessageChanges = m_checkForNodeMessageChanges || checkForNodeMessageChanges;
+        m_propagateChanges = m_propagateChanges || propagateChanges;
     }
 
     /** {@linkplain #unlock() Unlocks} the lock.
