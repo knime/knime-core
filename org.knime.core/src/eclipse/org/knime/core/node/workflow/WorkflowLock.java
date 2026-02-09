@@ -201,7 +201,7 @@ public final class WorkflowLock implements AutoCloseable {
 
     /**
      * Queues a state update check and notification when the lock is finally released by the calling thread.
-     * This method is to be called when the lock is hold by the calling thread.
+     * This method is to be called when the lock is held by the calling thread.
      * @param propagateChanges Whether to propagate state changes to the parent workflow (if any)
      * @see WorkflowManager#checkForNodeStateChanges(boolean)
      */
@@ -211,7 +211,7 @@ public final class WorkflowLock implements AutoCloseable {
 
     /**
      * Queues a state update check and notification when the lock is finally released by the calling thread. This method
-     * is to be called when the lock is hold by the calling thread.
+     * is to be called when the lock is held by the calling thread.
      *
      * @param propagateChanges Whether to propagate state changes to the parent workflow (if any)
      * @param checkForNodeMessageChanges Whether to also check for node message changes when the workflow state reaches

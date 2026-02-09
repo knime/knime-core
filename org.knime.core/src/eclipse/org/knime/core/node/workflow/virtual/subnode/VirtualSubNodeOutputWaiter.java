@@ -104,38 +104,41 @@ final class VirtualSubNodeOutputWaiter {
     Optional<Message> waitForNodesToExecute() throws InterruptedException {
         List<NodeContainer> nonExecutedNodesList;
         final var wfm = m_subnodeContainer.getWorkflowManager();
-        boolean hasSeenNodesInExecution;
-        final var outputNodeID = m_subnodeContainer.getVirtualOutNodeID();
-        do {
-            nonExecutedNodesList = new ArrayList<>();
-            final var nodesInExecutionToListenerMap = new LinkedHashMap<NodeID, NodeStateChangeListener>();
-            try (var lock = wfm.lock(); var waiter =
+        try (var lock = wfm.lock()) {
+            boolean hasSeenNodesInExecution;
+            final var outputNodeID = m_subnodeContainer.getVirtualOutNodeID();
+            do {
+                nonExecutedNodesList = new ArrayList<>();
+                final var nodesInExecutionToListenerMap = new LinkedHashMap<NodeID, NodeStateChangeListener>();
+                try (var waiter =
                     new MultipleNodesToExecutedStateWaiter(nodesInExecutionToListenerMap, lock.getReentrantLock())) {
-                for (var nc : wfm.getNodeContainers()) { // list might be different in each iteration, see class comment
-                    if (nc.getID().equals(outputNodeID)) { // NOSONAR (nesting)
-                        continue; // the output node causes this code here to be run - ignore it
+                    // list might be different in each iteration, see class comment
+                    for (var nc : wfm.getNodeContainers()) {
+                        if (nc.getID().equals(outputNodeID)) { // NOSONAR (nesting)
+                            continue; // the output node causes this code here to be run - ignore it
+                        }
+                        final var ncState = nc.getNodeContainerState();
+                        if (ncState.isExecutionInProgress()) { // NOSONAR (nesting)
+                            final var stateChangeListener = new MyStateChangeListener(nc, waiter);
+                            nc.addNodeStateChangeListener(stateChangeListener);
+                            nodesInExecutionToListenerMap.put(nc.getID(), stateChangeListener);
+                        } else if (!ncState.isExecuted()) {
+                            nonExecutedNodesList.add(nc);
+                        }
                     }
-                    final var ncState = nc.getNodeContainerState();
-                    if (ncState.isExecutionInProgress()) { // NOSONAR (nesting)
-                        final var stateChangeListener = new MyStateChangeListener(nc, waiter);
-                        nc.addNodeStateChangeListener(stateChangeListener);
-                        nodesInExecutionToListenerMap.put(nc.getID(), stateChangeListener);
-                    } else if (!ncState.isExecuted()) {
-                        nonExecutedNodesList.add(nc);
-                    }
+                    hasSeenNodesInExecution = !nodesInExecutionToListenerMap.isEmpty();
+                    waiter.awaitNodesExecutions();
                 }
-                hasSeenNodesInExecution = !nodesInExecutionToListenerMap.isEmpty();
-                waiter.awaitNodesExecutions();
+            } while (hasSeenNodesInExecution);
+            if (nonExecutedNodesList.isEmpty()) {
+                return Optional.empty();
+            } else {
+                // get errors (or, if there are none, warnings) from workflow, prepend some text
+                return Optional.of(wfm.getNodeErrorSummary().or(wfm::getNodeWarningSummary) //
+                    .map(msg -> msg.modify().withSummary("Errors in workflow - %s".formatted(msg.getSummary())).build()
+                        .orElseThrow())
+                    .orElse(getNonExecutedNodesListMessage(nonExecutedNodesList, wfm)));
             }
-        } while (hasSeenNodesInExecution);
-        if (nonExecutedNodesList.isEmpty()) {
-            return Optional.empty();
-        } else {
-            // get errors (or, if there are none, warnings) from workflow, prepend some text
-            return Optional.of(wfm.getNodeErrorSummary().or(wfm::getNodeWarningSummary) //
-                .map(msg -> msg.modify().withSummary("Errors in workflow - %s".formatted(msg.getSummary())).build()
-                    .orElseThrow())
-                .orElse(getNonExecutedNodesListMessage(nonExecutedNodesList, wfm)));
         }
     }
 
