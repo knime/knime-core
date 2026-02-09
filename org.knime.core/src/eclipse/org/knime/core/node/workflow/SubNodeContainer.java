@@ -1548,9 +1548,8 @@ public final class SubNodeContainer extends SingleNodeContainer
             } else if (isCanceled) {
                 setNodeMessage(NodeMessage.newWarning("Execution canceled"));
             } else {
-                final var nodeMessage = m_wfm.getNodeErrorSummary() //
-                        .or(m_wfm::getNodeWarningSummary) //
-                        .map(m -> m.toNodeMessage(Type.ERROR))
+                final var nodeMessage = Optional.of(m_wfm.getNodeMessage()) //
+                        .filter(m -> NodeMessage.Type.RESET != m.getMessageType()) //
                         .orElse(NodeMessage.newError("<reason unknown>"));
                 setNodeMessage(nodeMessage);
                 return NodeContainerExecutionStatus.newFailure(nodeMessage.getMessage());
