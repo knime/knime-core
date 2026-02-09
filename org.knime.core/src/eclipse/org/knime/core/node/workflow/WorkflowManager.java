@@ -1358,9 +1358,9 @@ public final class WorkflowManager extends NodeContainer
                 getAutoSaveDirectory().getDeletedNodesFileLocations().add(autoSaveDir);
             }
             lock.queueCheckForNodeStateChangeNotification(true);
+            setDirty();
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, getID(), nc, null));
         }
-        setDirty();
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, getID(), nc, null));
     }
 
     /**
@@ -1923,9 +1923,9 @@ public final class WorkflowManager extends NodeContainer
                 // otherwise just configure successor
                 configureNodeAndSuccessors(dest, true);
             }
+            setDirty();
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, cc, null));
         }
-        setDirty();
-        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, cc, null));
     }
 
     /////////////////////////////////
@@ -2389,25 +2389,22 @@ public final class WorkflowManager extends NodeContainer
     public void loadNodeSettings(final NodeID id, final NodeSettingsRO settings) throws InvalidSettingsException {
         try (WorkflowLock lock = lock()) {
             NodeContainer nc = getNodeContainer(id);
-            if (canModifyStructure(id)) {
-                // make sure we are consistent (that is reset + configure)
-                // if we touch upstream nodes implicitly (e.g. loop heads)
-                nc.validateSettings(settings);
-                resetNodeAndSuccessors(id);
-                nc.loadSettings(settings);
-                // bug fix 2593: can't simply call configureNodeAndSuccessor
-                // with metanode as argument: will miss contained source nodes
-                if (nc instanceof SingleNodeContainer) {
-                    configureNodeAndSuccessors(id, true);
-                } else {
-                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(false);
-                    configureNodeAndSuccessors(id, false);
-                }
-                notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
-            } else {
-                throw new IllegalStateException(
+            CheckUtils.checkState(canModifyStructure(id),
                     "Cannot load settings into node; it is executing or has executing successors");
+            // make sure we are consistent (that is reset + configure)
+            // if we touch upstream nodes implicitly (e.g. loop heads)
+            nc.validateSettings(settings);
+            resetNodeAndSuccessors(id);
+            nc.loadSettings(settings);
+            // bug fix 2593: can't simply call configureNodeAndSuccessor
+            // with metanode as argument: will miss contained source nodes
+            if (nc instanceof SingleNodeContainer) {
+                configureNodeAndSuccessors(id, true);
+            } else {
+                ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM(false);
+                configureNodeAndSuccessors(id, false);
             }
+            notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
         }
     }
 
@@ -2427,16 +2424,16 @@ public final class WorkflowManager extends NodeContainer
      * @since 4.6
      */
     public void loadNodeViewSettings(final NodeID id, final NodeSettingsRO settings) throws InvalidSettingsException {
-        var nc = getNodeContainer(id);
-        if (nc instanceof SingleNodeContainer) {
+        try (WorkflowLock lock = lock()) {
+            var nc = getNodeContainer(id);
+            CheckUtils.checkState(nc instanceof SingleNodeContainer,
+                "Node view settings can only be loaded for native nodes or components");
             var snc = (SingleNodeContainer)nc;
             snc.loadViewSettings(settings.getNodeSettings(SingleNodeContainer.CFG_VIEW));
             if (settings.containsKey(SingleNodeContainer.CFG_VIEW_VARIABLES)) {
                 snc.loadViewVariableSettings(settings.getNodeSettings(SingleNodeContainer.CFG_VIEW_VARIABLES));
             }
             notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_SETTINGS_CHANGED, id, null, null));
-        } else {
-            throw new IllegalArgumentException("Node view settings can only be loaded for native nodes or components");
         }
     }
 
@@ -7349,11 +7346,12 @@ public final class WorkflowManager extends NodeContainer
      * </ul>
      *
      * @return Message object describing the error or an <i>empty</i> when there are no errors.
+     * @noreference While this method is public, it is not intended to be referenced by clients.
      * @see #getNodeWarningSummary()
      * @since 4.1
      */
     public Optional<Message> getNodeErrorSummary() {
-        try (WorkflowLock lock = lock()) {
+        try (WorkflowLock lock = assertLock()) {
             final var msgBuilder = Message.builder();
             Map<NodeContainer, String> erroredNodes = new LinkedHashMap<>();
             Set<NodeContainer> notFullyConnectedNodes = new LinkedHashSet<>();
@@ -7437,10 +7435,11 @@ public final class WorkflowManager extends NodeContainer
      * configuration available") will have no error message but a warning.
      *
      * @return Message containing warnings, if any.
+     * @noreference While this method is public, it is not intended to be referenced by clients.
      * @since 4.1
      */
     public Optional<Message> getNodeWarningSummary() {
-        try (WorkflowLock lock = lock()) {
+        try (WorkflowLock lock = assertLock()) {
             final var msgBuilder = Message.builder();
             final Map<NodeContainer, String> warnedNodes = new LinkedHashMap<>();
             final Set<NodeID> downstreamNodesOfWarnedNodes = new HashSet<>();
@@ -7476,8 +7475,8 @@ public final class WorkflowManager extends NodeContainer
                 } else {
                     msgBuilder.withSummary("%d nodes contained nodes raised a warning".formatted(warnedNodes.size()));
                     warnedNodes.entrySet().stream().limit(3)//
-                        .map(entry -> entry.getKey().getNameWithID(getID()) + ": " + entry.getValue())//
-                        .forEach(msgBuilder::addTextIssue);
+                    .map(entry -> entry.getKey().getNameWithID(getID()) + ": " + entry.getValue())//
+                    .forEach(msgBuilder::addTextIssue);
                 }
             }
             return msgBuilder.build();
@@ -10411,11 +10410,13 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.5
      */
     public void setInPortsBarUIInfo(final NodeUIInformation inPortsBarUIInfo) {
-        if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
-            m_inPortsBarUIInfo = inPortsBarUIInfo;
-            notifyWorkflowListeners(
-                new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
-            setDirty();
+        try (WorkflowLock lock = lock()) {
+            if (!ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
+                m_inPortsBarUIInfo = inPortsBarUIInfo;
+                notifyWorkflowListeners(
+                    new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
+                setDirty();
+            }
         }
     }
 
@@ -10426,11 +10427,13 @@ public final class WorkflowManager extends NodeContainer
      * @since 3.5
      */
     public void setOutPortsBarUIInfo(final NodeUIInformation outPortsBarUIInfo) {
-        if (!ConvenienceMethods.areEqual(m_outPortsBarUIInfo, outPortsBarUIInfo)) {
-            m_outPortsBarUIInfo = outPortsBarUIInfo;
-            notifyWorkflowListeners(
-                new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
-            setDirty();
+        try (WorkflowLock lock = lock()) {
+            if (!ConvenienceMethods.areEqual(m_outPortsBarUIInfo, outPortsBarUIInfo)) {
+                m_outPortsBarUIInfo = outPortsBarUIInfo;
+                notifyWorkflowListeners(
+                    new WorkflowEvent(WorkflowEvent.Type.PORTS_BAR_UI_INFO_CHANGED, getID(), null, null));
+                setDirty();
+            }
         }
     }
 
@@ -11418,20 +11421,23 @@ public final class WorkflowManager extends NodeContainer
 
     @Override
     public void setContainerMetadata(final NodeContainerMetadata updatedMetadata) {
-        if ((m_metadata == null) != (updatedMetadata == null)) {
-            throw new IllegalArgumentException(m_metadata == null ? "Only project workflow managers can have metadata"
-                : "Project workflow manager must have metadata");
-        }
-        if (updatedMetadata instanceof WorkflowMetadata wfMetadata) {
-            if (!m_metadata.equals(wfMetadata)) {
-                m_metadata = wfMetadata;
-                setDirty();
-                notifyWorkflowListeners( // No need to send old and new value
-                    new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
+        try (WorkflowLock lock = lock()) {
+            if ((m_metadata == null) != (updatedMetadata == null)) {
+                throw new IllegalArgumentException(
+                    m_metadata == null ? "Only project workflow managers can have metadata"
+                        : "Project workflow manager must have metadata");
             }
-        } else if (updatedMetadata != null) {
-            throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName() + "`, found: `"
-                + updatedMetadata.getClass().getSimpleName() + "`");
+            if (updatedMetadata instanceof WorkflowMetadata wfMetadata) {
+                if (!m_metadata.equals(wfMetadata)) {
+                    m_metadata = wfMetadata;
+                    setDirty();
+                    notifyWorkflowListeners( // No need to send old and new value
+                        new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
+                }
+            } else if (updatedMetadata != null) {
+                throw new IllegalStateException("Can only set `" + WorkflowMetadata.class.getSimpleName()
+                    + "`, found: `" + updatedMetadata.getClass().getSimpleName() + "`");
+            }
         }
     }
 

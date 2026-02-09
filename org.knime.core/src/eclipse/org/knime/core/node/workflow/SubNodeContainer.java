@@ -590,24 +590,26 @@ public final class SubNodeContainer extends SingleNodeContainer
     /** Called by listener on inner workflow; will unset the {@link NodeMessage} when the inner workflow changes. */
     private void onWFMStructureChange(final WorkflowEvent state) {
         if (!m_isPerformingActionCalledFromParent) {
-            switch (state.getType()) {
-                case CONNECTION_ADDED:
-                case CONNECTION_REMOVED:
-                case NODE_ADDED:
-                case NODE_REMOVED:
-                case NODE_SETTINGS_CHANGED:
-                    final NodeMessage msg = m_wfm.getNodeErrorSummary() //
-                        .or(m_wfm::getNodeWarningSummary) //
-                        .map(m -> m.toNodeMessage(Type.WARNING)) //
-                        .orElse(NodeMessage.NONE);
-                    setNodeMessage(msg);
-                    final var virtualOutNode = getVirtualOutNode();
-                    if (virtualOutNode.getInternalState().isExecuted()) {
-                        m_wfm.resetAndConfigureNode(virtualOutNode.getID());
-                    }
-                    break;
-                default:
-                    // annotation change, dirty state change
+            try (WorkflowLock lock = m_wfm.lock()) {
+                switch (state.getType()) {
+                    case CONNECTION_ADDED:
+                    case CONNECTION_REMOVED:
+                    case NODE_ADDED:
+                    case NODE_REMOVED:
+                    case NODE_SETTINGS_CHANGED:
+                        final NodeMessage msg = m_wfm.getNodeErrorSummary() //
+                            .or(m_wfm::getNodeWarningSummary) //
+                            .map(m -> m.toNodeMessage(Type.WARNING)) //
+                            .orElse(NodeMessage.NONE);
+                        setNodeMessage(msg);
+                        final var virtualOutNode = getVirtualOutNode();
+                        if (virtualOutNode.getInternalState().isExecuted()) {
+                            m_wfm.resetAndConfigureNode(virtualOutNode.getID());
+                        }
+                        break;
+                    default:
+                        // annotation change, dirty state change
+                }
             }
         }
     }
@@ -1308,7 +1310,7 @@ public final class SubNodeContainer extends SingleNodeContainer
         }
 
         m_isPerformingActionCalledFromParent = true;
-        try {
+        try (WorkflowLock lock = m_wfm.lock()) {
             if (nch != null && !m_subnodeScopeContext.isInactiveScope()) {
                 try {
                     nch.preConfigure();
@@ -2992,12 +2994,14 @@ public final class SubNodeContainer extends SingleNodeContainer
      * @param metadata
      */
     public void setMetadata(final ComponentMetadata metadata) {
-        m_metadata = metadata;
-        notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
-        refreshPortNames();
-        setDirty();
-        getWorkflowManager().notifyWorkflowListeners(
-            new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
+        try (WorkflowLock lock = lock()) {
+            m_metadata = metadata;
+            notifyNodePropertyChangedListener(NodeProperty.ComponentMetadata);
+            refreshPortNames();
+            setDirty();
+            getWorkflowManager().notifyWorkflowListeners(
+                new WorkflowEvent(WorkflowEvent.Type.WORKFLOW_METADATA_CHANGED, getID(), null, null));
+        }
     }
 
     @Override
