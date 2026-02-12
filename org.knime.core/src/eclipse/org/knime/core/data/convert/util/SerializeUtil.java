@@ -340,7 +340,6 @@ public final class SerializeUtil {
             return Optional.empty();
         }
 
-
         return Optional.of(new ProductionPath(producer.get(), converter.get()));
     }
 
@@ -358,13 +357,15 @@ public final class SerializeUtil {
      * @throws InvalidSettingsException
      * @since 3.7
      */
-    public static <S, D, F extends ConverterFactory<S, D>, R extends AbstractConverterFactoryRegistry<S, D, F, R>> Optional<F> loadConverterFactory(
-        final ConfigBaseRO config, final R registry, final String key) throws InvalidSettingsException {
+    public static <S, D, F extends ConverterFactory<S, D>, R extends AbstractConverterFactoryRegistry<S, D, F, R>>
+        Optional<F> loadConverterFactory(final ConfigBaseRO config, final R registry, final String key)
+            throws InvalidSettingsException {
         final String id = config.getString(key);
+        final String configKey = key + "_config";
 
         final Optional<F> factory = registry.getFactory(id);
-        if (factory.isPresent()) {
-            factory.get().loadAdditionalConfig(config.getConfigBase(key + "_config"));
+        if (factory.isPresent() && config.containsKey(configKey)) {
+            factory.get().loadAdditionalConfig(config.getConfigBase(configKey));
         }
         return factory;
     }
