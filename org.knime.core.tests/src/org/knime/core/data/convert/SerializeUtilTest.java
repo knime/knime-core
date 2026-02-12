@@ -131,4 +131,27 @@ public class SerializeUtilTest {
         assertEquals(theMissingFactory.getDestinationType().getName(), placeholder.getDestinationTypeName());
         assertEquals(theMissingFactory.getIdentifier(), placeholder.getIdentifier());
     }
+
+    @Test
+    public void testLoadWithoutAdditionalConfig() throws InvalidSettingsException {
+        // given
+        final Optional<? extends DataCellToJavaConverterFactory<? extends DataValue, Integer>> factory =
+            DataCellToJavaConverterRegistry.getInstance().getConverterFactories(IntCell.TYPE, Integer.class).stream()
+                .findFirst();
+        assumeTrue(factory.isPresent());
+        final NodeSettings testSettings = new NodeSettings(getClass().getName());
+        testSettings.addString("factory", factory.get().getIdentifier());
+        testSettings.addString("factory_src", factory.get().getSourceType().getName());
+        testSettings.addString("factory_dst", factory.get().getDestinationType().getName());
+        testSettings.addString("factory_name", factory.get().getName());
+        // Note: NOT adding "factory_config"
+
+        // when
+        final Optional<DataCellToJavaConverterFactory<?, ?>> loadedFactory =
+            SerializeUtil.loadDataCellToJavaConverterFactory(testSettings, "factory");
+
+        // then
+        assertTrue(loadedFactory.isPresent());
+        assertEquals(factory.get().getIdentifier(), loadedFactory.get().getIdentifier());
+    }
 }
