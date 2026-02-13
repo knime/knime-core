@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.knime.bcprov
+Bundle-ManifestVersion: 2
+Bundle-Name: KNIME BouncyCastle bcprov provider registrator
+Bundle-SymbolicName: org.knime.bcprov;singleton:=true
+Bundle-Version: 5.10.0.qualifier
+Bundle-ClassPath: .
+Bundle-Vendor: KNIME AG, Zurich, Switzerland
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: bcprov;bundle-version="[1.80,2.0.0)",
+ org.knime.core;bundle-version="[5.10.0,6.0.0)"
