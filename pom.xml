@@ -32,6 +32,7 @@
 				<module>org.knime.slf4j.binding</module>
 				<module>org.knime.testing</module>
 				<module>org.knime.rsyntaxtextarea</module>
+				<module>org.knime.bcprov</module>
 				<module>org.knime.features.core</module>
 				<module>org.knime.update.core</module>
 			</modules>
@@ -51,6 +52,7 @@
 				<module>org.knime.core.tests/lib/fetch_jars</module>
 				<module>org.knime.core.tests</module>
 				<module>org.knime.rsyntaxtextarea</module>
+				<module>org.knime.bcprov</module>
 				<module>org.knime.features.core</module>
 				<module>org.knime.core.workflow.tests</module>
 				<module>org.knime.core.workbench.tests</module>
