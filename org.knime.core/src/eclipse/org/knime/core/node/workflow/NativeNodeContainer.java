@@ -1280,6 +1280,19 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node.getFlowObjectStack();
     }
 
+    /**
+     * Returns the appropriate FlowObjectStack to use when opening a dialog for this node.
+     * For VirtualSubNodeInput nodes, this returns the parent SubNodeContainer's FlowObjectStack
+     * instead of the node's own (empty) stack, so that the dialog can show the flow variables
+     * available in the component's scope.
+     *
+     * @return the flow object stack to use for dialogs
+     * @since 5.11
+     */
+    public FlowObjectStack getFlowObjectStackForDialog() {
+        return m_node.getFlowObjectStackForDialog();
+    }
+
     /** {@inheritDoc} */
     @Override
     public FlowObjectStack getOutgoingFlowObjectStack() {
