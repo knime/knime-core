@@ -2335,8 +2335,7 @@ public final class Node {
         // the sub node virtual input node shows in its dialog all flow variables that are available to the rest
         // of the subnode. It's the only case where the flow variables shown in the dialog are not the ones available
         // to the node model class ...
-        final FlowObjectStack actualFlowObjectStack = model instanceof VirtualSubNodeInputNodeModel
-            ? ((VirtualSubNodeInputNodeModel)model).getSubNodeContainerFlowObjectStack() : flowObjectStack;
+        final var actualFlowObjectStack = getModelSpecificFlowObjectStackForDialog(model).orElse(flowObjectStack);
         dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData, actualFlowObjectStack,
             credentialsProvider, isWriteProtected);
         if (model instanceof ValueControlledNode && dialogPane instanceof ValueControlledDialogPane) {
@@ -2914,6 +2913,33 @@ public final class Node {
 
     public FlowObjectStack getFlowObjectStack() {
         return m_model.getFlowObjectStack();
+    }
+
+    /**
+     * Returns the appropriate FlowObjectStack to use when opening a dialog for this node.
+     * For VirtualSubNodeInput nodes, this returns the parent SubNodeContainer's FlowObjectStack
+     * instead of the node's own (empty) stack, so that the dialog can show the flow variables
+     * available in the component's scope.
+     *
+     * @return the flow object stack to use for dialogs
+     * @since 5.11
+     */
+    public FlowObjectStack getFlowObjectStackForDialog() {
+        // VirtualSubNodes are the only nodes where the flow variables shown in the dialog are not the ones available
+        // to the node model class, which is handled by the helper method below
+        return getModelSpecificFlowObjectStackForDialog(m_model).orElseGet(this::getFlowObjectStack);
+    }
+
+    /**
+     * Static helper to get model-specific FlowObjectStack for dialog opening.
+     * Returns empty for regular nodes, or a specific stack for special cases like VirtualSubNodeInput.
+     *
+     * @param model the node model
+     * @return Optional containing the model-specific flow object stack, or empty if default should be used
+     */
+    static Optional<FlowObjectStack> getModelSpecificFlowObjectStackForDialog(final NodeModel model) {
+        return model instanceof VirtualSubNodeInputNodeModel vsubModel
+            ? Optional.of(vsubModel.getSubNodeContainerFlowObjectStack()) : Optional.empty();
     }
 
     /** Get list of flow variables that are added by NodeModel implementation.
