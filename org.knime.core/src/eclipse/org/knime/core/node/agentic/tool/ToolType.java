@@ -56,7 +56,7 @@ package org.knime.core.node.agentic.tool;
  * - MCP = 1
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.10
+ * @since 5.11
  */
 public enum ToolType {
     /** Workflow-based tool executing a KNIME workflow */

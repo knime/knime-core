@@ -80,13 +80,13 @@ import org.knime.core.table.schema.StructDataSpec;
 
 /**
  * Unified ValueFactory for reading and writing Tool instances (both WorkflowTool and MCPTool).
- * 
+ *
  * Uses a discriminator pattern with byte-indexed enum to support both tool types in a single column.
- * 
+ *
  * Arrow schema (9 fields):
  * - Field 0: tool_type (BYTE) - Enum index: 0=WORKFLOW, 1=MCP
  * - Field 1: name (STRING) - Common
- * - Field 2: description (STRING) - Common  
+ * - Field 2: description (STRING) - Common
  * - Field 3: parameter_schema (STRING) - Common (JSON)
  * - Field 4: input_spec (LIST) - Workflow ports or null for MCP
  * - Field 5: output_spec (LIST) - Workflow ports or null for MCP
@@ -95,7 +95,7 @@ import org.knime.core.table.schema.StructDataSpec;
  * - Field 8: server_uri (STRING) - MCP only (null for Workflow)
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.11
  */
 public class ToolValueFactory extends AbstractFileStoreValueFactory {
 
@@ -184,9 +184,9 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             ListReadAccess inputPorts = tableDataAccess.getAccess(4);
             ListReadAccess outputPorts = tableDataAccess.getAccess(5);
             IntReadAccess messageOutputPortIndex = tableDataAccess.getAccess(6);
-            
+
             ToolType type = ToolType.fromIndex(toolType.getByteValue());
-            
+
             if (type == ToolType.WORKFLOW) {
                 return new WorkflowToolCell(
                     name.getStringValue(),
@@ -236,7 +236,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
 
         /**
          * Read tool ports from accessor.
-         * 
+         *
          * @param access the list access
          * @return array of tool ports
          */
@@ -304,7 +304,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
 
         /**
          * Write tool ports to accessor.
-         * 
+         *
          * @param access the list access
          * @param ports the tool ports to write
          */
@@ -356,22 +356,22 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
         protected void setTableData(final WorkflowToolValue value, final StructWriteAccess access) {
             // Set tool type (always WORKFLOW for now, as we only have WorkflowToolValue)
             ((ByteWriteAccess)access.getWriteAccess(0)).setByteValue(ToolType.WORKFLOW.getIndex());
-            
+
             // Common fields
             ((StringWriteAccess)access.getWriteAccess(1)).setStringValue(value.getName());
             ((StringWriteAccess)access.getWriteAccess(2)).setStringValue(value.getDescription());
             ((StringWriteAccess)access.getWriteAccess(3)).setStringValue(value.getParameterSchema());
-            
+
             // Workflow-specific fields
             writeToolPorts((ListWriteAccess)access.getWriteAccess(4), value.getInputs());
             writeToolPorts((ListWriteAccess)access.getWriteAccess(5), value.getOutputs());
             ((IntWriteAccess)access.getWriteAccess(6)).setIntValue(value.getMessageOutputPortIndex());
-            
+
             // Field 7 is reserved/unused
-            ((StringWriteAccess)access.getWriteAccess(7)).setMissing();
-            
+            access.getWriteAccess(7).setMissing();
+
             // MCP field (null for Workflow)
-            ((StringWriteAccess)access.getWriteAccess(8)).setMissing();
+            access.getWriteAccess(8).setMissing();
         }
     }
 }
