@@ -50,18 +50,18 @@ package org.knime.core.node.agentic.tool;
 
 /**
  * Enum representing the type of tool in the unified Tool value factory.
- * 
+ *
  * The ordinal values MUST match the Python ToolType IntEnum:
  * - WORKFLOW = 0
  * - MCP = 1
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
- * @since 5.5
+ * @since 5.10
  */
 public enum ToolType {
     /** Workflow-based tool executing a KNIME workflow */
     WORKFLOW((byte) 0),
-    
+
     /** MCP (Model Context Protocol) server tool */
     MCP((byte) 1);
 
@@ -80,7 +80,7 @@ public enum ToolType {
 
     /**
      * Get ToolType from byte index.
-     * 
+     *
      * @param index the byte index (0 or 1)
      * @return the corresponding ToolType
      * @throws IllegalArgumentException if index is invalid
