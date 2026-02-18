@@ -173,7 +173,9 @@ public final class WorkflowLock implements AutoCloseable {
                 m_wfm.setInternalStateAfterLockRelease(newState, propagateChanges);
                 if (m_checkForNodeMessageChanges && !newState.isExecutionInProgress()) {
                     m_checkForNodeMessageChanges = false;
-                    if (!newState.isExecuted()) {
+                    // the second check (project or component-wfm) is to avoid error messages on regular meta nodes
+                    // (they do not have errors/warnings, at least not visible, and tests will fail if the field is set)
+                    if (!newState.isExecuted() && (m_wfm.isProject() || m_wfm.isComponentWFM())) {
                         m_wfm.getNodeErrorSummary().or(m_wfm::getNodeWarningSummary)
                             .map(m -> m.toNodeMessage(Type.ERROR)).ifPresent(m_wfm::setNodeMessage);
                     }

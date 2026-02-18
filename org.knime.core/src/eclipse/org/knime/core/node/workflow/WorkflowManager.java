@@ -1444,7 +1444,7 @@ public final class WorkflowManager extends NodeContainer
         return isComponentWFM() && ((SubNodeContainer)getDirectNCParent()).isProject();
     }
 
-    private boolean isComponentWFM() {
+    boolean isComponentWFM() {
         return getDirectNCParent() instanceof SubNodeContainer;
     }
 
