@@ -342,7 +342,8 @@ public class EnhAP18918_FunctionalIntegrationTestsForDefBasedCopyPaste extends W
 				.build();
 		var pastedCC = getManager().paste(getManager().copyToDef(cc, PasswordRedactor.asNull()));
 
-		var pastedTableCreator = (SingleNodeContainer) findNodeContainer(findNodeInCC(pastedCC, "Table Creator"));
+        final var pastedTableCreator = (SingleNodeContainer) findNodeContainer(
+                findNodeInCC(pastedCC, "Table Creator (deprecated)"));
 		assertThat(pastedTableCreator.getOutDataMemoryPolicy(),
 				is(SingleNodeContainer.MemoryPolicy.CacheSmallInMemory));
 
