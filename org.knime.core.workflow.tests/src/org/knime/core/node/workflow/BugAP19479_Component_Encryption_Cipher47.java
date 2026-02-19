@@ -77,7 +77,7 @@ public class BugAP19479_Component_Encryption_Cipher47 extends WorkflowTestCase {
         final NodeID innerID = lockedID.createChild(0).createChild(1);
         final var inner = ((SubNodeContainer) locked).getWorkflowManager().getNodeContainer(innerID);
         assertTrue(inner instanceof NativeNodeContainer, "Inner node should be loadable.");
-        assertEquals("Table Creator", inner.getName());
+        assertEquals("Table Creator (deprecated)", inner.getName());
     }
 
 }
