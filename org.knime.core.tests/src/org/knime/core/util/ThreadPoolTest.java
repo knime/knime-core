@@ -61,13 +61,14 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.eclipse.osgi.internal.framework.ContextFinder;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
@@ -81,6 +82,7 @@ import org.knime.core.node.NodeLogger;
 public final class ThreadPoolTest {
     private static final int LOOPS = 20;
     private static final int LOOPS_MODULO = LOOPS / 5;
+    private static final Duration TIMEOUT = Duration.TWO_SECONDS;
     /** A counter for the Testers. */
     private static int count = 0;
     /** Counter for running threads. */
@@ -246,9 +248,10 @@ public final class ThreadPoolTest {
         final var task1 = submitTask(pool, false);
         final var task2 = submitTask(pool, true);
         final var task3 = submitTask(pool, false);
-        Thread.sleep(100);
-        assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
-        assertEquals(1, pool.getQueueSize(), "Expected task 3 to be queued");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
+            assertEquals(1, pool.getQueueSize(), "Expected task 3 to be queued");
+        });
         // task 2 gets invisible, blocking on next condition
         try {
             task2.lock.lock();
@@ -256,10 +259,11 @@ public final class ThreadPoolTest {
         } finally {
             task2.lock.unlock();
         }
-        Thread.sleep(100);
         // third task gets scheduled on additional worker
-        assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
-        assertEquals(0, pool.getQueueSize(), "Expected no task to be queued");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertEquals(poolSize, pool.getRunningThreads(), "Unexpected number of running workers");
+            assertEquals(0, pool.getQueueSize(), "Expected no task to be queued");
+        });
         // invisible task finishes and wants to re-acquire slot
         try {
             task2.lock.lock();
@@ -267,8 +271,9 @@ public final class ThreadPoolTest {
         } finally {
             task2.lock.unlock();
         }
-        Thread.sleep(100);
-        assertFalse(task2.task.isDone() || task2.task.isCancelled(), "Expected task 2 to not be finished");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertFalse(task2.task.isDone() || task2.task.isCancelled(), "Expected task 2 to not be finished");
+        });
         // worker with task 1 or 3 finishes and releases slot
         try {
             task1.lock.lock();
@@ -277,7 +282,7 @@ public final class ThreadPoolTest {
             task1.lock.unlock();
         }
         // invisible task can reacquire slot and finish (return value)
-        assertTrue(task2.task.get(2, TimeUnit.SECONDS), "Expected task2 to finish");
+        assertTrue(task2.task.get(TIMEOUT.getValue(), TIMEOUT.getTimeUnit()), "Expected task2 to finish");
         try {
             task3.lock.lock();
             task3.conditions[0].signal();
@@ -349,14 +354,16 @@ public final class ThreadPoolTest {
         }
 
         try {
-            task1Future.get(2, TimeUnit.SECONDS);
+            task1Future.get(TIMEOUT.getValue(), TIMEOUT.getTimeUnit());
         } catch (CancellationException e) {
             // expected, canceled above
         }
-        task2Future.get(2, TimeUnit.SECONDS); // exception test
+        task2Future.get(TIMEOUT.getValue(), TIMEOUT.getTimeUnit()); // exception test
 
-        assertEquals(0, pool.getRunningThreads(), "Expected no running threads");
-        assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertEquals(0, pool.getRunningThreads(), "Expected no running threads");
+            assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads");
+        });
 
         Lock postExecuteLock = new ReentrantLock();
         Condition postExecuteCondition = postExecuteLock.newCondition();
@@ -374,9 +381,9 @@ public final class ThreadPoolTest {
         };
         Future<Void> forSomeConditionInvisiblyFuture = pool.submit(forSomeConditionInvisiblyCallable);
 
-        Thread.sleep(100);
-
-        assertEquals(0, pool.getRunningThreads(), "Expected no (visible) running threads");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertEquals(0, pool.getRunningThreads(), "Expected no (visible) running threads");
+        });
 
         Callable<Void> task4Callable = () -> {
             postExecuteLock.lock();
@@ -389,10 +396,10 @@ public final class ThreadPoolTest {
         };
         Future<Void> task4Future = pool.enqueue(task4Callable);
 
-        assertDoesNotThrow(() -> forSomeConditionInvisiblyFuture.get(2, TimeUnit.SECONDS),
+        assertDoesNotThrow(() -> forSomeConditionInvisiblyFuture.get(TIMEOUT.getValue(), TIMEOUT.getTimeUnit()),
             "Task4 should have been run, releasing the condition");
 
-        task4Future.get(2, TimeUnit.SECONDS);
+        task4Future.get(TIMEOUT.getValue(), TIMEOUT.getTimeUnit());
 
         pool.waitForTermination();
         pool.shutdown();
@@ -792,13 +799,10 @@ public final class ThreadPoolTest {
             assertTrue(ee.getCause() instanceof InternalError);
             assertEquals(expectedErrorMessage, ee.getCause().getMessage());
         }
-        int waitPolls = 5;
-        while (pool.getRunningThreads() > 0 && waitPolls-- > 0) {
-            Thread.sleep(50); // Future#get doesn't immediately release the thread (#workerFinished called from thread)
-        }
-
-        assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads after error handling");
-        assertEquals(0, pool.getRunningThreads(), "Expected no running threads after error handling");
+        Awaitility.await().atMost(TIMEOUT).untilAsserted(() -> {
+            assertEquals(0, pool.getInvisibleThreads(), "Expected no invisible threads after error handling");
+            assertEquals(0, pool.getRunningThreads(), "Expected no running threads after error handling");
+        });
 
         pool.shutdown();
     }
