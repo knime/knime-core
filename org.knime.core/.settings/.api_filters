@@ -4,7 +4,7 @@
         <filter comment="Should not have been exported" id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.10.0"/>
+                <message_argument value="org.knime.core_5.11.0"/>
             </message_arguments>
         </filter>
     </resource>
