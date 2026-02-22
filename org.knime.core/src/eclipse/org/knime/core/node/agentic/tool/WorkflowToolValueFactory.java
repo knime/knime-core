@@ -78,9 +78,11 @@ import org.knime.core.table.schema.StructDataSpec;
 /**
  * De-/serialization of {@link WorkflowToolValue}s.
  *
+ * @deprecated
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
  * @since 5.5
  */
+@Deprecated
 public final class WorkflowToolValueFactory extends AbstractFileStoreValueFactory {
 
     @Override

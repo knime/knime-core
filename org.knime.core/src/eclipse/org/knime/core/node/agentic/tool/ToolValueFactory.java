@@ -184,11 +184,13 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             ListReadAccess inputPorts = tableDataAccess.getAccess(4);
             ListReadAccess outputPorts = tableDataAccess.getAccess(5);
             IntReadAccess messageOutputPortIndex = tableDataAccess.getAccess(6);
+            StringReadAccess serverUri = tableDataAccess.getAccess(8);
 
             ToolType type = ToolType.fromIndex(toolType.getByteValue());
 
-            if (type == ToolType.WORKFLOW) {
-                return new WorkflowToolCell(
+            // @ToolTypeDispatch - Update when adding new ToolType values
+            return switch (type) {
+                case WORKFLOW -> new ToolCell(
                     name.getStringValue(),
                     description.getStringValue(),
                     parameterSchema.getStringValue(),
@@ -196,19 +198,14 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
                     readToolPorts(outputPorts),
                     messageOutputPortIndex.getIntValue()
                 );
-            } else {
-                // MCP tool - create appropriate cell
-                // For now, return a simple WorkflowToolCell with empty ports
-                // This should be replaced with proper MCPToolCell when available
-                return new WorkflowToolCell(
+                case MCP -> new ToolCell(
                     name.getStringValue(),
                     description.getStringValue(),
                     parameterSchema.getStringValue(),
-                    new ToolPort[0],
-                    new ToolPort[0],
-                    -1
+                    serverUri.getStringValue(),
+                    name.getStringValue()  // Use name as tool_name
                 );
-            }
+            };
         }
 
         @Override
@@ -354,24 +351,47 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
          */
         @Override
         protected void setTableData(final WorkflowToolValue value, final StructWriteAccess access) {
-            // Set tool type (always WORKFLOW for now, as we only have WorkflowToolValue)
-            ((ByteWriteAccess)access.getWriteAccess(0)).setByteValue(ToolType.WORKFLOW.getIndex());
+            // Determine tool type and write it
+            ToolType toolType = ToolType.WORKFLOW; // default
+            if (value instanceof ToolCell toolCell) {
+                toolType = toolCell.getToolType();
+            }
+            ((ByteWriteAccess)access.getWriteAccess(0)).setByteValue(toolType.getIndex());
 
             // Common fields
             ((StringWriteAccess)access.getWriteAccess(1)).setStringValue(value.getName());
             ((StringWriteAccess)access.getWriteAccess(2)).setStringValue(value.getDescription());
             ((StringWriteAccess)access.getWriteAccess(3)).setStringValue(value.getParameterSchema());
 
-            // Workflow-specific fields
-            writeToolPorts((ListWriteAccess)access.getWriteAccess(4), value.getInputs());
-            writeToolPorts((ListWriteAccess)access.getWriteAccess(5), value.getOutputs());
-            ((IntWriteAccess)access.getWriteAccess(6)).setIntValue(value.getMessageOutputPortIndex());
+            // @ToolTypeDispatch - Update when adding new ToolType values
+            switch (toolType) {
+                case WORKFLOW -> {
+                    // Workflow-specific fields
+                    writeToolPorts((ListWriteAccess)access.getWriteAccess(4), value.getInputs());
+                    writeToolPorts((ListWriteAccess)access.getWriteAccess(5), value.getOutputs());
+                    ((IntWriteAccess)access.getWriteAccess(6)).setIntValue(value.getMessageOutputPortIndex());
 
-            // Field 7 is reserved/unused
-            access.getWriteAccess(7).setMissing();
+                    // Field 7 is reserved/unused
+                    access.getWriteAccess(7).setMissing();
 
-            // MCP field (null for Workflow)
-            access.getWriteAccess(8).setMissing();
+                    // MCP field (null for Workflow)
+                    access.getWriteAccess(8).setMissing();
+                }
+                case MCP -> {
+                    // Workflow fields are missing for MCP tools
+                    access.getWriteAccess(4).setMissing();
+                    access.getWriteAccess(5).setMissing();
+                    access.getWriteAccess(6).setMissing();
+                    access.getWriteAccess(7).setMissing();
+
+                    // MCP-specific field
+                    if (value instanceof ToolCell toolCell) {
+                        ((StringWriteAccess)access.getWriteAccess(8)).setStringValue(toolCell.getServerUri());
+                    } else {
+                        access.getWriteAccess(8).setMissing();
+                    }
+                }
+            }
         }
     }
 }
