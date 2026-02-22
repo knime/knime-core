@@ -67,7 +67,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -89,6 +88,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.agentic.tool.WorkflowToolValue.WorkflowToolResult;
 import org.knime.core.node.dialog.ContentType;
 import org.knime.core.node.dialog.ExternalNodeData;
 import org.knime.core.node.dialog.InputNode;
@@ -125,22 +125,22 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonValue;
 
 /**
- * Implementation of a {@link ToolValue} where the tool is a KNIME workflow.
+ * Implementation of a {@link ToolValue} where the tool can be provided by a MCP server
+ * or as a KNIME workflow.
  *
  * @author Martin Horn, KNIME GmbH, Konstanz, Germany
  * @author Adrian Nembach, KNIME GmbH, Konstanz, Germany
- * @deprecated
- * @since 5.5
+ * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
+ * @since 5.11
  */
-@Deprecated
-public final class WorkflowToolCell extends FileStoreCell implements WorkflowToolValue {
+public final class ToolCell extends FileStoreCell implements ToolValue {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Data type of the {@link WorkflowToolCell}.
+     * Data type of the {@link ToolCell}.
      */
-    public static final DataType TYPE = DataType.getType(WorkflowToolCell.class);
+    public static final DataType TYPE = DataType.getType(ToolCell.class);
 
     /**
      * Creates a new tool cell instance from a {@link WorkflowManager} instance and(!) removes all the 'Workflow Service
@@ -154,7 +154,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      * @throws IOException if the file stores cannot be created
      */
-    public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
+    public static ToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
         final ToolWorkflowMetadata metadata, final FileStoreFactory fileStoreFactory)
         throws ToolIncompatibleWorkflowException, IOException {
         return createFromAndModifyWorkflow(wfm, metadata, null, fileStoreFactory);
@@ -173,14 +173,14 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
      *             (e.g. multiple tool message outputs or the workflow is executed/executing)
      * @throws IOException if the file stores cannot be created
      */
-    public static WorkflowToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
+    public static ToolCell createFromAndModifyWorkflow(final WorkflowManager wfm,
         final ToolWorkflowMetadata metadata, final Path dataAreaPath, final FileStoreFactory fileStoreFactory)
         throws ToolIncompatibleWorkflowException, IOException {
         checkThatThereAreNoExecutingOrExecutedNodes(wfm);
         var workflowFileStore = fileStoreFactory.createFileStore("workflow_" + UUID.randomUUID().toString());
         var fileStores = dataAreaPath == null ? new FileStore[]{workflowFileStore} : new FileStore[]{workflowFileStore,
             fileStoreFactory.createFileStore("data_area_" + UUID.randomUUID().toString())};
-        var cell = new WorkflowToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
+        var cell = new ToolCell(wfm, metadata == null ? null : metadata.toolMessageOutputNodeID(), dataAreaPath,
             fileStores);
         // AP-24599: flushing is necessary to make sure that the data area cannot be deleted (or modified) after the cell
         // is created but before flushToFileStore is called.
@@ -201,12 +201,15 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         }
     }
 
+    private final ToolType m_toolType;
+
     private final String m_name;
 
     private final String m_description;
 
     private final String m_parameterSchema;
 
+    // Workflow-specific fields (null for MCP tools)
     private final ToolPort[] m_inputs;
 
     private final ToolPort[] m_outputs;
@@ -217,9 +220,15 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
 
     private Path m_dataAreaPath;
 
-    private WorkflowToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath,
+    // MCP-specific fields (null for Workflow tools)
+    private final String m_serverUri;
+
+    private final String m_toolName;
+
+    private ToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath,
         final FileStore... fileStores) throws ToolIncompatibleWorkflowException {
         super(fileStores);
+        m_toolType = ToolType.WORKFLOW;
         var wsInputs = new ArrayList<WorkflowSegment.Input>();
         var wsOutputs = new ArrayList<WorkflowSegment.Output>();
         var toolInputs = new ArrayList<ToolPort>();
@@ -236,17 +245,70 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         m_outputs = toolOutputs.toArray(new ToolPort[0]);
         m_workflow = serializeAndDisposeWorkflowSegment(ws);
         m_dataAreaPath = dataAreaPath;
+        // MCP fields are null
+        m_serverUri = null;
+        m_toolName = null;
     }
 
-    // deserialization constructor
-    WorkflowToolCell(final String name, final String description, final String parameterSchema, final ToolPort[] inputs,
+    // Workflow deserialization constructor
+    ToolCell(final String name, final String description, final String parameterSchema, final ToolPort[] inputs,
         final ToolPort[] outputs, final int messageOutputPortIndex) {
+        m_toolType = ToolType.WORKFLOW;
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
         m_inputs = inputs;
         m_outputs = outputs;
         m_messageOutputPortIndex = messageOutputPortIndex;
+        // MCP fields are null
+        m_serverUri = null;
+        m_toolName = null;
+    }
+
+    /**
+     * MCP tool constructor.
+     * 
+     * @param name the tool name
+     * @param description the tool description
+     * @param parameterSchema the parameter schema as JSON
+     * @param serverUri the MCP server URI
+     * @param toolName the tool name on the MCP server
+     */
+    public ToolCell(final String name, final String description, final String parameterSchema,
+        final String serverUri, final String toolName) {
+        m_toolType = ToolType.MCP;
+        m_name = name;
+        m_description = description;
+        m_parameterSchema = parameterSchema;
+        m_serverUri = serverUri;
+        m_toolName = toolName;
+        // Workflow fields are null/empty
+        m_inputs = new ToolPort[0];
+        m_outputs = new ToolPort[0];
+        m_messageOutputPortIndex = -1;
+        m_workflow = null;
+        m_dataAreaPath = null;
+    }
+
+    /**
+     * @return the tool type (WORKFLOW or MCP)
+     */
+    public ToolType getToolType() {
+        return m_toolType;
+    }
+
+    /**
+     * @return the MCP server URI (null for Workflow tools)
+     */
+    public String getServerUri() {
+        return m_serverUri;
+    }
+
+    /**
+     * @return the MCP tool name (null for Workflow tools)
+     */
+    public String getToolName() {
+        return m_toolName;
     }
 
     private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm)
@@ -293,26 +355,42 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
 
     @Override
     protected void postConstruct() throws IOException {
-        var fileStores = getFileStores();
-        m_workflow = FileUtils.readFileToByteArray(fileStores[0].getFile());
-        if (fileStores.length == 2) {
-            m_dataAreaPath = fileStores[1].getFile().toPath();
-        } else {
-            m_dataAreaPath = null;
+        // @ToolTypeDispatch - Update when adding new ToolType values
+        switch (m_toolType) {
+            case WORKFLOW -> {
+                var fileStores = getFileStores();
+                m_workflow = FileUtils.readFileToByteArray(fileStores[0].getFile());
+                if (fileStores.length == 2) {
+                    m_dataAreaPath = fileStores[1].getFile().toPath();
+                } else {
+                    m_dataAreaPath = null;
+                }
+            }
+            case MCP -> {
+                // MCP tools have no workflow data to load
+            }
         }
     }
 
     @Override
     protected void flushToFileStore() throws IOException {
-        var fileStores = getFileStores();
-        var fileStore = fileStores[0];
-        FileUtils.writeByteArrayToFile(fileStore.getFile(), m_workflow);
-        if (m_dataAreaPath != null && fileStores.length == 2
-            && !m_dataAreaPath.equals(fileStores[1].getFile().toPath())) {
-            // copy the data area to the file store
-            var dataAreaDir = fileStores[1].getFile();
-            FileUtils.copyDirectory(m_dataAreaPath.toFile(), dataAreaDir);
-            m_dataAreaPath = dataAreaDir.toPath();
+        // @ToolTypeDispatch - Update when adding new ToolType values
+        switch (m_toolType) {
+            case WORKFLOW -> {
+                var fileStores = getFileStores();
+                var fileStore = fileStores[0];
+                FileUtils.writeByteArrayToFile(fileStore.getFile(), m_workflow);
+                if (m_dataAreaPath != null && fileStores.length == 2
+                    && !m_dataAreaPath.equals(fileStores[1].getFile().toPath())) {
+                    // copy the data area to the file store
+                    var dataAreaDir = fileStores[1].getFile();
+                    FileUtils.copyDirectory(m_dataAreaPath.toFile(), dataAreaDir);
+                    m_dataAreaPath = dataAreaDir.toPath();
+                }
+            }
+            case MCP -> {
+                // MCP tools have no workflow data to flush
+            }
         }
     }
 
@@ -469,7 +547,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         return m_outputs;
     }
 
-    @Override
+//    @Override
     public int getMessageOutputPortIndex() {
         return m_messageOutputPortIndex;
     }
@@ -477,6 +555,15 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
     @Override
     public WorkflowToolResult execute(final String parameters, final PortObject[] inputs, final ExecutionContext exec,
         final Map<String, String> executionHints) {
+        // @ToolTypeDispatch - Update when adding new ToolType values
+        return switch (m_toolType) {
+            case WORKFLOW -> executeWorkflowTool(parameters, inputs, exec, executionHints);
+            case MCP -> executeMCPTool(parameters, inputs, exec, executionHints);
+        };
+    }
+
+    private WorkflowToolResult executeWorkflowTool(final String parameters, final PortObject[] inputs,
+        final ExecutionContext exec, final Map<String, String> executionHints) {
         var ws = deserializeWorkflowSegment();
         var name = ws.loadWorkflow().getName();
         var hostNode = (NativeNodeContainer)NodeContext.getContext().getNodeContainer();
@@ -536,36 +623,45 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         }
     }
 
-    @Override
-    public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
-        final List<CombinedExecutor.PortId> inputs, final ExecutionContext exec,
-        final Map<String, String> executionHints) {
-        var ws = deserializeWorkflowSegment();
-        var name = ws.loadWorkflow().getName();
-        Path dataAreaPath = null;
-        try {
-            dataAreaPath = copyDataAreaToTempDir().orElse(null);
-            var result = workflowExecutor.execute(ws, inputs, parseParameters(parameters), dataAreaPath,
-                Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
-
-            var viewNodeIds = getViewNodeIds(workflowExecutor, executionHints, result);
-            setComponentMetadata(workflowExecutor, inputs, result.outputIds(), result.component());
-            var outputIds = result.outputIds() == null ? null : Stream.of(result.outputIds())
-                .map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex()).toArray(String[]::new);
-            return new WorkflowToolResult(
-                extractMessage(result.outputs(),
-                    () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
-                removeMessageOutput(outputIds), removeMessageOutput(result.outputs()), null, viewNodeIds);
-        } catch (Exception ex) {
-            var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
-            NodeLogger.getLogger(getClass()).error(message, ex);
-            return new WorkflowToolResult(message, null, null, null, null);
-        } finally {
-            if (dataAreaPath != null) {
-                FileUtils.deleteQuietly(dataAreaPath.toFile());
-            }
-        }
+    private WorkflowToolResult executeMCPTool(final String parameters, final PortObject[] inputs,
+        final ExecutionContext exec, final Map<String, String> executionHints) {
+        // TODO: Implement MCP tool execution
+        // This should call the MCP server at m_serverUri with the tool m_toolName and parameters
+        var message = "MCP tool execution not yet implemented for tool: " + m_name;
+        NodeLogger.getLogger(getClass()).warn(message);
+        return new WorkflowToolResult(message, null, null, null, null);
     }
+
+//    @Override
+//    public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
+//        final List<CombinedExecutor.PortId> inputs, final ExecutionContext exec,
+//        final Map<String, String> executionHints) {
+//        var ws = deserializeWorkflowSegment();
+//        var name = ws.loadWorkflow().getName();
+//        Path dataAreaPath = null;
+//        try {
+//            dataAreaPath = copyDataAreaToTempDir().orElse(null);
+//            var result = workflowExecutor.execute(ws, inputs, parseParameters(parameters), dataAreaPath,
+//                Restriction.WORKFLOW_RELATIVE_RESOURCE_ACCESS, Restriction.WORKFLOW_DATA_AREA_ACCESS);
+//
+//            var viewNodeIds = getViewNodeIds(workflowExecutor, executionHints, result);
+//            setComponentMetadata(workflowExecutor, inputs, result.outputIds(), result.component());
+//            var outputIds = result.outputIds() == null ? null : Stream.of(result.outputIds())
+//                .map(id -> id.nodeIDSuffix().toString() + "#" + id.portIndex()).toArray(String[]::new);
+//            return new WorkflowToolResult(
+//                extractMessage(result.outputs(),
+//                    () -> WorkflowSegmentNodeMessage.compileSingleErrorMessage(result.nodeMessages())),
+//                removeMessageOutput(outputIds), removeMessageOutput(result.outputs()), null, viewNodeIds);
+//        } catch (Exception ex) {
+//            var message = "Failed to execute tool: " + name + ": " + ex.getMessage();
+//            NodeLogger.getLogger(getClass()).error(message, ex);
+//            return new WorkflowToolResult(message, null, null, null, null);
+//        } finally {
+//            if (dataAreaPath != null) {
+//                FileUtils.deleteQuietly(dataAreaPath.toFile());
+//            }
+//        }
+//    }
 
     private static String[] getViewNodeIds(final CombinedExecutor workflowExecutor,
         final Map<String, String> executionHints, final WorkflowSegmentExecutionResult result) {
@@ -735,7 +831,7 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
 
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        if (dc instanceof WorkflowToolCell toolCell) {
+        if (dc instanceof ToolCell toolCell) {
             return new EqualsBuilder() //
                 .append(m_name, toolCell.m_name) //
                 .append(m_description, toolCell.m_description) //
@@ -762,21 +858,37 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
 
     @SuppressWarnings("javadoc")
     // needed for the registry to properly register the cell type. Looks more like a bug in the registry, though.
-    public static final class WorkflowToolCellSerializer implements DataCellSerializer<WorkflowToolCell> {
+    public static final class WorkflowToolCellSerializer implements DataCellSerializer<ToolCell> {
         @Override
-        public void serialize(final WorkflowToolCell cell, final DataCellDataOutput output) throws IOException {
+        public void serialize(final ToolCell cell, final DataCellDataOutput output) throws IOException {
+            // Write tool type discriminator
+            output.writeByte(cell.getToolType().getIndex());
+            
+            // Write common fields
             output.writeUTF(cell.getName());
             output.writeUTF(cell.getDescription());
             output.writeUTF(cell.getParameterSchema());
-            output.writeInt(cell.getInputs().length);
-            for (var toolPort : cell.getInputs()) {
-                writeToolPort(toolPort, output);
+            
+            // @ToolTypeDispatch - Update when adding new ToolType values
+            switch (cell.getToolType()) {
+                case WORKFLOW -> {
+                    // Write workflow-specific fields
+                    output.writeInt(cell.getInputs().length);
+                    for (var toolPort : cell.getInputs()) {
+                        writeToolPort(toolPort, output);
+                    }
+                    output.writeInt(cell.getOutputs().length);
+                    for (var toolPort : cell.getOutputs()) {
+                        writeToolPort(toolPort, output);
+                    }
+                    output.writeInt(cell.getMessageOutputPortIndex());
+                }
+                case MCP -> {
+                    // Write MCP-specific fields
+                    output.writeUTF(cell.getServerUri());
+                    output.writeUTF(cell.getToolName());
+                }
             }
-            output.writeInt(cell.getOutputs().length);
-            for (var toolPort : cell.getOutputs()) {
-                writeToolPort(toolPort, output);
-            }
-            output.writeInt(cell.getMessageOutputPortIndex());
         }
 
         private static void writeToolPort(final ToolPort toolPort, final DataCellDataOutput output) throws IOException {
@@ -787,20 +899,38 @@ public final class WorkflowToolCell extends FileStoreCell implements WorkflowToo
         }
 
         @Override
-        public WorkflowToolCell deserialize(final DataCellDataInput input) throws IOException {
+        public ToolCell deserialize(final DataCellDataInput input) throws IOException {
+            // Read tool type discriminator
+            final byte toolTypeIndex = input.readByte();
+            final ToolType toolType = ToolType.fromIndex(toolTypeIndex);
+            
+            // Read common fields
             final String name = input.readUTF();
             final String description = input.readUTF();
             final String parameterSchema = input.readUTF();
-            final var inputs = new ToolPort[input.readInt()];
-            for (int i = 0; i < inputs.length; i++) {
-                inputs[i] = readToolPort(input);
-            }
-            final var outputs = new ToolPort[input.readInt()];
-            for (int i = 0; i < outputs.length; i++) {
-                outputs[i] = readToolPort(input);
-            }
-            final int messageOutputPortIndex = input.readInt();
-            return new WorkflowToolCell(name, description, parameterSchema, inputs, outputs, messageOutputPortIndex);
+            
+            // @ToolTypeDispatch - Update when adding new ToolType values
+            return switch (toolType) {
+                case WORKFLOW -> {
+                    // Read workflow-specific fields
+                    final var inputs = new ToolPort[input.readInt()];
+                    for (int i = 0; i < inputs.length; i++) {
+                        inputs[i] = readToolPort(input);
+                    }
+                    final var outputs = new ToolPort[input.readInt()];
+                    for (int i = 0; i < outputs.length; i++) {
+                        outputs[i] = readToolPort(input);
+                    }
+                    final int messageOutputPortIndex = input.readInt();
+                    yield new ToolCell(name, description, parameterSchema, inputs, outputs, messageOutputPortIndex);
+                }
+                case MCP -> {
+                    // Read MCP-specific fields
+                    final String serverUri = input.readUTF();
+                    final String toolName = input.readUTF();
+                    yield new ToolCell(name, description, parameterSchema, serverUri, toolName);
+                }
+            };
         }
 
         private static ToolPort readToolPort(final DataCellDataInput input) throws IOException {

@@ -607,8 +607,19 @@
                serializerClass="org.knime.core.node.agentic.tool.WorkflowToolCell$WorkflowToolCellSerializer">
          </serializer>
          <ValueFactory
-               deprecated="false"
+               deprecated="true"
                valueFactoryClass="org.knime.core.node.agentic.tool.WorkflowToolValueFactory">
+         </ValueFactory>
+      </DataType>
+      <DataType
+            cellClass="org.knime.core.node.agentic.tool.ToolCell">
+         <serializer
+               cellClass="org.knime.core.node.agentic.tool.ToolCell"
+               serializerClass="org.knime.core.node.agentic.tool.ToolCell$ToolCellSerializer">
+         </serializer>
+         <ValueFactory
+               deprecated="true"
+               valueFactoryClass="org.knime.core.node.agentic.tool.ToolValueFactory">
          </ValueFactory>
       </DataType>
    </extension>
