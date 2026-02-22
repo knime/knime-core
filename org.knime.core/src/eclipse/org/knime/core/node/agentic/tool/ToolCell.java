@@ -225,6 +225,9 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
 
     private final String m_toolName;
 
+    // Credential reference for authenticated MCP servers (null if unauthenticated)
+    private final String m_credentialName;
+
     private ToolCell(final WorkflowManager wfm, final NodeID toolMessageOutputNodeID, final Path dataAreaPath,
         final FileStore... fileStores) throws ToolIncompatibleWorkflowException {
         super(fileStores);
@@ -248,6 +251,7 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
         // MCP fields are null
         m_serverUri = null;
         m_toolName = null;
+        m_credentialName = null;
     }
 
     // Workflow deserialization constructor
@@ -263,11 +267,12 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
         // MCP fields are null
         m_serverUri = null;
         m_toolName = null;
+        m_credentialName = null;
     }
 
     /**
      * MCP tool constructor.
-     * 
+     *
      * @param name the tool name
      * @param description the tool description
      * @param parameterSchema the parameter schema as JSON
@@ -276,12 +281,28 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
      */
     public ToolCell(final String name, final String description, final String parameterSchema,
         final String serverUri, final String toolName) {
+        this(name, description, parameterSchema, serverUri, toolName, null);
+    }
+
+    /**
+     * MCP tool constructor with credential reference.
+     *
+     * @param name the tool name
+     * @param description the tool description
+     * @param parameterSchema the parameter schema as JSON
+     * @param serverUri the MCP server URI
+     * @param toolName the tool name on the MCP server
+     * @param credentialName the KNIME credential name for authentication, or {@code null} if unauthenticated
+     */
+    public ToolCell(final String name, final String description, final String parameterSchema,
+        final String serverUri, final String toolName, final String credentialName) {
         m_toolType = ToolType.MCP;
         m_name = name;
         m_description = description;
         m_parameterSchema = parameterSchema;
         m_serverUri = serverUri;
         m_toolName = toolName;
+        m_credentialName = credentialName;
         // Workflow fields are null/empty
         m_inputs = new ToolPort[0];
         m_outputs = new ToolPort[0];
@@ -309,6 +330,13 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
      */
     public String getToolName() {
         return m_toolName;
+    }
+
+    /**
+     * @return the KNIME credential name for MCP authentication, or {@code null} if unauthenticated
+     */
+    public String getCredentialName() {
+        return m_credentialName;
     }
 
     private static String extractParameterSchemaFromConfigNodes(final WorkflowManager wfm)
@@ -858,11 +886,11 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
 
     @SuppressWarnings("javadoc")
     // needed for the registry to properly register the cell type. Looks more like a bug in the registry, though.
-    public static final class WorkflowToolCellSerializer implements DataCellSerializer<ToolCell> {
+    public static final class ToolCellSerializer implements DataCellSerializer<ToolCell> {
         @Override
         public void serialize(final ToolCell cell, final DataCellDataOutput output) throws IOException {
             // Write tool type discriminator
-            output.writeByte(cell.getToolType().getIndex());
+            output.writeInt(cell.getToolType().getIndex());
             
             // Write common fields
             output.writeUTF(cell.getName());
@@ -901,7 +929,7 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
         @Override
         public ToolCell deserialize(final DataCellDataInput input) throws IOException {
             // Read tool type discriminator
-            final byte toolTypeIndex = input.readByte();
+            final int toolTypeIndex = input.readInt();
             final ToolType toolType = ToolType.fromIndex(toolTypeIndex);
             
             // Read common fields

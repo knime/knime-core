@@ -60,32 +60,32 @@ package org.knime.core.node.agentic.tool;
  */
 public enum ToolType {
     /** Workflow-based tool executing a KNIME workflow */
-    WORKFLOW((byte) 0),
+    WORKFLOW(0),
 
     /** MCP (Model Context Protocol) server tool */
-    MCP((byte) 1);
+    MCP(1);
 
-    private final byte m_index;
+    private final int m_index;
 
-    private ToolType(final byte index) {
+    private ToolType(final int index) {
         m_index = index;
     }
 
     /**
-     * @return the byte index for this tool type
+     * @return the int index for this tool type
      */
-    public byte getIndex() {
+    public int getIndex() {
         return m_index;
     }
 
     /**
-     * Get ToolType from byte index.
+     * Get ToolType from int index.
      *
-     * @param index the byte index (0 or 1)
+     * @param index the int index (0 or 1)
      * @return the corresponding ToolType
      * @throws IllegalArgumentException if index is invalid
      */
-    public static ToolType fromIndex(final byte index) {
+    public static ToolType fromIndex(final int index) {
         for (ToolType type : values()) {
             if (type.m_index == index) {
                 return type;
