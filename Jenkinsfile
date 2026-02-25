@@ -19,7 +19,7 @@ try {
             knimetools.defaultTychoBuild('org.knime.update.core')
         },
         'Integrated Workflowtests': {
-                workflowTests.runIntegratedWorkflowTests(profile: 'test')
+            workflowTests.runIntegratedWorkflowTests(profile: 'test')
          },
      )
 

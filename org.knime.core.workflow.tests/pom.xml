@@ -9,12 +9,6 @@
 	<packaging>eclipse-test-plugin</packaging>
 
 	<properties>
-		<surefireArgLine>-Dsun.java2d.d3d=false -Dosgi.classloader.lock=classname \
-		-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass \
-		-Dsun.net.client.defaultReadTimeout=0 -Xmx4G \
-		-XX:CompileCommand=exclude,javax/swing/text/GlyphView,getBreakSpot \
-		-Dchromium.multi_threaded_message_loop=true
-		</surefireArgLine>
 		<revision>5.9.0</revision>
 	</properties>
 
