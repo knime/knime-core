@@ -49,7 +49,6 @@
 package org.knime.core.node.agentic.tool;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
@@ -58,11 +57,8 @@ import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.v2.filestore.AbstractFileStoreValueFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.agentic.tool.ToolValue.ToolPort;
+import org.knime.core.node.agentic.tool.WorkflowToolValue.WorkflowToolResult;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.capture.CombinedExecutor;
-import org.knime.core.node.workflow.capture.CombinedExecutor.PortId;
-import org.knime.core.table.access.ByteAccess.ByteReadAccess;
-import org.knime.core.table.access.ByteAccess.ByteWriteAccess;
 import org.knime.core.table.access.IntAccess.IntReadAccess;
 import org.knime.core.table.access.IntAccess.IntWriteAccess;
 import org.knime.core.table.access.ListAccess.ListReadAccess;
@@ -71,7 +67,6 @@ import org.knime.core.table.access.StringAccess.StringReadAccess;
 import org.knime.core.table.access.StringAccess.StringWriteAccess;
 import org.knime.core.table.access.StructAccess.StructReadAccess;
 import org.knime.core.table.access.StructAccess.StructWriteAccess;
-import org.knime.core.table.schema.ByteDataSpec;
 import org.knime.core.table.schema.DataSpec;
 import org.knime.core.table.schema.IntDataSpec;
 import org.knime.core.table.schema.ListDataSpec;
@@ -81,10 +76,10 @@ import org.knime.core.table.schema.StructDataSpec;
 /**
  * Unified ValueFactory for reading and writing Tool instances (both WorkflowTool and MCPTool).
  *
- * Uses a discriminator pattern with byte-indexed enum to support both tool types in a single column.
+ * Uses a discriminator pattern with int-indexed enum to support both tool types in a single column.
  *
- * Arrow schema (9 fields):
- * - Field 0: tool_type (BYTE) - Enum index: 0=WORKFLOW, 1=MCP
+ * Arrow schema (10 fields):
+ * - Field 0: tool_type (INT) - Enum index: 0=WORKFLOW, 1=MCP
  * - Field 1: name (STRING) - Common
  * - Field 2: description (STRING) - Common
  * - Field 3: parameter_schema (STRING) - Common (JSON)
@@ -93,6 +88,7 @@ import org.knime.core.table.schema.StructDataSpec;
  * - Field 6: message_output_port_index (INT) - Workflow only (-1 for MCP)
  * - Field 7: workflow_filestore (unused for now, reserved for future use)
  * - Field 8: server_uri (STRING) - MCP only (null for Workflow)
+ * - Field 9: credential_name (STRING) - MCP only (null if unauthenticated)
  *
  * @author Carsten Haubold, KNIME GmbH, Konstanz, Germany
  * @since 5.11
@@ -115,7 +111,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
     @Override
     protected DataSpec getTableDataSpec() {
         return new StructDataSpec(
-            ByteDataSpec.INSTANCE,           // 0: tool_type discriminator
+            IntDataSpec.INSTANCE,            // 0: tool_type discriminator
             StringDataSpec.INSTANCE,         // 1: name
             StringDataSpec.INSTANCE,         // 2: description
             StringDataSpec.INSTANCE,         // 3: parameter_schema (JSON)
@@ -123,7 +119,8 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             new ListDataSpec(portDataSpec()),// 5: output_spec (Workflow ports or null)
             IntDataSpec.INSTANCE,            // 6: message_output_port_index
             StringDataSpec.INSTANCE,         // 7: reserved (unused for now)
-            StringDataSpec.INSTANCE          // 8: server_uri (MCP only)
+            StringDataSpec.INSTANCE,         // 8: server_uri (MCP only)
+            StringDataSpec.INSTANCE          // 9: credential_name (MCP only)
         );
     }
 
@@ -140,9 +137,9 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
      * Unified ReadValue that can handle both WorkflowTool and MCPTool types.
      */
     protected final class UnifiedToolReadValue extends FileStoreReadValue<StructReadAccess>
-        implements WorkflowToolValue {
+        implements ToolValue {
 
-        private final ByteReadAccess m_toolType;
+        private final IntReadAccess m_toolType;
         private final StringReadAccess m_name;
         private final StringReadAccess m_description;
         private final StringReadAccess m_parameterSchema;
@@ -150,6 +147,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
         private final ListReadAccess m_outputPorts;
         private final IntReadAccess m_messageOutputPortIndex;
         private final StringReadAccess m_serverUri;
+        private final StringReadAccess m_credentialName;
 
         private UnifiedToolReadValue(final StructReadAccess access) {
             super(access);
@@ -163,13 +161,14 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             m_messageOutputPortIndex = tableDataAccess.getAccess(6);
             // Field 7 is reserved/unused
             m_serverUri = tableDataAccess.getAccess(8);
+            m_credentialName = tableDataAccess.getAccess(9);
         }
 
         /**
          * @return the tool type (WORKFLOW or MCP)
          */
         public ToolType getToolType() {
-            return ToolType.fromIndex(m_toolType.getByteValue());
+            return ToolType.fromIndex(m_toolType.getIntValue());
         }
 
         /**
@@ -177,7 +176,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
          */
         @Override
         protected DataCell createCell(final StructReadAccess tableDataAccess) {
-            ByteReadAccess toolType = tableDataAccess.getAccess(0);
+            IntReadAccess toolType = tableDataAccess.getAccess(0);
             StringReadAccess name = tableDataAccess.getAccess(1);
             StringReadAccess description = tableDataAccess.getAccess(2);
             StringReadAccess parameterSchema = tableDataAccess.getAccess(3);
@@ -185,8 +184,9 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             ListReadAccess outputPorts = tableDataAccess.getAccess(5);
             IntReadAccess messageOutputPortIndex = tableDataAccess.getAccess(6);
             StringReadAccess serverUri = tableDataAccess.getAccess(8);
+            StringReadAccess credentialName = tableDataAccess.getAccess(9);
 
-            ToolType type = ToolType.fromIndex(toolType.getByteValue());
+            ToolType type = ToolType.fromIndex(toolType.getIntValue());
 
             // @ToolTypeDispatch - Update when adding new ToolType values
             return switch (type) {
@@ -203,7 +203,8 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
                     description.getStringValue(),
                     parameterSchema.getStringValue(),
                     serverUri.getStringValue(),
-                    name.getStringValue()  // Use name as tool_name
+                    name.getStringValue(),  // Use name as tool_name
+                    credentialName.isMissing() ? null : credentialName.getStringValue()
                 );
             };
         }
@@ -264,7 +265,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             return readToolPorts(m_outputPorts);
         }
 
-        @Override
+//        @Override
         public int getMessageOutputPortIndex() {
             return m_messageOutputPortIndex.getIntValue();
         }
@@ -276,24 +277,31 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
             return m_serverUri.isMissing() ? null : m_serverUri.getStringValue();
         }
 
+        /**
+         * @return the credential name for MCP authentication (null if unauthenticated or Workflow tool)
+         */
+        public String getCredentialName() {
+            return m_credentialName.isMissing() ? null : m_credentialName.getStringValue();
+        }
+
         @Override
         public WorkflowToolResult execute(final String parameters, final PortObject[] inputs,
             final ExecutionContext exec, final Map<String, String> executionHints) {
             return ((WorkflowToolValue)super.getDataCell()).execute(parameters, inputs, exec, executionHints);
         }
 
-        @Override
-        public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
-            final List<PortId> inputs, final ExecutionContext exec, final Map<String, String> executionHints) {
-            return ((WorkflowToolValue)super.getDataCell()).execute(workflowExecutor, parameters, inputs, exec,
-                executionHints);
-        }
+//        @Override
+//        public WorkflowToolResult execute(final CombinedExecutor workflowExecutor, final String parameters,
+//            final List<PortId> inputs, final ExecutionContext exec, final Map<String, String> executionHints) {
+//            return ((WorkflowToolValue)super.getDataCell()).execute(workflowExecutor, parameters, inputs, exec,
+//                executionHints);
+//        }
     }
 
     /**
      * Unified WriteValue that can handle both WorkflowTool and MCPTool types.
      */
-    protected final class UnifiedToolWriteValue extends FileStoreWriteValue<WorkflowToolValue, StructWriteAccess> {
+    protected final class UnifiedToolWriteValue extends FileStoreWriteValue<ToolValue, StructWriteAccess> {
 
         private UnifiedToolWriteValue(final StructWriteAccess access) {
             super(access);
@@ -331,7 +339,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
          * {@inheritDoc}
          */
         @Override
-        protected boolean isCorrespondingReadValue(final WorkflowToolValue value) {
+        protected boolean isCorrespondingReadValue(final ToolValue value) {
             return value instanceof UnifiedToolReadValue;
         }
 
@@ -339,7 +347,7 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
          * {@inheritDoc}
          */
         @Override
-        protected FileStoreCell getFileStoreCell(final WorkflowToolValue value) throws IOException {
+        protected FileStoreCell getFileStoreCell(final ToolValue value) throws IOException {
             if (value instanceof WorkflowToolCell wtc) {
                 return wtc;
             }
@@ -350,13 +358,13 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
          * {@inheritDoc}
          */
         @Override
-        protected void setTableData(final WorkflowToolValue value, final StructWriteAccess access) {
+        protected void setTableData(final ToolValue value, final StructWriteAccess access) {
             // Determine tool type and write it
             ToolType toolType = ToolType.WORKFLOW; // default
             if (value instanceof ToolCell toolCell) {
                 toolType = toolCell.getToolType();
             }
-            ((ByteWriteAccess)access.getWriteAccess(0)).setByteValue(toolType.getIndex());
+            ((IntWriteAccess)access.getWriteAccess(0)).setIntValue(toolType.getIndex());
 
             // Common fields
             ((StringWriteAccess)access.getWriteAccess(1)).setStringValue(value.getName());
@@ -369,13 +377,14 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
                     // Workflow-specific fields
                     writeToolPorts((ListWriteAccess)access.getWriteAccess(4), value.getInputs());
                     writeToolPorts((ListWriteAccess)access.getWriteAccess(5), value.getOutputs());
-                    ((IntWriteAccess)access.getWriteAccess(6)).setIntValue(value.getMessageOutputPortIndex());
+//                    ((IntWriteAccess)access.getWriteAccess(6)).setIntValue(value.getMessageOutputPortIndex());
 
                     // Field 7 is reserved/unused
                     access.getWriteAccess(7).setMissing();
 
-                    // MCP field (null for Workflow)
+                    // MCP fields (null for Workflow)
                     access.getWriteAccess(8).setMissing();
+                    access.getWriteAccess(9).setMissing();
                 }
                 case MCP -> {
                     // Workflow fields are missing for MCP tools
@@ -384,11 +393,17 @@ public class ToolValueFactory extends AbstractFileStoreValueFactory {
                     access.getWriteAccess(6).setMissing();
                     access.getWriteAccess(7).setMissing();
 
-                    // MCP-specific field
+                    // MCP-specific fields
                     if (value instanceof ToolCell toolCell) {
                         ((StringWriteAccess)access.getWriteAccess(8)).setStringValue(toolCell.getServerUri());
+                        if (toolCell.getCredentialName() != null) {
+                            ((StringWriteAccess)access.getWriteAccess(9)).setStringValue(toolCell.getCredentialName());
+                        } else {
+                            access.getWriteAccess(9).setMissing();
+                        }
                     } else {
                         access.getWriteAccess(8).setMissing();
+                        access.getWriteAccess(9).setMissing();
                     }
                 }
             }

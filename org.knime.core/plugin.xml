@@ -618,7 +618,7 @@
                serializerClass="org.knime.core.node.agentic.tool.ToolCell$ToolCellSerializer">
          </serializer>
          <ValueFactory
-               deprecated="true"
+               deprecated="false"
                valueFactoryClass="org.knime.core.node.agentic.tool.ToolValueFactory">
          </ValueFactory>
       </DataType>
