@@ -54,8 +54,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -100,6 +106,7 @@ import org.knime.core.node.wizard.page.WizardPageContribution;
 import org.knime.core.node.workflow.ComponentMetadata;
 import org.knime.core.node.workflow.ComponentMetadata.Port;
 import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
@@ -653,11 +660,132 @@ public final class ToolCell extends FileStoreCell implements ToolValue {
 
     private WorkflowToolResult executeMCPTool(final String parameters, final PortObject[] inputs,
         final ExecutionContext exec, final Map<String, String> executionHints) {
-        // TODO: Implement MCP tool execution
-        // This should call the MCP server at m_serverUri with the tool m_toolName and parameters
-        var message = "MCP tool execution not yet implemented for tool: " + m_name;
-        NodeLogger.getLogger(getClass()).warn(message);
-        return new WorkflowToolResult(message, null, null, null, null);
+        try {
+            // Resolve authentication header if credential is specified
+            var authHeader = resolveMCPAuthHeader();
+
+            // Parse the parameters into a JsonObject for the JSON-RPC arguments
+            var provider = JsonUtil.getProvider();
+            JsonObject paramsObj;
+            if (StringUtils.isBlank(parameters)) {
+                paramsObj = provider.createObjectBuilder().build();
+            } else {
+                try (var reader = provider.createReader(new StringReader(parameters))) {
+                    paramsObj = reader.readObject();
+                }
+            }
+
+            // Create JSON-RPC 2.0 request
+            var requestId = UUID.randomUUID().toString();
+            var requestJson = provider.createObjectBuilder()
+                .add("jsonrpc", "2.0")
+                .add("id", requestId)
+                .add("method", "tools/call")
+                .add("params", provider.createObjectBuilder()
+                    .add("name", m_toolName)
+                    .add("arguments", paramsObj))
+                .build().toString();
+
+            // Build HTTP request
+            var httpRequestBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(m_serverUri))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestJson, StandardCharsets.UTF_8));
+
+            if (authHeader != null) {
+                httpRequestBuilder.header("Authorization", authHeader);
+            }
+
+            // Send the request
+            exec.setMessage("Calling MCP tool: " + m_name);
+            var httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .build();
+            var httpResponse = httpClient.send(httpRequestBuilder.build(),
+                HttpResponse.BodyHandlers.ofString());
+
+            // Check HTTP status
+            if (httpResponse.statusCode() != 200) {
+                var errMsg = "MCP server returned HTTP " + httpResponse.statusCode() + ": " + httpResponse.body();
+                NodeLogger.getLogger(getClass()).error(errMsg);
+                return new WorkflowToolResult(errMsg, null, null, null, null);
+            }
+
+            // Parse JSON-RPC response
+            try (var reader = provider.createReader(new StringReader(httpResponse.body()))) {
+                var responseJson = reader.readObject();
+                if (responseJson.containsKey("error")) {
+                    var error = responseJson.getJsonObject("error");
+                    return new WorkflowToolResult(
+                        "MCP tool execution failed: " + error.toString(), null, null, null, null);
+                }
+                if (!responseJson.containsKey("result")) {
+                    return new WorkflowToolResult(
+                        "MCP response missing 'result' field", null, null, null, null);
+                }
+                var result = responseJson.get("result").toString();
+                return new WorkflowToolResult(result, null, new PortObject[0], null, null);
+            }
+        } catch (Exception e) {
+            var message = "Failed to execute MCP tool: " + m_name + ": " + e.getMessage();
+            NodeLogger.getLogger(getClass()).error(message, e);
+            return new WorkflowToolResult(message, null, null, null, null);
+        }
+    }
+
+    /**
+     * Resolves the Authorization header for an MCP tool call using the credential stored in this cell.
+     *
+     * <p>Auth type inference:
+     * <ol>
+     *   <li>{@link ICredentials#getSecondAuthenticationFactor()} present → Bearer token</li>
+     *   <li>{@link ICredentials#getLogin()} present → Basic Auth</li>
+     *   <li>{@link ICredentials#getPassword()} only → Bearer token</li>
+     * </ol>
+     *
+     * @return the Authorization header value, or {@code null} if no credential is configured
+     */
+    private String resolveMCPAuthHeader() {
+        if (m_credentialName == null) {
+            return null;
+        }
+        try {
+            var nc = NodeContext.getContext().getNodeContainer();
+            if (!(nc instanceof NativeNodeContainer nnc)) {
+                NodeLogger.getLogger(getClass()).warn(
+                    "Cannot resolve MCP credential outside of a native node context.");
+                return null;
+            }
+            ICredentials credentials = nnc.getNode().getCredentialsProvider().get(m_credentialName);
+
+            // Prefer second authentication factor as Bearer token (JWT / API key)
+            var secondFactor = credentials.getSecondAuthenticationFactor();
+            if (secondFactor.isPresent() && !secondFactor.get().isEmpty()) {
+                return "Bearer " + secondFactor.get();
+            }
+
+            // If login is present, use Basic Auth
+            var login = credentials.getLogin();
+            if (login != null && !login.isEmpty()) {
+                var password = credentials.getPassword() != null ? credentials.getPassword() : "";
+                return "Basic " + Base64.getEncoder()
+                    .encodeToString((login + ":" + password).getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Fall back to using the password as a Bearer token
+            var password = credentials.getPassword();
+            if (password != null && !password.isEmpty()) {
+                return "Bearer " + password;
+            }
+
+            NodeLogger.getLogger(getClass()).warn(
+                "Credential \"" + m_credentialName + "\" has no usable authentication data.");
+            return null;
+        } catch (IllegalArgumentException e) {
+            NodeLogger.getLogger(getClass()).warn(
+                "Could not resolve credential \"" + m_credentialName + "\": " + e.getMessage());
+            return null;
+        }
     }
 
 //    @Override
