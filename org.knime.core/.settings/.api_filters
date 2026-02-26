@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver">
-        <filter comment="Should not have been exported" id="305422471">
+        <filter comment="Re-exported API from org.apache.xmlbeans via org.knime.core shows up as API error. To be investigated in AP-25684, suppressing for now." id="305422471">
             <message_arguments>
                 <message_argument value="META-INF.versions.9.org.apache.xmlbeans.impl.tool.MavenPluginResolver"/>
-                <message_argument value="org.knime.core_5.10.0"/>
+                <message_argument value="org.knime.core_5.11.0"/>
             </message_arguments>
         </filter>
     </resource>
