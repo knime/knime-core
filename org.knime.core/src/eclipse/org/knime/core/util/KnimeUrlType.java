@@ -147,7 +147,7 @@ public enum KnimeUrlType {
     }
 
     /** URI scheme of KNIME URLs. */
-    public static final String SCHEME = CoreConstants.SCHEME;
+    public static final String SCHEME = "knime";
 
     /**
      * Name of the query parameter specifying the Hub item version.

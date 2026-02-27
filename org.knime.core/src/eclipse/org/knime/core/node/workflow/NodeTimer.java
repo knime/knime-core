@@ -53,9 +53,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -65,19 +63,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hc.client5.http.auth.AuthScope;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpException;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.annotation.Owning;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -101,9 +96,6 @@ import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.JsonUtil;
 import org.knime.core.util.MutableInteger;
-import org.knime.core.util.Pair;
-import org.knime.core.util.proxy.apache5.ProxyCredentialsProvider;
-import org.knime.core.util.proxy.apache5.ProxyHttpClients;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
@@ -713,59 +705,50 @@ public final class NodeTimer {
                 return;
             }
 
+            PostMethod method = null;
             final var jo = constructJSONObject(properShutdown);
             final var cfg = Collections.singletonMap(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
             try (var bos = new ByteArrayOutputStream();
                     var jw = JsonUtil.getProvider().createWriterFactory(cfg).createWriter(bos)) {
                 // we don't need to compress here since gzip is done on the web server
                 jw.write(jo);
+                byte[] bytes = bos.toByteArray();
 
-                final Pair<HttpClientBuilder, HttpPost> request = prepareRequestToServer(bos.toByteArray());
-                try (var client = request.getFirst().build()) {
-                    client.execute(request.getSecond(), response -> {
-                        if (response.getCode() != HttpStatus.SC_OK) {
-                            String responseReason = response.getReasonPhrase();
-                            String responseString = responseReason == null ? Integer.toString(response.getCode())
-                                : (response.getCode() + " - " + responseReason);
-                            throw new HttpException("Server returned HTTP code " + responseString);
-                        }
-                        // this is why we `@SuppressWarnings("resource")` in the preparation,
-                        // the HTTP entity is quietly consumed and closed here
-                        EntityUtils.consumeQuietly(response.getEntity());
-                        return null;
-                    });
+                String knid = URLEncoder.encode(KNIMEConstants.getKNID(), "UTF-8");
+                final var requestClient = new HttpClient();
+                requestClient.getParams().setAuthenticationPreemptive(true);
+                org.apache.commons.httpclient.Credentials usageCredentials =
+                    new UsernamePasswordCredentials("knime-usage-user", "knime");
+                requestClient.getState().setCredentials(AuthScope.ANY, usageCredentials);
 
+                // use the new v2 end point for session based files
+                String uri = SERVER_ADDRESS + "/usage/v2/" + knid;
+                method = new PostMethod(uri);
+                RequestEntity entity = new ByteArrayRequestEntity(bytes);
+                method.setRequestEntity(entity);
+                int response = requestClient.executeMethod(method);
+                if (response != HttpStatus.SC_OK) {
+                    String responseReason = HttpStatus.getStatusText(response);
+                    String responseString = responseReason == null ?
+                        Integer.toString(response) : (response + " - " + responseReason);
+                    throw new HttpException("Server returned HTTP code " + responseString);
                 }
                 // reset all session counts
                 resetSessionCounts();
                 // write new file after resetting the session counts to read the current global counts next time
                 writeToFile(properShutdown);
                 LOGGER.debug("Successfully sent node usage stats to server");
+            } catch (HttpException ex) {
+                LOGGER.warn("Node usage file failed to send  because of a protocol exception.", ex);
             } catch (IOException ex) {
                 LOGGER.debug("Node usage file did not send. Not logging additional information, "
                     + "since this is commonly due to limited internet connection: "
                     + ex.getClass().getName() + " - " + ex.getMessage());
+            } finally {
+                if (method != null) {
+                    method.releaseConnection();
+                }
             }
-        }
-
-        @SuppressWarnings("resource")
-        private static @Owning Pair<HttpClientBuilder, HttpPost> prepareRequestToServer(final byte[] bytes) {
-            String knid = URLEncoder.encode(KNIMEConstants.getKNID(), StandardCharsets.UTF_8);
-
-            // use the new v2 end point for session based files
-            final var uri = URI.create(SERVER_ADDRESS + "/usage/v2/" + knid);
-            final var credentialsProvider = new ProxyCredentialsProvider(uri);
-            credentialsProvider.setCredentials( //
-                new AuthScope(uri.getHost(), uri.getPort()), //
-                new UsernamePasswordCredentials("knime-usage-user", "knime".toCharArray()) // NOSONAR
-            );
-            final var requestBuilder = ProxyHttpClients.custom() //
-                .setDefaultCredentialsProvider(credentialsProvider);
-            HttpEntity entity = new ByteArrayEntity(bytes, ContentType.APPLICATION_JSON);
-            final var post = new HttpPost(uri);
-            post.setEntity(entity);
-
-            return Pair.create(requestBuilder, post);
         }
 
         private Thread asyncSendToServer(final boolean properShutdown) {
