@@ -86,7 +86,7 @@ public final class WorkflowManagerUtil {
         }
     }
 
-    private static WorkflowManager loadWorkflow(final File workflowDir, final WorkflowContextV2 workflowContext)
+    private static WorkflowLoadResult loadWorkflow(final File workflowDir, final WorkflowContextV2 workflowContext)
             throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
         final var loadHelper = new TryAlwaysWorkflowLoadHelper() {
@@ -96,8 +96,7 @@ public final class WorkflowManagerUtil {
             }
         };
 
-        WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
-        return loadRes.getWorkflowManager();
+        return WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
     }
 
     /**
@@ -114,14 +113,33 @@ public final class WorkflowManagerUtil {
      * @throws LockFailedException
      */
     public static WorkflowManager loadWorkflowInWorkspace(final Path workflowDir, final Path workspaceDir)
-            throws IOException, InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException, LockFailedException {
-        return loadWorkflow(workflowDir.toFile(), WorkflowContextV2.builder()
-            .withAnalyticsPlatformExecutor(exec -> exec
-                .withCurrentUserAsUserId()
-                .withLocalWorkflowPath(workflowDir.toAbsolutePath())
-                .withMountpoint("LOCAL", workspaceDir.toAbsolutePath()))
-            .withLocalLocation()
+        throws IOException, InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException,
+        LockFailedException {
+        return loadWorkflowInWorkspaceAndReturnLoadResult(workflowDir, workspaceDir).getWorkflowManager();
+    }
+
+    /**
+     * Loads a workflow into memory and sets a {@link WorkflowContextV2 workflow context} claiming that the workflow
+     * lives on a {@code LOCAL} mountpoint with the given root directory.
+     *
+     * @param workflowDir
+     * @param workspaceDir
+     * @return the {@link WorkflowLoadResult}
+     * @throws IOException
+     * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
+     * @throws UnsupportedWorkflowVersionException
+     * @throws LockFailedException
+     */
+    public static WorkflowLoadResult loadWorkflowInWorkspaceAndReturnLoadResult(final Path workflowDir,
+        final Path workspaceDir) throws IOException, InvalidSettingsException, CanceledExecutionException,
+        UnsupportedWorkflowVersionException, LockFailedException {
+        return loadWorkflow(workflowDir.toFile(), WorkflowContextV2.builder() //
+            .withAnalyticsPlatformExecutor(exec -> exec //
+                .withCurrentUserAsUserId() //
+                .withLocalWorkflowPath(workflowDir.toAbsolutePath()) //
+                .withMountpoint("LOCAL", workspaceDir.toAbsolutePath())) //
+            .withLocalLocation() //
             .build());
     }
 
@@ -138,7 +156,7 @@ public final class WorkflowManagerUtil {
      */
     public static WorkflowManager loadWorkflow(final File workflowDir) throws IOException, InvalidSettingsException,
         CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
-        return loadWorkflow(workflowDir, WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null));
+        return loadWorkflow(workflowDir, WorkflowContextV2.forTemporaryWorkflow(workflowDir.toPath(), null)).getWorkflowManager();
     }
 
     /**
