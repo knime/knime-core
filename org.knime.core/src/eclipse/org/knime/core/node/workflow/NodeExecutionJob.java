@@ -57,7 +57,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.util.ThreadPool;
 
@@ -245,12 +244,7 @@ public abstract class NodeExecutionJob implements Runnable {
             // failure inside an active try-catch:
             // make node inactive and preserve error message(s)
             if (snc.setInactive()) {
-                final NodeMessage msg;
-                if (status instanceof NodeContainerExecutionResult ncer) {
-                    msg = ncer.getNodeMessage().prependMessage("Execution failed in Try-Catch block: ");
-                } else {
-                    msg = NodeMessage.newError("Execution failed in Try-Catch block: " + status.toString());
-                }
+                final NodeMessage msg = status.getNodeMessage().prependMessage("Execution failed in Try-Catch block: ");
                 String errorMessage = msg.getMessage();
                 snc.setNodeMessage(msg);
                 // and store information such that the catch-node can report it
