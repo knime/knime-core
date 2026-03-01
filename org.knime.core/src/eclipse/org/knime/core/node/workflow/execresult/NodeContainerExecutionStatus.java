@@ -48,6 +48,7 @@
 package org.knime.core.node.workflow.execresult;
 
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
@@ -74,6 +75,12 @@ public interface NodeContainerExecutionStatus {
      */
     public boolean isSuccess();
 
+    /** The node's message, corresponding to the node's execution status.
+     * @return the message, not null.
+     * @since 5.12
+     */
+    NodeMessage getNodeMessage();
+
     /** Query the execution status for a child given its
      * {@linkplain NodeID#getIndex() node id suffix}. If the child is unknown,
      * the implementation should return {@link #FAILURE}.
@@ -85,8 +92,19 @@ public interface NodeContainerExecutionStatus {
     /** Convenience shortcut to create failure with no children but custom error message.
      * @param message the message
      * @return a new failure with a custom message.
-     * @since 3.0 */
-    static public NodeContainerExecutionStatus newFailure(final String message) {
+     * @since 3.0
+     * @deprecated Use {@link #newFailure(NodeMessage)} instead.
+     */
+    @Deprecated(since = "5.12", forRemoval = true)
+    static NodeContainerExecutionStatus newFailure(final String message) {
+        return newFailure(new NodeMessage(NodeMessage.Type.ERROR, message));
+    }
+
+    /** Convenience shortcut to create failure with no children but custom error message.
+     * @param message the message
+     * @return a new failure with a custom message.
+     * @since 5.12 */
+    static NodeContainerExecutionStatus newFailure(final NodeMessage message) {
         return new NodeContainerExecutionStatus() {
 
             /**
@@ -98,6 +116,12 @@ public interface NodeContainerExecutionStatus {
                 return this;
             }
 
+
+            @Override
+            public NodeMessage getNodeMessage() {
+                return message;
+            }
+
             /** @return false */
             @Override
             public boolean isSuccess() {
@@ -107,7 +131,7 @@ public interface NodeContainerExecutionStatus {
             /** {@inheritDoc} */
             @Override
             public String toString() {
-                return message;
+                return message.getMessage();
             }
         };
     }
@@ -127,6 +151,11 @@ public interface NodeContainerExecutionStatus {
                 final int idSuffix) {
             assert false : "No implied success status on children";
             return SUCCESS;
+        }
+
+        @Override
+        public NodeMessage getNodeMessage() {
+            return NodeMessage.NONE;
         }
 
         /** @return true */

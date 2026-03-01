@@ -1554,7 +1554,7 @@ public final class SubNodeContainer extends SingleNodeContainer
                         .filter(m -> NodeMessage.Type.RESET != m.getMessageType()) //
                         .orElse(NodeMessage.newError("<reason unknown>"));
                 setNodeMessage(nodeMessage);
-                return NodeContainerExecutionStatus.newFailure(nodeMessage.getMessage());
+                return NodeContainerExecutionStatus.newFailure(nodeMessage);
             }
             return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
         } finally {

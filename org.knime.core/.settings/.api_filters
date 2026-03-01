@@ -8,4 +8,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeContainerExecutionStatus.java" type="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus">
+        <filter comment="added as part of AP-25686 - interface is internal API" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus"/>
+                <message_argument value="getNodeMessage()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
