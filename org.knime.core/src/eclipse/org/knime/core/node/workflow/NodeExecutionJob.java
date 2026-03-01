@@ -245,9 +245,14 @@ public abstract class NodeExecutionJob implements Runnable {
             // failure inside an active try-catch:
             // make node inactive and preserve error message(s)
             if (snc.setInactive()) {
-                String errorMessage = (status instanceof NodeContainerExecutionResult)
-                    ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
-                snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
+                final NodeMessage msg;
+                if (status instanceof NodeContainerExecutionResult ncer) {
+                    msg = ncer.getNodeMessage().prependMessage("Execution failed in Try-Catch block: ");
+                } else {
+                    msg = NodeMessage.newError("Execution failed in Try-Catch block: " + status.toString());
+                }
+                String errorMessage = msg.getMessage();
+                snc.setNodeMessage(msg);
                 // and store information such that the catch-node can report it
                 tcslc.setErrorToFlowObjectStack(snc.getName(), errorMessage, null, null,
                     snc.getOutgoingFlowObjectStack());
