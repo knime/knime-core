@@ -57,7 +57,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.util.ThreadPool;
 
@@ -245,9 +244,9 @@ public abstract class NodeExecutionJob implements Runnable {
             // failure inside an active try-catch:
             // make node inactive and preserve error message(s)
             if (snc.setInactive()) {
-                String errorMessage = (status instanceof NodeContainerExecutionResult)
-                    ? ((NodeContainerExecutionResult)status).getNodeMessage().getMessage() : status.toString();
-                snc.setNodeMessage(NodeMessage.newError("Execution failed in Try-Catch block: " + errorMessage));
+                final NodeMessage msg = status.getNodeMessage().prependMessage("Execution failed in Try-Catch block: ");
+                String errorMessage = msg.getMessage();
+                snc.setNodeMessage(msg);
                 // and store information such that the catch-node can report it
                 tcslc.setErrorToFlowObjectStack(snc.getName(), errorMessage, null, null,
                     snc.getOutgoingFlowObjectStack());
