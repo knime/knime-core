@@ -396,8 +396,12 @@ public class ThreadPool {
      * Creates a sub pool that shares the threads with this (parent) pool.
      *
      * @return a thread pool
+     * @deprecated This API complicates the execution pipeline and blocks migration to
+     *             {@link java.util.concurrent.ForkJoinPool}. Use {@link #currentPool()} instead.
      */
-    public ThreadPool createSubPool() {
+    @Deprecated(since = "5.12.0", forRemoval = true)
+    public ThreadPool createSubPool() { // NOSONAR to be removed with AP-24183
+        NodeLogger.getLogger(ThreadPool.class).coding("ThreadPool#createSubPool() is deprecated.");
         return new ThreadPool(m_maxThreads.get(), this);
     }
 
@@ -409,8 +413,12 @@ public class ThreadPool {
      *
      * @param maxThreads the maximum number of threads in the sub pool
      * @return a thread pool
+     * @deprecated This API complicates the execution pipeline and blocks migration to
+     *             {@link java.util.concurrent.ForkJoinPool}. Use {@link #currentPool()} instead.
      */
-    public ThreadPool createSubPool(final int maxThreads) {
+    @Deprecated(since = "5.12.0", forRemoval = true)
+    public ThreadPool createSubPool(final int maxThreads) { // NOSONAR to be removed with AP-24183
+        NodeLogger.getLogger(ThreadPool.class).coding("ThreadPool#createSubPool(int) is deprecated");
         return new ThreadPool(maxThreads, this);
     }
 
