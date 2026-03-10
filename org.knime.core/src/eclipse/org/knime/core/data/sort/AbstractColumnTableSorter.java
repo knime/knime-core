@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
@@ -97,9 +98,6 @@ import org.knime.core.util.ThreadPool;
  * @since 2.10
  */
 abstract class AbstractColumnTableSorter {
-
-    private final ThreadPool m_executor =
-            KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool(Runtime.getRuntime().availableProcessors());
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractColumnTableSorter.class);
 
@@ -490,10 +488,11 @@ abstract class AbstractColumnTableSorter {
     }
 
     private void sortBufferInParallel() {
+        final ThreadPool pool = Objects.requireNonNullElse(ThreadPool.currentPool(), KNIMEConstants.GLOBAL_THREAD_POOL);
         List<Future<?>> futures = new ArrayList<>();
         try {
             for (final Entry<SortingDescription, List<DataRow>> descr : m_buffer.entrySet()) {
-                futures.add(m_executor.enqueue(() -> Collections.sort(descr.getValue(), descr.getKey())));
+                futures.add(pool.enqueue(() -> Collections.sort(descr.getValue(), descr.getKey())));
             }
             // wait until the inserting is finished
             for (Future<?> f : futures) {
