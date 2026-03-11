@@ -56,6 +56,7 @@ import static org.knime.core.data.property.ColorGradientDefinitionUtil.MATPLOTLI
 import static org.knime.core.data.property.ColorGradientDefinitionUtil.PLASMA_COLORS;
 import static org.knime.core.data.property.ColorGradientDefinitionUtil.VIRIDIS_COLORS;
 
+import java.awt.Color;
 import java.util.Arrays;
 
 /**
@@ -107,25 +108,39 @@ public enum ColorGradient {
 
     private final double[][] m_gradientColorsCIELab;
 
+    private final Color[] m_gradientColors;
+
     ColorGradient() {
         m_gradientColorsCIELab = null;
+        m_gradientColors = null;
     }
 
     ColorGradient(final String[] gradientColorsHex) {
         m_gradientColorsCIELab =
             cloneGradientColors(ColorSpaceConversionUtil.convertHexColorsToCIELab(gradientColorsHex));
+        m_gradientColors = Arrays.stream(gradientColorsHex).map(Color::decode).toArray(Color[]::new);
     }
 
     ColorGradient(final double[][] gradientColorsSRGB) {
         m_gradientColorsCIELab =
             cloneGradientColors(ColorSpaceConversionUtil.convertSRGBColorsToCIELab(gradientColorsSRGB));
+        m_gradientColors = Arrays.stream(gradientColorsSRGB)
+            .map(rgb -> new Color((float)rgb[0], (float)rgb[1], (float)rgb[2])).toArray(Color[]::new);
     }
 
     /**
-     * @return the paletteAsColor (or <code>null</code> for {@link ColorGradient#CUSTOM}).
+     * @return the gradient colors in the CIELab color space (or <code>null</code> for {@link ColorGradient#CUSTOM}).
      */
     double[][] getGradientColorsCIELab() {
         return m_gradientColorsCIELab;
+    }
+
+    /**
+     * @return the gradient colors (or <code>null</code> for {@link ColorGradient#CUSTOM}).
+     * @since 5.12
+     */
+    public Color[] getGradientColors() {
+        return m_gradientColors == null ? null : Arrays.copyOf(m_gradientColors, m_gradientColors.length);
     }
 
     private static double[][] cloneGradientColors(final double[][] gradientColors) {
