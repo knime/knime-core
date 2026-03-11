@@ -174,7 +174,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.19.0,4.0.0)";visibility:=ree
  org.knime.core.util;bundle-version="[6.8.1,7.0.0)";visibility:=reexport,
  org.knime.core.workbench;bundle-version="[5.8.3,6.0.0)",
  org.knime.shared.workflow.def;bundle-version="[5.8.3,6.0.0)";visibility:=reexport,
- org.knime.shared.workflow.storage;bundle-version="[5.8.0,6.0.0)";visibility:=reexport,
+ org.knime.shared.workflow.storage;bundle-version="[5.8.3,6.0.0)";visibility:=reexport,
  org.eclipse.ecf.filetransfer;bundle-version="[5.0.0,6.0.0)",
  org.knime.core.pmml;bundle-version="[5.8.3,6.0.0)",
  org.apache.httpcomponents.core5.httpcore5;bundle-version="[5.1.4,6.0.0)",
