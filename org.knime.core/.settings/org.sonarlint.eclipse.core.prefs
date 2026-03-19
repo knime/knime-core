@@ -1,6 +1,6 @@
 autoEnabled=true
 eclipse.preferences.version=1
 idePrefixKey=
-projectKey=KNIME_knime-core
+projectKey=knime_knime-core
 serverId=SonarCloud
 sqPrefixKey=org.knime.core
