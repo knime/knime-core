@@ -56,9 +56,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -68,6 +70,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -89,6 +92,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.NodeLogger.NodeContextInformation;
+import org.knime.core.node.NodeLoggerPatternLayout;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -170,6 +174,16 @@ import org.knime.core.util.Pair;
 public final class KNIMELogger {
 
     /**
+     * Environment variable controlling where the logging failsafe output is written. Defaults to {@code stdout}.
+     */
+    private static final String ENV_LOGGING_FAILSAFE_TARGET = "KNIME_CORE_LOGGING_FAILSAFE_TARGET";
+
+    /**
+     * Environment variable controlling the minimum level written by the logging failsafe output.
+     */
+    private static final String ENV_LOGGING_FAILSAFE_MIN_LEVEL = "KNIME_CORE_LOGGING_FAILSAFE_MIN_LEVEL";
+
+    /**
      * This initializer is registered via the {@link IEarlyStartup} extension point at stage
      * {@link org.knime.core.util.IEarlyStartup.StartupStage#AFTER_PROFILES_SET AFTER_PROFILES_SET}.
      */
@@ -184,6 +198,18 @@ public final class KNIMELogger {
     private static final LogBuffer BUFFER = new LogBuffer(1024);
 
     private static volatile boolean isInitialized;
+
+    private static final PrintStream FAILSAFE_LOGGING_TARGET = initFailsafeLoggingTarget();
+
+    private static final Level FAILSAFE_LOGGING_MIN_LEVEL = initFailsafeLoggingMinLevel();
+
+    private static final Layout FAILSAFE_LOGGING_LAYOUT = initFailsafeLoggingLayout();
+
+    private static final AtomicBoolean isShutdownHookInstalled = new AtomicBoolean();
+
+    private static volatile boolean isFailsafeShutdownLoggingActive;
+
+    private static boolean isFailsafeBufferDumped;
 
     static boolean isInstanceLocationSet() {
         final var loc = Platform.getInstanceLocation();
@@ -279,6 +305,125 @@ public final class KNIMELogger {
         if (logBufferedLogMessages) {
             logBufferedMessages();
         }
+    }
+
+    private static void installFailsafeLoggingHandlers() {
+        if (isShutdownHookInstalled.compareAndSet(false, true)) {
+            try {
+                Runtime.getRuntime().addShutdownHook(new Thread(
+                    () -> drainBufferedMessagesTo(FAILSAFE_LOGGING_TARGET,
+                        "JVM is shutting down before KNIME logging could finish initialization"),
+                    "KNIME startup log dump"));
+            } catch (IllegalStateException ex) {
+                FAILSAFE_LOGGING_TARGET.println(
+                    "Unable to register KNIME startup log shutdown hook because JVM shutdown is already in progress:");
+                ex.printStackTrace(FAILSAFE_LOGGING_TARGET);
+                drainBufferedMessagesTo(FAILSAFE_LOGGING_TARGET,
+                    "JVM is shutting down before KNIME logging could finish initialization");
+            } catch (SecurityException ex) {
+                isShutdownHookInstalled.set(false);
+                FAILSAFE_LOGGING_TARGET.println("Unable to register KNIME startup log shutdown hook:");
+                ex.printStackTrace(FAILSAFE_LOGGING_TARGET);
+            }
+        }
+    }
+
+    /**
+     * Dumps buffered startup log messages to the given stream.
+     *
+     * @param out the target stream
+     * @param reason a human-readable reason included in the dump header
+     */
+    private static void drainBufferedMessagesTo(final PrintStream out, final String reason) {
+        drainBufferedMessagesTo(out, reason, FAILSAFE_LOGGING_MIN_LEVEL);
+    }
+
+    private static void drainBufferedMessagesTo(final PrintStream out, final String reason, final Level minLevel) {
+        Objects.requireNonNull(out);
+        final LogBuffer.BufferContents contents;
+        synchronized (BUFFER) {
+            if (isFailsafeBufferDumped) {
+                return;
+            }
+            isFailsafeShutdownLoggingActive = true;
+            isFailsafeBufferDumped = true;
+            contents = BUFFER.drain();
+        }
+        if (contents.isEmpty()) {
+            return;
+        }
+
+        final var matchingMessages = Arrays.stream(contents.messages())
+            .filter(message -> message.level().isGreaterOrEqual(minLevel))
+            .toList();
+        final var shouldEmitEvictionNotice = contents.evictedEntries() > 0
+            && contents.evictionMessageLevel().isGreaterOrEqual(minLevel);
+        if (matchingMessages.isEmpty() && !shouldEmitEvictionNotice) {
+            return;
+        }
+
+        final var total = contents.messages().length + contents.evictedEntries();
+        final var countMessages = total > 1 ? "%d messages were".formatted(total) : "1 message was";
+        out.printf("KNIME startup failsafe logging dump: %s. %s buffered. Minimum level: %s.%n",
+            reason, countMessages, minLevel);
+        if (shouldEmitEvictionNotice) {
+            emitToFailsafeLoggingTarget(out, KNIMELogger.class.getName(), contents.evictionMessageLevel(),
+                "[*** Log incomplete: log buffer did wrap around -- %d messages were evicted from buffer in total ***]"
+                    .formatted(contents.evictedEntries()),
+                null, Instant.now());
+        }
+        for (final var message : matchingMessages) {
+            emitToFailsafeLoggingTarget(out, message.name(), message.level(), message.message(), message.cause(),
+                message.instant());
+        }
+        out.println("End of KNIME startup failsafe logging dump.");
+        out.flush();
+    }
+
+    private static void emitToFailsafeLoggingTarget(final String name, final Level level, final Object message,
+        final Throwable cause) {
+        if (!level.isGreaterOrEqual(FAILSAFE_LOGGING_MIN_LEVEL)) {
+            return;
+        }
+
+        emitToFailsafeLoggingTarget(FAILSAFE_LOGGING_TARGET, name, level, message, cause, Instant.now());
+    }
+
+    private static void emitToFailsafeLoggingTarget(final String name, final Level level,
+        final Supplier<Object> messageSupplier, final Throwable cause) {
+        if (!level.isGreaterOrEqual(FAILSAFE_LOGGING_MIN_LEVEL)) {
+            return;
+        }
+
+        emitToFailsafeLoggingTarget(FAILSAFE_LOGGING_TARGET, name, level, messageSupplier.get(), cause, Instant.now());
+    }
+
+    private static void emitToFailsafeLoggingTarget(final PrintStream out, final String name, final Level level,
+        final Object message, final Throwable cause, final Instant instant) {
+        final var event =
+            new LoggingEvent(KNIMELogger.class.getName(), Logger.getLogger(name), instant.toEpochMilli(), level,
+                message, cause);
+        out.print(FAILSAFE_LOGGING_LAYOUT.format(event));
+        if (cause != null && FAILSAFE_LOGGING_LAYOUT.ignoresThrowable()) {
+            cause.printStackTrace(out);
+        }
+        out.flush();
+    }
+
+    private static PrintStream initFailsafeLoggingTarget() {
+        final var configuredTarget = System.getenv(ENV_LOGGING_FAILSAFE_TARGET);
+        return "stderr".equalsIgnoreCase(configuredTarget) ? System.err : System.out;
+    }
+
+    private static Level initFailsafeLoggingMinLevel() {
+        return Level.toLevel(System.getenv(ENV_LOGGING_FAILSAFE_MIN_LEVEL), Level.DEBUG);
+    }
+
+    private static Layout initFailsafeLoggingLayout() {
+        final var layout = new NodeLoggerPatternLayout();
+        layout.setConversionPattern("%d{ISO8601} : %-5p : %t : %c{1} : %m%n");
+        layout.activateOptions();
+        return layout;
     }
 
     private void initializeInternalLogger() {
@@ -984,12 +1129,22 @@ public final class KNIMELogger {
      */
     public void log(final Level level, final Supplier<Object> messageSupplier, final boolean omitContext,
             final Throwable cause) {
+        Objects.requireNonNull(level, "Must not log a null level");
         // we double-check to avoid expensive locking
         if (!isInitialized()) {
+            if (isFailsafeShutdownLoggingActive) {
+                emitToFailsafeLoggingTarget(m_name, level, messageSupplier, cause);
+                return;
+            }
+            installFailsafeLoggingHandlers();
             synchronized(BUFFER) {
                 // we need to check again now that we have the lock to see if someone else has initialized it in the
                 // meantime
                 if (!isInitialized()) {
+                    if (isFailsafeShutdownLoggingActive) {
+                        emitToFailsafeLoggingTarget(m_name, level, messageSupplier, cause);
+                        return;
+                    }
                     BUFFER.log(level, m_name, messageSupplier.get(), cause);
                     return;
                 }
@@ -1008,10 +1163,20 @@ public final class KNIMELogger {
      */
     public void log(final Level level, final Object message, final boolean omitContext,
             final Throwable cause) {
+        Objects.requireNonNull(level, "Must not log a null level");
         // we double-check to avoid expensive locking
         if (!isInitialized()) {
+            if (isFailsafeShutdownLoggingActive) {
+                emitToFailsafeLoggingTarget(m_name, level, message, cause);
+                return;
+            }
+            installFailsafeLoggingHandlers();
             synchronized(BUFFER) {
                 if (!isInitialized()) {
+                    if (isFailsafeShutdownLoggingActive) {
+                        emitToFailsafeLoggingTarget(m_name, level, message, cause);
+                        return;
+                    }
                     BUFFER.log(level, m_name, message, cause);
                     return;
                 }
