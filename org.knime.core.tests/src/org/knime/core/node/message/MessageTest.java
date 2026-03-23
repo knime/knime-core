@@ -82,6 +82,7 @@ class MessageTest {
         ThrowingConsumer<RowIssue> rowIssueCondition = issue -> {
             assertThat(issue.toPreformatted()).contains(issueDesc);
         };
+        assertThat(messageBuilder.getResolutionCount()).isEqualTo(0);
         assertThat(messageBuilder.getIssueCount()).isEqualTo(2);
         assertThat(messageBuilder.getFirstIssue()).get().asString().contains(issueDesc);
         final var summary = "Some Summary";
@@ -281,14 +282,14 @@ class MessageTest {
         assertThat(message1.toKNIMEException()) //
             .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
             .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
-            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .extracting(e -> e.getKNIMEMessage()) //
             .as("Original message is available").isEqualTo(message1);
 
         assertThat(message1.toKNIMEException(cause)) //
             .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
             .as("root cause is exactly").hasRootCause(cause)
             .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
-            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .extracting(e -> e.getKNIMEMessage()) //
             .as("Original message is available").isEqualTo(message1);
     }
 
