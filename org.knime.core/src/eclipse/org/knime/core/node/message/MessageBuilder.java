@@ -212,6 +212,21 @@ public final class MessageBuilder {
     }
 
     /**
+     * Returns the number of resolutions that have a been added to this {@link MessageBuilder}.
+     * Note that adding two identical resolutions will increase this count.
+     * <p>
+     * Hence, this count can be useful to avoid duplicates in resolutions for the same (row-)issue.
+     * For example, 13 identical issues may exist, but all have the same resolution.
+     * </p>
+     *
+     * @return the number of resolutions added to the message builder
+     * @since 5.12
+     */
+    public int getResolutionCount() {
+        return m_resolutions.size();
+    }
+
+    /**
      * Builds the final message or an empty {@link Optional} if no summary was set.
      *
      * @return The message.
