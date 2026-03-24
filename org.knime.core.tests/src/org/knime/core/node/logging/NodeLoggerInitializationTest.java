@@ -50,9 +50,13 @@ package org.knime.core.node.logging;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.io.output.NullWriter;
 import org.apache.log4j.Level;
@@ -66,6 +70,7 @@ import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
+import org.knime.core.node.logging.LogBuffer.DrainResult;
 
 /**
  * Tests that the node logger can be used prior to setting the workspace (instance location) and still
@@ -98,13 +103,31 @@ class NodeLoggerInitializationTest {
         final var buffer = new LogBuffer(3);
         final var msgs = new String[] { "First", "Second", "Third" };
         for (final var msg : msgs) {
-            buffer.log(Level.DEBUG, "testing", msg, null);
+            buffer.add(Level.DEBUG, "testing", msg, null);
         }
+        final DrainResult result = buffer.drain();
+        assertNotNull(result, "Expected non-null drain result for non-empty buffer");
         final var buffered = new ArrayList<BufferedLogMessage>();
-        buffer.drainTo(buffered::add);
-        final var bufferedMessages = buffered.stream().map(BufferedLogMessage::message)
-                .toArray(String[]::new);
+        result.messages().forEachRemaining(buffered::add);
+        final var bufferedMessages = buffered.stream().map(BufferedLogMessage::message).toArray(String[]::new);
         assertArrayEquals(msgs, bufferedMessages, "Unexpected messages received while draining buffer");
+    }
+
+    @Test
+    void testEmptyBufferDrainReturnsNull() {
+        final var buffer = new LogBuffer(3);
+        assertTrue(buffer.isEmpty(), "Freshly created buffer should be empty");
+        assertNull(buffer.drain(), "Expected null drain result for empty buffer");
+    }
+
+    @Test
+    void testBufferIteratorThrowsOnExhaustion() {
+        final var buffer = new LogBuffer(1);
+        buffer.add(Level.DEBUG, "test", "msg", null);
+        final var result = buffer.drain();
+        result.messages().next(); // consume the single entry
+        assertThrows(NoSuchElementException.class, () -> result.messages().next(),
+            "Expected NoSuchElementException when advancing exhausted iterator");
     }
 
     @Test
@@ -113,13 +136,13 @@ class NodeLoggerInitializationTest {
         final var logStack = new LogInterceptor(KNIMELogger.class.getName());
         KNIMELogger.addWriter(WRITER, logStack, LEVEL.DEBUG, LEVEL.FATAL);
 
-        final var buffer = new LogBuffer(2);
-        buffer.log(Level.FATAL, "testing", "First", null);
-        buffer.log(Level.DEBUG, "testing", "Second", null);
-        buffer.log(Level.INFO, "testing", "Third", null);
+        final var router = new StartupLogRouter(2);
+        router.route(() -> false, Level.FATAL, "testing", "First", null);
+        router.route(() -> false, Level.DEBUG, "testing", "Second", null);
+        router.route(() -> false, Level.INFO, "testing", "Third", null);
 
         final var drainedMessages = new ArrayList<BufferedLogMessage>();
-        buffer.drainTo(drainedMessages::add);
+        router.drainToLogger(drainedMessages::add);
 
         final var bufferedMessages = drainedMessages.stream().map(BufferedLogMessage::message)
             .toArray(String[]::new);
