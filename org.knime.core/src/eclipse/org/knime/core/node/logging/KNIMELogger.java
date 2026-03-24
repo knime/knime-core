@@ -314,13 +314,13 @@ public final class KNIMELogger {
                     () -> drainBufferedMessagesTo(FAILSAFE_LOGGING_TARGET,
                         "JVM is shutting down before KNIME logging could finish initialization"),
                     "KNIME startup log dump"));
-            } catch (IllegalStateException ex) {
+            } catch (IllegalStateException ex) { // NOSONAR: failsafe path cannot rely on regular logging here
                 FAILSAFE_LOGGING_TARGET.println(
                     "Unable to register KNIME startup log shutdown hook because JVM shutdown is already in progress:");
                 ex.printStackTrace(FAILSAFE_LOGGING_TARGET);
                 drainBufferedMessagesTo(FAILSAFE_LOGGING_TARGET,
                     "JVM is shutting down before KNIME logging could finish initialization");
-            } catch (SecurityException ex) {
+            } catch (SecurityException ex) { // NOSONAR: failsafe path cannot rely on regular logging here
                 isShutdownHookInstalled.set(false);
                 FAILSAFE_LOGGING_TARGET.println("Unable to register KNIME startup log shutdown hook:");
                 ex.printStackTrace(FAILSAFE_LOGGING_TARGET);

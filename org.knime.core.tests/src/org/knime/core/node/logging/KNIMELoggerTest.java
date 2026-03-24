@@ -49,6 +49,7 @@
 package org.knime.core.node.logging;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.apache.commons.io.output.NullWriter;
 import org.apache.log4j.Level;
@@ -159,5 +160,17 @@ class KNIMELoggerTest {
         logger.error(thirdMsg);
         m_logStack.assertLastLogMessageEquals(Level.ERROR, thirdMsg);
         m_logStack.assertFirstLogMessageEquals(Level.ERROR, firstMsg);
+    }
+
+    @Test
+    void testLogRejectsNullLevelForObjectMessage() {
+        final var logger = KNIMELogger.getLogger(LOGGER_NAME);
+        assertThrows(NullPointerException.class, () -> logger.log(null, "message", true, null));
+    }
+
+    @Test
+    void testLogRejectsNullLevelForSupplierMessage() {
+        final var logger = KNIMELogger.getLogger(LOGGER_NAME);
+        assertThrows(NullPointerException.class, () -> logger.log(null, () -> "message", true, null));
     }
 }
