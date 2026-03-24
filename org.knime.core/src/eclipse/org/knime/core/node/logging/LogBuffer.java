@@ -64,19 +64,6 @@ import org.apache.log4j.Level;
  */
 final class LogBuffer {
 
-    /**
-     * Drained buffer contents and any overflow metadata.
-     *
-     * @param messages buffered messages in insertion order
-     * @param evictedEntries total number of messages evicted from the buffer
-     * @param evictionMessageLevel log level to use for an overflow notice
-     */
-    record BufferContents(BufferedLogMessage[] messages, long evictedEntries, Level evictionMessageLevel) {
-        boolean isEmpty() {
-            return messages.length == 0;
-        }
-    }
-
     private final CircularFiFoBuffer m_logBuffer;
 
     LogBuffer(final int bufferSize) {
@@ -200,49 +187,29 @@ final class LogBuffer {
      * @param consumer consumer for buffered log messages
      */
     void drainTo(final Consumer<BufferedLogMessage> consumer) {
-        final BufferContents contents;
         synchronized (this) {
-            contents = drain();
-        }
-        if (!contents.isEmpty()) {
+            if (m_logBuffer.isEmpty()) {
+                return;
+            }
+
             // we expect no NodeContext to be available at this point anyway
             final var omitCtx = true;
             final var logger = KNIMELogger.getLogger(KNIMELogger.class);
-            final var total = contents.messages().length + contents.evictedEntries();
+            final var current = m_logBuffer.size();
+            final var evicted = m_logBuffer.getNumberOfEvictedEntries();
+            final var total = current + evicted;
             final var countMessages = total > 1 ? "%d messages were".formatted(total) : "1 message was";
             logger.log(Level.DEBUG, () -> "%s logged before logging was initialized; see below..."
                 .formatted(countMessages), omitCtx, null);
-            if (contents.evictedEntries() > 0) {
-                logger.log(contents.evictionMessageLevel(),
+            if (evicted > 0) {
+                logger.log(m_logBuffer.m_levelForEvictionMessage,
                     () -> "[*** Log incomplete: log buffer did wrap around -- "
-                            + "%d messages were evicted from buffer in total ***]"
-                                .formatted(contents.evictedEntries()),
+                        + "%d messages were evicted from buffer in total ***]".formatted(evicted),
                     omitCtx, null);
             }
-            for (final var message : contents.messages()) {
-                consumer.accept(message);
-            }
+            m_logBuffer.drainingIterator().forEachRemaining(consumer);
             logger.log(Level.DEBUG, "End of buffered log messages", omitCtx, null);
         }
-    }
-
-    /**
-     * Drains and returns the current buffer contents.
-     *
-     * <p>
-     * <b>Note:</b> this method is <i>not thread-safe</i>. Callers must synchronize on the parent
-     * {@link LogBuffer} instance before invoking it.
-     *
-     * @return drained buffer contents in insertion order
-     */
-    BufferContents drain() {
-        final var current = m_logBuffer.size();
-        final var messages = new BufferedLogMessage[current];
-        final var iter = m_logBuffer.drainingIterator();
-        for (var i = 0; i < current; i++) {
-            messages[i] = iter.next();
-        }
-        return new BufferContents(messages, m_logBuffer.getNumberOfEvictedEntries(), m_logBuffer.m_levelForEvictionMessage);
     }
 
     /**
@@ -256,6 +223,26 @@ final class LogBuffer {
     void log(final Level level, final String name, final Object msg, final Throwable cause) {
         m_logBuffer.add(new BufferedLogMessage(Instant.now(), Objects.requireNonNull(name),
             Objects.requireNonNull(level), Objects.requireNonNullElse(msg, ""), cause));
+    }
+
+    boolean isEmpty() {
+        return m_logBuffer.isEmpty();
+    }
+
+    long getNumberOfEvictedEntries() {
+        return m_logBuffer.getNumberOfEvictedEntries();
+    }
+
+    Level getEvictionMessageLevel() {
+        return m_logBuffer.m_levelForEvictionMessage;
+    }
+
+    int drainingSize() {
+        return m_logBuffer.size();
+    }
+
+    Iterator<BufferedLogMessage> drainingIterator() {
+        return m_logBuffer.drainingIterator();
     }
 
 }

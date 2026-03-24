@@ -49,7 +49,6 @@
 package org.knime.core.node.logging;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -106,29 +105,6 @@ class NodeLoggerInitializationTest {
         final var bufferedMessages = buffered.stream().map(BufferedLogMessage::message)
                 .toArray(String[]::new);
         assertArrayEquals(msgs, bufferedMessages, "Unexpected messages received while draining buffer");
-    }
-
-    @Test
-    void testDrainReturnsEvictionMetadata() {
-        final var buffer = new LogBuffer(2);
-        buffer.log(Level.FATAL, "testing", "First", null);
-        buffer.log(Level.DEBUG, "testing", "Second", null);
-        buffer.log(Level.INFO, "testing", "Third", null);
-
-        final LogBuffer.BufferContents contents;
-        synchronized (buffer) {
-            contents = buffer.drain();
-        }
-
-        final var bufferedMessages = new Object[] {contents.messages()[0].message(), contents.messages()[1].message()};
-        assertArrayEquals(new Object[]{"Second", "Third"}, bufferedMessages,
-            "Unexpected messages returned while draining buffer");
-        assertEquals(1L, contents.evictedEntries(), "Unexpected number of evicted log messages");
-        assertEquals(Level.FATAL, contents.evictionMessageLevel(), "Unexpected eviction message level");
-
-        synchronized (buffer) {
-            assertTrue(buffer.drain().isEmpty(), "Buffer should be empty after draining");
-        }
     }
 
     @Test

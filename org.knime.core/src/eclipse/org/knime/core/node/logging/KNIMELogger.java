@@ -340,36 +340,43 @@ public final class KNIMELogger {
 
     private static void drainBufferedMessagesTo(final PrintStream out, final String reason, final Level minLevel) {
         Objects.requireNonNull(out);
-        final LogBuffer.BufferContents contents;
+        final var matchingMessages = new ArrayList<BufferedLogMessage>();
+        final long evictedEntries;
+        final long bufferedEntries;
+        final Level evictionMessageLevel;
+        final boolean shouldEmitEvictionNotice;
         synchronized (BUFFER) {
             if (isFailsafeBufferDumped) {
                 return;
             }
             isFailsafeShutdownLoggingActive = true;
             isFailsafeBufferDumped = true;
-            contents = BUFFER.drain();
-        }
-        if (contents.isEmpty()) {
-            return;
-        }
+            if (BUFFER.isEmpty()) {
+                return;
+            }
 
-        final var matchingMessages = Arrays.stream(contents.messages())
-            .filter(message -> message.level().isGreaterOrEqual(minLevel))
-            .toList();
-        final var shouldEmitEvictionNotice = contents.evictedEntries() > 0
-            && contents.evictionMessageLevel().isGreaterOrEqual(minLevel);
+            evictedEntries = BUFFER.getNumberOfEvictedEntries();
+            evictionMessageLevel = BUFFER.getEvictionMessageLevel();
+            bufferedEntries = BUFFER.drainingSize();
+            shouldEmitEvictionNotice = evictedEntries > 0 && evictionMessageLevel.isGreaterOrEqual(minLevel);
+            BUFFER.drainingIterator().forEachRemaining(message -> {
+                if (message.level().isGreaterOrEqual(minLevel)) {
+                    matchingMessages.add(message);
+                }
+            });
+        }
         if (matchingMessages.isEmpty() && !shouldEmitEvictionNotice) {
             return;
         }
+        final var bufferedTotal = bufferedEntries + evictedEntries;
 
-        final var total = contents.messages().length + contents.evictedEntries();
-        final var countMessages = total > 1 ? "%d messages were".formatted(total) : "1 message was";
+        final var countMessages = bufferedTotal > 1 ? "%d messages were".formatted(bufferedTotal) : "1 message was";
         out.printf("KNIME startup failsafe logging dump: %s. %s buffered. Minimum level: %s.%n",
             reason, countMessages, minLevel);
         if (shouldEmitEvictionNotice) {
-            emitToFailsafeLoggingTarget(out, KNIMELogger.class.getName(), contents.evictionMessageLevel(),
+            emitToFailsafeLoggingTarget(out, KNIMELogger.class.getName(), evictionMessageLevel,
                 "[*** Log incomplete: log buffer did wrap around -- %d messages were evicted from buffer in total ***]"
-                    .formatted(contents.evictedEntries()),
+                    .formatted(evictedEntries),
                 null, Instant.now());
         }
         for (final var message : matchingMessages) {
