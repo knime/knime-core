@@ -125,6 +125,12 @@ class LogInterceptor extends Layout {
         expectLogMessageEquals(true, level, expected);
     }
 
+    void assertContainsLogMessage(final Level level, final String expected) {
+        assertThat(m_stack) //
+            .as(() -> "Expected log stack to contain message \"%s\" at level %s".formatted(expected, level)) //
+            .contains(new LogMsg(level, expected));
+    }
+
     boolean isEmpty() {
         return m_stack.isEmpty();
     }
