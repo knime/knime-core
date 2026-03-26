@@ -152,6 +152,19 @@ import org.knime.core.util.Pair;
  * <b>Note:</b> it is assumed that in the "uninitialized" state, no workflow log messages are supposed to be
  * logged.
  *
+ * <h3>Failsafe logging</h3>
+ *
+ * If the JVM shuts down before initialization completes, buffered messages are emitted to a configurable output
+ * stream (the <em>failsafe</em> path) so that startup log messages are not silently lost. Two environment variables
+ * control this behaviour:
+ * <ul>
+ *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_TARGET} — output target: {@code stderr} (case-insensitive) writes to
+ *       {@code stderr}; any other value (or unset) writes to {@code stdout}.</li>
+ *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_MIN_LEVEL} — minimum log level emitted to the failsafe output; any
+ *       valid Log4j&nbsp;1 level name (case-insensitive), e.g. {@code INFO}. Defaults to {@code DEBUG} if unset
+ *       or unrecognised.</li>
+ * </ul>
+ *
  * <p>
  * Such a two-phase logging lifecycle is useful in the following (currently in place) scenario:
  * <br>
@@ -180,8 +193,8 @@ public final class KNIMELogger {
         }
     }
 
-    // shared buffer for all instances used before logging is initialized
-    private static final LogBuffer BUFFER = new LogBuffer(1024);
+    // Exclusively owns the log buffer and governs all pre-initialization message routing
+    private static final StartupLogRouter STARTUP_ROUTER = new StartupLogRouter(1024);
 
     private static volatile boolean isInitialized;
 
@@ -964,9 +977,7 @@ public final class KNIMELogger {
      */
     static void logBufferedMessages() {
         checkInitializedState();
-        synchronized(BUFFER) {
-            BUFFER.drainTo(bufferedMessage -> getLogger(bufferedMessage.name()).log(bufferedMessage));
-        }
+        STARTUP_ROUTER.drainToLogger(bufferedMessage -> getLogger(bufferedMessage.name()).log(bufferedMessage));
     }
 
     private void log(final BufferedLogMessage bufferedMessage) {
@@ -974,28 +985,21 @@ public final class KNIMELogger {
     }
 
     /**
-     * Log the message from the supplier at the specified level.
-     * The message supplier may or may not get invoked immediately (or at all).
+     * Log the message from the supplier at the specified level. The message supplier may or may not get invoked
+     * immediately (or at all).
      *
      * @param level level to log under
-     * @param messageSupplier supplier for the message
+     * @param msg supplier for the message
      * @param omitContext if {@code true}, any available context information (e.g. node id) will not be logged
      * @param cause optional cause for the log message
      */
-    public void log(final Level level, final Supplier<Object> messageSupplier, final boolean omitContext,
-            final Throwable cause) {
-        // we double-check to avoid expensive locking
-        if (!isInitialized()) {
-            synchronized(BUFFER) {
-                // we need to check again now that we have the lock to see if someone else has initialized it in the
-                // meantime
-                if (!isInitialized()) {
-                    BUFFER.log(level, m_name, messageSupplier.get(), cause);
-                    return;
-                }
-            }
+    public void log(final Level level, final Supplier<Object> msg, final boolean omitContext, final Throwable cause) {
+        Objects.requireNonNull(level, "Must not log a null level");
+        // we double-check (here and in #route) to avoid expensive locking on the happy path
+        if (!isInitialized() && STARTUP_ROUTER.route(KNIMELogger::isInitialized, level, m_name, msg, cause)) {
+            return;
         }
-        m_logger.log(level, messageSupplier, omitContext, cause);
+        m_logger.log(level, msg, omitContext, cause);
     }
 
     /**
@@ -1006,16 +1010,11 @@ public final class KNIMELogger {
      * @param omitContext if {@code true}, any available context information (e.g. node id) will not be logged
      * @param cause optional cause for the log message
      */
-    public void log(final Level level, final Object message, final boolean omitContext,
-            final Throwable cause) {
-        // we double-check to avoid expensive locking
-        if (!isInitialized()) {
-            synchronized(BUFFER) {
-                if (!isInitialized()) {
-                    BUFFER.log(level, m_name, message, cause);
-                    return;
-                }
-            }
+    public void log(final Level level, final Object message, final boolean omitContext, final Throwable cause) {
+        Objects.requireNonNull(level, "Must not log a null level");
+        // we double-check (here and in #route) to avoid expensive locking on the happy path
+        if (!isInitialized() && STARTUP_ROUTER.route(KNIMELogger::isInitialized, level, m_name, message, cause)) {
+            return;
         }
         m_logger.log(level, message, omitContext, cause);
     }
