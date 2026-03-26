@@ -323,8 +323,16 @@ final class StartupLogRouter {
     private void installShutdownHookIfNeeded() {
         if (!m_isShutdownHookInstalled.get() && m_isShutdownHookInstalled.compareAndSet(false, true)) {
             try {
-                Runtime.getRuntime()
-                    .addShutdownHook(new Thread(this::activateFailsafeAndDrain, "KNIME startup log dump"));
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    if (KNIMELogger.isInitialized()) {
+                        // Logging is configured: drain through the real appenders so configured levels are respected.
+                        // logBufferedMessages() is synchronized on KNIMELogger.class, so if initializeLogging() is
+                        // still running we block until all KNIMELogger instances have their m_logger set.
+                        KNIMELogger.logBufferedMessages();
+                    } else {
+                        activateFailsafeAndDrain();
+                    }
+                }, "KNIME startup log dump"));
             } catch (IllegalStateException ex) { // NOSONAR: failsafe path cannot rely on regular logging here
                 emitToFailsafe(KNIMELogger.class.getName(), Level.WARN,
                     "Unable to register KNIME startup log shutdown hook because JVM shutdown is already in progress."
