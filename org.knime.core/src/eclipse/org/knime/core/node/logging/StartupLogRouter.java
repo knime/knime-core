@@ -370,6 +370,16 @@ final class StartupLogRouter {
         return Level.toLevel(System.getenv(ENV_LOGGING_FAILSAFE_MIN_LEVEL), Level.DEBUG);
     }
 
+    /**
+     * Creates the default failsafe layout.
+     * <p>
+     * The pattern {@code %d{ISO8601} : %-5p : %t : %c{1} : %m%n} mirrors the structure of the default KNIME logfile
+     * appender pattern. The KNIME-specific node-context fields ({@code %N}, {@code %I}, {@code %J}) present in the
+     * regular log pattern are omitted; they are always empty during startup so the output is equivalent. Example:
+     * <pre>
+     * 2026-03-26 10:15:30,123 : INFO  : main : KNIMELogger : Startup message
+     * </pre>
+     */
     private static Layout initFailsafeLayout() {
         final var layout = new NodeLoggerPatternLayout();
         layout.setConversionPattern("%d{ISO8601} : %-5p : %t : %c{1} : %m%n");

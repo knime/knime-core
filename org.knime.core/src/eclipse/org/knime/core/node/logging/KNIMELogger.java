@@ -152,6 +152,19 @@ import org.knime.core.util.Pair;
  * <b>Note:</b> it is assumed that in the "uninitialized" state, no workflow log messages are supposed to be
  * logged.
  *
+ * <h3>Failsafe logging</h3>
+ *
+ * If the JVM shuts down before initialization completes, buffered messages are emitted to a configurable output
+ * stream (the <em>failsafe</em> path) so that startup log messages are not silently lost. Two environment variables
+ * control this behaviour:
+ * <ul>
+ *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_TARGET} — output target: {@code stderr} (case-insensitive) writes to
+ *       {@code stderr}; any other value (or unset) writes to {@code stdout}.</li>
+ *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_MIN_LEVEL} — minimum log level emitted to the failsafe output; any
+ *       valid Log4j&nbsp;1 level name (case-insensitive), e.g. {@code INFO}. Defaults to {@code DEBUG} if unset
+ *       or unrecognised.</li>
+ * </ul>
+ *
  * <p>
  * Such a two-phase logging lifecycle is useful in the following (currently in place) scenario:
  * <br>
