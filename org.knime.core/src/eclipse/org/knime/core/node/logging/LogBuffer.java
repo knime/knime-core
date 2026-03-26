@@ -52,13 +52,15 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 import org.apache.commons.collections.buffer.BoundedFifoBuffer;
 import org.apache.log4j.Level;
 
 /**
- * Simple fixed-size buffer of log messages. This class is <b>not thread-safe</b>.
+ * Simple fixed-size circular buffer for log messages.
+ *
+ * <p><strong>This class is not thread-safe.</strong> Callers must ensure that concurrent {@link #add} calls and calls
+ * to {@link #drain} do not overlap.
  *
  * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
  */
@@ -66,13 +68,9 @@ final class LogBuffer {
 
     private final CircularFiFoBuffer m_logBuffer;
 
-    LogBuffer(final int bufferSize) {
-        m_logBuffer = new CircularFiFoBuffer(bufferSize);
-    }
-
     /**
-     * Buffered log message for storage until the logging system is initialized and log messages can be written
-     * to their intended location based on user configuration.
+     * Buffered log message for storage until the logging system is initialized and log messages can be written to their
+     * intended location based on user configuration.
      *
      * @param instant instant the log message was buffered
      * @param name name of the logger (e.g. the class name)
@@ -82,8 +80,23 @@ final class LogBuffer {
      *
      * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
      */
-    record BufferedLogMessage(Instant instant, String name, Level level, Object message,
-        Throwable cause) { }
+    record BufferedLogMessage(Instant instant, String name, Level level, Object message, Throwable cause) {
+    }
+
+    /**
+     * The result of draining the buffer. The caller exclusively owns the entries after {@link LogBuffer#drain()}
+     * returns.
+     *
+     * @param messages iterator over the buffered entries in insertion order
+     * @param evictedEntries number of entries evicted over the lifetime of the buffer
+     * @param total total number of entries that passed through the buffer (buffered + evicted)
+     * @param evictionMessageLevel most severe level among evicted entries, at least {@link Level#WARN}
+     *
+     * @author Manuel Hotz, KNIME GmbH, Konstanz, Germany
+     */
+    record DrainResult(Iterator<BufferedLogMessage> messages, long evictedEntries, long total,
+        Level evictionMessageLevel) {
+    }
 
     /**
      * Ring buffer with fixed capacity that evicts the least recently inserted entry.
@@ -93,7 +106,8 @@ final class LogBuffer {
     private static final class CircularFiFoBuffer {
 
         private long m_evicted;
-        private final BoundedFifoBuffer m_delegate;
+
+        private BoundedFifoBuffer m_delegate;
 
         /**
          * Level used for log message informing the user that some log messages were evicted.
@@ -110,12 +124,10 @@ final class LogBuffer {
         }
 
         /**
-         * Adds the given entry to the buffer, indicating if another entry was evicted to make room for the
-         * given one.
+         * Adds the given entry to the buffer, indicating if another entry was evicted to make room for the given one.
          *
          * @param entry entry to buffer
-         * @return {@code true} if another entry was evicted in order to add the given entry,
-         *     {@code false} otherwise
+         * @return {@code true} if another entry was evicted in order to add the given entry, {@code false} otherwise
          */
         boolean add(final BufferedLogMessage entry) {
             var didEvict = false;
@@ -136,6 +148,7 @@ final class LogBuffer {
 
         /**
          * Returns the number of evicted entries during the lifetime of this buffer.
+         *
          * @return number of evicted entries
          */
         long getNumberOfEvictedEntries() {
@@ -144,6 +157,7 @@ final class LogBuffer {
 
         /**
          * Checks whether the buffer is empty or not.
+         *
          * @return {@code true} if the buffer is empty, {@code false} otherwise
          */
         boolean isEmpty() {
@@ -151,19 +165,22 @@ final class LogBuffer {
         }
 
         /**
-         * Returns an iterator over the entries in the buffer, draining it in the process.
+         * Transfers ownership of all currently buffered entries to a detached iterator.
          * <p>
-         * <b>Note:</b> this method is <i>not thread-safe</i>.
-         *     Therefore, you have to synchronize over the parent object.
+         * After this call, the delegate is set to {@code null}: the buffer must not be used further.
          *
-         * @return draining iterator over contained entries in insertion order (from least recently inserted to
-         *     most recently inserted)
+         * @return iterator over the detached buffered entries in insertion order
          */
-        Iterator<BufferedLogMessage> drainingIterator() {
+        private Iterator<BufferedLogMessage> transferEntries() {
+            final var detachedEntries = m_delegate;
+            m_delegate = null;
             return new Iterator<BufferedLogMessage>() {
+                @SuppressWarnings("unchecked")
+                private final Iterator<BufferedLogMessage> m_iterator = detachedEntries.iterator();
+
                 @Override
                 public boolean hasNext() {
-                    return !m_delegate.isEmpty();
+                    return m_iterator.hasNext();
                 }
 
                 @Override
@@ -171,7 +188,7 @@ final class LogBuffer {
                     if (!hasNext()) {
                         throw new NoSuchElementException();
                     }
-                    return (BufferedLogMessage)m_delegate.remove();
+                    return m_iterator.next();
                 }
             };
         }
@@ -181,43 +198,48 @@ final class LogBuffer {
         }
     }
 
-    /**
-     * Drain the buffer to the given consumer. If the buffer evicted any messages, a warning message will be logged.
-     *
-     * @param consumer consumer for buffered log messages
-     */
-    void drainTo(final Consumer<BufferedLogMessage> consumer) {
-        if (!m_logBuffer.isEmpty()) {
-            // we expect no NodeContext to be available at this point anyway
-            final var omitCtx = true;
-            final var logger = KNIMELogger.getLogger(KNIMELogger.class);
-            final var current = m_logBuffer.size();
-            final var evicted = m_logBuffer.getNumberOfEvictedEntries();
-            final var total = current + evicted;
-            final var countMessages = total > 1 ? "%d messages were".formatted(total) : "1 message was";
-            logger.log(Level.DEBUG, () -> "%s logged before logging was initialized; see below..."
-                .formatted(countMessages), omitCtx, null);
-            if (evicted > 0) {
-                logger.log(m_logBuffer.m_levelForEvictionMessage,
-                    () -> "[*** Log incomplete: log buffer did wrap around -- "
-                            + "%d messages were evicted from buffer in total ***]".formatted(evicted), omitCtx, null);
-            }
-            m_logBuffer.drainingIterator().forEachRemaining(consumer);
-            logger.log(Level.DEBUG, "End of buffered log messages", omitCtx, null);
-        }
+    LogBuffer(final int bufferSize) {
+        m_logBuffer = new CircularFiFoBuffer(bufferSize);
     }
 
     /**
-     * Buffer the given message at the given level under the given logger name.
+     * Adds a log message to the buffer.
      *
      * @param level level to log at
      * @param name logger name to log under
      * @param msg message to log
      * @param cause {@code null}-able cause for the message
      */
-    void log(final Level level, final String name, final Object msg, final Throwable cause) {
+    void add(final Level level, final String name, final Object msg, final Throwable cause) {
         m_logBuffer.add(new BufferedLogMessage(Instant.now(), Objects.requireNonNull(name),
             Objects.requireNonNull(level), Objects.requireNonNullElse(msg, ""), cause));
+    }
+
+    /**
+     * Checks whether the buffer is currently empty.
+     *
+     * @return {@code true} if the buffer is empty, {@code false} otherwise
+     */
+    boolean isEmpty() {
+        return m_logBuffer.isEmpty();
+    }
+
+    /**
+     * Transfers ownership of all buffered entries to the caller.
+     * <p>
+     * <strong>After this call, this buffer must not be used for further {@link #add} calls.</strong> The caller is
+     * responsible for ensuring no concurrent {@link #add} calls are in progress when this method is invoked.
+     *
+     * @return drain result holding the buffered entries, or {@code null} if the buffer is empty
+     */
+    DrainResult drain() {
+        if (m_logBuffer.isEmpty()) {
+            return null;
+        }
+        final var evictedEntries = m_logBuffer.getNumberOfEvictedEntries();
+        final var total = m_logBuffer.size() + evictedEntries;
+        return new DrainResult(m_logBuffer.transferEntries(), evictedEntries, total,
+            m_logBuffer.m_levelForEvictionMessage);
     }
 
 }
