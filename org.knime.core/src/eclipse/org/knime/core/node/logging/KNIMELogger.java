@@ -183,13 +183,30 @@ import org.knime.core.util.Pair;
 public final class KNIMELogger {
 
     /**
-     * This initializer is registered via the {@link IEarlyStartup} extension point at stage
+     * Initializes the logging framework. Registered via the {@link IEarlyStartup} extension point at stage
      * {@link org.knime.core.util.IEarlyStartup.StartupStage#AFTER_PROFILES_SET AFTER_PROFILES_SET}.
+     * <p>
+     * The buffer drain is intentionally deferred to {@link EarlyStartupMessageForwarder}, which runs at
+     * {@link org.knime.core.util.IEarlyStartup.StartupStage#BEFORE_WFM_CLASS_LOADED BEFORE_WFM_CLASS_LOADED}, after
+     * operator-configured log levels (env vars, customization profile preferences) have been applied.
      */
     public static final class EarlyStartupInitializer implements IEarlyStartup {
         @Override
         public void run() {
-            initializeLogging(true);
+            initializeLogging(false);
+        }
+    }
+
+    /**
+     * Drains the startup log buffer into the configured logging framework. Registered via the {@link IEarlyStartup}
+     * extension point at stage
+     * {@link org.knime.core.util.IEarlyStartup.StartupStage#BEFORE_WFM_CLASS_LOADED BEFORE_WFM_CLASS_LOADED}, after
+     * operator-configured log levels have been applied.
+     */
+    public static final class EarlyStartupMessageForwarder implements IEarlyStartup {
+        @Override
+        public void run() {
+            logBufferedMessages();
         }
     }
 
@@ -974,8 +991,13 @@ public final class KNIMELogger {
 
     /**
      * Logs any buffered messages. Will throw an exception if still in uninitialized state.
+     * <p>
+     * Synchronized on {@code KNIMELogger.class} to serialize with {@link #initializeLogging}: a concurrent shutdown
+     * hook calling this method before {@link #initializeLogging} has finished populating {@link #LOGGERS} would
+     * otherwise encounter {@code KNIMELogger} instances whose {@code m_logger} field is still {@code null}.
+     * {@link #drainToLogger} is idempotent, so concurrent calls are safe.
      */
-    static void logBufferedMessages() {
+    static synchronized void logBufferedMessages() {
         checkInitializedState();
         STARTUP_ROUTER.drainToLogger(bufferedMessage -> getLogger(bufferedMessage.name()).log(bufferedMessage));
     }
