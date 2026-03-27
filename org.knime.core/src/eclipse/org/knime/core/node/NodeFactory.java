@@ -61,6 +61,7 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NodeDescription.DescriptionLink;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.context.NodeCreationConfiguration;
@@ -493,6 +494,15 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     public final String[] getKeywords() {
         return m_nodeDescription.getKeywords();
+    }
+
+
+    /**
+     * @return List of links in the node description. Returns null when there are none
+     * @since 5.12
+     */
+    public final DescriptionLink[] getDescriptionLinks() {
+          return m_nodeDescription.getLinks().toArray(new DescriptionLink[0]);
     }
 
     /**
