@@ -113,7 +113,7 @@ public final class Message {
     Message(final MessageBuilder builder) {
         m_summary = builder.getSummary().orElseThrow(() -> new IllegalArgumentException("Summary must not be null"));
         m_issue = builder.getIssue().orElse(null);
-        m_resolutions = builder.getResolutions();
+        m_resolutions = List.copyOf(builder.getResolutions());
     }
 
     /**
@@ -179,8 +179,8 @@ public final class Message {
     /**
      * Framework method to convert user message to a framwork message. Not to be used.
      *
-     * @param type ...
-     * @return ...
+     * @param type RESET, WARNING, or ERROR type of node message.
+     * @return The constructed node message.
      *
      * @noreference This method is not intended to be referenced by clients.
      */
