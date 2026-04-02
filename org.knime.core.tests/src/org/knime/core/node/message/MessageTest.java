@@ -148,6 +148,18 @@ class MessageTest {
     }
 
     @Test
+    void testFilteringDuplicateResolutions() {
+        final var message = Message.builder() //
+            .withSummary("Summary") //
+            .addTextIssue("Issue") //
+            .addResolutions("Resolution", "Resolution") //
+            .build().orElseThrow();
+        assertThat(message.getResolutions()) //
+            .as("Message should not contain duplicate resolutions") //
+            .containsExactly("Resolution");
+    }
+
+    @Test
     void testSaveAndLoad_RowIssues() throws Exception {
         var messageBuilder = Message.builder();
         messageBuilder.addResolutions("Resolution 1", "Resolution 2");
@@ -281,14 +293,14 @@ class MessageTest {
         assertThat(message1.toKNIMEException()) //
             .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
             .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
-            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .extracting(e -> e.getKNIMEMessage()) //
             .as("Original message is available").isEqualTo(message1);
 
         assertThat(message1.toKNIMEException(cause)) //
             .as("Exception message extracted from KNIME Message object").hasMessage(summary) //
             .as("root cause is exactly").hasRootCause(cause)
             .as("is MessageAwareException").isInstanceOf(MessageAwareException.class) //
-            .extracting(e -> ((MessageAwareException)e).getKNIMEMessage()) //
+            .extracting(e -> e.getKNIMEMessage()) //
             .as("Original message is available").isEqualTo(message1);
     }
 

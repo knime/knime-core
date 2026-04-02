@@ -48,10 +48,10 @@
  */
 package org.knime.core.node.message;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.NodeLogger;
@@ -101,10 +101,10 @@ public final class MessageBuilder {
     private String m_summary;
     private Issue m_relevantIssue;
     private long m_issueCount;
-    private List<String> m_resolutions;
+    private Set<String> m_resolutions;
 
     MessageBuilder() {
-        m_resolutions = new ArrayList<>();
+        m_resolutions = new LinkedHashSet<>();
     }
 
     MessageBuilder(final Message msg) {
@@ -126,7 +126,7 @@ public final class MessageBuilder {
         return Optional.ofNullable(m_relevantIssue);
     }
 
-    List<String> getResolutions() {
+    Set<String> getResolutions() {
         return m_resolutions;
     }
 
@@ -181,7 +181,8 @@ public final class MessageBuilder {
     }
 
     /**
-     * A resolution hints (shown as enumerated list).
+     * A resolution hints (shown as enumerated list). Duplicate resolutions
+     * (i.e. their strings) will be filtered out.
      *
      * @param res The resolution hints.
      * @return this.
