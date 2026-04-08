@@ -61,6 +61,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.knime.core.node.NodeLoggerPatternLayout;
 import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
+import org.knime.core.util.EclipseUtil;
 
 /**
  * Routes pre-initialization log messages: buffers until the logging system is initialized (normal path), or emits to a
@@ -83,8 +84,16 @@ import org.knime.core.node.logging.LogBuffer.BufferedLogMessage;
 final class StartupLogRouter {
 
     /**
-     * Environment variable controlling where the logging failsafe output is written. Values: "stderr"
-     * (case-insensitive) for {@code stderr}, anything else (including if not set) for {@code stdout}.
+     * Environment variable controlling where the logging failsafe output is written.
+     * <ul>
+     *   <li>{@code stderr} (case-insensitive) — writes to {@code stderr}</li>
+     *   <li>{@code stdout} (case-insensitive) — writes to {@code stdout}</li>
+     *   <li>{@code off} (case-insensitive) — disables the failsafe</li>
+     *   <li>any other non-empty value — writes to {@code stdout}</li>
+     *   <li>unset or blank — enabled by default for {@link EclipseUtil.Application#AP} and
+     *       {@link EclipseUtil.Application#EXECUTOR} (writing to {@code stdout}); disabled for all other
+     *       applications</li>
+     * </ul>
      */
     private static final String ENV_LOGGING_FAILSAFE_TARGET = "KNIME_CORE_LOGGING_FAILSAFE_TARGET";
 
@@ -105,7 +114,7 @@ final class StartupLogRouter {
     // monitor, except after m_isDrained is set. At that point the buffer's contents are owned by the drainer.
     private final LogBuffer m_buffer;
 
-    // Immutable after construction
+    // null if disabled
     private final PrintStream m_failsafeOut;
 
     private final Level m_failsafeMinLevel;
@@ -267,6 +276,9 @@ final class StartupLogRouter {
      * any subsequent messages are routed correctly, but there is nothing to emit.
      */
     void activateFailsafeAndDrain() {
+        if (m_failsafeOut == null) {
+            return; // failsafe is disabled
+        }
         final LogBuffer.DrainResult drainResult;
         synchronized (this) {
             if (m_target == Target.FAILSAFE) {
@@ -321,6 +333,9 @@ final class StartupLogRouter {
     }
 
     private void installShutdownHookIfNeeded() {
+        if (m_failsafeOut == null) {
+            return; // failsafe is disabled
+        }
         if (!m_isShutdownHookInstalled.get() && m_isShutdownHookInstalled.compareAndSet(false, true)) {
             try {
                 Runtime.getRuntime()
@@ -355,10 +370,34 @@ final class StartupLogRouter {
         m_failsafeOut.flush();
     }
 
+    @SuppressWarnings("resource") // no ownership over System streams
     private static PrintStream initFailsafeTarget() {
-        final var configuredTarget = System.getenv(ENV_LOGGING_FAILSAFE_TARGET);
-        // do not involve another logging framework, that's the whole point of this failsafe
-        return "stderr".equalsIgnoreCase(configuredTarget) ? System.err : System.out; // NOSONAR see comment above
+        return resolveFailsafeTarget(System.getenv(ENV_LOGGING_FAILSAFE_TARGET), EclipseUtil.getApplication());
+    }
+
+    /**
+     * Resolves the failsafe output stream from the given env-variable value and application type.
+     * <p>
+     * Package-private for testing.
+     *
+     * @param configuredTarget value of {@link #ENV_LOGGING_FAILSAFE_TARGET}, or {@code null} if unset
+     * @param app the currently running application
+     * @return the output stream to write to, or {@code null} if the failsafe is disabled
+     */
+    @SuppressWarnings("resource") // no ownership over System streams
+    static PrintStream resolveFailsafeTarget(final String configuredTarget, final EclipseUtil.Application app) {
+        if ("off".equalsIgnoreCase(configuredTarget)) {
+            return null; // explicitly disabled
+        }
+        if (configuredTarget != null && !configuredTarget.isBlank()) {
+            // do not involve another logging framework, that's the whole point of this failsafe
+            return "stderr".equalsIgnoreCase(configuredTarget) ? System.err : System.out; // NOSONAR see comment above
+        }
+        // env var is unset or blank: enable by default only for AP and EXECUTOR
+        if (app == EclipseUtil.Application.AP || app == EclipseUtil.Application.EXECUTOR) {
+            return System.out; // NOSONAR see comment above
+        }
+        return null; // disabled by default for all other applications
     }
 
     private static Level initFailsafeMinLevel() {

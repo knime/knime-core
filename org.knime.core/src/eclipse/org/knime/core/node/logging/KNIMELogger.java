@@ -158,8 +158,16 @@ import org.knime.core.util.Pair;
  * stream (the <em>failsafe</em> path) so that startup log messages are not silently lost. Two environment variables
  * control this behaviour:
  * <ul>
- *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_TARGET} — output target: {@code stderr} (case-insensitive) writes to
- *       {@code stderr}; any other value (or unset) writes to {@code stdout}.</li>
+ *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_TARGET} — output target:
+ *     <ul>
+ *       <li>{@code stderr} (case-insensitive) — writes to {@code stderr}</li>
+ *       <li>{@code stdout} (case-insensitive) or any other non-empty value — writes to {@code stdout}</li>
+ *       <li>{@code off} (case-insensitive) — disables the failsafe</li>
+ *       <li>unset — enabled by default for {@link org.knime.core.util.EclipseUtil.Application#AP AP} and
+ *           {@link org.knime.core.util.EclipseUtil.Application#EXECUTOR EXECUTOR} applications (writing to
+ *           {@code stdout}); disabled for all other applications</li>
+ *     </ul>
+ *   </li>
  *   <li>{@code KNIME_CORE_LOGGING_FAILSAFE_MIN_LEVEL} — minimum log level emitted to the failsafe output; any
  *       valid Log4j&nbsp;1 level name (case-insensitive), e.g. {@code INFO}. Defaults to {@code DEBUG} if unset
  *       or unrecognised.</li>

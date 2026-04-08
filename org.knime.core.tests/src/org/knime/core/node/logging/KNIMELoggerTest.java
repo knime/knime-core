@@ -50,6 +50,7 @@ package org.knime.core.node.logging;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -68,6 +69,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.Pair;
 
 /**
@@ -301,6 +303,76 @@ class KNIMELoggerTest {
         assertFalse(dump.contains("evicted"), "Expected no eviction notice without overflow");
         assertTrue(dump.contains("first"), "Expected first message in dump");
         assertTrue(dump.contains("second"), "Expected second message in dump");
+    }
+
+    @Test
+    void testResolveFailsafeTargetOffDisablesFailsafe() {
+        assertNull(StartupLogRouter.resolveFailsafeTarget("off", EclipseUtil.Application.AP),
+            "Expected null for \"off\" (AP)");
+        assertNull(StartupLogRouter.resolveFailsafeTarget("OFF", EclipseUtil.Application.EXECUTOR),
+            "Expected null for \"OFF\" (EXECUTOR)");
+        assertNull(StartupLogRouter.resolveFailsafeTarget("Off", EclipseUtil.Application.UNKNOWN),
+            "Expected null for \"Off\" (UNKNOWN)");
+    }
+
+    @Test
+    void testResolveFailsafeTargetStderrWritesToStderr() {
+        assertEquals(System.err, StartupLogRouter.resolveFailsafeTarget("stderr", EclipseUtil.Application.UNKNOWN),
+            "Expected System.err for \"stderr\"");
+        assertEquals(System.err, StartupLogRouter.resolveFailsafeTarget("STDERR", EclipseUtil.Application.UNKNOWN),
+            "Expected System.err for \"STDERR\" (case-insensitive)");
+    }
+
+    @Test
+    void testResolveFailsafeTargetStdoutWritesToStdout() {
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget("stdout", EclipseUtil.Application.UNKNOWN),
+            "Expected System.out for \"stdout\"");
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget("any-other-value", EclipseUtil.Application.UNKNOWN),
+            "Expected System.out for any non-special non-blank value");
+    }
+
+    @Test
+    void testResolveFailsafeTargetNullEnablesDefaultByApplication() {
+        // enabled by default for AP and EXECUTOR
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.AP),
+            "Expected System.out by default for AP");
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.EXECUTOR),
+            "Expected System.out by default for EXECUTOR");
+        // disabled by default for all other applications
+        assertNull(StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.WARMSTART),
+            "Expected null (disabled) by default for WARMSTART");
+    }
+
+    @Test
+    void testResolveFailsafeTargetBlankEnablesDefaultByApplication() {
+        // blank is treated the same as unset: enabled for AP and EXECUTOR, disabled for others
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget("", EclipseUtil.Application.AP),
+            "Expected System.out for blank value with AP");
+        assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget("  ", EclipseUtil.Application.EXECUTOR),
+            "Expected System.out for whitespace-only value with EXECUTOR");
+        assertNull(StartupLogRouter.resolveFailsafeTarget("", EclipseUtil.Application.WARMSTART),
+            "Expected null (disabled) for blank value with WARMSTART");
+    }
+
+    @Test
+    void testFailsafeDisabledProducesNoOutput() {
+        final var router = new StartupLogRouter(2, null, Level.DEBUG, createFailsafeLayout());
+        router.route(() -> false, Level.ERROR, LOGGER_NAME, "message", null);
+        router.activateFailsafeAndDrain(); // no-op: failsafe is disabled
+        // message is still in the buffer since the disabled failsafe did not drain it
+        final var wasDrained = new AtomicBoolean();
+        router.drainToLogger(m -> wasDrained.set(true));
+        assertTrue(wasDrained.get(), "Expected message to remain buffered after disabled failsafe");
+    }
+
+    @Test
+    void testFailsafeDisabledDoesNotDrainBuffer() {
+        final var router = new StartupLogRouter(2, null, Level.DEBUG, createFailsafeLayout());
+        router.route(() -> false, Level.WARN, LOGGER_NAME, "first", null);
+        router.activateFailsafeAndDrain(); // no-op when disabled
+        // buffer is still in BUFFER state, so further route() calls still buffer
+        assertTrue(router.route(() -> false, Level.ERROR, LOGGER_NAME, "second", null),
+            "Expected route() to still buffer messages after disabled failsafe activation");
     }
 
     private static Layout createFailsafeLayout() {
