@@ -46,11 +46,11 @@
  */
 package org.knime.core.data.blob;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.DigestInputStream;
+import java.io.OutputStream;
+import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.util.UUID;
 
@@ -59,6 +59,7 @@ import org.apache.commons.io.HexDump;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
+import org.apache.commons.lang3.function.FailableConsumer;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellFactory.FromInputStream;
 import org.knime.core.data.DataType;
@@ -133,11 +134,8 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      */
     @DataCellFactoryMethod(name = "byte[]")
     public DataCell create(final byte[] bytes) throws IOException {
-        if (bytes.length < MEMORY_LIMIT) {
-            byte[] md5sum = newMD5Digest().digest(bytes);
-            return new BinaryObjectDataCell(bytes, md5sum);
-        }
-        return create(new ByteArrayInputStream(bytes));
+        return bytes.length < MEMORY_LIMIT ? new BinaryObjectDataCell(bytes, newMD5Digest().digest(bytes))
+            : create(output -> output.write(bytes));
     }
 
     /** Creates cell given by reading from an input stream. The stream will be closed by this method.
@@ -148,26 +146,46 @@ public final class BinaryObjectCellFactory implements FromInputStream {
      */
     @DataCellFactoryMethod(name = "InputStream")
     public DataCell create(final InputStream input) throws IOException {
-        final var uniqueFileName = "knime-binary-copy-";
-        final var suffix = ".bin";
+        return create(output -> IOUtils.copy(input, output));
+    }
+
+    /**
+     * Creates a cell by writing to an output stream. The output stream will be closed by this method.
+     *
+     * @param dataSource producer of the binary data, does not need to close the output stream
+     * @return a cell with a copy of the byte content
+     * @throws IOException if that fails (stream not readable, file store not writable, close problems, ...)
+     * @since 5.12
+     */
+    public DataCell create(final FailableConsumer<OutputStream, IOException> dataSource) throws IOException {
         final var md5MessageDigest = newMD5Digest();
-        final var outStream = new DeferredFileOutputStream(MEMORY_LIMIT, uniqueFileName, suffix, TMP_DIR_FOLDER);
-        try (outStream; var digestInputStream = new DigestInputStream(input, md5MessageDigest)) {
-            IOUtils.copy(digestInputStream, outStream);
-        }
-        byte[] md5sum = md5MessageDigest.digest();
-        if (outStream.isInMemory()) {
-            return new BinaryObjectDataCell(outStream.getData(), md5sum);
-        } else {
-            FileStore fs;
-            synchronized (this) {
-                fs = m_fileStoreFactory.createFileStore(UUID.randomUUID().toString());
+        final File tempFile;
+        try (final var outStream = DeferredFileOutputStream.builder() //
+                .setThreshold(MEMORY_LIMIT) //
+                .setPrefix("knime-binary-copy-") //
+                .setSuffix(".bin") //
+                .setDirectory(TMP_DIR_FOLDER) //
+                .get()) {
+            // accept and hash the contents
+            try (var digestOutputStream = new DigestOutputStream(outStream, md5MessageDigest)) {
+                dataSource.accept(digestOutputStream);
             }
-            final var f = outStream.getFile();
-            assert f.exists() : "File " + f.getAbsolutePath() + " not created by file output stream";
-            FileUtils.moveFile(f, fs.getFile());
-            return new BinaryObjectFileStoreDataCell(fs, md5sum);
+
+            // are we still in memory or did we switch to file?
+            if (outStream.isInMemory()) {
+                return new BinaryObjectDataCell(outStream.getData(), md5MessageDigest.digest());
+            }
+            tempFile = outStream.getFile();
+            assert tempFile.exists() : "File " + tempFile.getAbsolutePath() + " not created by file output stream";
         }
+
+        // move the file to the file store
+        final FileStore fs;
+        synchronized (this) {
+            fs = m_fileStoreFactory.createFileStore(UUID.randomUUID().toString());
+        }
+        FileUtils.moveFile(tempFile, fs.getFile());
+        return new BinaryObjectFileStoreDataCell(fs, md5MessageDigest.digest());
     }
 
     /** Get new MD5 digest from system.
