@@ -339,8 +339,8 @@ class KNIMELoggerTest {
         assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.EXECUTOR),
             "Expected System.out by default for EXECUTOR");
         // disabled by default for all other applications
-        assertNull(StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.WARMSTART),
-            "Expected null (disabled) by default for WARMSTART");
+        assertNull(StartupLogRouter.resolveFailsafeTarget(null, EclipseUtil.Application.UNKNOWN),
+            "Expected null (disabled) by default for UNKNOWN");
     }
 
     @Test
@@ -350,8 +350,8 @@ class KNIMELoggerTest {
             "Expected System.out for blank value with AP");
         assertEquals(System.out, StartupLogRouter.resolveFailsafeTarget("  ", EclipseUtil.Application.EXECUTOR),
             "Expected System.out for whitespace-only value with EXECUTOR");
-        assertNull(StartupLogRouter.resolveFailsafeTarget("", EclipseUtil.Application.WARMSTART),
-            "Expected null (disabled) for blank value with WARMSTART");
+        assertNull(StartupLogRouter.resolveFailsafeTarget("", EclipseUtil.Application.UNKNOWN),
+            "Expected null (disabled) for blank value with UNKNOWN");
     }
 
     @Test
@@ -362,7 +362,7 @@ class KNIMELoggerTest {
         // message is still in the buffer since the disabled failsafe did not drain it
         final var wasDrained = new AtomicBoolean();
         router.drainToLogger(m -> wasDrained.set(true));
-        assertTrue(wasDrained.get(), "Expected message to remain buffered after disabled failsafe");
+        assertTrue(wasDrained.get(), "Expected message to stay buffered until explicitly drained to the logger");
     }
 
     @Test
