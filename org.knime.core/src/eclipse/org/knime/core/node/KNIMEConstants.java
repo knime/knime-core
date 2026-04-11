@@ -131,6 +131,46 @@ public final class KNIMEConstants {
     public static final String ENV_MAX_THREAD_COUNT = "KNIME_CORE_MAX_THREADS";
 
     /**
+     * Environment variable to specify the default minimum log level for the stdout appender.
+     *
+     * @since 5.12
+     */
+    public static final String ENV_LOGLEVEL_STDOUT = "KNIME_CORE_LOG_STDOUT_LEVEL";
+
+    /**
+     * Environment variable to specify the default minimum log level for the global logfile appender.
+     *
+     * @since 5.12
+     */
+    public static final String ENV_LOGLEVEL_LOGFILE = "KNIME_CORE_LOG_LOGFILE_LEVEL";
+
+    /**
+     * Environment variable to specify the default minimum log level for workflow log appenders.
+     *
+     * @since 5.12
+     */
+    public static final String ENV_LOGLEVEL_WORKFLOW_LOG = "KNIME_CORE_LOG_WORKFLOW_LEVEL";
+
+    /** Java system property equivalent of {@link #ENV_LOGLEVEL_WORKFLOW_LOG}.
+     *
+     * @since 5.12
+     */
+    public static final String PROPERTY_LOGLEVEL_WORKFLOW_LOG = "org.knime.core.log.workflow.level";
+
+    /**
+     * Environment variable to specify whether workflow logging should be enabled by default.
+     *
+     * @since 5.12
+     */
+    public static final String ENV_LOG_WORKFLOW_ENABLED = "KNIME_CORE_LOG_WORKFLOW_ENABLED";
+
+    /** Java system property equivalent of {@link #ENV_LOG_WORKFLOW_ENABLED}.
+     *
+     * @since 5.12
+     */
+    public static final String PROPERTY_LOG_WORKFLOW_ENABLED = "org.knime.core.log.workflow.enabled";
+
+    /**
      * Java property name to specify the default temp directory for KNIME temp files (such as data files). This can be
      * changed in the preference pages and is by default the same as the java.io.tmpdir
      */
