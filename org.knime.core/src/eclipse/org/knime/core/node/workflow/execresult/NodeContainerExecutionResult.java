@@ -86,6 +86,7 @@ public abstract class NodeContainerExecutionResult
     /** Get a node message that was set during execution.
      * @return The node message. */
     @JsonProperty("nodeMessage")
+    @Override
     public NodeMessage getNodeMessage() {
         return m_message;
     }
